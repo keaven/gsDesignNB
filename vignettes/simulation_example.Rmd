@@ -1,0 +1,133 @@
+---
+title: "Simulation of Recurrent Events"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulation of Recurrent Events}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(nbDesign)
+library(dplyr)
+```
+
+This vignette demonstrates how to use the `nb_sim()` function to simulate a 2-arm clinical trial with recurrent event outcomes.
+
+## Simulation Setup
+
+We will simulate a small trial with the following parameters:
+
+*   **Enrollment:** 20 patients total, recruited over 5 months with a constant rate.
+*   **Treatments:** Two groups (Control vs. Experimental) with a 1:1 allocation ratio.
+*   **Event Rates:**
+    *   Control: 0.5 events per year.
+    *   Experimental: 0.3 events per year.
+*   **Dropout:**
+    *   Control: 10% annual dropout rate.
+    *   Experimental: 5% annual dropout rate.
+*   **Maximum Follow-up:** Each patient is followed for a maximum of 2 years from randomization.
+
+### Defining Input Parameters
+
+```{r}
+# Enrollment: rate of 4 patients/month for 5 months -> ~20 patients
+enroll_rate <- data.frame(
+  rate = 4,
+  duration = 5
+)
+
+# Failure rates (events per unit time)
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.5, 0.3) # events per year (assuming time unit is year, adjust enroll duration if needed)
+)
+
+# Let's ensure time units are consistent.
+# If fail_rate is per year, then durations should be in years.
+# 5 months = 5/12 years.
+enroll_rate <- data.frame(
+  rate = 20 / (5 / 12), # 20 patients over 5/12 years
+  duration = 5 / 12
+)
+
+# Dropout rates (per year)
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.1, 0.05),
+  duration = c(100, 100) # constant rate for long duration
+)
+
+# Maximum follow-up per patient (years)
+max_followup <- 2
+```
+
+## Running the Simulation
+
+```{r}
+set.seed(123)
+
+sim_data <- nb_sim(
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = max_followup,
+  n = 20
+)
+
+head(sim_data)
+```
+
+The output contains multiple rows per subject:
+*   `event = 1`: An actual recurrent event.
+*   `event = 0`: The censoring time (either due to dropout or reaching `max_followup`).
+
+## Analyzing the Data
+
+We can aggregate the data to calculate the observed event rates and total follow-up time for each group.
+
+```{r}
+# Summarize by treatment group
+summary_stats <- sim_data %>%
+  group_by(treatment) %>%
+  summarise(
+    n_subjects = n_distinct(id),
+    total_events = sum(event == 1),
+    total_followup = sum(tte[event == 0]), # Censoring time represents total individual follow-up
+    observed_rate = total_events / total_followup
+  )
+
+print(summary_stats)
+```
+
+### Plotting Events
+
+We can visualize the events and censoring times for each subject.
+
+```{r, fig.width=7, fig.height=5}
+library(ggplot2)
+
+# Create a plot of patient timelines
+# Each line is a patient. Points are events. 'x' is censoring.
+
+ggplot(sim_data, aes(x = tte, y = factor(id), color = treatment)) +
+  geom_line(aes(group = id), color = "gray80") +
+  geom_point(data = subset(sim_data, event == 1), shape = 19, size = 2) +
+  geom_point(data = subset(sim_data, event == 0), shape = 4, size = 3) +
+  labs(
+    title = "Patient Timelines",
+    x = "Time from Randomization (Years)",
+    y = "Patient ID",
+    caption = "Dots = Events, X = Censoring/Dropout"
+  ) +
+  theme_minimal()
+```
+
+
