@@ -143,5 +143,7 @@ nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = N
 
   result_dt <- dt_subjects[, simulate_subject(id, treatment, enroll_time, lambda), by = id]
   setorder(result_dt, id, calendar_time)
-  as.data.frame(result_dt)
+  result_df <- as.data.frame(result_dt)
+  class(result_df) <- unique(c("nb_sim_data", class(result_df)))
+  result_df
 }

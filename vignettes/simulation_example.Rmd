@@ -142,4 +142,15 @@ ggplot(sim_plot, aes(x = tte, y = factor(id), color = treatment)) +
   theme_minimal()
 ```
 
+## Cutting Data by Analysis Date
+
+We can truncate the simulated data at an interim analysis date using
+`cut_data_by_date()`. The function returns a single record per participant with
+the truncated follow-up time (`tte`) and number of observed events.
+
+```{r}
+cut_summary <- cut_data_by_date(sim_data, cut_date = 1.5)
+head(cut_summary)
+```
+
 
