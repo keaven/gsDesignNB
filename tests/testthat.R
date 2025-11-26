@@ -1,4 +1,4 @@
 library(testthat)
-library(nbsample)
+library(nbDesign)
 
-test_check("nbsample")
+test_check("nbDesign")
