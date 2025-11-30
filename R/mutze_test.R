@@ -32,6 +32,9 @@
 #' mutze_test(cut)
 #'
 #' @export
+#'
+#' @importFrom stats pnorm poisson qnorm
+#' @importFrom utils tail
 mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95) {
   method <- match.arg(method)
   df <- as.data.frame(data)

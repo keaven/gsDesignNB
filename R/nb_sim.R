@@ -29,6 +29,7 @@
 #'
 #' @import data.table
 #' @importFrom stats rexp runif
+#' @importFrom utils tail
 #' @importFrom simtrial rpwexp_enroll
 nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL) {
   # 1. Generate Enrollment

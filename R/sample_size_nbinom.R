@@ -59,6 +59,7 @@
 #'   trial_duration = 12
 #' )
 #'
+#' @importFrom stats pnorm qnorm
 sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
                                alpha = 0.025, sided = 1, exposure = NULL, ratio = 1,
                                accrual_rate = NULL, accrual_duration = NULL,
