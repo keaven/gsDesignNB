@@ -184,5 +184,65 @@ cut_events <- cut_data_by_date(sim_data, cut_date = analysis_date)
 sum(cut_events$events)
 ```
 
+## Generating and Verifying Negative Binomial Data
+
+The `nb_sim()` function can also generate data where the counts follow a Negative Binomial distribution. This is achieved by providing a `dispersion` parameter in the `fail_rate` data frame. The dispersion parameter $k$ relates the variance to the mean as $Var(Y) = \mu + k\mu^2$.
+
+### Simulation with Dispersion
+
+We define a scenario with a known dispersion of 0.5.
+
+```{r}
+# Define failure rates with dispersion
+fail_rate_nb <- data.frame(
+  treatment = "Control",
+  rate = 10,       # Mean event rate
+  dispersion = 0.5 # Variance = mean + 0.5 * mean^2
+)
+
+enroll_rate_nb <- data.frame(
+  rate = 100,
+  duration = 1
+)
+
+set.seed(1)
+# Simulate 500 subjects to get a stable estimate
+sim_nb <- nb_sim(
+  enroll_rate = enroll_rate_nb,
+  fail_rate = fail_rate_nb,
+  max_followup = 1,
+  n = 500,
+  block = "Control" # Assign all to Control for simplicity
+)
+```
+
+### Verifying the Dispersion Parameter
+
+We can verify that the simulated data reflects the input dispersion parameter by estimating it back from the data. We use the Method of Moments (MoM) estimator:
+
+$$ \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2} $$
+
+```{r}
+# Count events per subject
+counts_nb <- as.data.table(sim_nb)[, .(events = sum(event)), by = id]
+
+m <- mean(counts_nb$events)
+v <- var(counts_nb$events)
+k_mom <- (v - m) / (m^2)
+
+# Also estimate using GLM
+# We use MASS::glm.nb to fit the negative binomial model
+# We suppress warnings because fitting intercept-only models on simulated data
+# can occasionally produce convergence warnings despite valid estimates.
+k_glm <- tryCatch({
+  fit <- suppressWarnings(MASS::glm.nb(events ~ 1, data = counts_nb))
+  1 / fit$theta
+}, error = function(e) NA)
+
+print(paste("True Dispersion:", 0.5))
+print(paste("Estimated Dispersion (MoM):", signif(k_mom, 4)))
+print(paste("Estimated Dispersion (GLM):", signif(k_glm, 4)))
+```
+
 
 
