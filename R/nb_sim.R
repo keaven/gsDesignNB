@@ -3,6 +3,19 @@
 #' Simulates recurrent events for a clinical trial with piecewise constant enrollment,
 #' exponential failure rates (Poisson process), and piecewise exponential dropout.
 #'
+#' The simulation generates data consistent with the Negative Binomial models described
+#' by Friede and Schmidli (2010) and Mutze et al. (2018). Specifically, it simulates
+#' a Gamma-distributed frailty variable for each individual (if dispersion > 0),
+#' which acts as a multiplier for that individual's event rate. Events are then
+#' generated according to a Poisson process with this subject-specific rate.
+#'
+#' @references
+#' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
+#' \emph{Statistics in Medicine}, 29(10), 1145-1156.
+#'
+#' Mutze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Blind sample size reestimation in clinical trials with recurrent event data.
+#' \emph{Pharmaceutical Statistics}, 17(4), 369-383.
+#'
 #' @param enroll_rate A data frame with columns \code{rate} and \code{duration} defining
 #'   the piecewise constant enrollment rates.
 #' @param fail_rate A data frame with columns \code{treatment} and \code{rate} defining
