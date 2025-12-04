@@ -3,6 +3,8 @@ Title: Sample Size Calculation and Simulation for Negative Binomial Outcomes
 Version: 0.1.0
 Authors@R: 
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre"))
+Author: Keaven Anderson [aut, cre]
+Maintainer: Keaven Anderson <keaven_anderson@merck.com>
 Description: Provides sample size calculation methods for negative binomial outcomes,
     including the methods by Zhu and Lakkis (2014) and Friede and Schmidli (2010).
     Supports piecewise constant accrual rates.

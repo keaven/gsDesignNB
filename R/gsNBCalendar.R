@@ -138,3 +138,198 @@ gsNBCalendar <- function(x,
   return(result)
 }
 
+
+#' Summary for gsNB Objects
+#'
+#' Provides a textual summary of a group sequential design for negative binomial
+#' outcomes, similar to the summary provided by \code{\link[gsDesign]{gsDesign}}.
+#' For tabular output, use \code{\link[gsDesign]{gsBoundSummary}} directly on
+#' the gsNB object.
+#'
+#' @param object An object of class \code{gsNB}.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return A character string summarizing the design (invisibly). The summary
+#'   is also printed to the console.
+#'
+#' @export
+#'
+#' @examples
+#' nb_ss <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' gs_design <- gsNBCalendar(nb_ss, k = 3)
+#' summary(gs_design)
+#'
+#' # For tabular bounds summary, use gsBoundSummary directly:
+#' # gsDesign::gsBoundSummary(gs_design)
+summary.gsNB <- function(object, ...) {
+  # Extract negative binomial design information
+  nb <- object$nb_design
+  inputs <- nb$inputs
+
+  # Calculate risk ratio (lambda2/lambda1)
+  risk_ratio <- inputs$lambda2 / inputs$lambda1
+
+  # Determine test type description
+ test_type_desc <- switch(
+    as.character(object$test.type),
+    "1" = "One-sided",
+    "2" = "Two-sided symmetric",
+    "3" = "Asymmetric two-sided with binding futility bound",
+    "4" = "Asymmetric two-sided with non-binding futility bound",
+    "5" = "Asymmetric two-sided with binding futility bound (lower spending)",
+    "6" = "Asymmetric two-sided with non-binding futility bound (lower spending)",
+    "Unknown test type"
+  )
+
+  # Build the summary text
+  summary_text <- sprintf(
+    paste0(
+      "%s group sequential design for negative binomial outcomes, ",
+      "%d analyses, ",
+      "total sample size %.1f, ",
+      "%.0f percent power, ",
+      "%.1f percent (1-sided) Type I error. ",
+      "Control rate %.4f, treatment rate %.4f, ",
+      "risk ratio %.4f, dispersion %.4f. ",
+      "Accrual duration %.1f, trial duration %.1f, ",
+      "average exposure %.2f. ",
+      "Randomization ratio %.0f:1."
+    ),
+    test_type_desc,
+    object$k,
+    object$n_total[object$k],
+    (1 - object$beta) * 100,
+    object$alpha * 100,
+    inputs$lambda1,
+    inputs$lambda2,
+    risk_ratio,
+    inputs$dispersion,
+    sum(inputs$accrual_duration),
+    inputs$trial_duration,
+    nb$exposure,
+    inputs$ratio
+  )
+
+  class(summary_text) <- "gsNBsummary"
+  summary_text
+}
+
+
+#' Print Method for gsNBsummary Objects
+#'
+#' @param x An object of class \code{gsNBsummary}.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns the input object.
+#'
+#' @export
+print.gsNBsummary <- function(x, ...) {
+  cat(strwrap(x, width = 80), sep = "\n")
+  cat("\n")
+  invisible(x)
+}
+
+
+#' Convert Group Sequential Design to Integer Sample Sizes
+#'
+#' Generic function to round sample sizes in a group sequential design to integers.
+#' This extends the \code{\link[gsDesign]{toInteger}} function from the gsDesign
+#' package to work with \code{gsNB} objects.
+#'
+#' @param x An object of class \code{gsNB} or \code{gsDesign}.
+#' @param ... Additional arguments passed to methods.
+#'
+#' @return An object of the same class as input with integer sample sizes.
+#'
+#' @export
+#'
+#' @examples
+#' nb_ss <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' gs_design <- gsNBCalendar(nb_ss, k = 3)
+#' gs_integer <- toInteger(gs_design)
+toInteger <- function(x, ...) {
+  UseMethod("toInteger")
+}
+
+
+#' @describeIn toInteger Method for gsDesign objects (calls gsDesign::toInteger)
+#' @param ratio Randomization ratio. See \code{\link[gsDesign]{toInteger}}.
+#' @param roundUpFinal Logical. See \code{\link[gsDesign]{toInteger}}.
+#' @export
+toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
+ gsDesign::toInteger(x, ratio = ratio, roundUpFinal = roundUpFinal)
+}
+
+
+#' @describeIn toInteger Method for gsNB objects
+#'
+#' Rounds sample sizes in a group sequential negative binomial design to integers,
+#' respecting the randomization ratio.
+#'
+#' @param ratio Randomization ratio (n2/n1). If an integer is provided, rounding
+#'   is done to a multiple of \code{ratio + 1}. Default uses the ratio from the
+#'   original design.
+#' @param roundUpFinal If \code{TRUE} (default), the final sample size is rounded
+#'   up to ensure the target is met. If \code{FALSE}, rounding is to the nearest
+#'   integer.
+#'
+#' @details
+#' This function rounds sample sizes at each analysis to integers while maintaining
+#' the randomization ratio and ensuring monotonically increasing sample sizes across
+#' analyses. Only the final analysis sample size is rounded to an integer;
+#' interim sample sizes remain as expected (non-integer) values based on
+#' the information fraction.
+#'
+#' @export
+toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = TRUE, ...) {
+  # Make a copy of the object
+  result <- x
+
+  k <- x$k
+
+  # Only round the final sample size to an integer
+  # Interim sample sizes remain as expected values (non-integer)
+  n_total_new <- x$n_total
+
+  # Round final analysis sample size
+  if (roundUpFinal) {
+    if (is.numeric(ratio) && ratio == floor(ratio) && ratio >= 0) {
+      # Round up to nearest multiple of (ratio + 1)
+      group_size <- ratio + 1
+      n_total_new[k] <- ceiling(x$n_total[k] / group_size) * group_size
+    } else {
+      n_total_new[k] <- ceiling(x$n_total[k])
+    }
+  } else {
+    if (is.numeric(ratio) && ratio == floor(ratio) && ratio >= 0) {
+      group_size <- ratio + 1
+      n_total_new[k] <- round(x$n_total[k] / group_size) * group_size
+    } else {
+      n_total_new[k] <- round(x$n_total[k])
+    }
+  }
+
+  # Recalculate interim sample sizes based on timing and new final sample size
+  for (i in seq_len(k - 1)) {
+    n_total_new[i] <- x$timing[i] * n_total_new[k]
+  }
+
+  # Calculate per-group sample sizes
+  result$n_total <- n_total_new
+  result$n1 <- n_total_new / (1 + ratio)
+  result$n2 <- n_total_new * ratio / (1 + ratio)
+
+  # Update n.I to reflect the new sample sizes
+  # n.I is relative to the fixed sample size
+  n_total_fixed <- x$nb_design$n_total
+  result$n.I <- n_total_new / n_total_fixed
+
+  result
+}
+

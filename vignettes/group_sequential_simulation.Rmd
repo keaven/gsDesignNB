@@ -396,31 +396,25 @@ ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
 
 ## Design Summary
 
+The `summary()` function provides a textual overview of the group sequential design:
+
 ```{r design-summary}
-cat("=== Group Sequential Design Summary ===\n\n")
-cat("Trial Parameters:\n")
-cat(sprintf("  Enrollment duration: 1 year\n"))
-cat(sprintf("  Trial duration: 2 years\n"))
-cat(sprintf("  Control rate: %.1f events/year\n", nb_ss$inputs$lambda1))
-cat(sprintf("  Experimental rate: %.1f events/year\n", nb_ss$inputs$lambda2))
-cat(sprintf("  Rate ratio: %.2f\n", nb_ss$inputs$lambda2 / nb_ss$inputs$lambda1))
-cat(sprintf("  Dispersion: %.1f\n", nb_ss$inputs$dispersion))
-cat(sprintf("\n"))
-cat("Sample Size:\n")
-cat(sprintf("  Fixed design N: %d\n", ceiling(nb_ss$n_total)))
-cat(sprintf("  GS max N: %d (inflation: %.1f%%)\n", 
-            ceiling(max(gs_nb$n_total)), 
-            (max(gs_nb$n.I) - 1) * 100))
-cat(sprintf("\n"))
-cat("Analysis Schedule:\n")
-for (i in 1:3) {
-  cat(sprintf("  Analysis %d: Month %d (info frac: %.3f)\n", 
-              i, analysis_times[i] * 12, gs_nb$timing[i]))
-}
-cat(sprintf("\n"))
-cat("Spending Times (usTime): %.1f, %.1f, %.1f\n", 
-    gs_nb$usTime[1], gs_nb$usTime[2], gs_nb$usTime[3])
+summary(gs_nb)
 ```
+
+For detailed boundary information, use `gsDesign::gsBoundSummary()`:
+
+```{r bounds-table}
+gsDesign::gsBoundSummary(gs_nb)
+```
+
+After rounding to integer sample sizes with `toInteger()`:
+
+```{r integer-design}
+gs_nb_int <- toInteger(gs_nb)
+summary(gs_nb_int)
+```
+
 
 ## Notes
 
