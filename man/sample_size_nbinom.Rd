@@ -55,8 +55,9 @@ Default is NULL (no gap). If provided, the effective event rate is reduced.}
 "friede" for Friede and Schmidli (2010) / Mütze et al. (2018).}
 }
 \value{
-A list containing:
+An object of class \code{sample_size_nbinom_result}, which is a list containing:
 \describe{
+\item{inputs}{Named list of the original function arguments.}
 \item{n1}{Sample size for group 1}
 \item{n2}{Sample size for group 2}
 \item{n_total}{Total sample size}
