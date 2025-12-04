@@ -12,7 +12,6 @@ gsNBCalendar(
   beta = 0.1,
   astar = 0,
   delta = 0,
-  n.fix = 1,
   timing = 1,
   sfu = gsDesign::sfHSD,
   sfupar = -4,
@@ -49,8 +48,6 @@ Default is 4.}
 Default is 0.}
 
 \item{delta}{Standardized effect size. Default is 0 (computed from design).}
-
-\item{n.fix}{Sample size inflation factor. Default is 1.}
 
 \item{timing}{Timing of interim analyses. May be a vector of length k-1
 with values between 0 and 1 representing information fractions.

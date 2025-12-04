@@ -21,7 +21,6 @@
 #' @param astar Allocated Type I error for lower bound for test.type = 5 or 6.
 #'   Default is 0.
 #' @param delta Standardized effect size. Default is 0 (computed from design).
-#' @param n.fix Sample size inflation factor. Default is 1.
 #' @param timing Timing of interim analyses. May be a vector of length k-1
 #'   with values between 0 and 1 representing information fractions.
 #'   Default is 1 (equally spaced).
@@ -68,7 +67,6 @@ gsNBCalendar <- function(x,
                          beta = 0.1,
                          astar = 0,
                          delta = 0,
-                         n.fix = 1,
                          timing = 1,
                          sfu = gsDesign::sfHSD,
                          sfupar = -4,
@@ -92,6 +90,10 @@ gsNBCalendar <- function(x,
   risk_ratio <- x$inputs$lambda2 / x$inputs$lambda1
   delta1 <- log(risk_ratio)
 
+  # Statistical information is the inverse of the variance of the log rate ratio
+  # This is used as n.fix so that gs$n.I represents actual statistical information
+  info_fixed <- 1 / x$variance
+
   # Call gsDesign with the provided parameters
   gs <- gsDesign::gsDesign(
     k = k,
@@ -102,7 +104,7 @@ gsNBCalendar <- function(x,
     delta = delta,
     delta1 = delta1,
     delta0 = 0,
-    n.fix = n.fix,
+    n.fix = info_fixed,
     timing = timing,
     sfu = sfu,
     sfupar = sfupar,
@@ -115,16 +117,14 @@ gsNBCalendar <- function(x,
   )
 
   # Calculate sample sizes per analysis based on information fraction
-  # gs$n.I contains the cumulative sample size at each analysis
-  # We need to scale this by the fixed sample size from nb design
+  # gs$n.I contains the statistical information at each analysis
+  # Scale to get sample sizes using the relationship: info / info_fixed = n / n_fixed
   n_total_fixed <- x$n_total
   ratio <- x$inputs$ratio
 
-  # gs$n.I is the information (sample size) at each analysis relative to n.fix
-
-
   # Calculate cumulative sample sizes at each analysis
-  n_cumulative <- gs$n.I * n_total_fixed
+  # n.I / n.fix gives the information fraction, multiply by fixed sample size
+  n_cumulative <- (gs$n.I / info_fixed) * n_total_fixed
 
   # Per-group sample sizes (cumulative)
   n1_cumulative <- n_cumulative / (1 + ratio)

@@ -429,7 +429,7 @@ rate ratio ($\lambda_2/\lambda_1$), where values < 1 indicate treatment benefit:
 gsDesign::gsBoundSummary(gs_nb, 
                          deltaname = "RR", 
                          logdelta = TRUE,
-                         Nname = "N",
+                         Nname = "Information",
                          digits = 4,
                          ddigits = 2) |>
   gt() |>
