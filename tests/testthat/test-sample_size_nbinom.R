@@ -9,6 +9,9 @@ test_that("sample_size_nbinom calculates correctly", {
     accrual_rate = 10, accrual_duration = 2, trial_duration = 2
   )
   expect_type(res, "list")
+  expect_s3_class(res, "sample_size_nbinom_result")
+  expect_equal(res$inputs$lambda1, 0.5)
+  expect_equal(res$inputs$power, 0.8)
   expect_true(res$n1 > 0)
   expect_true(res$n2 > 0)
   expect_equal(res$n_total, res$n1 + res$n2)
@@ -74,6 +77,7 @@ test_that("sample_size_nbinom calculates correctly", {
     accrual_rate = 10, accrual_duration = 2, trial_duration = 2
   )
   expect_type(res_friede, "list")
+  expect_s3_class(res_friede, "sample_size_nbinom_result")
   expect_true(res_friede$n1 > 0)
   expect_true(res_friede$n2 > 0)
 

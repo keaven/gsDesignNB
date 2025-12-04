@@ -26,6 +26,7 @@ test_that("sample_size_nbinom adjusts for event_gap", {
     accrual_rate = acc_r, accrual_duration = acc_d, trial_duration = trial_d,
     event_gap = gap
   )
+  expect_equal(res2$inputs$event_gap, gap)
   
   expect_true(res2$n_total > res1$n_total)
   

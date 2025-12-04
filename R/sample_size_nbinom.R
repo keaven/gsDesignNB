@@ -22,8 +22,9 @@
 #' @param method Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
 #'   "friede" for Friede and Schmidli (2010) / Mütze et al. (2018).
 #'
-#' @return A list containing:
+#' @return An object of class \code{sample_size_nbinom_result}, which is a list containing:
 #' \describe{
+#'   \item{inputs}{Named list of the original function arguments.}
 #'   \item{n1}{Sample size for group 1}
 #'   \item{n2}{Sample size for group 2}
 #'   \item{n_total}{Total sample size}
@@ -86,6 +87,24 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
   if (!is.null(max_followup) && max_followup <= 0) {
     stop("max_followup must be positive.")
   }
+
+  power_input <- power
+  inputs <- list(
+    lambda1 = lambda1,
+    lambda2 = lambda2,
+    dispersion = dispersion,
+    power = power_input,
+    alpha = alpha,
+    sided = sided,
+    ratio = ratio,
+    accrual_rate = accrual_rate,
+    accrual_duration = accrual_duration,
+    trial_duration = trial_duration,
+    dropout_rate = dropout_rate,
+    max_followup = max_followup,
+    event_gap = event_gap,
+    method = method
+  )
 
   # Determine mode: Calculate N or Calculate Power
   # We don't have 'mode' logic based on missing accrual_rate anymore since it's required.
@@ -277,19 +296,24 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
   events_n2 <- n2_c * mu2
   total_events <- events_n1 + events_n2
 
-  return(list(
-    n1 = n1_c,
-    n2 = n2_c,
-    n_total = n_total_c,
-    alpha = alpha,
-    sided = sided,
-    power = power,
-    exposure = exposure,
-    events_n1 = events_n1,
-    events_n2 = events_n2,
-    total_events = total_events,
-    variance = variance,
-    accrual_rate = computed_accrual_rate,
-    accrual_duration = accrual_duration
-  ))
+  result <- c(
+    list(inputs = inputs),
+    list(
+      n1 = n1_c,
+      n2 = n2_c,
+      n_total = n_total_c,
+      alpha = alpha,
+      sided = sided,
+      power = power,
+      exposure = exposure,
+      events_n1 = events_n1,
+      events_n2 = events_n2,
+      total_events = total_events,
+      variance = variance,
+      accrual_rate = computed_accrual_rate,
+      accrual_duration = accrual_duration
+    )
+  )
+  class(result) <- c("sample_size_nbinom_result", "list")
+  result
 }
