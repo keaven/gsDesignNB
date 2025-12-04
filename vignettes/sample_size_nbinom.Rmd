@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(nbDesign)
+library(gsDesignNB)
 ```
 
 This vignette describes the methodology used in the `sample_size_nbinom` function for calculating sample sizes when comparing two treatment groups with negative binomial outcomes. It covers two available methods and how to account for variable accrual rates.
@@ -96,7 +96,8 @@ Calculate sample size for:
 *   Dispersion $k = 0.1$
 *   Power = 80%
 *   Alpha = 0.025 (one-sided)
-*   Fixed exposure duration = 1 year
+*   Accrual over 12 months
+*   Trial duration 12 months (implying exposure approx 6 months)
 
 ```{r}
 sample_size_nbinom(
@@ -106,7 +107,9 @@ sample_size_nbinom(
   power = 0.8,
   alpha = 0.025,
   sided = 1,
-  exposure = 1,
+  accrual_rate = 10, # arbitrary, just for average exposure
+  accrual_duration = 12,
+  trial_duration = 12,
   method = "zhu"
 )
 ```
@@ -121,7 +124,9 @@ sample_size_nbinom(
   power = 0.8,
   alpha = 0.025,
   sided = 1,
-  exposure = 1,
+  accrual_rate = 10,
+  accrual_duration = 12,
+  trial_duration = 12,
   method = "friede"
 )
 ```
@@ -206,7 +211,10 @@ sample_size_nbinom(
   lambda1 = 0.5,
   lambda2 = 0.3,
   dispersion = 0.1,
-  ratio = 2
+  ratio = 2,
+  accrual_rate = 10,
+  accrual_duration = 12,
+  trial_duration = 12
 )
 ```
 
@@ -230,7 +238,9 @@ sample_size_nbinom(
   lambda2 = 0.3,
   dispersion = 0.1,
   power = 0.8,
-  exposure = 1,
+  accrual_rate = 10,
+  accrual_duration = 12,
+  trial_duration = 12,
   event_gap = 5 / 365.25
 )
 ```

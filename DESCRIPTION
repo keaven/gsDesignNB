@@ -1,4 +1,4 @@
-Package: nbDesign
+Package: gsDesignNB
 Title: Sample Size Calculation and Simulation for Negative Binomial Outcomes
 Version: 0.1.0
 Authors@R: 
@@ -7,7 +7,7 @@ Description: Provides sample size calculation methods for negative binomial outc
     including the methods by Zhu and Lakkis (2014) and Friede and Schmidli (2010).
     Supports piecewise constant accrual rates.
 License: GPL (>= 3)
-URL: https://keaven.github.io/nbDesign/
+URL: https://keaven.github.io/gsDesignNB/
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

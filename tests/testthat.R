@@ -1,4 +1,4 @@
 library(testthat)
-library(nbDesign)
+library(gsDesignNB)
 
-test_check("nbDesign")
+test_check("gsDesignNB")
