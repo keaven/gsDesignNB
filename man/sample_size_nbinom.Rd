@@ -71,19 +71,22 @@ binomial distribution for the outcome.
 \examples{
 # Calculate sample size for lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1
 # with fixed recruitment of 10/month for 20 months, 24 month trial duration
-sample_size_nbinom(
+x <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 )
+class(x)
+summary(x)
 
 # With piecewise accrual
 # 5 patients/month for 3 months, then 10 patients/month for 3 months
 # Trial ends at month 12.
-sample_size_nbinom(
+x2 <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
   accrual_rate = c(5, 10), accrual_duration = c(3, 3),
   trial_duration = 12
 )
+summary(x2)
 
 }
 \references{

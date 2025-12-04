@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
+library(gt)
 ```
 
 This vignette demonstrates how to use the `nb_sim()` function to simulate a 2-arm clinical trial with recurrent event outcomes.
@@ -107,7 +108,18 @@ summary_stats <- sim_dt[
   ),
   by = treatment
 ]
-print(summary_stats)
+summary_stats |>
+  gt() |>
+  tab_header(title = "Summary Statistics by Treatment") |>
+  cols_label(
+    treatment = "Treatment",
+    n_subjects = "N",
+    total_events = "Events",
+    total_followup = "Follow-up",
+    observed_rate = "Rate"
+  ) |>
+  fmt_number(columns = total_followup, decimals = 2) |>
+  fmt_number(columns = observed_rate, decimals = 3)
 ```
 
 ### Inspect First Ten Records
@@ -177,7 +189,11 @@ Mütze et al. (2018).
 
 ```{r}
 mutze_res <- mutze_test(cut_summary)
-mutze_res$group_summary
+mutze_res$group_summary |>
+  gt() |>
+  tab_header(title = "Mütze Test: Group Summary") |>
+  fmt_number(columns = c(total_events, total_time, mean_events), decimals = 2) |>
+  fmt_number(columns = c(rate_estimate, dispersion_estimate), decimals = 4)
 mutze_res$rate_ratio
 ```
 

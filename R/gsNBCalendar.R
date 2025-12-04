@@ -84,8 +84,15 @@ gsNBCalendar <- function(x,
     stop("x must be an object of class 'sample_size_nbinom_result'")
   }
 
-  # Call gsDesign with the provided parameters
+  # Calculate delta1 based on the log rate ratio
+  # For NB, the test statistic is based on log(lambda2/lambda1)
+  # RR = lambda2/lambda1, so delta1 = log(RR)
+  # When treatment is beneficial (lambda2 < lambda1), RR < 1 and delta1 < 0
+  # gsBoundSummary with logdelta=TRUE will show exp(delta1) = RR
+  risk_ratio <- x$inputs$lambda2 / x$inputs$lambda1
+  delta1 <- log(risk_ratio)
 
+  # Call gsDesign with the provided parameters
   gs <- gsDesign::gsDesign(
     k = k,
     test.type = test.type,
@@ -93,6 +100,8 @@ gsNBCalendar <- function(x,
     beta = beta,
     astar = astar,
     delta = delta,
+    delta1 = delta1,
+    delta0 = 0,
     n.fix = n.fix,
     timing = timing,
     sfu = sfu,

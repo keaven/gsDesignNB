@@ -49,19 +49,22 @@
 #' @examples
 #' # Calculate sample size for lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1
 #' # with fixed recruitment of 10/month for 20 months, 24 month trial duration
-#' sample_size_nbinom(
+#' x <- sample_size_nbinom(
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
 #'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 #' )
+#' class(x)
+#' summary(x)
 #'
 #' # With piecewise accrual
 #' # 5 patients/month for 3 months, then 10 patients/month for 3 months
 #' # Trial ends at month 12.
-#' sample_size_nbinom(
+#' x2 <- sample_size_nbinom(
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
 #'   accrual_rate = c(5, 10), accrual_duration = c(3, 3),
 #'   trial_duration = 12
 #' )
+#' summary(x2)
 #'
 #' @importFrom stats pnorm qnorm
 sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
@@ -317,3 +320,111 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
   class(result) <- c("sample_size_nbinom_result", "list")
   result
 }
+
+
+#' Print Method for sample_size_nbinom_result Objects
+#'
+#' Prints a concise summary of the sample size calculation results.
+#'
+#' @param x An object of class \code{sample_size_nbinom_result}.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns the input object.
+#'
+#' @export
+print.sample_size_nbinom_result <- function(x, ...) {
+  cat("Sample Size for Negative Binomial Outcome\n")
+  cat("==========================================\n\n")
+  
+  cat(sprintf("Sample size:     n1 = %d, n2 = %d, total = %d\n", 
+              x$n1, x$n2, x$n_total))
+  cat(sprintf("Expected events: %.1f (n1: %.1f, n2: %.1f)\n",
+              x$total_events, x$events_n1, x$events_n2))
+  cat(sprintf("Power: %.0f%%, Alpha: %.3f (%d-sided)\n",
+              x$power * 100, x$alpha, x$sided))
+  cat(sprintf("Rates: control = %.4f, treatment = %.4f (RR = %.4f)\n",
+              x$inputs$lambda1, x$inputs$lambda2, 
+              x$inputs$lambda2 / x$inputs$lambda1))
+  cat(sprintf("Dispersion: %.4f, Avg exposure: %.2f\n",
+              x$inputs$dispersion, x$exposure))
+  cat(sprintf("Accrual: %.1f, Trial duration: %.1f\n",
+              sum(x$inputs$accrual_duration), x$inputs$trial_duration))
+  
+  invisible(x)
+}
+
+
+#' Summary for sample_size_nbinom_result Objects
+#'
+#' Provides a textual summary of the sample size calculation for negative binomial
+#' outcomes, similar to the summary for gsNB objects.
+#'
+#' @param object An object of class \code{sample_size_nbinom_result}.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return A character string summarizing the design (invisibly). The summary
+#'   is also printed to the console.
+#'
+#' @export
+#'
+#' @examples
+#' x <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' class(x)
+#' summary(x)
+summary.sample_size_nbinom_result <- function(object, ...) {
+  inputs <- object$inputs
+  risk_ratio <- inputs$lambda2 / inputs$lambda1
+  
+  # Build the summary text
+  summary_text <- sprintf(
+    paste0(
+      "Fixed sample size design for negative binomial outcome, ",
+      "total sample size %d (n1=%d, n2=%d), ",
+      "%.0f percent power, ",
+      "%.1f percent (%d-sided) Type I error. ",
+      "Control rate %.4f, treatment rate %.4f, ",
+      "risk ratio %.4f, dispersion %.4f. ",
+      "Accrual duration %.1f, trial duration %.1f, ",
+      "average exposure %.2f. ",
+      "Expected events %.1f. ",
+      "Randomization ratio %.0f:1."
+    ),
+    object$n_total,
+    object$n1,
+    object$n2,
+    object$power * 100,
+    object$alpha * 100,
+    inputs$sided,
+    inputs$lambda1,
+    inputs$lambda2,
+    risk_ratio,
+    inputs$dispersion,
+    sum(inputs$accrual_duration),
+    inputs$trial_duration,
+    object$exposure,
+    object$total_events,
+    inputs$ratio
+  )
+  
+  class(summary_text) <- "sample_size_nbinom_summary"
+  summary_text
+}
+
+
+#' Print Method for sample_size_nbinom_summary Objects
+#'
+#' @param x An object of class \code{sample_size_nbinom_summary}.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns the input object.
+#'
+#' @export
+print.sample_size_nbinom_summary <- function(x, ...) {
+  cat(strwrap(x, width = 80), sep = "\n")
+  cat("\n")
+  invisible(x)
+}
+

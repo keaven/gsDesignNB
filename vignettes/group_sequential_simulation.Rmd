@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
+library(gt)
 ```
 
 This vignette demonstrates how to create and simulate a group sequential design for 
@@ -271,14 +272,22 @@ summary_by_analysis <- as.data.table(all_results)[
   by = .(analysis, analysis_time)
 ]
 
-knitr::kable(
-  summary_by_analysis,
-  digits = 2,
-  col.names = c("Analysis", "Time (yrs)", "N Enrolled", "Total Events",
-                "Ctrl Events", "Exp Events", "Ctrl Exposure", "Exp Exposure",
-                "Mean Z", "SD Z"),
-  caption = "Summary Statistics by Analysis"
-)
+summary_by_analysis |>
+  gt() |>
+  tab_header(title = "Summary Statistics by Analysis") |>
+  cols_label(
+    analysis = "Analysis",
+    analysis_time = "Time (yrs)",
+    mean_n_enrolled = "N Enrolled",
+    mean_total_events = "Total Events",
+    mean_events_ctrl = "Ctrl Events",
+    mean_events_exp = "Exp Events",
+    mean_exposure_ctrl = "Ctrl Exposure",
+    mean_exposure_exp = "Exp Exposure",
+    mean_z = "Mean Z",
+    sd_z = "SD Z"
+  ) |>
+  fmt_number(decimals = 2)
 ```
 
 ### Statistical Information
@@ -302,12 +311,16 @@ info_by_analysis <- as.data.table(all_results)[
 # Normalize to get observed information fractions
 info_by_analysis[, observed_info_frac := mean_info / max(mean_info)]
 
-knitr::kable(
-  info_by_analysis,
-  digits = 3,
-  col.names = c("Analysis", "Mean Information", "Planned Info Frac", "Observed Info Frac"),
-  caption = "Information by Analysis"
-)
+info_by_analysis |>
+  gt() |>
+  tab_header(title = "Information by Analysis") |>
+  cols_label(
+    analysis = "Analysis",
+    mean_info = "Mean Information",
+    planned_info_frac = "Planned Info Frac",
+    observed_info_frac = "Observed Info Frac"
+  ) |>
+  fmt_number(decimals = 3)
 ```
 
 ### Boundary Crossings and Power
@@ -327,12 +340,17 @@ crossing_summary <- as.data.table(all_results)[
 crossing_summary[, prob_cross_upper := n_cross_upper / n_sims]
 crossing_summary[, prob_cross_lower := n_cross_lower / n_sims]
 
-knitr::kable(
-  crossing_summary[, .(analysis, n_cross_upper, prob_cross_upper, n_cross_lower, prob_cross_lower)],
-  digits = 3,
-  col.names = c("Analysis", "N Cross Upper", "P(Cross Upper)", "N Cross Lower", "P(Cross Lower)"),
-  caption = "Boundary Crossing by Analysis"
-)
+crossing_summary[, .(analysis, n_cross_upper, prob_cross_upper, n_cross_lower, prob_cross_lower)] |>
+  gt() |>
+  tab_header(title = "Boundary Crossing by Analysis") |>
+  cols_label(
+    analysis = "Analysis",
+    n_cross_upper = "N Cross Upper",
+    prob_cross_upper = "P(Cross Upper)",
+    n_cross_lower = "N Cross Lower",
+    prob_cross_lower = "P(Cross Lower)"
+  ) |>
+  fmt_number(columns = starts_with("prob"), decimals = 3)
 ```
 
 ### Overall Power
@@ -378,7 +396,8 @@ bounds_df <- data.frame(
 )
 
 ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
-  geom_jitter(width = 0.1, alpha = 0.5, color = "steelblue") +
+  geom_violin(fill = "steelblue", alpha = 0.5, color = "steelblue") +
+  geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
   geom_hline(data = bounds_df, aes(yintercept = upper), 
              linetype = "dashed", color = "darkgreen", linewidth = 1) +
   geom_hline(data = bounds_df, aes(yintercept = lower), 
@@ -402,10 +421,36 @@ The `summary()` function provides a textual overview of the group sequential des
 summary(gs_nb)
 ```
 
-For detailed boundary information, use `gsDesign::gsBoundSummary()`:
+For detailed boundary information, use `gsDesign::gsBoundSummary()`. We set `logdelta = TRUE` 
+since the test statistic is based on the log rate ratio. The `~RR at bound` displays the 
+rate ratio ($\lambda_2/\lambda_1$), where values < 1 indicate treatment benefit:
 
 ```{r bounds-table}
-gsDesign::gsBoundSummary(gs_nb)
+gsDesign::gsBoundSummary(gs_nb, 
+                         deltaname = "RR", 
+                         logdelta = TRUE,
+                         Nname = "N",
+                         digits = 4,
+                         ddigits = 2) |>
+  gt() |>
+  tab_header(title = "Group Sequential Design Bounds")
+```
+
+Note that `P(Cross) if RR=0.67` corresponds to the design's alternate hypothesis 
+(treatment rate / control rate = `r round(nb_ss$inputs$lambda2 / nb_ss$inputs$lambda1, 2)`).
+
+Sample sizes at each analysis:
+
+```{r sample-sizes}
+data.frame(
+  Analysis = 1:gs_nb$k,
+  n1 = gs_nb$n1,
+  n2 = gs_nb$n2,
+  n_total = gs_nb$n_total
+) |>
+  gt() |>
+  tab_header(title = "Sample Sizes at Each Analysis") |>
+  fmt_number(columns = c(n1, n2, n_total), decimals = 1)
 ```
 
 After rounding to integer sample sizes with `toInteger()`:
