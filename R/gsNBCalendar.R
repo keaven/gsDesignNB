@@ -33,6 +33,9 @@
 #'   Default is 18.
 #' @param usTime Spending time for upper bound (optional).
 #' @param lsTime Spending time for lower bound (optional).
+#' @param analysis_times Optional vector of calendar times for each analysis.
+#'   If provided, must have length k. These times are stored in the \code{T}
+#'   element and displayed by \code{\link[gsDesign]{gsBoundSummary}}.
 #'
 #' @return An object of class \code{gsNB} which inherits from \code{gsDesign}
 #'   and \code{sample_size_nbinom_result}. Contains all elements from
@@ -41,6 +44,7 @@
 #'     \item{nb_design}{The original \code{sample_size_nbinom_result} object}
 #'     \item{n1}{Sample size per analysis for group 1}
 #'     \item{n2}{Sample size per analysis for group 2}
+#'     \item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
 #'   }
 #'
 #' @references
@@ -56,8 +60,9 @@
 #'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 #' )
 #'
-#' # Then create a group sequential design
-#' gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4)
+#' # Then create a group sequential design with analysis times
+#' gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4,
+#'                          analysis_times = c(10, 18, 24))
 #'
 #' @importFrom gsDesign gsDesign sfHSD
 gsNBCalendar <- function(x,
@@ -75,7 +80,8 @@ gsNBCalendar <- function(x,
                          tol = 1e-06,
                          r = 18,
                          usTime = NULL,
-                         lsTime = NULL) {
+                         lsTime = NULL,
+                         analysis_times = NULL) {
   # Validate input
 
   if (!inherits(x, "sample_size_nbinom_result")) {
@@ -140,6 +146,15 @@ gsNBCalendar <- function(x,
   result$n1 <- n1_cumulative
   result$n2 <- n2_cumulative
   result$n_total <- n_cumulative
+  result$ratio <- ratio
+
+ # Add calendar times if provided (for gsBoundSummary display)
+  if (!is.null(analysis_times)) {
+    if (length(analysis_times) != k) {
+      stop("analysis_times must have length k (", k, ")")
+    }
+    result$T <- analysis_times
+  }
 
   # Set the class to inherit from both gsDesign and sample_size_nbinom_result
   class(result) <- c("gsNB", "gsDesign", "sample_size_nbinom_result")
@@ -341,4 +356,3 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
 
   result
 }
-

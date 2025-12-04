@@ -20,7 +20,8 @@ gsNBCalendar(
   tol = 1e-06,
   r = 18,
   usTime = NULL,
-  lsTime = NULL
+  lsTime = NULL,
+  analysis_times = NULL
 )
 }
 \arguments{
@@ -69,6 +70,10 @@ Default is 18.}
 \item{usTime}{Spending time for upper bound (optional).}
 
 \item{lsTime}{Spending time for lower bound (optional).}
+
+\item{analysis_times}{Optional vector of calendar times for each analysis.
+If provided, must have length k. These times are stored in the \code{T}
+element and displayed by \code{\link[gsDesign]{gsBoundSummary}}.}
 }
 \value{
 An object of class \code{gsNB} which inherits from \code{gsDesign}
@@ -78,6 +83,7 @@ and \code{sample_size_nbinom_result}. Contains all elements from
 \item{nb_design}{The original \code{sample_size_nbinom_result} object}
 \item{n1}{Sample size per analysis for group 1}
 \item{n2}{Sample size per analysis for group 2}
+\item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
 }
 }
 \description{
@@ -91,8 +97,9 @@ nb_ss <- sample_size_nbinom(
   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 )
 
-# Then create a group sequential design
-gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4)
+# Then create a group sequential design with analysis times
+gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4,
+                         analysis_times = c(10, 18, 24))
 
 }
 \references{
