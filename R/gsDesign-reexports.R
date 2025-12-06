@@ -81,3 +81,7 @@ gsDesign::sfXG2
 #' @importFrom gsDesign sfXG3
 #' @export
 gsDesign::sfXG3
+
+#' @importFrom gsDesign gsBoundSummary
+#' @export
+gsDesign::gsBoundSummary

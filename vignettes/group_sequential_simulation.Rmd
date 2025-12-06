@@ -94,10 +94,9 @@ gs_nb <- gsNBCalendar(
   test.type = 4,           # Two-sided asymmetric, non-binding futility
   sfu = sfLinear,          # Linear spending function for upper bound
   sfupar = c(.5, .5),      # Identity function
-  sfl = sfLinear,          # Same lower spending
-  sflpar = c(.5, .5),
-  usTime = c(.1, .2, 1),   # Conservative efficacy spending: 10%, 20% at IAs
-  lsTime = c(.1, .4, 1),   # Futility spending more aggressive at IA2
+  sfl = sfHSD,             # HSD spending for lower bound
+  sflpar = -8,             # Conservative futility bound
+  lsTime = NULL,           # Spending based on information
   analysis_times = analysis_times  # Calendar times in months
 ) |> toInteger() # Round to integer sample size
 ```
@@ -316,23 +315,28 @@ to the total exposure and event counts.
 info_by_analysis <- as.data.table(all_results)[
   ,
   .(
-    mean_info = mean(1 / (1/events_ctrl + 1/events_exp), na.rm = TRUE),
-    planned_info_frac = unique(gs_nb$timing[analysis])
+    mean_info = mean(1 / (1/events_ctrl + 1/events_exp), na.rm = TRUE)
   ),
   by = analysis
 ]
 
-# Normalize to get observed information fractions
-info_by_analysis[, observed_info_frac := mean_info / max(mean_info)]
+# Add planned information from design
+info_by_analysis[, planned_info := gs_nb$n.I[analysis]]
+
+# Normalize to get observed information fractions (relative to planned max)
+max_planned_info <- tail(gs_nb$n.I, 1)
+info_by_analysis[, observed_info_frac := mean_info / max_planned_info]
+info_by_analysis[, planned_info_frac := planned_info / max_planned_info]
 
 info_by_analysis |>
   gt() |>
   tab_header(title = "Information by Analysis") |>
   cols_label(
     analysis = "Analysis",
-    mean_info = "Mean Information",
-    planned_info_frac = "Planned Info Frac",
-    observed_info_frac = "Observed Info Frac"
+    mean_info = "Mean Info (Obs)",
+    planned_info = "Planned Info",
+    planned_info_frac = "Planned Frac",
+    observed_info_frac = "Observed Frac"
   ) |>
   fmt_number(decimals = 3)
 ```
@@ -354,17 +358,27 @@ crossing_summary <- as.data.table(all_results)[
 crossing_summary[, prob_cross_upper := n_cross_upper / n_sims]
 crossing_summary[, prob_cross_lower := n_cross_lower / n_sims]
 
-crossing_summary[, .(analysis, n_cross_upper, prob_cross_upper, n_cross_lower, prob_cross_lower)] |>
+# Cumulative power (Sim)
+crossing_summary[, cum_prob_cross_upper := cumsum(prob_cross_upper)]
+
+# Cumulative power (Design)
+# Drift parameter for alternative: |log(RR)| * sqrt(I_max)
+# Note: gs_nb$n.fix is the information at final analysis
+log_rr <- log(nb_ss$inputs$lambda2 / nb_ss$inputs$lambda1)
+theta <- abs(log_rr) * sqrt(gs_nb$n.fix)
+design_probs <- gsDesign::gsProbability(d = gs_nb, theta = theta)
+crossing_summary[, design_cum_power := cumsum(design_probs$upper$prob)[analysis]]
+
+crossing_summary[, .(analysis, n_cross_upper, cum_prob_cross_upper, design_cum_power)] |>
   gt() |>
-  tab_header(title = "Boundary Crossing by Analysis") |>
+  tab_header(title = "Boundary Crossing and Power") |>
   cols_label(
     analysis = "Analysis",
     n_cross_upper = "N Cross Upper",
-    prob_cross_upper = "P(Cross Upper)",
-    n_cross_lower = "N Cross Lower",
-    prob_cross_lower = "P(Cross Lower)"
+    cum_prob_cross_upper = "Cum Power (Sim)",
+    design_cum_power = "Cum Power (Design)"
   ) |>
-  fmt_number(columns = starts_with("prob"), decimals = 3)
+  fmt_number(columns = contains("power"), decimals = 3)
 ```
 
 ### Overall Power
@@ -412,10 +426,14 @@ bounds_df <- data.frame(
 ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
   geom_violin(fill = "steelblue", alpha = 0.5, color = "steelblue") +
   geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
-  geom_hline(data = bounds_df, aes(yintercept = upper), 
+  # Draw bounds as lines connecting analyses
+  geom_line(data = bounds_df, aes(x = analysis, y = upper, group = 1), 
              linetype = "dashed", color = "darkgreen", linewidth = 1) +
-  geom_hline(data = bounds_df, aes(yintercept = lower), 
+  geom_line(data = bounds_df, aes(x = analysis, y = lower, group = 1), 
              linetype = "dashed", color = "darkred", linewidth = 1) +
+  # Draw points for bounds
+  geom_point(data = bounds_df, aes(x = analysis, y = upper), color = "darkgreen") +
+  geom_point(data = bounds_df, aes(x = analysis, y = lower), color = "darkred") +
   geom_hline(yintercept = 0, color = "gray50") +
   labs(
     title = "Simulated Z-Statistics by Analysis",

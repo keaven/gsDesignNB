@@ -354,6 +354,10 @@ print.sample_size_nbinom_result <- function(x, ...) {
   cat(sprintf("Accrual: %.1f, Trial duration: %.1f\n",
               sum(x$inputs$accrual_duration), x$inputs$trial_duration))
   
+  if (!is.null(x$inputs$max_followup)) {
+    cat(sprintf("Max follow-up: %.1f\n", x$inputs$max_followup))
+  }
+  
   invisible(x)
 }
 
