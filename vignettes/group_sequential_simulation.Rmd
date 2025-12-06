@@ -191,6 +191,8 @@ for (sim in 1:n_sims) {
     events_total = NA_integer_,
     exposure_ctrl = NA_real_,
     exposure_exp = NA_real_,
+    blinded_info = NA_real_,
+    unblinded_info = NA_real_,
     z_stat = NA_real_,
     p_value = NA_real_,
     cross_upper = NA,
@@ -243,12 +245,59 @@ for (sim in 1:n_sims) {
         sim_results$z_stat[k] <- test_result$z
         sim_results$p_value[k] <- test_result$p_value
         
+        # Calculate unblinded information (approx)
+        evt_ctrl <- sim_results$events_ctrl[k]
+        evt_exp <- sim_results$events_exp[k]
+        if (evt_ctrl > 0 && evt_exp > 0) {
+           sim_results$unblinded_info[k] <- 1 / (1/evt_ctrl + 1/evt_exp)
+        }
+        
+        # Calculate blinded information and update bounds
+        blinded_est <- calculate_blinded_info(
+          cut_data,
+          ratio = nb_ss$inputs$ratio,
+          lambda1_planning = nb_ss$inputs$lambda1,
+          lambda2_planning = nb_ss$inputs$lambda2
+        )
+        sim_results$blinded_info[k] <- blinded_est$blinded_info
+        
+        # Update design with observed information fraction
+        max_info <- gs_nb$n.fix
+        if (k == 3) {
+          frac <- 1
+        } else {
+          frac <- min(blinded_est$blinded_info / max_info, 0.999)
+        }
+        
+        # Current timing
+        current_timing <- gs_nb$timing
+        current_timing[k] <- frac
+        
+        # Safety check for timing order
+        if (k > 1 && current_timing[k] <= current_timing[k-1]) current_timing[k] <- current_timing[k-1] + 0.001
+        if (k < 3 && current_timing[k+1] <= current_timing[k]) current_timing[k+1] <- current_timing[k] + 0.001
+        
+        # Recompute bounds
+        temp_gs <- gsDesign::gsDesign(
+          k = 3,
+          test.type = 4,
+          alpha = 0.025,
+          beta = 0.1,
+          sfu = gsDesign::sfLinear, sfupar = c(.5, .5),
+          sfl = gsDesign::sfHSD, sflpar = -8,
+          timing = current_timing,
+          n.fix = max_info
+        )
+        
+        upper_bound <- temp_gs$upper$bound[k]
+        lower_bound <- temp_gs$lower$bound[k]
+        
         # Check boundaries (one-sided: reject if z < -upper bound for benefit)
         # For rate ratio < 1 (experimental better), log(RR) < 0, so z < 0
         z_eff <- -test_result$z  # Flip sign for efficacy direction
         
-        sim_results$cross_upper[k] <- z_eff > gs_nb$upper$bound[k]
-        sim_results$cross_lower[k] <- z_eff < gs_nb$lower$bound[k]
+        sim_results$cross_upper[k] <- z_eff > upper_bound
+        sim_results$cross_lower[k] <- z_eff < lower_bound
         
         if (sim_results$cross_upper[k] || sim_results$cross_lower[k]) {
           stopped <- TRUE
@@ -310,12 +359,12 @@ of the treatment effect estimate. For negative binomial outcomes, this relates
 to the total exposure and event counts.
 
 ```{r info-summary}
-# Information proxy: inverse variance of log rate ratio
-# For large samples: Var(log RR) ≈ 1/events_ctrl + 1/events_exp
+# Summarize information (using blinded estimate from simulation)
 info_by_analysis <- as.data.table(all_results)[
   ,
   .(
-    mean_info = mean(1 / (1/events_ctrl + 1/events_exp), na.rm = TRUE)
+    mean_blinded = mean(blinded_info, na.rm = TRUE),
+    mean_unblinded = mean(unblinded_info, na.rm = TRUE)
   ),
   by = analysis
 ]
@@ -325,7 +374,8 @@ info_by_analysis[, planned_info := gs_nb$n.I[analysis]]
 
 # Normalize to get observed information fractions (relative to planned max)
 max_planned_info <- tail(gs_nb$n.I, 1)
-info_by_analysis[, observed_info_frac := mean_info / max_planned_info]
+info_by_analysis[, observed_frac_blinded := mean_blinded / max_planned_info]
+info_by_analysis[, observed_frac_unblinded := mean_unblinded / max_planned_info]
 info_by_analysis[, planned_info_frac := planned_info / max_planned_info]
 
 info_by_analysis |>
@@ -333,10 +383,12 @@ info_by_analysis |>
   tab_header(title = "Information by Analysis") |>
   cols_label(
     analysis = "Analysis",
-    mean_info = "Mean Info (Obs)",
+    mean_blinded = "Mean Info (Blinded)",
+    mean_unblinded = "Mean Info (Unblinded)",
     planned_info = "Planned Info",
     planned_info_frac = "Planned Frac",
-    observed_info_frac = "Observed Frac"
+    observed_frac_blinded = "Obs Frac (Blind)",
+    observed_frac_unblinded = "Obs Frac (Unblind)"
   ) |>
   fmt_number(decimals = 3)
 ```
