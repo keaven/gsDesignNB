@@ -2,4 +2,63 @@ url: https://keaven.github.io/gsDesignNB/
 template:
   bootstrap: 5
 
+reference:
+  - title: "Sample Size Calculation"
+    desc: >
+      Functions for calculating fixed sample sizes for negative binomial outcomes.
+    contents:
+      - sample_size_nbinom
+      - print.sample_size_nbinom_result
+      - summary.sample_size_nbinom_result
 
+  - title: "Group Sequential Design"
+    desc: >
+      Functions for extending fixed designs to group sequential designs.
+    contents:
+      - gsNBCalendar
+      - toInteger
+      - summary.gsNB
+      - print.gsNBsummary
+
+  - title: "Simulation"
+    desc: >
+      Tools for simulating trial data.
+    contents:
+      - nb_sim
+
+  - title: "Analysis"
+    desc: >
+      Functions for analyzing trial data, including blinded sample size re-estimation and interim analysis.
+    contents:
+      - blinded_ssr
+      - calculate_blinded_info
+      - mutze_test
+      - cut_data_by_date
+      - compute_info_at_time
+      - get_analysis_date
+
+  - title: "gsDesign Re-exports"
+    desc: >
+      Spending functions and utilities re-exported from the gsDesign package for convenience.
+    contents:
+      - sfBetaDist
+      - sfCauchy
+      - sfExponential
+      - sfExtremeValue
+      - sfExtremeValue2
+      - sfGapped
+      - sfHSD
+      - sfLDOF
+      - sfLDPocock
+      - sfLinear
+      - sfLogistic
+      - sfNormal
+      - sfPoints
+      - sfPower
+      - sfStep
+      - sfTDist
+      - sfTrimmed
+      - sfTruncated
+      - sfXG1
+      - sfXG2
+      - sfXG3
