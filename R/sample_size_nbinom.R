@@ -20,7 +20,9 @@
 #' @param event_gap Gap duration after each event during which no new events are counted.
 #'   Default is NULL (no gap). If provided, the effective event rate is reduced.
 #' @param method Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
-#'   "friede" for Friede and Schmidli (2010) / Mütze et al. (2018).
+#'   "friede" for Friede and Schmidli (2010) / Mütze et al. (2018), or
+#'   "AZG" for the Anderson-Zhang-Gemini method which adjusts exposure for event gaps
+#'   rather than rates.
 #'
 #' @return An object of class \code{sample_size_nbinom_result}, which is a list containing:
 #' \describe{
@@ -28,7 +30,9 @@
 #'   \item{n1}{Sample size for group 1}
 #'   \item{n2}{Sample size for group 2}
 #'   \item{n_total}{Total sample size}
-#'   \item{exposure}{Average exposure time used in calculation}
+#'   \item{exposure}{Average exposure time used in calculation (calendar time)}
+#'   \item{exposure1}{Average at-risk exposure time for group 1 (if AZG method)}
+#'   \item{exposure2}{Average at-risk exposure time for group 2 (if AZG method)}
 #' }
 #'
 #' @references
@@ -206,20 +210,31 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
     stop("Accrual results in 0 patients.")
   }
 
-  exposure <- total_exposure_mass / total_n_accrual
+  exposure_calendar <- total_exposure_mass / total_n_accrual
 
+  # Setup effective rates and exposures based on method and event_gap
+  exposure1 <- exposure_calendar
+  exposure2 <- exposure_calendar
+  lambda1_eff <- lambda1
+  lambda2_eff <- lambda2
 
-  # Adjust expectations for event_gap if present
-  if (!is.null(event_gap) && !is.na(event_gap) && event_gap > 0) {
-    lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
-    lambda2_eff <- lambda2 / (1 + lambda2 * event_gap)
+  if (method == "AZG") {
+    # Anderson-Zhang-Gemini method: adjust exposure, keep rates raw
+    if (!is.null(event_gap) && !is.na(event_gap) && event_gap > 0) {
+      exposure1 <- exposure_calendar / (1 + lambda1 * event_gap)
+      exposure2 <- exposure_calendar / (1 + lambda2 * event_gap)
+    }
+    # rates remain unadjusted
   } else {
-    lambda1_eff <- lambda1
-    lambda2_eff <- lambda2
+    # zhu or friede: adjust rates, keep exposure calendar
+    if (!is.null(event_gap) && !is.na(event_gap) && event_gap > 0) {
+      lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
+      lambda2_eff <- lambda2 / (1 + lambda2 * event_gap)
+    }
   }
 
-  mu1 <- lambda1_eff * exposure
-  mu2 <- lambda2_eff * exposure
+  mu1 <- lambda1_eff * exposure1
+  mu2 <- lambda2_eff * exposure2
   k <- dispersion
 
   z_alpha <- qnorm(1 - alpha / sided)
@@ -232,7 +247,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
   if (mode == "solve_n") {
     z_beta <- qnorm(power)
 
-    if (method == "zhu") {
+    if (method == "zhu" || method == "AZG") {
       num <- (z_alpha + z_beta)^2 * ((1 / mu1 + k) + (1 / ratio) * (1 / mu2 + k))
       den <- (log(lambda1 / lambda2))^2
       n1 <- num / den
@@ -248,7 +263,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
       n1 <- n_total * p1
       n2 <- n_total * p2
     } else {
-      stop("Unknown method. Choose 'zhu' or 'friede'.")
+      stop("Unknown method. Choose 'zhu', 'friede', or 'AZG'.")
     }
 
     n1_c <- ceiling(n1)
@@ -267,7 +282,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
     n1_c <- n_total_c / (1 + ratio)
     n2_c <- n_total_c * ratio / (1 + ratio)
 
-    if (method == "zhu") {
+    if (method == "zhu" || method == "AZG") {
       # z_beta = sqrt( n1 * (log(mu1/mu2))^2 / V ) - z_alpha
       V <- (1 / mu1 + k) + (1 / ratio) * (1 / mu2 + k)
       z_beta <- sqrt(n1_c * (log(lambda1 / lambda2))^2 / V) - z_alpha
@@ -278,7 +293,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
       V <- (1 / mu1 + k) / p1 + (1 / mu2 + k) / p2
       z_beta <- sqrt(n_total_c * (log(lambda1 / lambda2))^2 / V) - z_alpha
     } else {
-      stop("Unknown method. Choose 'zhu' or 'friede'.")
+      stop("Unknown method. Choose 'zhu', 'friede', or 'AZG'.")
     }
 
     power <- pnorm(z_beta)
@@ -308,7 +323,9 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
       alpha = alpha,
       sided = sided,
       power = power,
-      exposure = exposure,
+      exposure = exposure_calendar,
+      exposure1 = exposure1,
+      exposure2 = exposure2,
       events_n1 = events_n1,
       events_n2 = events_n2,
       total_events = total_events,
@@ -336,6 +353,7 @@ print.sample_size_nbinom_result <- function(x, ...) {
   cat("Sample Size for Negative Binomial Outcome\n")
   cat("==========================================\n\n")
   
+  cat(sprintf("Method:          %s\n", x$inputs$method))
   cat(sprintf("Sample size:     n1 = %d, n2 = %d, total = %d\n", 
               x$n1, x$n2, x$n_total))
   cat(sprintf("Expected events: %.1f (n1: %.1f, n2: %.1f)\n",
@@ -345,8 +363,17 @@ print.sample_size_nbinom_result <- function(x, ...) {
   cat(sprintf("Rates: control = %.4f, treatment = %.4f (RR = %.4f)\n",
               x$inputs$lambda1, x$inputs$lambda2, 
               x$inputs$lambda2 / x$inputs$lambda1))
-  cat(sprintf("Dispersion: %.4f, Avg exposure: %.2f\n",
-              x$inputs$dispersion, x$exposure))
+  
+  if (x$inputs$method == "AZG" && !is.null(x$inputs$event_gap) && x$inputs$event_gap > 0) {
+    cat(sprintf("Dispersion: %.4f, Avg exposure (calendar): %.2f\n",
+                x$inputs$dispersion, x$exposure))
+    cat(sprintf("Avg exposure (at-risk): n1 = %.2f, n2 = %.2f\n",
+                x$exposure1, x$exposure2))
+  } else {
+    cat(sprintf("Dispersion: %.4f, Avg exposure: %.2f\n",
+                x$inputs$dispersion, x$exposure))
+  }
+  
   cat(sprintf("Accrual: %.1f, Trial duration: %.1f\n",
               sum(x$inputs$accrual_duration), x$inputs$trial_duration))
   
@@ -381,7 +408,7 @@ summary.sample_size_nbinom_result <- function(object, ...) {
   # Build the summary text
   summary_text <- sprintf(
     paste0(
-      "Fixed sample size design for negative binomial outcome, ",
+      "Fixed sample size design for negative binomial outcome (%s method), ",
       "total sample size %d (n1=%d, n2=%d), ",
       "%.0f percent power, ",
       "%.1f percent (%d-sided) Type I error. ",
@@ -392,6 +419,7 @@ summary.sample_size_nbinom_result <- function(object, ...) {
       "Expected events %.1f. ",
       "Randomization ratio %.0f:1."
     ),
+    inputs$method,
     object$n_total,
     object$n1,
     object$n2,
@@ -427,4 +455,3 @@ print.sample_size_nbinom_summary <- function(x, ...) {
   cat("\n")
   invisible(x)
 }
-

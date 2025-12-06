@@ -52,7 +52,9 @@ as \code{accrual_rate}.}
 Default is NULL (no gap). If provided, the effective event rate is reduced.}
 
 \item{method}{Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
-"friede" for Friede and Schmidli (2010) / Mütze et al. (2018).}
+"friede" for Friede and Schmidli (2010) / Mütze et al. (2018), or
+"AZG" for the Anderson-Zhang-Gemini method which adjusts exposure for event gaps
+rather than rates.}
 }
 \value{
 An object of class \code{sample_size_nbinom_result}, which is a list containing:
@@ -61,7 +63,9 @@ An object of class \code{sample_size_nbinom_result}, which is a list containing:
 \item{n1}{Sample size for group 1}
 \item{n2}{Sample size for group 2}
 \item{n_total}{Total sample size}
-\item{exposure}{Average exposure time used in calculation}
+\item{exposure}{Average exposure time used in calculation (calendar time)}
+\item{exposure1}{Average at-risk exposure time for group 1 (if AZG method)}
+\item{exposure2}{Average at-risk exposure time for group 2 (if AZG method)}
 }
 }
 \description{

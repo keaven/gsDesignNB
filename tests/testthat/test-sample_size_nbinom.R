@@ -124,3 +124,41 @@ test_that("sample_size_nbinom calculates correctly", {
     accrual_rate = 10, accrual_duration = 2, trial_duration = 2
   ))
 })
+
+# Test AZG method
+# Compare Zhu and AZG - should give same sample size but different exposure reporting
+test_that("AZG method produces consistent results", {
+  lambda1 <- 0.5
+  lambda2 <- 0.3
+  gap <- 0.5
+  
+  # Zhu method
+  res_zhu <- sample_size_nbinom(
+    lambda1 = lambda1, lambda2 = lambda2, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = gap, method = "zhu"
+  )
+  
+  # AZG method
+  res_azg <- sample_size_nbinom(
+    lambda1 = lambda1, lambda2 = lambda2, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = gap, method = "AZG"
+  )
+  
+  # Sample sizes should be identical
+  expect_equal(res_zhu$n_total, res_azg$n_total)
+  
+  # Exposures
+  exp_cal <- res_zhu$exposure
+  expect_equal(res_azg$exposure, exp_cal)
+  
+  exp1_expected <- exp_cal / (1 + lambda1 * gap)
+  exp2_expected <- exp_cal / (1 + lambda2 * gap)
+  
+  expect_equal(res_azg$exposure1, exp1_expected)
+  expect_equal(res_azg$exposure2, exp2_expected)
+  
+  # Zhu has unadjusted exposure1/2 equal to calendar
+  expect_equal(res_zhu$exposure1, res_zhu$exposure)
+})
