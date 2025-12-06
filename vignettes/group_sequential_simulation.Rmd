@@ -78,8 +78,8 @@ Now we convert this a group sequential design with 3 analyses after
 Note that the final analysis time must be the same as for the fixed design.
 The relative enrollment rates will be increased to increase the sample size
 as with standard group sequential design theory.
-We specify `usTime = c(0.1, 0.2, 1)` which along with the `sfLinear()` spending
-function will spend 10%, 20% and 100% of the cumulative $\alpha$ at the 3
+We specify `usTime = c(0.1, 0.18, 1)` which along with the `sfLinear()` spending
+function will spend 10%, 18% and 100% of the cumulative $\alpha$ at the 3
 planned analyses regardless of the observed statistical information at each
 analysis. 
 
@@ -96,6 +96,7 @@ gs_nb <- gsNBCalendar(
   sfupar = c(.5, .5),      # Identity function
   sfl = sfHSD,             # HSD spending for lower bound
   sflpar = -8,             # Conservative futility bound
+  usTime = c(.1, .18, 1),  # Upper spending timing
   lsTime = NULL,           # Spending based on information
   analysis_times = analysis_times  # Calendar times in months
 ) |> toInteger() # Round to integer sample size
@@ -285,6 +286,7 @@ for (sim in 1:n_sims) {
           beta = 0.1,
           sfu = gsDesign::sfLinear, sfupar = c(.5, .5),
           sfl = gsDesign::sfHSD, sflpar = -8,
+          usTime = c(.1, .18, 1),
           timing = current_timing,
           n.fix = max_info
         )
