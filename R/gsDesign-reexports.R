@@ -1,66 +1,83 @@
-#' @importFrom gsDesign sfBetaDist sfCauchy sfExponential sfExtremeValue
-#' @importFrom gsDesign sfExtremeValue2 sfGapped sfHSD sfLDOF sfLDPocock
-#' @importFrom gsDesign sfLinear sfLogistic sfNormal sfPoints sfPower
-#' @importFrom gsDesign sfStep sfTDist sfTrimmed sfTruncated sfXG1 sfXG2 sfXG3
+#' @importFrom gsDesign sfBetaDist
 #' @export
-sfBetaDist <- gsDesign::sfBetaDist
+gsDesign::sfBetaDist
 
+#' @importFrom gsDesign sfCauchy
 #' @export
-sfCauchy <- gsDesign::sfCauchy
+gsDesign::sfCauchy
 
+#' @importFrom gsDesign sfExponential
 #' @export
-sfExponential <- gsDesign::sfExponential
+gsDesign::sfExponential
 
+#' @importFrom gsDesign sfExtremeValue
 #' @export
-sfExtremeValue <- gsDesign::sfExtremeValue
+gsDesign::sfExtremeValue
 
+#' @importFrom gsDesign sfExtremeValue2
 #' @export
-sfExtremeValue2 <- gsDesign::sfExtremeValue2
+gsDesign::sfExtremeValue2
 
+#' @importFrom gsDesign sfGapped
 #' @export
-sfGapped <- gsDesign::sfGapped
+gsDesign::sfGapped
 
+#' @importFrom gsDesign sfHSD
 #' @export
-sfHSD <- gsDesign::sfHSD
+gsDesign::sfHSD
 
+#' @importFrom gsDesign sfLDOF
 #' @export
-sfLDOF <- gsDesign::sfLDOF
+gsDesign::sfLDOF
 
+#' @importFrom gsDesign sfLDPocock
 #' @export
-sfLDPocock <- gsDesign::sfLDPocock
+gsDesign::sfLDPocock
 
+#' @importFrom gsDesign sfLinear
 #' @export
-sfLinear <- gsDesign::sfLinear
+gsDesign::sfLinear
 
+#' @importFrom gsDesign sfLogistic
 #' @export
-sfLogistic <- gsDesign::sfLogistic
+gsDesign::sfLogistic
 
+#' @importFrom gsDesign sfNormal
 #' @export
-sfNormal <- gsDesign::sfNormal
+gsDesign::sfNormal
 
+#' @importFrom gsDesign sfPoints
 #' @export
-sfPoints <- gsDesign::sfPoints
+gsDesign::sfPoints
 
+#' @importFrom gsDesign sfPower
 #' @export
-sfPower <- gsDesign::sfPower
+gsDesign::sfPower
 
+#' @importFrom gsDesign sfStep
 #' @export
-sfStep <- gsDesign::sfStep
+gsDesign::sfStep
 
+#' @importFrom gsDesign sfTDist
 #' @export
-sfTDist <- gsDesign::sfTDist
+gsDesign::sfTDist
 
+#' @importFrom gsDesign sfTrimmed
 #' @export
-sfTrimmed <- gsDesign::sfTrimmed
+gsDesign::sfTrimmed
 
+#' @importFrom gsDesign sfTruncated
 #' @export
-sfTruncated <- gsDesign::sfTruncated
+gsDesign::sfTruncated
 
+#' @importFrom gsDesign sfXG1
 #' @export
-sfXG1 <- gsDesign::sfXG1
+gsDesign::sfXG1
 
+#' @importFrom gsDesign sfXG2
 #' @export
-sfXG2 <- gsDesign::sfXG2
+gsDesign::sfXG2
 
+#' @importFrom gsDesign sfXG3
 #' @export
-sfXG3 <- gsDesign::sfXG3
+gsDesign::sfXG3
