@@ -106,3 +106,6 @@ Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential desig
 for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
 27(10), 2978-2993.
 }
+\seealso{
+\code{vignette("sample_size_nbinom", package = "gsDesignNB")} for a detailed explanation of the methodology and the difference between "zhu" and "AZG" methods.
+}
