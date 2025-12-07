@@ -349,6 +349,11 @@ print.sample_size_nbinom_result <- function(x, ...) {
   if (!is.null(x$inputs$event_gap) && x$inputs$event_gap > 0) {
     cat(sprintf("Avg exposure (at-risk): n1 = %.2f, n2 = %.2f\n",
                 x$exposure_at_risk_n1, x$exposure_at_risk_n2))
+    cat(sprintf("Event gap: %.2f\n", x$inputs$event_gap))
+  }
+  
+  if (!is.null(x$inputs$dropout_rate) && x$inputs$dropout_rate > 0) {
+    cat(sprintf("Dropout rate: %.4f\n", x$inputs$dropout_rate))
   }
   
   cat(sprintf("Accrual: %.1f, Trial duration: %.1f\n",

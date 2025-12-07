@@ -62,6 +62,7 @@ nb_ss <- sample_size_nbinom(
   accrual_duration = 12,   # 12 months enrollment
   trial_duration = 24,     # 24 months trial
   max_followup = 12,       # 12 months of follow-up per patient
+  dropout_rate = -log(0.95), # 5% dropout rate at 1 year
   event_gap = event_gap_val,
   method = "zhu"           # Zhu and Lakkis sample size method
 )
@@ -132,8 +133,8 @@ gs_nb |>
 
 ## Simulation Study
 
-We now simulate `r 50` trials to evaluate the operating characteristics 
-of the group sequential design.
+We now simulate `r 50` trials to evaluate the power
+of the group sequential design assuming design parameters above are correct.
 
 ### Simulation Setup
 
@@ -158,11 +159,16 @@ fail_rate <- data.frame(
   dispersion = c(0.5, 0.5)
 )
 
-# No dropout for simplicity
-dropout_rate <- NULL
+# Dropout rate (5% at 1 year)
+dropout_rate_val <- -log(0.95)
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(dropout_rate_val, dropout_rate_val),
+  duration = c(100, 100) # Long duration
+)
 
 # Maximum follow-up (trial duration from enrollment start)
-max_followup <- 24  # 24 months
+max_followup <- 12  # 12 months to match design
 ```
 
 ### Run Simulations
@@ -246,12 +252,8 @@ for (sim in 1:n_sims) {
         sim_results$z_stat[k] <- test_result$z
         sim_results$p_value[k] <- test_result$p_value
         
-        # Calculate unblinded information (approx)
-        evt_ctrl <- sim_results$events_ctrl[k]
-        evt_exp <- sim_results$events_exp[k]
-        if (evt_ctrl > 0 && evt_exp > 0) {
-           sim_results$unblinded_info[k] <- 1 / (1/evt_ctrl + 1/evt_exp)
-        }
+        # Calculate unblinded information using the variance from the GLM
+        sim_results$unblinded_info[k] <- 1 / test_result$se^2
         
         # Calculate blinded information and update bounds
         blinded_est <- calculate_blinded_info(
@@ -265,7 +267,7 @@ for (sim in 1:n_sims) {
         # Update design with observed information fraction
         max_info <- gs_nb$n.fix
         if (k == 3) {
-          frac <- 1
+          frac <- blinded_est$blinded_info / max_info
         } else {
           frac <- min(blinded_est$blinded_info / max_info, 0.999)
         }

@@ -300,6 +300,9 @@ summary.gsNB <- function(object, ...) {
   # Build the summary text
   max_followup_str <- if (!is.null(inputs$max_followup)) sprintf(", max follow-up %.1f", inputs$max_followup) else ""
   
+  event_gap_str <- if (!is.null(inputs$event_gap) && inputs$event_gap > 0) sprintf(", event gap %.2f", inputs$event_gap) else ""
+  dropout_str <- if (!is.null(inputs$dropout_rate) && inputs$dropout_rate > 0) sprintf(", dropout rate %.4f", inputs$dropout_rate) else ""
+  
   summary_text <- sprintf(
     paste0(
       "%s group sequential design for negative binomial outcomes, ",
@@ -309,7 +312,7 @@ summary.gsNB <- function(object, ...) {
       "%.1f percent (1-sided) Type I error. ",
       "Control rate %.4f, treatment rate %.4f, ",
       "risk ratio %.4f, dispersion %.4f. ",
-      "Accrual duration %.1f, trial duration %.1f%s, ",
+      "Accrual duration %.1f, trial duration %.1f%s%s%s, ",
       "%s. ",
       "Randomization ratio %.0f:1."
     ),
@@ -325,6 +328,8 @@ summary.gsNB <- function(object, ...) {
     sum(inputs$accrual_duration),
     inputs$trial_duration,
     max_followup_str,
+    event_gap_str,
+    dropout_str,
     exposure_text,
     inputs$ratio
   )
