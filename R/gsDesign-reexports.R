@@ -1,3 +1,7 @@
+#' @importFrom gsDesign gsDesign
+#' @export
+gsDesign::gsDesign
+
 #' @importFrom gsDesign sfBetaDist
 #' @export
 gsDesign::sfBetaDist

@@ -3,6 +3,7 @@
 \docType{import}
 \name{reexports}
 \alias{reexports}
+\alias{gsDesign}
 \alias{sfBetaDist}
 \alias{sfCauchy}
 \alias{sfExponential}
@@ -32,6 +33,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{gsDesign}{\code{\link[gsDesign]{gsBoundSummary}}, \code{\link[gsDesign:sfDistribution]{sfBetaDist}}, \code{\link[gsDesign:sfDistribution]{sfCauchy}}, \code{\link[gsDesign]{sfExponential}}, \code{\link[gsDesign:sfDistribution]{sfExtremeValue}}, \code{\link[gsDesign:sfDistribution]{sfExtremeValue2}}, \code{\link[gsDesign:sfSpecial]{sfGapped}}, \code{\link[gsDesign]{sfHSD}}, \code{\link[gsDesign]{sfLDOF}}, \code{\link[gsDesign:sfLDOF]{sfLDPocock}}, \code{\link[gsDesign]{sfLinear}}, \code{\link[gsDesign:sfDistribution]{sfLogistic}}, \code{\link[gsDesign:sfDistribution]{sfNormal}}, \code{\link[gsDesign]{sfPoints}}, \code{\link[gsDesign]{sfPower}}, \code{\link[gsDesign:sfLinear]{sfStep}}, \code{\link[gsDesign]{sfTDist}}, \code{\link[gsDesign:sfSpecial]{sfTrimmed}}, \code{\link[gsDesign:sfSpecial]{sfTruncated}}, \code{\link[gsDesign:sfXG]{sfXG1}}, \code{\link[gsDesign:sfXG]{sfXG2}}, \code{\link[gsDesign:sfXG]{sfXG3}}}
+  \item{gsDesign}{\code{\link[gsDesign]{gsBoundSummary}}, \code{\link[gsDesign]{gsDesign}}, \code{\link[gsDesign:sfDistribution]{sfBetaDist}}, \code{\link[gsDesign:sfDistribution]{sfCauchy}}, \code{\link[gsDesign]{sfExponential}}, \code{\link[gsDesign:sfDistribution]{sfExtremeValue}}, \code{\link[gsDesign:sfDistribution]{sfExtremeValue2}}, \code{\link[gsDesign:sfSpecial]{sfGapped}}, \code{\link[gsDesign]{sfHSD}}, \code{\link[gsDesign]{sfLDOF}}, \code{\link[gsDesign:sfLDOF]{sfLDPocock}}, \code{\link[gsDesign]{sfLinear}}, \code{\link[gsDesign:sfDistribution]{sfLogistic}}, \code{\link[gsDesign:sfDistribution]{sfNormal}}, \code{\link[gsDesign]{sfPoints}}, \code{\link[gsDesign]{sfPower}}, \code{\link[gsDesign:sfLinear]{sfStep}}, \code{\link[gsDesign]{sfTDist}}, \code{\link[gsDesign:sfSpecial]{sfTrimmed}}, \code{\link[gsDesign:sfSpecial]{sfTruncated}}, \code{\link[gsDesign:sfXG]{sfXG1}}, \code{\link[gsDesign:sfXG]{sfXG2}}, \code{\link[gsDesign:sfXG]{sfXG3}}}
 }}
 
