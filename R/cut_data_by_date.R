@@ -97,3 +97,109 @@ cut_data_by_date.nb_sim_data <- function(data, cut_date, event_gap = 5 / 365.25,
   out <- as.data.frame(agg)
   out
 }
+
+#' @export
+cut_data_by_date.nb_sim_seasonal <- function(data, cut_date, event_gap = 5 / 365.25, ...) {
+  if (is.null(cut_date) || length(cut_date) != 1L || !is.finite(cut_date)) {
+    stop("cut_date must be a single finite numeric value", call. = FALSE)
+  }
+
+  dt <- data.table::as.data.table(data)
+  
+  # Filter subjects not yet enrolled
+  dt <- dt[enroll_time < cut_date]
+  
+  if (nrow(dt) == 0) {
+    return(data.frame(
+      id = integer(0), treatment = character(0), season = character(0),
+      enroll_time = numeric(0), tte = numeric(0), events = integer(0)
+    ))
+  }
+
+  # Calculate cut time relative to randomization
+  dt[, cut_rel := cut_date - enroll_time]
+  
+  # Filter intervals that start after cut date
+  dt <- dt[start < cut_rel]
+  
+  # Truncate intervals that end after cut date
+  dt[end > cut_rel, `:=`(end = cut_rel, event = 0)]
+  
+  # Helper to subtract gaps
+  # We need to process per ID to handle cross-interval gaps
+  # Events can happen in any interval.
+  
+  agg <- dt[, {
+    # All event times for this subject
+    # Note: 'end' is the event time if event=1
+    event_times <- end[event == 1]
+    
+    # Calculate total duration per season, subtracting gaps
+    # Intervals: [start, end]
+    # Gaps: (t_evt, t_evt + gap]
+    
+    # Define gaps as a set of intervals
+    gaps <- if (length(event_times) > 0) {
+      g <- if (is.function(event_gap)) event_gap() else event_gap
+      data.table(g_start = event_times, g_end = event_times + g)
+    } else {
+      NULL
+    }
+    
+    # Function to calculate overlap of [s, e] with gaps
+    calc_exposure <- function(s, e, g_dt) {
+      dur <- e - s
+      if (dur <= 0) return(0)
+      if (is.null(g_dt) || nrow(g_dt) == 0) return(dur)
+      
+      # Union of gaps: overlaps?
+      # Gaps generally don't overlap if gap < inter-arrival, but they might.
+      # Simplified: Just integrate indicator function?
+      # Or: Gaps are small, events rare. 
+      # Robust way: Union of gap intervals.
+      # sort by start
+      gs <- g_dt[order(g_start)]
+      # Merge overlaps
+      merged_gaps <- list()
+      if (nrow(gs) > 0) {
+        curr_g_start <- gs$g_start[1]
+        curr_g_end <- gs$g_end[1]
+        for (i in seq_len(nrow(gs))[-1]) {
+           if (gs$g_start[i] < curr_g_end) {
+             curr_g_end <- max(curr_g_end, gs$g_end[i])
+           } else {
+             merged_gaps[[length(merged_gaps) + 1]] <- c(curr_g_start, curr_g_end)
+             curr_g_start <- gs$g_start[i]
+             curr_g_end <- gs$g_end[i]
+           }
+        }
+        merged_gaps[[length(merged_gaps) + 1]] <- c(curr_g_start, curr_g_end)
+      }
+      
+      gap_loss <- 0
+      for (mg in merged_gaps) {
+        overlap_start <- max(s, mg[1])
+        overlap_end <- min(e, mg[2])
+        if (overlap_end > overlap_start) {
+          gap_loss <- gap_loss + (overlap_end - overlap_start)
+        }
+      }
+      max(0, dur - gap_loss)
+    }
+    
+    # Apply to each row in .SD
+    # .SD has columns start, end, season, event
+    
+    # We can vectorize or just loop
+    # Since we are inside 'by id', N is small.
+    exposures <- mapply(calc_exposure, start, end, MoreArgs = list(g_dt = gaps))
+    
+    list(
+      events = sum(event),
+      tte = sum(exposures)
+    )
+  }, by = .(id, treatment, enroll_time, season)]
+  
+  data.table::setorder(agg, id, season)
+  as.data.frame(agg)
+}
