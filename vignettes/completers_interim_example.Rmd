@@ -101,7 +101,7 @@ for (i in 1:n_sims) {
   interim_date <- cut_date_for_completers(sim_data, target_completers)
   
   # Cut data for completers at this date
-  data_interim <- cut_completers(sim_data, date_interim)
+  data_interim <- cut_completers(sim_data, interim_date)
   
   # Analyze (Mütze Test)
   res_interim <- mutze_test(data_interim)
@@ -126,7 +126,7 @@ for (i in 1:n_sims) {
   
   # Store results
   results$sim_id[i] <- i
-  results$interim_date[i] <- date_interim
+  results$interim_date[i] <- interim_date
   results$interim_z[i] <- z_interim
   results$interim_n[i] <- nrow(data_interim)
   results$interim_info[i] <- info_interim
