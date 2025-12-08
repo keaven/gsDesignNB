@@ -16,12 +16,13 @@ Can be a numeric value (default \code{5 / 365.25}) or a function returning a num
 The time at risk is reduced by the sum of these gaps (truncated by the cut date).}
 }
 \value{
-A data frame with one row per subject who has completed follow-up by \code{cut_date}.
+A data frame with one row per subject randomized prior to \code{cut_date}.
 Contains the truncated follow-up time (\code{tte}) and total number of observed events (\code{events}).
 }
 \description{
-Subsets the data to subjects who have completed follow-up by the specified date,
-and prepares the data for analysis.
+Subsets the data to all subjects randomized by the specified date,
+and prepares the data for analysis. This is a wrapper for \code{\link[=cut_data_by_date]{cut_data_by_date()}}
+typically used with a date determined by \code{\link[=cut_date_for_completers]{cut_date_for_completers()}}.
 }
 \examples{
 enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
@@ -33,6 +34,6 @@ dropout_rate <- data.frame(
 sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
 # Find date when 5 subjects have completed
 date_5 <- cut_date_for_completers(sim, 5)
-# Get analysis dataset for these completers
+# Get analysis dataset for this cut date (includes partial follow-up)
 cut_completers(sim, date_5)
 }

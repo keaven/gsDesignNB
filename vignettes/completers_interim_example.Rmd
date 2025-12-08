@@ -30,8 +30,8 @@ We define a trial with the following parameters:
 *   **Sample Size:** 200 patients.
 *   **Enrollment:** Recruited over 12 months.
 *   **Follow-up:** 2 years maximum follow-up per patient.
-*   **Interim Analysis:** Conducted when 40% of patients (80 subjects) have completed their 2-year follow-up. The interim analysis includes **only** these completers.
-*   **Final Analysis:** Conducted when all patients have completed follow-up (or dropped out). Includes all available data (completers and partial follow-up).
+*   **Interim Analysis:** Conducted when 40% of patients (80 subjects) have completed their 2-year follow-up. The interim analysis includes all data available at that time (completers and partial follow-up).
+*   **Final Analysis:** Conducted when all patients have completed follow-up (or dropped out). Includes all available data.
 
 ```{r params}
 # Parameters
@@ -96,9 +96,9 @@ for (i in 1:n_sims) {
     n = n_total
   )
   
-  # 2. Interim Analysis (Completers Only)
+  # 2. Interim Analysis
   # Find date when target_completers is reached
-  date_interim <- cut_date_for_completers(sim_data, target_completers)
+  interim_date <- cut_date_for_completers(sim_data, target_completers)
   
   # Cut data for completers at this date
   data_interim <- cut_completers(sim_data, date_interim)

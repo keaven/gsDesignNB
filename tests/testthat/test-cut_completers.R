@@ -33,20 +33,23 @@ test_that("cut_completers and cut_date_for_completers work as expected", {
   expect_true(is.data.frame(cut_data))
   expect_true(all(c("id", "treatment", "enroll_time", "tte", "events") %in% names(cut_data)))
   
-  # Verify only completers are included
+  # Verify that subjects randomized before cut_date are included (even if not completers)
+  # In this simulation, everyone is randomized quickly (rate 10, duration 10 -> 100 subjects? No n=20)
+  # n=20, rate=10 -> duration 2.
+  # date_5 will be around 2 + something.
+  # Everyone should be randomized by then.
+  
   included_ids <- cut_data$id
-  expect_true(all(included_ids %in% completers_dt[is_completer == TRUE, id]))
+  # Check that we have at least the completers
+  expect_true(all(completers_dt[is_completer == TRUE & completion_time <= date_5, id] %in% included_ids))
   
-  # Verify all included subjects completed by cut_date
-  # (Already checked by logic, but double check)
-  completion_times_included <- completers_dt[id %in% included_ids, completion_time]
-  expect_true(all(completion_times_included <= date_5 + 1e-8))
+  # Check that we have non-completers (or those who complete later) if they were randomized
+  randomized_before_cut <- unique(sim$id[sim$enroll_time < date_5])
+  expect_true(all(randomized_before_cut %in% included_ids))
   
-  # Verify tte is max_followup (minus gaps if any, but default gap is small)
-  # Here we used default gap. 
-  # tte should be approx max_followup - gaps.
-  # Since gap logic subtracts gaps after events, and events are random, tte might vary slightly but should be close to max_followup if few events.
-  # But definitely shouldn't be small if max_followup is 2.
+  # Verify tte is correct (<= cut_date - enroll_time)
+  # For included subjects, tte should be min(max_followup, cut_date - enroll_time) - gaps
+  # Just check it's positive and reasonable
   expect_true(all(cut_data$tte > 0))
   
   # 3. Test edge case: target > n completers
