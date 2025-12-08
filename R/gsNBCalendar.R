@@ -388,16 +388,17 @@ toInteger <- function(x, ...) {
 }
 
 
-#' @describeIn toInteger Method for gsDesign objects (calls gsDesign::toInteger)
-#' @param ratio Randomization ratio. See \code{\link[gsDesign]{toInteger}}.
-#' @param roundUpFinal Logical. See \code{\link[gsDesign]{toInteger}}.
+#' @describeIn toInteger Method for \code{gsDesign} objects (calls \code{gsDesign::toInteger}).
+#' @param ratio Randomization ratio (n2/n1).
+#' @param roundUpFinal Logical flag indicating whether to round the final analysis
+#'   sample size up to meet or exceed the target size.
 #' @export
 toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
- gsDesign::toInteger(x, ratio = ratio, roundUpFinal = roundUpFinal)
+  gsDesign::toInteger(x, ratio = ratio, roundUpFinal = roundUpFinal)
 }
 
 
-#' @describeIn toInteger Method for gsNB objects
+#' @describeIn toInteger Method for \code{gsNB} objects.
 #'
 #' Rounds sample sizes in a group sequential negative binomial design to integers,
 #' respecting the randomization ratio.
@@ -498,9 +499,44 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     # Update timing based on new information fractions
     result$timing <- info_at_analyses / info_at_analyses[k]
   } else {
-    # No analysis times - use simple scaling
-    result$n.I <- result$timing * result$n.fix
+    # If no calendar times, just scale n.I by the sample size increase
+    # This assumes information is proportional to sample size (approx true)
+    scaling_factor <- n_total_new[k] / x$n_total[k]
+    result$n.I <- x$n.I * scaling_factor
+    result$n.fix <- result$n.I[k]
   }
-
-  result
+  
+  # Update gsDesign object properties
+  # We need to update the gsDesign object to reflect the new n.I
+  # This is crucial for gsBoundSummary to work correctly
+  
+  # Create a new gsDesign object with updated n.I
+  # We use the original parameters but new n.I
+  
+  # Note: gsDesign() function recalculates bounds based on n.I
+  gs_updated <- gsDesign::gsDesign(
+    k = k,
+    test.type = x$test.type,
+    alpha = x$alpha,
+    beta = x$beta,
+    astar = x$astar,
+    delta = x$delta,
+    n.I = result$n.I,
+    maxn.IPlan = result$n.I[k],
+    sfu = x$upper$sf,
+    sfupar = x$upper$param,
+    sfl = x$lower$sf,
+    sflpar = x$lower$param,
+    tol = x$tol,
+    r = x$r
+  )
+  
+  # Copy updated gsDesign slots to result
+  result$upper <- gs_updated$upper
+  result$lower <- gs_updated$lower
+  result$theta <- gs_updated$theta
+  result$falseposnb <- gs_updated$falseposnb
+  result$en <- gs_updated$en
+  
+  return(result)
 }

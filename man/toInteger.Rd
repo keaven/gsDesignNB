@@ -46,9 +46,9 @@ time based on the new sample size and expected exposures.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{toInteger(gsDesign)}: Method for gsDesign objects (calls gsDesign::toInteger)
+\item \code{toInteger(gsDesign)}: Method for \code{gsDesign} objects (calls \code{gsDesign::toInteger}).
 
-\item \code{toInteger(gsNB)}: Method for gsNB objects
+\item \code{toInteger(gsNB)}: Method for \code{gsNB} objects.
 
 Rounds sample sizes in a group sequential negative binomial design to integers,
 respecting the randomization ratio.

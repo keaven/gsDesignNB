@@ -15,8 +15,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(gsDesignNB)
 library(gsDesign)
+library(gsDesignNB)
 library(data.table)
 library(ggplot2)
 library(gt)
@@ -101,7 +101,7 @@ gs_nb <- gsNBCalendar(
   usTime = c(.1, .18, 1),  # Upper spending timing
   lsTime = NULL,           # Spending based on information
   analysis_times = analysis_times  # Calendar times in months
-) |> toInteger() # Round to integer sample size
+) |> gsDesignNB::toInteger() # Round to integer sample size
 ```
 
 Textual group sequential design summary:
