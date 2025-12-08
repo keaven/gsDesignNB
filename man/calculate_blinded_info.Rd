@@ -4,7 +4,13 @@
 \alias{calculate_blinded_info}
 \title{Calculate Blinded Statistical Information}
 \usage{
-calculate_blinded_info(data, ratio = 1, lambda1_planning, lambda2_planning)
+calculate_blinded_info(
+  data,
+  ratio = 1,
+  lambda1_planning,
+  lambda2_planning,
+  event_gap = NULL
+)
 }
 \arguments{
 \item{data}{A data frame containing the blinded interim data. Must include
@@ -15,6 +21,9 @@ columns \code{events} (number of events) and \code{tte} (total exposure/follow-u
 \item{lambda1_planning}{Planned event rate for the control group.}
 
 \item{lambda2_planning}{Planned event rate for the experimental group.}
+
+\item{event_gap}{Optional. Gap duration (numeric) to adjust planning rates if provided.
+If provided, planning rates are adjusted as lambda / (1 + lambda * gap).}
 }
 \value{
 A list containing:

@@ -9,6 +9,8 @@
 #' @param ratio Planned allocation ratio (experimental / control). Default is 1.
 #' @param lambda1_planning Planned event rate for the control group.
 #' @param lambda2_planning Planned event rate for the experimental group.
+#' @param event_gap Optional. Gap duration (numeric) to adjust planning rates if provided. 
+#'   If provided, planning rates are adjusted as lambda / (1 + lambda * gap).
 #'
 #' @return A list containing:
 #'   \describe{

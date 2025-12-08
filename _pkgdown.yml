@@ -35,6 +35,8 @@ reference:
       - calculate_blinded_info
       - mutze_test
       - cut_data_by_date
+      - cut_completers
+      - cut_date_for_completers
       - compute_info_at_time
       - get_analysis_date
 

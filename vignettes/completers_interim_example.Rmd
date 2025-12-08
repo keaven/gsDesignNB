@@ -1,0 +1,156 @@
+---
+title: "Group Sequential Simulation with Completers Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Group Sequential Simulation with Completers Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gsDesignNB)
+library(data.table)
+library(ggplot2)
+library(gt)
+```
+
+This vignette demonstrates how to simulate a group sequential design where an interim analysis is conducted based on a specific number of "completers" (subjects who have finished their follow-up).
+
+## Simulation Setup
+
+We define a trial with the following parameters:
+
+*   **Sample Size:** 200 patients.
+*   **Enrollment:** Recruited over 12 months.
+*   **Follow-up:** 2 years maximum follow-up per patient.
+*   **Interim Analysis:** Conducted when 40% of patients (80 subjects) have completed their 2-year follow-up. The interim analysis includes **only** these completers.
+*   **Final Analysis:** Conducted when all patients have completed follow-up (or dropped out). Includes all available data (completers and partial follow-up).
+
+```{r params}
+# Parameters
+n_total <- 200
+enroll_duration <- 12 # months
+max_followup <- 24 # months (using months as time unit for clarity)
+
+# Convert to years if rates are annual, but let's stick to consistent units.
+# Let's say rates are per YEAR, so we convert time to years.
+# Time unit: Year
+n_total <- 200
+enroll_duration <- 1 # 1 year
+max_followup <- 2 # 2 years
+
+enroll_rate <- data.frame(
+  rate = n_total / enroll_duration, 
+  duration = enroll_duration
+)
+
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.5, 0.35) # Events per year
+)
+
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.05, 0.05),
+  duration = c(100, 100)
+)
+```
+
+## Simulation Loop
+
+We will simulate 50 trials. For each trial, we perform the interim and final analyses.
+
+```{r simulation}
+set.seed(2024)
+n_sims <- 50
+results <- data.frame(
+  sim_id = integer(n_sims),
+  interim_date = numeric(n_sims),
+  interim_z = numeric(n_sims),
+  interim_n = integer(n_sims),
+  final_date = numeric(n_sims),
+  final_z = numeric(n_sims),
+  final_n = integer(n_sims)
+)
+
+# Target completers for interim (40%)
+target_completers <- 0.4 * n_total
+
+for (i in 1:n_sims) {
+  # 1. Simulate Trial Data
+  sim_data <- nb_sim(
+    enroll_rate = enroll_rate,
+    fail_rate = fail_rate,
+    dropout_rate = dropout_rate,
+    max_followup = max_followup,
+    n = n_total
+  )
+  
+  # 2. Interim Analysis (Completers Only)
+  # Find date when target_completers is reached
+  date_interim <- cut_date_for_completers(sim_data, target_completers)
+  
+  # Cut data for completers at this date
+  data_interim <- cut_completers(sim_data, date_interim)
+  
+  # Analyze (Mütze Test)
+  res_interim <- mutze_test(data_interim)
+  # Extract Z-statistic
+  z_interim <- res_interim$z
+  
+  # 3. Final Analysis (All Data)
+  # Date is when last patient completes (or max follow-up reached)
+  # For final analysis, we use all data collected up to the end of the study.
+  # The end of the study is when the last patient reaches max_followup.
+  date_final <- max(sim_data$calendar_time)
+  
+  # Cut data at final date (includes partial follow-up for dropouts, full for completers)
+  data_final <- cut_data_by_date(sim_data, date_final)
+  
+  res_final <- mutze_test(data_final)
+  z_final <- res_final$z
+  
+  # Store results
+  results$sim_id[i] <- i
+  results$interim_date[i] <- date_interim
+  results$interim_z[i] <- z_interim
+  results$interim_n[i] <- nrow(data_interim)
+  results$final_date[i] <- date_final
+  results$final_z[i] <- z_final
+  results$final_n[i] <- nrow(data_final)
+}
+```
+
+## Results Summary
+
+We summarize the distribution of the test statistics (Z-scores) at the interim and final analyses.
+
+```{r summary}
+summary(results[, c("interim_date", "interim_z", "final_date", "final_z")])
+```
+
+### Visualization
+
+Comparison of Z-scores at Interim vs Final Analysis.
+
+```{r plot, fig.width=6, fig.height=6}
+ggplot(results, aes(x = interim_z, y = final_z)) +
+  geom_point(alpha = 0.7) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
+  labs(
+    title = "Z-Scores: Interim vs Final Analysis",
+    x = "Interim Z-Score (Completers Only)",
+    y = "Final Z-Score (Full Data)"
+  ) +
+  theme_minimal()
+```
+
+The plot shows the correlation between the interim statistic (based on 40% completers) and the final statistic.
+
