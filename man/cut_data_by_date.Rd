@@ -2,7 +2,7 @@
 % Please edit documentation in R/cut_data_by_date.R
 \name{cut_data_by_date}
 \alias{cut_data_by_date}
-\title{Cut nb_sim data by calendar date}
+\title{Cut Simulated Trial Data at a Calendar Date}
 \usage{
 cut_data_by_date(data, cut_date, event_gap = 5/365.25, ...)
 }
@@ -22,7 +22,10 @@ A data frame with one row per subject randomized prior to \code{cut_date} contai
 the truncated follow-up time (\code{tte}) and total number of observed events (\code{events}).
 }
 \description{
-Cut nb_sim data by calendar date
+Censors follow-up at a specified calendar time and aggregates events per subject.
+Returns one row per subject randomized before the cut date, with the total
+number of observed events and the truncated follow-up time (adjusted for any
+event gaps).
 }
 \examples{
 enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)

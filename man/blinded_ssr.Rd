@@ -54,9 +54,6 @@ Default is NULL (no gap).}
 }
 \value{
 A list containing:
-\item{lambda1}{Estimated event rate for control group}
-
-A list containing:
 \describe{
 \item{n_total_unadjusted}{Original planned total sample size (based on planning parameters).}
 \item{n_total_blinded}{Re-estimated total sample size using blinded estimates.}

@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(gsDesignNB)
 library(data.table)
+library(dplyr)
 ```
 
 This vignette demonstrates how to simulate recurrent events when event rates vary by season. This is useful for conditions with seasonal patterns, such as respiratory infections.

@@ -35,15 +35,6 @@ A data frame of class \code{nb_sim_seasonal} with columns:
 \code{id}, \code{treatment}, \code{season}, \code{enroll_time}, \code{start}, \code{end}, \code{event}, \code{calendar_start}, \code{calendar_end}.
 Rows represent intervals of risk or events. \code{event=1} indicates an event at \code{end}.
 \code{event=0} indicates censoring or end of a seasonal interval at \code{end}.
-
-Simulate Recurrent Events with Seasonal Rates
-
-Simulates recurrent events where event rates depend on the season.
-
-A data frame of class \code{nb_sim_seasonal} with columns:
-\code{id}, \code{treatment}, \code{season}, \code{enroll_time}, \code{start}, \code{end}, \code{event}, \code{calendar_start}, \code{calendar_end}.
-Rows represent intervals of risk or events. \code{event=1} indicates an event at \code{end}.
-\code{event=0} indicates censoring or end of a seasonal interval at \code{end}.
 }
 \description{
 Simulates recurrent events where event rates depend on the season.

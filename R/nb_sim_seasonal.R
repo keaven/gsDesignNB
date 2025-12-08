@@ -16,24 +16,6 @@
 #'   Rows represent intervals of risk or events. `event=1` indicates an event at `end`.
 #'   `event=0` indicates censoring or end of a seasonal interval at `end`.
 #'
-#' Simulate Recurrent Events with Seasonal Rates
-#'
-#' Simulates recurrent events where event rates depend on the season.
-#'
-#' @param enroll_rate A data frame with columns `rate` and `duration`.
-#' @param fail_rate A data frame with columns `treatment`, `season`, `rate`, and optionally `dispersion`.
-#'   Seasons should be "Spring", "Summer", "Fall", "Winter".
-#' @param dropout_rate A data frame with columns `treatment`, `rate`, `duration`.
-#' @param max_followup Numeric. Max follow-up duration (years).
-#' @param randomization_start_date Date. Start of randomization.
-#' @param n Integer. Total sample size.
-#' @param block Character vector for block randomization.
-#'
-#' @return A data frame of class `nb_sim_seasonal` with columns:
-#'   `id`, `treatment`, `season`, `enroll_time`, `start`, `end`, `event`, `calendar_start`, `calendar_end`.
-#'   Rows represent intervals of risk or events. `event=1` indicates an event at `end`.
-#'   `event=0` indicates censoring or end of a seasonal interval at `end`.
-#'
 #' @import data.table
 #' @export
 nb_sim_seasonal <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, 

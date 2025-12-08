@@ -27,8 +27,6 @@
 #' Schneider, S., Schmidli, H., & Friede, T. (2013). Blinded sample size reestimation for recurrent event data with time trends.
 #' \emph{Statistics in Medicine}, 32(30), 5448-5457. \doi{10.1002/sim.5920}
 #'
-#' @return A list containing:
-#'   \item{lambda1}{Estimated event rate for control group}
 #' @param trial_duration Total planned duration of the trial.
 #' @param dropout_rate Dropout rate (hazard rate). Default is 0.
 #' @param max_followup Maximum follow-up time for any patient. Default is NULL (infinite).
