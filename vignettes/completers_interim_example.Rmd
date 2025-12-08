@@ -53,7 +53,8 @@ enroll_rate <- data.frame(
 
 fail_rate <- data.frame(
   treatment = c("Control", "Experimental"),
-  rate = c(0.5, 0.35) # Events per year
+  rate = c(0.5, 0.35), # Events per year
+  dispersion = c(0.5, 0.5) # Negative Binomial dispersion
 )
 
 dropout_rate <- data.frame(
@@ -145,7 +146,7 @@ info_asymp_interim <- compute_info_at_time(
   accrual_duration = enroll_duration,
   lambda1 = fail_rate$rate[1],
   lambda2 = fail_rate$rate[2],
-  dispersion = 0, # Assuming Poisson for simplicity or update if NB
+  dispersion = fail_rate$dispersion[1],
   ratio = 1,
   dropout_rate = dropout_rate$rate[1] # Assuming equal dropout
 )
@@ -157,7 +158,7 @@ info_asymp_final <- compute_info_at_time(
   accrual_duration = enroll_duration,
   lambda1 = fail_rate$rate[1],
   lambda2 = fail_rate$rate[2],
-  dispersion = 0,
+  dispersion = fail_rate$dispersion[1],
   ratio = 1,
   dropout_rate = dropout_rate$rate[1]
 )
