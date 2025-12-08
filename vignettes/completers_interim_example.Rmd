@@ -161,7 +161,7 @@ ggplot(results, aes(x = interim_z, y = final_z)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
   labs(
     title = paste0("Z-Scores: Interim vs Final Analysis (Cor = ", round(cor_z, 3), ")"),
-    x = "Interim Z-Score (Completers Only)",
+    x = "Interim Z-Score",
     y = "Final Z-Score (Full Data)"
   ) +
   theme_minimal()
