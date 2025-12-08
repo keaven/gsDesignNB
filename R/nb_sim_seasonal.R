@@ -140,6 +140,7 @@ nb_sim_seasonal <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_fol
     # Summer: Jun 1 to Aug 31
     # Fall: Sep 1 to Nov 30
     
+    m <- as.integer(format(dates, "%m"))
     s <- rep("Winter", length(dates))
     s[m %in% 3:5] <- "Spring"
     s[m %in% 6:8] <- "Summer"
