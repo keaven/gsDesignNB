@@ -48,8 +48,9 @@
 #'   }
 #'
 #' @references
-#' Jennison, C. and Turnbull, B.W. (2000), \emph{Group Sequential Methods with
-#' Applications to Clinical Trials}. Boca Raton: Chapman and Hall.
+#' Jennison, C. and Turnbull, B.W. (2000),
+#' _Group Sequential Methods with Applications to Clinical Trials_.
+#' Boca Raton: Chapman and Hall.
 #'
 #' @export
 #'

@@ -11,11 +11,11 @@
 #'
 #' @references
 #' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-#' \emph{Statistics in Medicine}, 29(10), 1145-1156. \doi{10.1002/sim.3891}
+#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3891}
 #'
 #' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs
-#' for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
-#' 27(10), 2978-2993. \doi{10.1177/0962280218773115}
+#' for negative binomial outcomes. _Statistical Methods in Medical Research_,
+#' 27(10), 2978--2993. \doi{10.1177/0962280218773115}
 #'
 #' @param enroll_rate A data frame with columns `rate` and `duration` defining
 #'   the piecewise constant enrollment rates.

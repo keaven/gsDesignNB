@@ -73,8 +73,8 @@ Schmidli 2010) and accommodates future extensions for time-varying rates
 }
 \references{
 Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-\emph{Statistics in Medicine}, 29(10), 1145-1156. \doi{10.1002/sim.3891}
+\emph{Statistics in Medicine}, 29(10), 1145--1156. \doi{10.1002/sim.3891}
 
 Schneider, S., Schmidli, H., & Friede, T. (2013). Blinded sample size reestimation for recurrent event data with time trends.
-\emph{Statistics in Medicine}, 32(30), 5448-5457. \doi{10.1002/sim.5920}
+\emph{Statistics in Medicine}, 32(30), 5448--5457. \doi{10.1002/sim.5920}
 }
