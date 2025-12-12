@@ -64,7 +64,7 @@ event_gap <- 30 / 365.25
 
 # Accrual targeting N ~ 200
 # (Pre-calculated rates)
-accrual_rate <- c(11, 22) 
+accrual_rate <- c(11, 22)
 accrual_duration <- c(6, 6)
 
 design <- sample_size_nbinom(
@@ -194,7 +194,7 @@ knitr::kable(comparison_pwr, digits = 4, caption = "Comparison of Power")
 A 95% confidence interval for the empirical power can be calculated to check if the theoretical power falls within the simulation error bounds.
 
 ```{r power_ci, eval=!is.null(results)}
-binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm=TRUE), nrow(results))$conf.int
+binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), nrow(results))$conf.int
 ```
 
 ## Conclusion

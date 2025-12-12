@@ -98,8 +98,10 @@ nb_ss <- sample_size_nbinom(
 )
 
 # Then create a group sequential design with analysis times
-gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4,
-                         analysis_times = c(10, 18, 24))
+gs_design <- gsNBCalendar(nb_ss,
+  k = 3, test.type = 4,
+  analysis_times = c(10, 18, 24)
+)
 
 }
 \references{

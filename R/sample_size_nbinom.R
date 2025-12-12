@@ -141,7 +141,9 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
 
   # Helper function for average squared exposure over [u_min, u_max] given dropout_rate
   avg_exp_sq_func <- function(u_min, u_max, dropout_rate) {
-    if (u_min >= u_max) return(0)
+    if (u_min >= u_max) {
+      return(0)
+    }
     if (dropout_rate == 0) {
       return((u_max^3 - u_min^3) / (3 * (u_max - u_min)))
     } else {
@@ -219,18 +221,18 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
         # Truncation happens if u > max_followup.
         # So u in [max_followup, u_max] are truncated to max_followup.
         # u in [u_min, max_followup] are not truncated.
-        
+
         # Split point in u is max_followup.
         # Range 1 (Truncated): [max_followup, u_max] -> Follow-up is min(max_followup, dropout)
         # Range 2 (Not Truncated): [u_min, max_followup] -> Follow-up is min(u, dropout)
-        
+
         len_truncated <- u_max - max_followup
         len_not_truncated <- max_followup - u_min
-        
+
         # Check weights
         # Total length = u_max - u_min = d.
         # len_truncated + len_not_truncated = u_max - u_min = d. Correct.
-        
+
         # Avg for truncated part
         if (dropout_rate == 0) {
           avg_1 <- max_followup
@@ -239,11 +241,11 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
           avg_1 <- (1 - exp(-dropout_rate * max_followup)) / dropout_rate
           avg_sq_1 <- m2_func(max_followup, dropout_rate)
         }
-        
+
         # Avg for not truncated part
         avg_2 <- avg_exp_func(u_min, max_followup, dropout_rate)
         avg_sq_2 <- avg_exp_sq_func(u_min, max_followup, dropout_rate)
-        
+
         avg_followup <- (len_truncated * avg_1 + len_not_truncated * avg_2) / d
         avg_followup_sq <- (len_truncated * avg_sq_1 + len_not_truncated * avg_sq_2) / d
       }
@@ -261,7 +263,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
 
   exposure_calendar <- total_exposure_mass / total_n_accrual
   exposure_sq_avg <- total_exposure_sq_mass / total_n_accrual
-  
+
   # Calculate inflation factor Q for variance due to variable follow-up
   # Q = E[t^2] / (E[t])^2
   # If exposure is constant, Q = 1.
@@ -276,21 +278,21 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
     # Adjusted rates for calculation
     lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
     lambda2_eff <- lambda2 / (1 + lambda2 * event_gap)
-    
+
     # Adjusted exposures for reporting (at-risk)
     exposure1_at_risk <- exposure_calendar / (1 + lambda1 * event_gap)
     exposure2_at_risk <- exposure_calendar / (1 + lambda2 * event_gap)
   } else {
     lambda1_eff <- lambda1
     lambda2_eff <- lambda2
-    
+
     exposure1_at_risk <- exposure_calendar
     exposure2_at_risk <- exposure_calendar
   }
 
   mu1 <- lambda1_eff * exposure_calendar
   mu2 <- lambda2_eff * exposure_calendar
-  
+
   # Apply inflation factor to dispersion
   k <- dispersion * Q_inflation
 
@@ -401,38 +403,52 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
 print.sample_size_nbinom_result <- function(x, ...) {
   cat("Sample size for negative binomial outcome\n")
   cat("==========================================\n\n")
-  
+
   cat(sprintf("Method:          %s\n", x$inputs$method))
-  cat(sprintf("Sample size:     n1 = %d, n2 = %d, total = %d\n", 
-              x$n1, x$n2, x$n_total))
-  cat(sprintf("Expected events: %.1f (n1: %.1f, n2: %.1f)\n",
-              x$total_events, x$events_n1, x$events_n2))
-  cat(sprintf("Power: %.0f%%, Alpha: %.3f (%d-sided)\n",
-              x$power * 100, x$alpha, x$sided))
-  cat(sprintf("Rates: control = %.4f, treatment = %.4f (RR = %.4f)\n",
-              x$inputs$lambda1, x$inputs$lambda2, 
-              x$inputs$lambda2 / x$inputs$lambda1))
-  
-  cat(sprintf("Dispersion: %.4f, Avg exposure (calendar): %.2f\n",
-              x$inputs$dispersion, x$exposure))
-  
+  cat(sprintf(
+    "Sample size:     n1 = %d, n2 = %d, total = %d\n",
+    x$n1, x$n2, x$n_total
+  ))
+  cat(sprintf(
+    "Expected events: %.1f (n1: %.1f, n2: %.1f)\n",
+    x$total_events, x$events_n1, x$events_n2
+  ))
+  cat(sprintf(
+    "Power: %.0f%%, Alpha: %.3f (%d-sided)\n",
+    x$power * 100, x$alpha, x$sided
+  ))
+  cat(sprintf(
+    "Rates: control = %.4f, treatment = %.4f (RR = %.4f)\n",
+    x$inputs$lambda1, x$inputs$lambda2,
+    x$inputs$lambda2 / x$inputs$lambda1
+  ))
+
+  cat(sprintf(
+    "Dispersion: %.4f, Avg exposure (calendar): %.2f\n",
+    x$inputs$dispersion, x$exposure
+  ))
+
   if (!is.null(x$inputs$event_gap) && x$inputs$event_gap > 0) {
-    cat(sprintf("Avg exposure (at-risk): n1 = %.2f, n2 = %.2f\n",
-                x$exposure_at_risk_n1, x$exposure_at_risk_n2))
+    cat(sprintf(
+      "Avg exposure (at-risk): n1 = %.2f, n2 = %.2f\n",
+      x$exposure_at_risk_n1, x$exposure_at_risk_n2
+    ))
     cat(sprintf("Event gap: %.2f\n", x$inputs$event_gap))
   }
-  
+
   if (!is.null(x$inputs$dropout_rate) && x$inputs$dropout_rate > 0) {
     cat(sprintf("Dropout rate: %.4f\n", x$inputs$dropout_rate))
   }
-  
-  cat(sprintf("Accrual: %.1f, Trial duration: %.1f\n",
-              sum(x$inputs$accrual_duration), x$inputs$trial_duration))
-  
+
+  cat(sprintf(
+    "Accrual: %.1f, Trial duration: %.1f\n",
+    sum(x$inputs$accrual_duration), x$inputs$trial_duration
+  ))
+
   if (!is.null(x$inputs$max_followup)) {
     cat(sprintf("Max follow-up: %.1f\n", x$inputs$max_followup))
   }
-  
+
   invisible(x)
 }
 
@@ -460,7 +476,7 @@ print.sample_size_nbinom_result <- function(x, ...) {
 summary.sample_size_nbinom_result <- function(object, ...) {
   inputs <- object$inputs
   risk_ratio <- inputs$lambda2 / inputs$lambda1
-  
+
   # Build the summary text
   summary_text <- sprintf(
     paste0(
@@ -492,7 +508,7 @@ summary.sample_size_nbinom_result <- function(object, ...) {
     object$total_events,
     inputs$ratio
   )
-  
+
   class(summary_text) <- "sample_size_nbinom_summary"
   summary_text
 }

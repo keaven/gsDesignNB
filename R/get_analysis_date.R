@@ -24,10 +24,10 @@
 #' @export
 get_analysis_date <- function(data, planned_events, event_gap = 5 / 365.25) {
   dt <- data.table::as.data.table(data)
-  
+
   # Filter for actual events (event == 1)
   events_dt <- dt[event == 1]
-  
+
   # If no events at all
   if (nrow(events_dt) == 0) {
     message(sprintf("Only 0 events in trial"))
@@ -36,25 +36,27 @@ get_analysis_date <- function(data, planned_events, event_gap = 5 / 365.25) {
 
   # Identify valid events respecting the gap
   get_valid_indices <- function(tte_vec, gap_rule) {
-    if (length(tte_vec) == 0) return(integer(0))
-    
+    if (length(tte_vec) == 0) {
+      return(integer(0))
+    }
+
     # Sort by tte (time relative to randomization)
     ord <- order(tte_vec)
     sorted_tte <- tte_vec[ord]
-    
+
     keep_logical <- logical(length(sorted_tte))
     last_valid_end <- -Inf
-    
+
     for (i in seq_along(sorted_tte)) {
       t <- sorted_tte[i]
       if (t < last_valid_end) next # Skip if in gap
-      
+
       keep_logical[i] <- TRUE
-      
+
       g <- if (is.function(gap_rule)) gap_rule() else gap_rule
       last_valid_end <- t + g
     }
-    
+
     ord[keep_logical]
   }
 

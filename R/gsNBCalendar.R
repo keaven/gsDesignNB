@@ -62,8 +62,10 @@
 #' )
 #'
 #' # Then create a group sequential design with analysis times
-#' gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4,
-#'                          analysis_times = c(10, 18, 24))
+#' gs_design <- gsNBCalendar(nb_ss,
+#'   k = 3, test.type = 4,
+#'   analysis_times = c(10, 18, 24)
+#' )
 #'
 #' @importFrom gsDesign gsDesign sfHSD
 gsNBCalendar <- function(x,
@@ -149,7 +151,7 @@ gsNBCalendar <- function(x,
   result$n_total <- n_cumulative
   result$ratio <- ratio
 
- # Add calendar times if provided (for gsBoundSummary display)
+  # Add calendar times if provided (for gsBoundSummary display)
   if (!is.null(analysis_times)) {
     if (length(analysis_times) != k) {
       stop("analysis_times must have length k (", k, ")")
@@ -184,8 +186,8 @@ gsNBCalendar <- function(x,
 #'
 #' @export
 compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
-                                  lambda1, lambda2, dispersion, ratio = 1,
-                                  dropout_rate = 0, event_gap = 0) {
+                                 lambda1, lambda2, dispersion, ratio = 1,
+                                 dropout_rate = 0, event_gap = 0) {
   # Number of subjects enrolled by analysis_time
   enrollment_time <- min(analysis_time, accrual_duration)
   n_total <- accrual_rate * enrollment_time
@@ -194,26 +196,26 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
 
   # Average exposure calculation must account for dropout
   # We integrate dropout probability over the enrollment period and follow-up
-  
+
   # Helper for expected exposure for a subject enrolled at time t
   # Exposure is min(analysis_time - t, dropout_time)
   # If analysis_time - t > 0
-  
+
   # Simplified average exposure calculation with dropout
   # 1. Without dropout:
   #    If analysis_time <= accrual_duration: avg = analysis_time / 2
   #    If analysis_time > accrual_duration: avg = analysis_time - accrual_duration/2
-  
+
   # 2. With dropout, we need to integrate:
   #    E[min(T-t, E)] where E ~ Exp(dropout_rate)
   #    This is (1 - exp(-lambda * (T-t))) / lambda
-  
+
   # We need the average of this over t in [0, enrollment_time]
   # Let tau = T - t. As t goes 0 -> enrollment_time, tau goes T -> T-enrollment_time
   # Range of follow-up times: [min_f, max_f]
   max_f <- analysis_time
   min_f <- analysis_time - enrollment_time
-  
+
   if (dropout_rate <= 0) {
     avg_exposure <- (max_f + min_f) / 2
   } else {
@@ -223,12 +225,12 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
     # = (integral_{min_f}^{max_f} exp(-rate * x) dx) / (max_f - min_f)
     # = ([-1/rate * exp(-rate * x)]) / (max_f - min_f)
     # = (exp(-rate * min_f) - exp(-rate * max_f)) / (rate * (max_f - min_f))
-    
-    term2 <- (exp(-dropout_rate * min_f) - exp(-dropout_rate * max_f)) / 
-             (dropout_rate * (max_f - min_f))
+
+    term2 <- (exp(-dropout_rate * min_f) - exp(-dropout_rate * max_f)) /
+      (dropout_rate * (max_f - min_f))
     avg_exposure <- (1 - term2) / dropout_rate
   }
-  
+
   # Adjust rates for event gap
   if (!is.null(event_gap) && event_gap > 0) {
     lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
@@ -289,8 +291,7 @@ summary.gsNB <- function(object, ...) {
   risk_ratio <- inputs$lambda2 / inputs$lambda1
 
   # Determine test type description
-  test_type_desc <- switch(
-    as.character(object$test.type),
+  test_type_desc <- switch(as.character(object$test.type),
     "1" = "One-sided",
     "2" = "Two-sided symmetric",
     "3" = "Asymmetric two-sided with binding futility bound",
@@ -303,16 +304,18 @@ summary.gsNB <- function(object, ...) {
   # Format exposure text
   exposure_text <- sprintf("average exposure %.2f", nb$exposure)
   if (!is.null(inputs$event_gap) && inputs$event_gap > 0 && !is.null(nb$exposure_at_risk_n1)) {
-    exposure_text <- sprintf("average exposure (calendar) %.2f, (at-risk n1=%.2f, n2=%.2f)", 
-                             nb$exposure, nb$exposure_at_risk_n1, nb$exposure_at_risk_n2)
+    exposure_text <- sprintf(
+      "average exposure (calendar) %.2f, (at-risk n1=%.2f, n2=%.2f)",
+      nb$exposure, nb$exposure_at_risk_n1, nb$exposure_at_risk_n2
+    )
   }
 
   # Build the summary text
   max_followup_str <- if (!is.null(inputs$max_followup)) sprintf(", max follow-up %.1f", inputs$max_followup) else ""
-  
+
   event_gap_str <- if (!is.null(inputs$event_gap) && inputs$event_gap > 0) sprintf(", event gap %.2f", inputs$event_gap) else ""
   dropout_str <- if (!is.null(inputs$dropout_rate) && inputs$dropout_rate > 0) sprintf(", dropout rate %.4f", inputs$dropout_rate) else ""
-  
+
   summary_text <- sprintf(
     paste0(
       "%s group sequential design for negative binomial outcomes, ",
@@ -506,14 +509,14 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     result$n.I <- x$n.I * scaling_factor
     result$n.fix <- result$n.I[k]
   }
-  
+
   # Update gsDesign object properties
   # We need to update the gsDesign object to reflect the new n.I
   # This is crucial for gsBoundSummary to work correctly
-  
+
   # Create a new gsDesign object with updated n.I
   # We use the original parameters but new n.I
-  
+
   # Note: gsDesign() function recalculates bounds based on n.I
   gs_updated <- gsDesign::gsDesign(
     k = k,
@@ -531,13 +534,13 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     tol = x$tol,
     r = x$r
   )
-  
+
   # Copy updated gsDesign slots to result
   result$upper <- gs_updated$upper
   result$lower <- gs_updated$lower
   result$theta <- gs_updated$theta
   result$falseposnb <- gs_updated$falseposnb
   result$en <- gs_updated$en
-  
+
   return(result)
 }

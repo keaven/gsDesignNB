@@ -56,7 +56,7 @@
 #' @importFrom stats rexp rgamma
 #' @importFrom utils tail
 #' @importFrom simtrial rpwexp_enroll
-nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL, 
+nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL,
                    block = c(rep("Control", 2), rep("Experimental", 2)), event_gap = 0) {
   # 1. Generate Enrollment
   # Simplified implementation of piecewise constant enrollment
@@ -152,13 +152,13 @@ nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = N
     # This is achieved if subject-specific rate L ~ Gamma with
     # mean = lambda and var = k * lambda^2.
     # Gamma parameters: shape = 1/k, scale = k * lambda
-    
+
     # Identify rows with positive dispersion
     has_disp <- !is.na(dt_subjects$dispersion) & dt_subjects$dispersion > 0
     if (any(has_disp)) {
       dt_subjects[has_disp, lambda := rgamma(
-        sum(has_disp), 
-        shape = 1 / dispersion, 
+        sum(has_disp),
+        shape = 1 / dispersion,
         scale = lambda * dispersion
       )]
     }
@@ -217,15 +217,15 @@ nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = N
         # Wait, usually gap is "dead time" after event.
         # So T_1 ~ Exp(lambda). Event at T_1.
         # T_2 ~ Exp(lambda). Event at T_1 + gap + T_2.
-        
+
         inter_arrival <- rexp(1, lambda)
-        
+
         if (length(event_times) == 0) {
           cum_t <- cum_t + inter_arrival
         } else {
           cum_t <- cum_t + event_gap + inter_arrival
         }
-        
+
         if (cum_t <= end_time) {
           event_times <- c(event_times, cum_t)
         } else {

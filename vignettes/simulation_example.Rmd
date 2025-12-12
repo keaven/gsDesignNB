@@ -229,7 +229,7 @@ We define a scenario with a known dispersion of 0.5.
 # Define failure rates with dispersion
 fail_rate_nb <- data.frame(
   treatment = "Control",
-  rate = 10,       # Mean event rate
+  rate = 10, # Mean event rate
   dispersion = 0.5 # Variance = mean + 0.5 * mean^2
 )
 
@@ -267,10 +267,13 @@ k_mom <- (v - m) / (m^2)
 # We use MASS::glm.nb to fit the negative binomial model
 # We suppress warnings because fitting intercept-only models on simulated data
 # can occasionally produce convergence warnings despite valid estimates.
-k_glm <- tryCatch({
-  fit <- suppressWarnings(MASS::glm.nb(events ~ 1, data = counts_nb))
-  1 / fit$theta
-}, error = function(e) NA)
+k_glm <- tryCatch(
+  {
+    fit <- suppressWarnings(MASS::glm.nb(events ~ 1, data = counts_nb))
+    1 / fit$theta
+  },
+  error = function(e) NA
+)
 
 print(paste("True Dispersion:", 0.5))
 print(paste("Estimated Dispersion (MoM):", signif(k_mom, 4)))

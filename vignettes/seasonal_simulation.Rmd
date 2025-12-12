@@ -40,9 +40,9 @@ rand_start <- as.Date("2024-01-01")
 
 # Enrollment: 20 subjects over 6 months
 enroll_rate <- data.frame(
-  rate = 20 / 6, 
+  rate = 20 / 6,
   duration = 6
-) # time unit: months? 
+) # time unit: months?
 # Note: In nb_sim_seasonal, we assumed rate units match max_followup units.
 # Let's use YEARS as the time unit for consistency with the package conventions often used.
 # If max_followup = 1 (year), then rates are per year.
@@ -146,7 +146,7 @@ We can estimate the seasonal effects and the treatment effect using a Negative B
 # Fit Negative Binomial GLM
 # We include season and treatment in the model
 fit <- MASS::glm.nb(
-  events ~ treatment + season + offset(log(tte)), 
+  events ~ treatment + season + offset(log(tte)),
   data = analysis_data[analysis_data$tte > 0, ]
 )
 

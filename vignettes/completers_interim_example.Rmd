@@ -48,7 +48,7 @@ enroll_duration <- 1 # 1 year
 max_followup <- 1 # 1 year
 
 enroll_rate <- data.frame(
-  rate = n_total / enroll_duration, 
+  rate = n_total / enroll_duration,
   duration = enroll_duration
 )
 
@@ -97,35 +97,35 @@ for (i in 1:n_sims) {
     max_followup = max_followup,
     n = n_total
   )
-  
+
   # 2. Interim Analysis
   # Find date when target_completers is reached
   interim_date <- cut_date_for_completers(sim_data, target_completers)
-  
+
   # Cut data for completers at this date
   data_interim <- cut_completers(sim_data, interim_date)
-  
+
   # Analyze (Mütze Test)
   res_interim <- mutze_test(data_interim)
   # Extract Z-statistic
   z_interim <- res_interim$z
   # Extract Information
   info_interim <- 1 / res_interim$se^2
-  
+
   # 3. Final Analysis (All Data)
   # Date is when last patient completes (or max follow-up reached)
   # For final analysis, we use all data collected up to the end of the study.
   # The end of the study is when the last patient reaches max_followup.
   date_final <- max(sim_data$calendar_time)
-  
+
   # Cut data at final date (includes partial follow-up for dropouts, full for completers)
   data_final <- cut_data_by_date(sim_data, date_final)
-  
+
   res_final <- mutze_test(data_final)
   z_final <- res_final$z
   # Extract Information
   info_final <- 1 / res_final$se^2
-  
+
   # Store results
   results$sim_id[i] <- i
   results$interim_date[i] <- interim_date
@@ -183,7 +183,6 @@ summary(results[, c("interim_date", "interim_z", "interim_info", "final_date", "
 Comparison of Z-scores at Interim vs Final Analysis.
 
 ```{r plot, fig.width=6, fig.height=6}
-
 # Correlation between interim and final Z-scores
 cor_z <- cor(results$interim_z, results$final_z)
 cat("Correlation between interim and final Z-scores:", round(cor_z, 3), "\n")
@@ -223,17 +222,17 @@ for (i in 1:n_sims) {
   # Using gsDesign to get the boundary
   # We want to spend alpha(t) = alpha * sf(t)
   # But standard group sequential design defines boundaries.
-  
+
   # Let's use a simple error spending approach:
   # Spend alpha_1 at interim based on info_frac[i]
   # Spend remaining alpha at final (total alpha = 0.025)
-  
+
   # Interim spending
   spend_interim <- sfu(alpha, t = results$info_frac[i])$spend
   # Interim bound (Z-scale)
   # P(Z > b1) = spend_interim
   b1 <- qnorm(1 - spend_interim)
-  
+
   # Check interim rejection
   if (results$interim_z[i] > b1) {
     reject[i] <- TRUE
@@ -243,12 +242,12 @@ for (i in 1:n_sims) {
     # This requires integration over the joint distribution.
     # For simplicity in this vignette, we can use the asymptotic correlation
     # Cor(Z1, Z2) = sqrt(info_frac)
-    
+
     # Using gsDesign to compute the exact boundary given the fraction
     # We create a design with this fraction
     gs_des <- gsDesign(k = 2, test.type = 1, alpha = alpha, sfu = sfu, timing = results$info_frac[i])
     b2 <- gs_des$upper$bound[2]
-    
+
     if (results$final_z[i] > b2) {
       reject[i] <- TRUE
     }

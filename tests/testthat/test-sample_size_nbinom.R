@@ -3,7 +3,7 @@
 test_that("sample_size_nbinom calculates correctly", {
   # Basic calculation - now requires accrual params
   # To get exposure=1, e.g. trial=2, accrual=2 (uniform 0-2). Avg fup = 2 - 1 = 1.
-  
+
   res <- sample_size_nbinom(
     lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
     accrual_rate = 10, accrual_duration = 2, trial_duration = 2
@@ -131,24 +131,24 @@ test_that("Event gap results in correct exposure reporting", {
   lambda1 <- 0.5
   lambda2 <- 0.3
   gap <- 0.5
-  
+
   res <- sample_size_nbinom(
     lambda1 = lambda1, lambda2 = lambda2, dispersion = 0.1, power = 0.8,
     accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
     event_gap = gap, method = "zhu"
   )
-  
+
   # Calendar exposure
   exp_cal <- res$exposure
   expect_true(exp_cal > 0)
-  
+
   # Expected at-risk exposures
   exp1_expected <- exp_cal / (1 + lambda1 * gap)
   exp2_expected <- exp_cal / (1 + lambda2 * gap)
-  
+
   expect_equal(res$exposure_at_risk_n1, exp1_expected)
   expect_equal(res$exposure_at_risk_n2, exp2_expected)
-  
+
   # Check method name remains "zhu"
   expect_equal(res$inputs$method, "zhu")
 })
