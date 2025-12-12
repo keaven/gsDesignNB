@@ -5,15 +5,15 @@
 #'
 #' @param lambda1 Rate in group 1 (control).
 #' @param lambda2 Rate in group 2 (treatment).
-#' @param dispersion Dispersion parameter \code{k} such that \eqn{Var(Y) = \mu + k \mu^2}.
-#'   Note that this is equivalent to \code{1/size} in R's \code{rnbinom} parameterization.
+#' @param dispersion Dispersion parameter `k` such that \eqn{Var(Y) = \mu + k \mu^2}.
+#'   Note that this is equivalent to `1/size` in R's [stats::rnbinom()] parameterization.
 #' @param power Power of the test (1 - beta). Default is 0.9.
 #' @param alpha Significance level. Default is 0.025.
 #' @param sided One-sided or two-sided test. 1 for one-sided, 2 for two-sided. Default is 1.
 #' @param ratio Allocation ratio n2/n1. Default is 1.
 #' @param accrual_rate Vector of accrual rates (patients per unit time).
 #' @param accrual_duration Vector of durations for each accrual rate. Must be same length
-#'   as \code{accrual_rate}.
+#'   as `accrual_rate`.
 #' @param trial_duration Total planned duration of the trial.
 #' @param dropout_rate Dropout rate (hazard rate). Default is 0.
 #' @param max_followup Maximum follow-up time for any patient. Default is NULL (infinite).
@@ -22,7 +22,7 @@
 #' @param method Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
 #'   or "friede" for Friede and Schmidli (2010) / Mütze et al. (2018).
 #'
-#' @return An object of class \code{sample_size_nbinom_result}, which is a list containing:
+#' @return An object of class `sample_size_nbinom_result`, which is a list containing:
 #' \describe{
 #'   \item{inputs}{Named list of the original function arguments.}
 #'   \item{n1}{Sample size for group 1}
@@ -47,7 +47,8 @@
 #' 27(10), 2978-2993. \doi{10.1177/0962280218773115}
 #'
 #' @seealso
-#' \code{vignette("sample_size_nbinom", package = "gsDesignNB")} for a detailed explanation of the methodology.
+#' `vignette("sample_size_nbinom", package = "gsDesignNB")`
+#' for a detailed explanation of the methodology.
 #'
 #' @export
 #'
@@ -391,7 +392,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
 #'
 #' Prints a concise summary of the sample size calculation results.
 #'
-#' @param x An object of class \code{sample_size_nbinom_result}.
+#' @param x An object of class `sample_size_nbinom_result`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return Invisibly returns the input object.
@@ -441,7 +442,7 @@ print.sample_size_nbinom_result <- function(x, ...) {
 #' Provides a textual summary of the sample size calculation for negative binomial
 #' outcomes, similar to the summary for gsNB objects.
 #'
-#' @param object An object of class \code{sample_size_nbinom_result}.
+#' @param object An object of class `sample_size_nbinom_result`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return A character string summarizing the design (invisibly). The summary
@@ -499,7 +500,7 @@ summary.sample_size_nbinom_result <- function(object, ...) {
 
 #' Print Method for sample_size_nbinom_summary Objects
 #'
-#' @param x An object of class \code{sample_size_nbinom_summary}.
+#' @param x An object of class `sample_size_nbinom_summary`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return Invisibly returns the input object.

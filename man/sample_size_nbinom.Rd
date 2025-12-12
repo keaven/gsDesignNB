@@ -27,7 +27,7 @@ sample_size_nbinom(
 \item{lambda2}{Rate in group 2 (treatment).}
 
 \item{dispersion}{Dispersion parameter \code{k} such that \eqn{Var(Y) = \mu + k \mu^2}.
-Note that this is equivalent to \code{1/size} in R's \code{rnbinom} parameterization.}
+Note that this is equivalent to \code{1/size} in R's \code{\link[stats:NegBinomial]{stats::rnbinom()}} parameterization.}
 
 \item{power}{Power of the test (1 - beta). Default is 0.9.}
 
@@ -105,5 +105,6 @@ for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
 27(10), 2978-2993. \doi{10.1177/0962280218773115}
 }
 \seealso{
-\code{vignette("sample_size_nbinom", package = "gsDesignNB")} for a detailed explanation of the methodology.
+\code{vignette("sample_size_nbinom", package = "gsDesignNB")}
+for a detailed explanation of the methodology.
 }

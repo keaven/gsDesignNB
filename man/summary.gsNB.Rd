@@ -17,8 +17,8 @@ is also printed to the console.
 }
 \description{
 Provides a textual summary of a group sequential design for negative binomial
-outcomes, similar to the summary provided by \code{\link[gsDesign]{gsDesign}}.
-For tabular output, use \code{\link[gsDesign]{gsBoundSummary}} directly on
+outcomes, similar to the summary provided by \code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}}.
+For tabular output, use \code{\link[gsDesign:gsBoundSummary]{gsDesign::gsBoundSummary()}} directly on
 the gsNB object.
 }
 \examples{

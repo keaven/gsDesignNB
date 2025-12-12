@@ -26,11 +26,11 @@ gsNBCalendar(
 }
 \arguments{
 \item{x}{An object of class \code{sample_size_nbinom_result} from
-\code{\link{sample_size_nbinom}}.}
+\code{\link[=sample_size_nbinom]{sample_size_nbinom()}}.}
 
 \item{k}{Number of analyses (interim + final). Default is 3.}
 
-\item{test.type}{Test type as in \code{\link[gsDesign]{gsDesign}}:
+\item{test.type}{Test type as in \code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}}:
 \describe{
 \item{1}{One-sided}
 \item{2}{Two-sided symmetric}
@@ -73,12 +73,12 @@ Default is 18.}
 
 \item{analysis_times}{Optional vector of calendar times for each analysis.
 If provided, must have length k. These times are stored in the \code{T}
-element and displayed by \code{\link[gsDesign]{gsBoundSummary}}.}
+element and displayed by \code{\link[gsDesign:gsBoundSummary]{gsDesign::gsBoundSummary()}}.}
 }
 \value{
 An object of class \code{gsNB} which inherits from \code{gsDesign}
 and \code{sample_size_nbinom_result}. Contains all elements from
-\code{gsDesign::gsDesign()} plus:
+\code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}} plus:
 \describe{
 \item{nb_design}{The original \code{sample_size_nbinom_result} object}
 \item{n1}{Sample size per analysis for group 1}
@@ -88,7 +88,7 @@ and \code{sample_size_nbinom_result}. Contains all elements from
 }
 \description{
 Creates a group sequential design for negative binomial outcomes based on
-sample size calculations from \code{\link{sample_size_nbinom}}.
+sample size calculations from \code{\link[=sample_size_nbinom]{sample_size_nbinom()}}.
 }
 \examples{
 # First create a sample size calculation

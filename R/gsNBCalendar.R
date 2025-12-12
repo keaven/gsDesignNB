@@ -1,12 +1,12 @@
 #' Group sequential design for negative binomial outcomes
 #'
 #' Creates a group sequential design for negative binomial outcomes based on
-#' sample size calculations from \code{\link{sample_size_nbinom}}.
+#' sample size calculations from [sample_size_nbinom()].
 #'
-#' @param x An object of class \code{sample_size_nbinom_result} from
-#'   \code{\link{sample_size_nbinom}}.
+#' @param x An object of class `sample_size_nbinom_result` from
+#'   [sample_size_nbinom()].
 #' @param k Number of analyses (interim + final). Default is 3.
-#' @param test.type Test type as in \code{\link[gsDesign]{gsDesign}}:
+#' @param test.type Test type as in [gsDesign::gsDesign()]:
 #'   \describe{
 #'     \item{1}{One-sided}
 #'     \item{2}{Two-sided symmetric}
@@ -24,9 +24,9 @@
 #' @param timing Timing of interim analyses. May be a vector of length k-1
 #'   with values between 0 and 1 representing information fractions.
 #'   Default is 1 (equally spaced).
-#' @param sfu Spending function for upper bound. Default is \code{gsDesign::sfHSD}.
+#' @param sfu Spending function for upper bound. Default is `gsDesign::sfHSD`.
 #' @param sfupar Parameter for upper spending function. Default is -4.
-#' @param sfl Spending function for lower bound. Default is \code{gsDesign::sfHSD}.
+#' @param sfl Spending function for lower bound. Default is `gsDesign::sfHSD`.
 #' @param sflpar Parameter for lower spending function. Default is -2.
 #' @param tol Tolerance for convergence. Default is 1e-06.
 #' @param r Integer controlling grid size for numerical integration.
@@ -34,17 +34,17 @@
 #' @param usTime Spending time for upper bound (optional).
 #' @param lsTime Spending time for lower bound (optional).
 #' @param analysis_times Optional vector of calendar times for each analysis.
-#'   If provided, must have length k. These times are stored in the \code{T}
-#'   element and displayed by \code{\link[gsDesign]{gsBoundSummary}}.
+#'   If provided, must have length k. These times are stored in the `T`
+#'   element and displayed by [gsDesign::gsBoundSummary()].
 #'
-#' @return An object of class \code{gsNB} which inherits from \code{gsDesign}
-#'   and \code{sample_size_nbinom_result}. Contains all elements from
-#'   \code{gsDesign::gsDesign()} plus:
+#' @return An object of class `gsNB` which inherits from `gsDesign`
+#'   and `sample_size_nbinom_result`. Contains all elements from
+#'   [gsDesign::gsDesign()] plus:
 #'   \describe{
-#'     \item{nb_design}{The original \code{sample_size_nbinom_result} object}
+#'     \item{nb_design}{The original `sample_size_nbinom_result` object}
 #'     \item{n1}{Sample size per analysis for group 1}
 #'     \item{n2}{Sample size per analysis for group 2}
-#'     \item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
+#'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
 #'   }
 #'
 #' @references
@@ -257,11 +257,11 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
 #' Summary for gsNB Objects
 #'
 #' Provides a textual summary of a group sequential design for negative binomial
-#' outcomes, similar to the summary provided by \code{\link[gsDesign]{gsDesign}}.
-#' For tabular output, use \code{\link[gsDesign]{gsBoundSummary}} directly on
+#' outcomes, similar to the summary provided by [gsDesign::gsDesign()].
+#' For tabular output, use [gsDesign::gsBoundSummary()] directly on
 #' the gsNB object.
 #'
-#' @param object An object of class \code{gsNB}.
+#' @param object An object of class `gsNB`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return A character string summarizing the design (invisibly). The summary
@@ -350,7 +350,7 @@ summary.gsNB <- function(object, ...) {
 
 #' Print Method for gsNBsummary Objects
 #'
-#' @param x An object of class \code{gsNBsummary}.
+#' @param x An object of class `gsNBsummary`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return Invisibly returns the input object.
@@ -366,10 +366,10 @@ print.gsNBsummary <- function(x, ...) {
 #' Convert Group Sequential Design to Integer Sample Sizes
 #'
 #' Generic function to round sample sizes in a group sequential design to integers.
-#' This extends the \code{\link[gsDesign]{toInteger}} function from the gsDesign
-#' package to work with \code{gsNB} objects.
+#' This extends the [gsDesign::toInteger()] function from the gsDesign
+#' package to work with `gsNB` objects.
 #'
-#' @param x An object of class \code{gsNB} or \code{gsDesign}.
+#' @param x An object of class `gsNB` or `gsDesign`.
 #' @param ... Additional arguments passed to methods.
 #'
 #' @return An object of the same class as input with integer sample sizes.
@@ -388,7 +388,7 @@ toInteger <- function(x, ...) {
 }
 
 
-#' @describeIn toInteger Method for \code{gsDesign} objects (calls \code{gsDesign::toInteger}).
+#' @describeIn toInteger Method for `gsDesign` objects (calls [gsDesign::toInteger()]).
 #' @param ratio Randomization ratio (n2/n1).
 #' @param roundUpFinal Logical flag indicating whether to round the final analysis
 #'   sample size up to meet or exceed the target size.
@@ -398,16 +398,16 @@ toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
 }
 
 
-#' @describeIn toInteger Method for \code{gsNB} objects.
+#' @describeIn toInteger Method for `gsNB` objects.
 #'
 #' Rounds sample sizes in a group sequential negative binomial design to integers,
 #' respecting the randomization ratio.
 #'
 #' @param ratio Randomization ratio (n2/n1). If an integer is provided, rounding
-#'   is done to a multiple of \code{ratio + 1}. Default uses the ratio from the
+#'   is done to a multiple of `ratio + 1`. Default uses the ratio from the
 #'   original design.
-#' @param roundUpFinal If \code{TRUE} (default), the final sample size is rounded
-#'   up to ensure the target is met. If \code{FALSE}, rounding is to the nearest
+#' @param roundUpFinal If `TRUE` (default), the final sample size is rounded
+#'   up to ensure the target is met. If `FALSE`, rounding is to the nearest
 #'   integer.
 #'
 #' @details
@@ -417,8 +417,8 @@ toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
 #' interim sample sizes remain as expected (non-integer) values based on
 #' the information fraction.
 #'
-#' When \code{analysis_times} were provided to \code{\link{gsNBCalendar}},
-#' the statistical information (\code{n.I}) is recomputed at each analysis
+#' When `analysis_times` were provided to [gsNBCalendar()],
+#' the statistical information (`n.I`) is recomputed at each analysis
 #' time based on the new sample size and expected exposures.
 #'
 #' @export
