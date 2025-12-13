@@ -89,4 +89,3 @@ gsDesign::sfXG3
 #' @importFrom gsDesign gsBoundSummary
 #' @export
 gsDesign::gsBoundSummary
-

@@ -16,7 +16,7 @@ test_that("blinded_ssr estimates dispersion and rate", {
   # Mock accrual params for blinded_ssr (needed for sample size recalc)
   res <- blinded_ssr(
     cut,
-    lambda1_planning = 0.5, 
+    lambda1_planning = 0.5,
     lambda2_planning = 0.3,
     accrual_rate = 100,
     accrual_duration = 1,

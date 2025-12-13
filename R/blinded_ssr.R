@@ -1,4 +1,4 @@
-#' Blinded Sample Size Re-estimation for Recurrent Events
+#' Blinded sample size re-estimation for recurrent events
 #'
 #' Estimates the blinded dispersion and event rate from aggregated interim data
 #' and calculates the required sample size to maintain power, assuming the
@@ -22,10 +22,10 @@
 #'
 #' @references
 #' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-#' \emph{Statistics in Medicine}, 29(10), 1145-1156. \doi{10.1002/sim.3891}
+#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3891}
 #'
 #' Schneider, S., Schmidli, H., & Friede, T. (2013). Blinded sample size reestimation for recurrent event data with time trends.
-#' \emph{Statistics in Medicine}, 32(30), 5448-5457. \doi{10.1002/sim.5920}
+#' _Statistics in Medicine_, 32(30), 5448--5457. \doi{10.1002/sim.5920}
 #'
 #' @param trial_duration Total planned duration of the trial.
 #' @param dropout_rate Dropout rate (hazard rate). Default is 0.

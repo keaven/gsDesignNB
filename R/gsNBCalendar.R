@@ -1,12 +1,12 @@
-#' Group Sequential Design for Negative Binomial Outcomes
+#' Group sequential design for negative binomial outcomes
 #'
 #' Creates a group sequential design for negative binomial outcomes based on
-#' sample size calculations from \code{\link{sample_size_nbinom}}.
+#' sample size calculations from [sample_size_nbinom()].
 #'
-#' @param x An object of class \code{sample_size_nbinom_result} from
-#'   \code{\link{sample_size_nbinom}}.
+#' @param x An object of class `sample_size_nbinom_result` from
+#'   [sample_size_nbinom()].
 #' @param k Number of analyses (interim + final). Default is 3.
-#' @param test.type Test type as in \code{\link[gsDesign]{gsDesign}}:
+#' @param test.type Test type as in [gsDesign::gsDesign()]:
 #'   \describe{
 #'     \item{1}{One-sided}
 #'     \item{2}{Two-sided symmetric}
@@ -24,9 +24,9 @@
 #' @param timing Timing of interim analyses. May be a vector of length k-1
 #'   with values between 0 and 1 representing information fractions.
 #'   Default is 1 (equally spaced).
-#' @param sfu Spending function for upper bound. Default is \code{gsDesign::sfHSD}.
+#' @param sfu Spending function for upper bound. Default is `gsDesign::sfHSD`.
 #' @param sfupar Parameter for upper spending function. Default is -4.
-#' @param sfl Spending function for lower bound. Default is \code{gsDesign::sfHSD}.
+#' @param sfl Spending function for lower bound. Default is `gsDesign::sfHSD`.
 #' @param sflpar Parameter for lower spending function. Default is -2.
 #' @param tol Tolerance for convergence. Default is 1e-06.
 #' @param r Integer controlling grid size for numerical integration.
@@ -34,22 +34,23 @@
 #' @param usTime Spending time for upper bound (optional).
 #' @param lsTime Spending time for lower bound (optional).
 #' @param analysis_times Optional vector of calendar times for each analysis.
-#'   If provided, must have length k. These times are stored in the \code{T}
-#'   element and displayed by \code{\link[gsDesign]{gsBoundSummary}}.
+#'   If provided, must have length k. These times are stored in the `T`
+#'   element and displayed by [gsDesign::gsBoundSummary()].
 #'
-#' @return An object of class \code{gsNB} which inherits from \code{gsDesign}
-#'   and \code{sample_size_nbinom_result}. Contains all elements from
-#'   \code{gsDesign::gsDesign()} plus:
+#' @return An object of class `gsNB` which inherits from `gsDesign`
+#'   and `sample_size_nbinom_result`. Contains all elements from
+#'   [gsDesign::gsDesign()] plus:
 #'   \describe{
-#'     \item{nb_design}{The original \code{sample_size_nbinom_result} object}
+#'     \item{nb_design}{The original `sample_size_nbinom_result` object}
 #'     \item{n1}{Sample size per analysis for group 1}
 #'     \item{n2}{Sample size per analysis for group 2}
-#'     \item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
+#'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
 #'   }
 #'
 #' @references
-#' Jennison, C. and Turnbull, B.W. (2000), \emph{Group Sequential Methods with
-#' Applications to Clinical Trials}. Boca Raton: Chapman and Hall.
+#' Jennison, C. and Turnbull, B.W. (2000),
+#' _Group Sequential Methods with Applications to Clinical Trials_.
+#' Boca Raton: Chapman and Hall.
 #'
 #' @export
 #'
@@ -61,8 +62,10 @@
 #' )
 #'
 #' # Then create a group sequential design with analysis times
-#' gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4,
-#'                          analysis_times = c(10, 18, 24))
+#' gs_design <- gsNBCalendar(nb_ss,
+#'   k = 3, test.type = 4,
+#'   analysis_times = c(10, 18, 24)
+#' )
 #'
 #' @importFrom gsDesign gsDesign sfHSD
 gsNBCalendar <- function(x,
@@ -148,7 +151,7 @@ gsNBCalendar <- function(x,
   result$n_total <- n_cumulative
   result$ratio <- ratio
 
- # Add calendar times if provided (for gsBoundSummary display)
+  # Add calendar times if provided (for gsBoundSummary display)
   if (!is.null(analysis_times)) {
     if (length(analysis_times) != k) {
       stop("analysis_times must have length k (", k, ")")
@@ -183,8 +186,8 @@ gsNBCalendar <- function(x,
 #'
 #' @export
 compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
-                                  lambda1, lambda2, dispersion, ratio = 1,
-                                  dropout_rate = 0, event_gap = 0) {
+                                 lambda1, lambda2, dispersion, ratio = 1,
+                                 dropout_rate = 0, event_gap = 0) {
   # Number of subjects enrolled by analysis_time
   enrollment_time <- min(analysis_time, accrual_duration)
   n_total <- accrual_rate * enrollment_time
@@ -193,26 +196,26 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
 
   # Average exposure calculation must account for dropout
   # We integrate dropout probability over the enrollment period and follow-up
-  
+
   # Helper for expected exposure for a subject enrolled at time t
   # Exposure is min(analysis_time - t, dropout_time)
   # If analysis_time - t > 0
-  
+
   # Simplified average exposure calculation with dropout
   # 1. Without dropout:
   #    If analysis_time <= accrual_duration: avg = analysis_time / 2
   #    If analysis_time > accrual_duration: avg = analysis_time - accrual_duration/2
-  
+
   # 2. With dropout, we need to integrate:
   #    E[min(T-t, E)] where E ~ Exp(dropout_rate)
   #    This is (1 - exp(-lambda * (T-t))) / lambda
-  
+
   # We need the average of this over t in [0, enrollment_time]
   # Let tau = T - t. As t goes 0 -> enrollment_time, tau goes T -> T-enrollment_time
   # Range of follow-up times: [min_f, max_f]
   max_f <- analysis_time
   min_f <- analysis_time - enrollment_time
-  
+
   if (dropout_rate <= 0) {
     avg_exposure <- (max_f + min_f) / 2
   } else {
@@ -222,12 +225,12 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
     # = (integral_{min_f}^{max_f} exp(-rate * x) dx) / (max_f - min_f)
     # = ([-1/rate * exp(-rate * x)]) / (max_f - min_f)
     # = (exp(-rate * min_f) - exp(-rate * max_f)) / (rate * (max_f - min_f))
-    
-    term2 <- (exp(-dropout_rate * min_f) - exp(-dropout_rate * max_f)) / 
-             (dropout_rate * (max_f - min_f))
+
+    term2 <- (exp(-dropout_rate * min_f) - exp(-dropout_rate * max_f)) /
+      (dropout_rate * (max_f - min_f))
     avg_exposure <- (1 - term2) / dropout_rate
   }
-  
+
   # Adjust rates for event gap
   if (!is.null(event_gap) && event_gap > 0) {
     lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
@@ -257,11 +260,11 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
 #' Summary for gsNB Objects
 #'
 #' Provides a textual summary of a group sequential design for negative binomial
-#' outcomes, similar to the summary provided by \code{\link[gsDesign]{gsDesign}}.
-#' For tabular output, use \code{\link[gsDesign]{gsBoundSummary}} directly on
+#' outcomes, similar to the summary provided by [gsDesign::gsDesign()].
+#' For tabular output, use [gsDesign::gsBoundSummary()] directly on
 #' the gsNB object.
 #'
-#' @param object An object of class \code{gsNB}.
+#' @param object An object of class `gsNB`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return A character string summarizing the design (invisibly). The summary
@@ -288,8 +291,7 @@ summary.gsNB <- function(object, ...) {
   risk_ratio <- inputs$lambda2 / inputs$lambda1
 
   # Determine test type description
-  test_type_desc <- switch(
-    as.character(object$test.type),
+  test_type_desc <- switch(as.character(object$test.type),
     "1" = "One-sided",
     "2" = "Two-sided symmetric",
     "3" = "Asymmetric two-sided with binding futility bound",
@@ -302,16 +304,18 @@ summary.gsNB <- function(object, ...) {
   # Format exposure text
   exposure_text <- sprintf("average exposure %.2f", nb$exposure)
   if (!is.null(inputs$event_gap) && inputs$event_gap > 0 && !is.null(nb$exposure_at_risk_n1)) {
-    exposure_text <- sprintf("average exposure (calendar) %.2f, (at-risk n1=%.2f, n2=%.2f)", 
-                             nb$exposure, nb$exposure_at_risk_n1, nb$exposure_at_risk_n2)
+    exposure_text <- sprintf(
+      "average exposure (calendar) %.2f, (at-risk n1=%.2f, n2=%.2f)",
+      nb$exposure, nb$exposure_at_risk_n1, nb$exposure_at_risk_n2
+    )
   }
 
   # Build the summary text
   max_followup_str <- if (!is.null(inputs$max_followup)) sprintf(", max follow-up %.1f", inputs$max_followup) else ""
-  
+
   event_gap_str <- if (!is.null(inputs$event_gap) && inputs$event_gap > 0) sprintf(", event gap %.2f", inputs$event_gap) else ""
   dropout_str <- if (!is.null(inputs$dropout_rate) && inputs$dropout_rate > 0) sprintf(", dropout rate %.4f", inputs$dropout_rate) else ""
-  
+
   summary_text <- sprintf(
     paste0(
       "%s group sequential design for negative binomial outcomes, ",
@@ -350,7 +354,7 @@ summary.gsNB <- function(object, ...) {
 
 #' Print Method for gsNBsummary Objects
 #'
-#' @param x An object of class \code{gsNBsummary}.
+#' @param x An object of class `gsNBsummary`.
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return Invisibly returns the input object.
@@ -366,10 +370,10 @@ print.gsNBsummary <- function(x, ...) {
 #' Convert Group Sequential Design to Integer Sample Sizes
 #'
 #' Generic function to round sample sizes in a group sequential design to integers.
-#' This extends the \code{\link[gsDesign]{toInteger}} function from the gsDesign
-#' package to work with \code{gsNB} objects.
+#' This extends the [gsDesign::toInteger()] function from the gsDesign
+#' package to work with `gsNB` objects.
 #'
-#' @param x An object of class \code{gsNB} or \code{gsDesign}.
+#' @param x An object of class `gsNB` or `gsDesign`.
 #' @param ... Additional arguments passed to methods.
 #'
 #' @return An object of the same class as input with integer sample sizes.
@@ -388,7 +392,7 @@ toInteger <- function(x, ...) {
 }
 
 
-#' @describeIn toInteger Method for \code{gsDesign} objects (calls \code{gsDesign::toInteger}).
+#' @describeIn toInteger Method for `gsDesign` objects (calls [gsDesign::toInteger()]).
 #' @param ratio Randomization ratio (n2/n1).
 #' @param roundUpFinal Logical flag indicating whether to round the final analysis
 #'   sample size up to meet or exceed the target size.
@@ -398,16 +402,16 @@ toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
 }
 
 
-#' @describeIn toInteger Method for \code{gsNB} objects.
+#' @describeIn toInteger Method for `gsNB` objects.
 #'
 #' Rounds sample sizes in a group sequential negative binomial design to integers,
 #' respecting the randomization ratio.
 #'
 #' @param ratio Randomization ratio (n2/n1). If an integer is provided, rounding
-#'   is done to a multiple of \code{ratio + 1}. Default uses the ratio from the
+#'   is done to a multiple of `ratio + 1`. Default uses the ratio from the
 #'   original design.
-#' @param roundUpFinal If \code{TRUE} (default), the final sample size is rounded
-#'   up to ensure the target is met. If \code{FALSE}, rounding is to the nearest
+#' @param roundUpFinal If `TRUE` (default), the final sample size is rounded
+#'   up to ensure the target is met. If `FALSE`, rounding is to the nearest
 #'   integer.
 #'
 #' @details
@@ -417,8 +421,8 @@ toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
 #' interim sample sizes remain as expected (non-integer) values based on
 #' the information fraction.
 #'
-#' When \code{analysis_times} were provided to \code{\link{gsNBCalendar}},
-#' the statistical information (\code{n.I}) is recomputed at each analysis
+#' When `analysis_times` were provided to [gsNBCalendar()],
+#' the statistical information (`n.I`) is recomputed at each analysis
 #' time based on the new sample size and expected exposures.
 #'
 #' @export
@@ -505,14 +509,14 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     result$n.I <- x$n.I * scaling_factor
     result$n.fix <- result$n.I[k]
   }
-  
+
   # Update gsDesign object properties
   # We need to update the gsDesign object to reflect the new n.I
   # This is crucial for gsBoundSummary to work correctly
-  
+
   # Create a new gsDesign object with updated n.I
   # We use the original parameters but new n.I
-  
+
   # Note: gsDesign() function recalculates bounds based on n.I
   gs_updated <- gsDesign::gsDesign(
     k = k,
@@ -530,13 +534,13 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     tol = x$tol,
     r = x$r
   )
-  
+
   # Copy updated gsDesign slots to result
   result$upper <- gs_updated$upper
   result$lower <- gs_updated$lower
   result$theta <- gs_updated$theta
   result$falseposnb <- gs_updated$falseposnb
   result$en <- gs_updated$en
-  
+
   return(result)
 }

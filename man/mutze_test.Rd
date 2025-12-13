@@ -2,7 +2,7 @@
 % Please edit documentation in R/mutze_test.R
 \name{mutze_test}
 \alias{mutze_test}
-\title{Wald test for treatment effect using Negative Binomial model (Mütze et al.)}
+\title{Wald test for treatment effect using negative binomial model (Mütze et al.)}
 \usage{
 mutze_test(data, method = c("nb", "poisson"), conf_level = 0.95)
 }
@@ -10,7 +10,7 @@ mutze_test(data, method = c("nb", "poisson"), conf_level = 0.95)
 \item{data}{A data frame with at least the columns \code{treatment}, \code{events}, and
 \code{tte} (follow-up time). Typically output from \code{\link[=cut_data_by_date]{cut_data_by_date()}}.}
 
-\item{method}{Type of model to fit: "nb" (default) uses a Negative Binomial
+\item{method}{Type of model to fit: "nb" (default) uses a negative binomial
 GLM via \code{\link[MASS:glm.nb]{MASS::glm.nb()}}, "poisson" fits a Poisson GLM.}
 
 \item{conf_level}{Confidence level for the rate ratio interval. Default 0.95.}
@@ -28,7 +28,7 @@ A list containing the fitted model summary with elements:
 }
 }
 \description{
-Fits a Negative Binomial (or Poisson) log-rate model to the aggregated
+Fits a negative binomial (or Poisson) log-rate model to the aggregated
 subject-level data produced by \code{\link[=cut_data_by_date]{cut_data_by_date()}}. The method matches the
 Wald test described by Mütze et al. (2018) for comparing treatment arms with
 recurrent event outcomes.

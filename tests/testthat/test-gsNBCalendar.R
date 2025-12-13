@@ -6,7 +6,7 @@ test_that("gsNBCalendar creates valid gsNB object", {
   )
 
   # Create group sequential design
- gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4)
+  gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4)
 
   # Check class inheritance
   expect_s3_class(gs_design, "gsNB")
@@ -91,4 +91,3 @@ test_that("gsNBCalendar works with custom spending functions", {
 
   expect_s3_class(gs_design, "gsNB")
 })
-

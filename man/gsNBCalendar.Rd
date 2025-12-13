@@ -2,7 +2,7 @@
 % Please edit documentation in R/gsNBCalendar.R
 \name{gsNBCalendar}
 \alias{gsNBCalendar}
-\title{Group Sequential Design for Negative Binomial Outcomes}
+\title{Group sequential design for negative binomial outcomes}
 \usage{
 gsNBCalendar(
   x,
@@ -26,11 +26,11 @@ gsNBCalendar(
 }
 \arguments{
 \item{x}{An object of class \code{sample_size_nbinom_result} from
-\code{\link{sample_size_nbinom}}.}
+\code{\link[=sample_size_nbinom]{sample_size_nbinom()}}.}
 
 \item{k}{Number of analyses (interim + final). Default is 3.}
 
-\item{test.type}{Test type as in \code{\link[gsDesign]{gsDesign}}:
+\item{test.type}{Test type as in \code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}}:
 \describe{
 \item{1}{One-sided}
 \item{2}{Two-sided symmetric}
@@ -73,12 +73,12 @@ Default is 18.}
 
 \item{analysis_times}{Optional vector of calendar times for each analysis.
 If provided, must have length k. These times are stored in the \code{T}
-element and displayed by \code{\link[gsDesign]{gsBoundSummary}}.}
+element and displayed by \code{\link[gsDesign:gsBoundSummary]{gsDesign::gsBoundSummary()}}.}
 }
 \value{
 An object of class \code{gsNB} which inherits from \code{gsDesign}
 and \code{sample_size_nbinom_result}. Contains all elements from
-\code{gsDesign::gsDesign()} plus:
+\code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}} plus:
 \describe{
 \item{nb_design}{The original \code{sample_size_nbinom_result} object}
 \item{n1}{Sample size per analysis for group 1}
@@ -88,7 +88,7 @@ and \code{sample_size_nbinom_result}. Contains all elements from
 }
 \description{
 Creates a group sequential design for negative binomial outcomes based on
-sample size calculations from \code{\link{sample_size_nbinom}}.
+sample size calculations from \code{\link[=sample_size_nbinom]{sample_size_nbinom()}}.
 }
 \examples{
 # First create a sample size calculation
@@ -98,11 +98,14 @@ nb_ss <- sample_size_nbinom(
 )
 
 # Then create a group sequential design with analysis times
-gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4,
-                         analysis_times = c(10, 18, 24))
+gs_design <- gsNBCalendar(nb_ss,
+  k = 3, test.type = 4,
+  analysis_times = c(10, 18, 24)
+)
 
 }
 \references{
-Jennison, C. and Turnbull, B.W. (2000), \emph{Group Sequential Methods with
-Applications to Clinical Trials}. Boca Raton: Chapman and Hall.
+Jennison, C. and Turnbull, B.W. (2000),
+\emph{Group Sequential Methods with Applications to Clinical Trials}.
+Boca Raton: Chapman and Hall.
 }

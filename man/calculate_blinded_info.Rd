@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculate_blinded_info.R
 \name{calculate_blinded_info}
 \alias{calculate_blinded_info}
-\title{Calculate Blinded Statistical Information}
+\title{Calculate blinded statistical information}
 \usage{
 calculate_blinded_info(
   data,

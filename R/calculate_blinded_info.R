@@ -1,4 +1,4 @@
-#' Calculate Blinded Statistical Information
+#' Calculate blinded statistical information
 #'
 #' Estimates the blinded dispersion and event rate from aggregated interim data
 #' and calculates the observed statistical information for the log rate ratio,
@@ -9,7 +9,7 @@
 #' @param ratio Planned allocation ratio (experimental / control). Default is 1.
 #' @param lambda1_planning Planned event rate for the control group.
 #' @param lambda2_planning Planned event rate for the experimental group.
-#' @param event_gap Optional. Gap duration (numeric) to adjust planning rates if provided. 
+#' @param event_gap Optional. Gap duration (numeric) to adjust planning rates if provided.
 #'   If provided, planning rates are adjusted as lambda / (1 + lambda * gap).
 #'
 #' @return A list containing:
@@ -30,14 +30,14 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
   }
 
   # 1. Blinded Parameter Estimation
-  # Fit Negative Binomial model to pooled data (intercept only)
+  # Fit negative binomial model to pooled data (intercept only)
   fit_blind <- tryCatch(
     suppressWarnings(MASS::glm.nb(events ~ 1 + offset(log(tte)), data = df)),
     error = function(e) NULL
   )
 
   if (is.null(fit_blind) || is.na(fit_blind$theta)) {
-    warning("Negative Binomial fit failed on blinded data. Falling back to Poisson (dispersion = 0).")
+    warning("Negative binomial fit failed on blinded data. Falling back to Poisson (dispersion = 0).")
     dispersion_est <- 0
     lambda_est <- sum(df$events) / sum(df$tte)
   } else {
@@ -56,17 +56,17 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
   # But lambda_est is already the effective rate (events / exposure), where exposure accounts for gaps if cut_data_by_date used it.
   # However, the planning parameters lambda1_planning and lambda2_planning are likely "calendar" rates (without gap adjustment)
   # UNLESS the user passed effective rates.
-  
+
   # Assuming lambda1_planning are raw rates:
   if (!is.null(event_gap) && event_gap > 0) {
-     # Adjust planning ratio? 
-     # The ratio lambda2/lambda1 is roughly preserved even with gaps if rates are small, 
-     # but strictly: lambda_eff = lambda / (1 + lambda * gap)
-     # So RR_eff = (lambda2 / (1 + lambda2*gap)) / (lambda1 / (1 + lambda1*gap))
-     
-     lambda1_eff_plan <- lambda1_planning / (1 + lambda1_planning * event_gap)
-     lambda2_eff_plan <- lambda2_planning / (1 + lambda2_planning * event_gap)
-     rate_ratio_planning <- lambda2_eff_plan / lambda1_eff_plan
+    # Adjust planning ratio?
+    # The ratio lambda2/lambda1 is roughly preserved even with gaps if rates are small,
+    # but strictly: lambda_eff = lambda / (1 + lambda * gap)
+    # So RR_eff = (lambda2 / (1 + lambda2*gap)) / (lambda1 / (1 + lambda1*gap))
+
+    lambda1_eff_plan <- lambda1_planning / (1 + lambda1_planning * event_gap)
+    lambda2_eff_plan <- lambda2_planning / (1 + lambda2_planning * event_gap)
+    rate_ratio_planning <- lambda2_eff_plan / lambda1_eff_plan
   }
 
   lambda1_new <- lambda_est / (p1 + p2 * rate_ratio_planning)

@@ -1,13 +1,13 @@
-#' Wald test for treatment effect using Negative Binomial model (Mütze et al.)
+#' Wald test for treatment effect using negative binomial model (Mütze et al.)
 #'
-#' Fits a Negative Binomial (or Poisson) log-rate model to the aggregated
+#' Fits a negative binomial (or Poisson) log-rate model to the aggregated
 #' subject-level data produced by [cut_data_by_date()]. The method matches the
 #' Wald test described by Mütze et al. (2018) for comparing treatment arms with
 #' recurrent event outcomes.
 #'
 #' @param data A data frame with at least the columns `treatment`, `events`, and
 #'   `tte` (follow-up time). Typically output from [cut_data_by_date()].
-#' @param method Type of model to fit: "nb" (default) uses a Negative Binomial
+#' @param method Type of model to fit: "nb" (default) uses a negative binomial
 #'   GLM via [MASS::glm.nb()], "poisson" fits a Poisson GLM.
 #' @param conf_level Confidence level for the rate ratio interval. Default 0.95.
 #'
@@ -68,7 +68,7 @@ mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95) {
       method_label <- "Poisson Wald (fallback)"
     } else {
       dispersion <- fit$theta
-      method_label <- "Negative Binomial Wald"
+      method_label <- "Negative binomial Wald"
     }
   } else {
     fit <- stats::glm(events ~ treatment + offset(log(tte)), data = df, family = poisson())

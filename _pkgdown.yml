@@ -3,7 +3,7 @@ template:
   bootstrap: 5
 
 reference:
-  - title: "Sample Size Calculation"
+  - title: "Sample size calculation"
     desc: >
       Functions for calculating fixed sample sizes for negative binomial outcomes.
     contents:
@@ -12,7 +12,7 @@ reference:
       - summary.sample_size_nbinom_result
       - print.sample_size_nbinom_summary
 
-  - title: "Group Sequential Design"
+  - title: "Group sequential design"
     desc: >
       Functions for extending fixed designs to group sequential designs.
     contents:
@@ -41,7 +41,7 @@ reference:
       - compute_info_at_time
       - get_analysis_date
 
-  - title: "gsDesign Re-exports"
+  - title: "gsDesign re-exports"
     desc: >
       Spending functions and utilities re-exported from the gsDesign package for convenience.
     contents:

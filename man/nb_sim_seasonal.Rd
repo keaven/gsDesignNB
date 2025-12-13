@@ -2,7 +2,7 @@
 % Please edit documentation in R/nb_sim_seasonal.R
 \name{nb_sim_seasonal}
 \alias{nb_sim_seasonal}
-\title{Simulate Recurrent Events with Seasonal Rates}
+\title{Simulate recurrent events with seasonal rates}
 \usage{
 nb_sim_seasonal(
   enroll_rate,

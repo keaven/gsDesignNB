@@ -2,7 +2,7 @@
 % Please edit documentation in R/cut_data_by_date.R
 \name{cut_data_by_date}
 \alias{cut_data_by_date}
-\title{Cut Simulated Trial Data at a Calendar Date}
+\title{Cut simulated trial data at a calendar date}
 \usage{
 cut_data_by_date(data, cut_date, event_gap = 5/365.25, ...)
 }

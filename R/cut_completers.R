@@ -45,31 +45,30 @@ cut_completers <- function(data, cut_date, event_gap = 5 / 365.25) {
 #' @export
 cut_date_for_completers <- function(data, target_completers) {
   dt <- data.table::as.data.table(data)
-  
+
   # Determine max_followup
   max_f <- max(dt$tte)
-  
+
   # Identify completers and their completion times
   # Completers are those who reached max_f (did not drop out)
   # Their completion time is enroll_time + tte (where tte = max_f)
   # We look at the last record for each ID which holds the max tte
-  
+
   # Get last row per ID
   last_rows <- dt[, .SD[.N], by = id]
-  
+
   # Filter for completers
   # tte must be max_f
   completers <- last_rows[tte >= max_f - 1e-8]
-  
+
   if (nrow(completers) < target_completers) {
     message(sprintf("Only %d completers in trial (target: %d)", nrow(completers), target_completers))
     return(max(dt$calendar_time))
   }
-  
+
   # Sort completion times
   completion_times <- sort(completers$calendar_time)
-  
+
   # Return the date the target-th completer finished
   return(completion_times[target_completers])
 }
-

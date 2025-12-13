@@ -12,7 +12,7 @@ License: GPL (>= 3)
 URL: https://keaven.github.io/gsDesignNB/
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     data.table,
     gsDesign,

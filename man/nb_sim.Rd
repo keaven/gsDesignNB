@@ -2,7 +2,7 @@
 % Please edit documentation in R/nb_sim.R
 \name{nb_sim}
 \alias{nb_sim}
-\title{Simulate Recurrent Events with Fixed Follow-up}
+\title{Simulate recurrent events with fixed follow-up}
 \usage{
 nb_sim(
   enroll_rate,
@@ -19,27 +19,29 @@ nb_sim(
 the piecewise constant enrollment rates.}
 
 \item{fail_rate}{A data frame with columns \code{treatment} and \code{rate} defining
-the exponential failure rate for each treatment group. Optionally, a \code{dispersion}
-column can be provided to generate data from a Negative Binomial distribution.
-The dispersion parameter \code{k} is such that \eqn{Var(Y) = \mu + k \mu^2}.}
+the exponential failure rate for each treatment group.
+Optionally, a \code{dispersion} column can be provided to generate data from
+a negative binomial distribution. The dispersion parameter \code{k} is
+such that \eqn{Var(Y) = \mu + k \mu^2}.}
 
-\item{dropout_rate}{A data frame with columns \code{treatment}, \code{rate}, and \code{duration}
-defining the piecewise constant dropout rates.}
+\item{dropout_rate}{A data frame with columns \code{treatment}, \code{rate},
+and \code{duration} defining the piecewise constant dropout rates.}
 
-\item{max_followup}{Numeric. Maximum duration of follow-up for each individual
-(relative to their randomization time).}
+\item{max_followup}{Numeric. Maximum duration of follow-up for
+each individual (relative to their randomization time).}
 
 \item{n}{Total sample size. If NULL, it is estimated from \code{enroll_rate}.
 If provided, enrollment stops when \code{n} subjects are recruited.}
 
 \item{block}{Block vector for treatment allocation. Default is
 \code{c(rep("Control", 2), rep("Experimental", 2))}.
-If NULL, simple randomization is used (treatments are assigned with equal probability).
-If provided, it specifies the block structure, e.g., \code{c(rep("A", 2), rep("B", 2))}
-assigns 2 to group A and 2 to group B in each block.}
+If NULL, simple randomization is used (treatments are assigned with
+equal probability). If provided, it specifies the block structure,
+for example, \code{c(rep("A", 2), rep("B", 2))} assigns 2 to group A and
+2 to group B in each block.}
 
-\item{event_gap}{Numeric. Gap duration after each event during which no new events are counted.
-Default is 0.}
+\item{event_gap}{Numeric. Gap duration after each event during which
+no new events are counted. Default is 0.}
 }
 \value{
 A data frame (tibble) with columns:
@@ -58,7 +60,7 @@ Simulates recurrent events for a clinical trial with piecewise constant enrollme
 exponential failure rates (Poisson process), and piecewise exponential dropout.
 }
 \details{
-The simulation generates data consistent with the Negative Binomial models described
+The simulation generates data consistent with the negative binomial models described
 by Friede and Schmidli (2010) and Mutze et al. (2018). Specifically, it simulates
 a Gamma-distributed frailty variable for each individual (if dispersion > 0),
 which acts as a multiplier for that individual's event rate. Events are then
@@ -66,9 +68,9 @@ generated according to a Poisson process with this subject-specific rate.
 }
 \references{
 Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-\emph{Statistics in Medicine}, 29(10), 1145-1156. \doi{10.1002/sim.3891}
+\emph{Statistics in Medicine}, 29(10), 1145--1156. \doi{10.1002/sim.3891}
 
 Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs
 for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
-27(10), 2978-2993. \doi{10.1177/0962280218773115}
+27(10), 2978--2993. \doi{10.1177/0962280218773115}
 }

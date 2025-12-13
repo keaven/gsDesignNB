@@ -1,8 +1,8 @@
 ---
-title: "Sample Size Calculation for Negative Binomial Outcomes"
+title: "Sample size calculation for negative binomial outcomes"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Sample Size Calculation for Negative Binomial Outcomes}
+  %\VignetteIndexEntry{Sample size calculation for negative binomial outcomes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -56,7 +56,7 @@ where $p_1 = n_1/n_{total}$ and $p_2 = n_2/n_{total}$ are the allocation proport
 
 **Note:** For a fixed design with equal allocation, both methods yield identical sample sizes.
 
-## Average Exposure with Variable Accrual and Dropout
+## Average exposure with variable accrual and dropout
 
 When the accrual rate is not constant or when the trial has a fixed duration with ongoing recruitment, the exposure time for patients will vary. The function calculates an *average exposure* time to use in the sample size formula. Additionally, if a `dropout_rate` is specified, the exposure is adjusted to account for patients leaving the study early.
 
@@ -71,7 +71,7 @@ If `dropout_rate` is 0:
 
 If `dropout_rate` ($\delta$) > 0, the average exposure is calculated by integrating the exposure function over the recruitment interval:
 
-$$ 
+$$
 \begin{aligned}
 E_j &= \frac{1}{D_j}\int_{u_{min}}^{u_{max}} \frac{1 - e^{-\delta u}}{\delta} du \\
 &= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta u_{min}} - e^{-\delta u_{max}} \right)
@@ -79,7 +79,7 @@ E_j &= \frac{1}{D_j}\int_{u_{min}}^{u_{max}} \frac{1 - e^{-\delta u}}{\delta} du
 $$
 where $u_{max}$ and $u_{min}$ are the maximum and minimum potential follow-up times for patients in that segment ($T - S_{j-1}$ and $T - (S_{j-1} + D_j)$ respectively).
 
-### Maximum Follow-up
+### Maximum follow-up
 
 If `max_followup` ($F$) is specified, the follow-up time for any individual is capped at $F$. This creates three scenarios for a recruitment segment:
 
@@ -91,7 +91,7 @@ The overall average exposure used for the calculation is the weighted average:
 
 $$ \bar{t} = \frac{\sum_{j=1}^J N_j E_j}{\sum_{j=1}^J N_j} $$
 
-### Variance Inflation for Variable Follow-up
+### Variance inflation for variable follow-up
 
 When follow-up times are variable (due to accrual, dropout, or administrative censoring), simply using the average follow-up time $\bar{t}$ in the variance formula underestimates the true variance of the rate estimator. This is because the variance of the negative binomial distribution depends on the exposure time in a non-linear way ($Var(Y) = \mu + k\mu^2 = \lambda t + k (\lambda t)^2$).
 
@@ -101,7 +101,7 @@ $$ Q = \frac{E[t^2]}{(E[t])^2} $$
 
 The adjusted dispersion parameter used in the sample size calculation is $k_{adj} = k \cdot Q$. The function automatically calculates $E[t]$ and $E[t^2]$ based on the accrual, dropout, and trial duration parameters.
 
-### Event Gaps
+### Event gaps
 
 In some clinical trials, there is a mandatory "dead time" or gap after an event during which no new events can occur (e.g., a recovery period). If an `event_gap` is specified, the effective exposure time for a subject is reduced by the time spent in these gaps.
 
@@ -111,7 +111,7 @@ This adjusted rate is then used in the sample size calculations. The effective e
 
 ## Examples
 
-### Basic Calculation (Zhu and Lakkis)
+### Basic calculation (Zhu and Lakkis)
 
 Calculate sample size for:
 
@@ -138,7 +138,7 @@ sample_size_nbinom(
 )
 ```
 
-### Using Friede et al. Method
+### Using Friede et al. method
 
 ```{r}
 sample_size_nbinom(
@@ -155,7 +155,7 @@ sample_size_nbinom(
 )
 ```
 
-### Piecewise Constant Accrual
+### Piecewise constant accrual
 
 Consider a trial where recruitment ramps up:
 
@@ -177,7 +177,7 @@ sample_size_nbinom(
 )
 ```
 
-### Accrual with Dropout and Max Follow-up
+### Accrual with dropout and max follow-up
 
 Same design as above, but with a 5% dropout rate per unit time and a maximum follow-up of 6 months.
 
@@ -195,7 +195,7 @@ sample_size_nbinom(
 )
 ```
 
-### Calculating Power for Fixed Design
+### Calculating power for fixed design
 
 Using the accrual rates and design from the previous example, suppose we want to calculate the power if the treatment effect is smaller ($\lambda_2 = 0.4$ instead of $0.3$). We use the `accrual_rate` computed in the previous step.
 
@@ -227,7 +227,7 @@ sample_size_nbinom(
 )
 ```
 
-### Unequal Allocation
+### Unequal allocation
 
 Sample size with a 2:1 allocation ratio ($n_2 = 2 n_1$).
 
@@ -243,7 +243,7 @@ sample_size_nbinom(
 )
 ```
 
-## Accounting for Event Gaps
+## Accounting for event gaps
 
 In some recurrent event trials, there may be a mandatory "gap" period after each event during which no new events can be recorded (e.g., a recovery period or administrative window). This effectively reduces the time at risk.
 
@@ -254,7 +254,7 @@ If an `event_gap` ($g$) is specified, the function adjusts the calculation as fo
 
 Since the gap reduction depends on the event rate ($\lambda$), the at-risk exposure differs between treatment groups if their rates differ.
 
-### Example with Event Gap
+### Example with event gap
 
 Calculate sample size assuming a 5-day gap after each event (approx 0.0137 years).
 
@@ -280,4 +280,3 @@ Zhu, H., & Lakkis, H. (2014). Sample size calculation for comparing two negative
 Friede, T., & Schmidli, H. (2010). Sample size estimation for clinical trials with negative binomial rates. *Methods of Information in Medicine*, 49(6), 623-631. <https://doi.org/10.3414/ME09-01-0058>
 
 Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs for negative binomial outcomes. *Statistical Methods in Medical Research*, 27(10), 2978-2993. <https://doi.org/10.1177/0962280218773115>
-

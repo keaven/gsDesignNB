@@ -1,8 +1,8 @@
 ---
-title: "Verification of Sample Size Calculation via Simulation"
+title: "Verification of sample size calculation via simulation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Verification of Sample Size Calculation via Simulation}
+  %\VignetteIndexEntry{Verification of sample size calculation via simulation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -30,7 +30,7 @@ We specifically test a scenario with:
 *   Negative binomial outcomes.
 *   Fixed follow-up design.
 
-## Simulation Design
+## Simulation design
 
 The simulation parameters are chosen to yield a sample size of approximately 200 subjects.
 
@@ -46,7 +46,7 @@ The simulation parameters are chosen to yield a sample size of approximately 200
 *   **Event Gap**: 30 days (approx 0.082 years).
 *   **Accrual**: Piecewise linear ramp-up over 12 months (Rate $R$ for 0-6mo, $2R$ for 6-12mo).
 
-### Theoretical Calculation
+### Theoretical calculation
 
 First, we calculate the required sample size and expected properties using `sample_size_nbinom`.
 
@@ -64,7 +64,7 @@ event_gap <- 30 / 365.25
 
 # Accrual targeting N ~ 200
 # (Pre-calculated rates)
-accrual_rate <- c(11, 22) 
+accrual_rate <- c(11, 22)
 accrual_duration <- c(6, 6)
 
 design <- sample_size_nbinom(
@@ -83,7 +83,7 @@ design <- sample_size_nbinom(
 print(design)
 ```
 
-## Simulation Results
+## Simulation results
 
 We simulated 10,000 trials using the parameters defined above. The simulation script is located in `data-raw/generate_simulation_data.R`.
 
@@ -108,7 +108,7 @@ if (results_file != "") {
 }
 ```
 
-### 1. Average Exposure Verification
+### 1. Average exposure verification
 
 We compare the theoretical average exposure calculated by `sample_size_nbinom` with the observed average exposure in the simulation.
 
@@ -133,7 +133,7 @@ knitr::kable(comparison_exp, digits = 4, caption = "Comparison of Average Exposu
 
 The theoretical exposure should closely match the simulated average exposure.
 
-### 2. Statistical Information and Variance
+### 2. Statistical information and variance
 
 The theoretical variance of the log rate ratio estimator (Wald test) is given by:
 
@@ -170,7 +170,7 @@ knitr::kable(comparison_var, digits = 5, caption = "Comparison of Variance")
 
 Close agreement indicates that the sample size formula correctly anticipates the variability of the test statistic.
 
-### 3. Power Verification
+### 3. Power verification
 
 Finally, we compare the theoretical power with the empirical power (proportion of trials rejecting the null hypothesis).
 
@@ -194,10 +194,9 @@ knitr::kable(comparison_pwr, digits = 4, caption = "Comparison of Power")
 A 95% confidence interval for the empirical power can be calculated to check if the theoretical power falls within the simulation error bounds.
 
 ```{r power_ci, eval=!is.null(results)}
-binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm=TRUE), nrow(results))$conf.int
+binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), nrow(results))$conf.int
 ```
 
 ## Conclusion
 
 The simulation results confirm that `sample_size_nbinom` accurately predicts average exposure, variance, and power for this complex design with piecewise accrual and dropout.
-

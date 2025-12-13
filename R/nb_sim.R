@@ -1,9 +1,9 @@
-#' Simulate Recurrent Events with Fixed Follow-up
+#' Simulate recurrent events with fixed follow-up
 #'
 #' Simulates recurrent events for a clinical trial with piecewise constant enrollment,
 #' exponential failure rates (Poisson process), and piecewise exponential dropout.
 #'
-#' The simulation generates data consistent with the Negative Binomial models described
+#' The simulation generates data consistent with the negative binomial models described
 #' by Friede and Schmidli (2010) and Mutze et al. (2018). Specifically, it simulates
 #' a Gamma-distributed frailty variable for each individual (if dispersion > 0),
 #' which acts as a multiplier for that individual's event rate. Events are then
@@ -11,31 +11,33 @@
 #'
 #' @references
 #' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-#' \emph{Statistics in Medicine}, 29(10), 1145-1156. \doi{10.1002/sim.3891}
+#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3891}
 #'
 #' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs
-#' for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
-#' 27(10), 2978-2993. \doi{10.1177/0962280218773115}
+#' for negative binomial outcomes. _Statistical Methods in Medical Research_,
+#' 27(10), 2978--2993. \doi{10.1177/0962280218773115}
 #'
-#' @param enroll_rate A data frame with columns \code{rate} and \code{duration} defining
+#' @param enroll_rate A data frame with columns `rate` and `duration` defining
 #'   the piecewise constant enrollment rates.
-#' @param fail_rate A data frame with columns \code{treatment} and \code{rate} defining
-#'   the exponential failure rate for each treatment group. Optionally, a \code{dispersion}
-#'   column can be provided to generate data from a Negative Binomial distribution.
-#'   The dispersion parameter \code{k} is such that \eqn{Var(Y) = \mu + k \mu^2}.
-#' @param dropout_rate A data frame with columns \code{treatment}, \code{rate}, and \code{duration}
-#'   defining the piecewise constant dropout rates.
-#' @param max_followup Numeric. Maximum duration of follow-up for each individual
-#'   (relative to their randomization time).
-#' @param n Total sample size. If NULL, it is estimated from \code{enroll_rate}.
-#'   If provided, enrollment stops when \code{n} subjects are recruited.
+#' @param fail_rate A data frame with columns `treatment` and `rate` defining
+#'   the exponential failure rate for each treatment group.
+#'   Optionally, a `dispersion` column can be provided to generate data from
+#'   a negative binomial distribution. The dispersion parameter `k` is
+#'   such that \eqn{Var(Y) = \mu + k \mu^2}.
+#' @param dropout_rate A data frame with columns `treatment`, `rate`,
+#'   and `duration` defining the piecewise constant dropout rates.
+#' @param max_followup Numeric. Maximum duration of follow-up for
+#'   each individual (relative to their randomization time).
+#' @param n Total sample size. If NULL, it is estimated from `enroll_rate`.
+#'   If provided, enrollment stops when `n` subjects are recruited.
 #' @param block Block vector for treatment allocation. Default is
-#'   \code{c(rep("Control", 2), rep("Experimental", 2))}.
-#'   If NULL, simple randomization is used (treatments are assigned with equal probability).
-#'   If provided, it specifies the block structure, e.g., \code{c(rep("A", 2), rep("B", 2))}
-#'   assigns 2 to group A and 2 to group B in each block.
-#' @param event_gap Numeric. Gap duration after each event during which no new events are counted.
-#'   Default is 0.
+#'   `c(rep("Control", 2), rep("Experimental", 2))`.
+#'   If NULL, simple randomization is used (treatments are assigned with
+#'   equal probability). If provided, it specifies the block structure,
+#'   for example, `c(rep("A", 2), rep("B", 2))` assigns 2 to group A and
+#'   2 to group B in each block.
+#' @param event_gap Numeric. Gap duration after each event during which
+#'   no new events are counted. Default is 0.
 #'
 #' @return A data frame (tibble) with columns:
 #'   \describe{
@@ -54,7 +56,7 @@
 #' @importFrom stats rexp rgamma
 #' @importFrom utils tail
 #' @importFrom simtrial rpwexp_enroll
-nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL, 
+nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL,
                    block = c(rep("Control", 2), rep("Experimental", 2)), event_gap = 0) {
   # 1. Generate Enrollment
   # Simplified implementation of piecewise constant enrollment
@@ -143,20 +145,20 @@ nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = N
     stop("Each treatment must have an associated failure rate.")
   }
 
-  # Handle dispersion for Negative Binomial simulation
+  # Handle dispersion for negative binomial simulation
   if ("dispersion" %in% names(dt_subjects)) {
     # For rows with valid positive dispersion, sample lambda from Gamma.
     # We want the count Y ~ NegBin(mean = lambda*t, dispersion = k).
     # This is achieved if subject-specific rate L ~ Gamma with
     # mean = lambda and var = k * lambda^2.
     # Gamma parameters: shape = 1/k, scale = k * lambda
-    
+
     # Identify rows with positive dispersion
     has_disp <- !is.na(dt_subjects$dispersion) & dt_subjects$dispersion > 0
     if (any(has_disp)) {
       dt_subjects[has_disp, lambda := rgamma(
-        sum(has_disp), 
-        shape = 1 / dispersion, 
+        sum(has_disp),
+        shape = 1 / dispersion,
         scale = lambda * dispersion
       )]
     }
@@ -215,15 +217,15 @@ nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = N
         # Wait, usually gap is "dead time" after event.
         # So T_1 ~ Exp(lambda). Event at T_1.
         # T_2 ~ Exp(lambda). Event at T_1 + gap + T_2.
-        
+
         inter_arrival <- rexp(1, lambda)
-        
+
         if (length(event_times) == 0) {
           cum_t <- cum_t + inter_arrival
         } else {
           cum_t <- cum_t + event_gap + inter_arrival
         }
-        
+
         if (cum_t <= end_time) {
           event_times <- c(event_times, cum_t)
         } else {

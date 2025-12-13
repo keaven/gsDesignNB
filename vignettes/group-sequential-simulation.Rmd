@@ -1,8 +1,8 @@
 ---
-title: "Group Sequential Design and Simulation"
+title: "Group sequential design and simulation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Group Sequential Design and Simulation}
+  %\VignetteIndexEntry{Group sequential design and simulation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,10 +22,10 @@ library(ggplot2)
 library(gt)
 ```
 
-This vignette demonstrates how to create a group sequential design for 
+This vignette demonstrates how to create a group sequential design for
 negative binomial outcomes using `gsNBCalendar()` and simulate the design to confirm design operating characteristicsusing `nb_sim()`.
 
-## Trial Design Parameters
+## Trial design parameters
 
 We design a trial with the following characteristics:
 
@@ -43,7 +43,7 @@ We design a trial with the following characteristics:
 * **Power:** 90% (beta = 0.1)
 * **Alpha:** 0.025 (one-sided)
 
-### Sample Size Calculation
+### Sample size calculation
 
 First, we calculate the required sample size for a fixed design:
 
@@ -54,18 +54,18 @@ First, we calculate the required sample size for a fixed design:
 event_gap_val <- 20 / 30.4375 # Minimum gap between events is 20 days (approx)
 
 nb_ss <- sample_size_nbinom(
-  lambda1 = 1.5 / 12,      # Control event rate (per month)
-  lambda2 = 1.0 / 12,      # Experimental event rate (per month)
-  dispersion = 0.5,        # Overdispersion parameter
-  power = 0.9,             # 90% power
-  alpha = 0.025,           # One-sided alpha
+  lambda1 = 1.5 / 12, # Control event rate (per month)
+  lambda2 = 1.0 / 12, # Experimental event rate (per month)
+  dispersion = 0.5, # Overdispersion parameter
+  power = 0.9, # 90% power
+  alpha = 0.025, # One-sided alpha
   accrual_rate = 100 / 12, # Patients per month (will determine total n)
-  accrual_duration = 12,   # 12 months enrollment
-  trial_duration = 24,     # 24 months trial
-  max_followup = 12,       # 12 months of follow-up per patient
+  accrual_duration = 12, # 12 months enrollment
+  trial_duration = 24, # 24 months trial
+  max_followup = 12, # 12 months of follow-up per patient
   dropout_rate = -log(0.95), # 5% dropout rate at 1 year
   event_gap = event_gap_val,
-  method = "zhu"           # Zhu and Lakkis sample size method
+  method = "zhu" # Zhu and Lakkis sample size method
 )
 
 # Print key results
@@ -73,17 +73,17 @@ cat("Fixed design\n")
 nb_ss
 ```
 
-### Group Sequential Design
+### Group sequential design
 
-Now we convert this a group sequential design with 3 analyses after 
-10, 18 and 24 months. 
+Now we convert this a group sequential design with 3 analyses after
+10, 18 and 24 months.
 Note that the final analysis time must be the same as for the fixed design.
 The relative enrollment rates will be increased to increase the sample size
 as with standard group sequential design theory.
 We specify `usTime = c(0.1, 0.18, 1)` which along with the `sfLinear()` spending
 function will spend 10%, 18% and 100% of the cumulative $\alpha$ at the 3
 planned analyses regardless of the observed statistical information at each
-analysis. 
+analysis.
 
 ```{r gs-design}
 # Analysis times (in months)
@@ -91,16 +91,16 @@ analysis_times <- c(10, 18, 24)
 
 # Create group sequential design with integer sample sizes
 gs_nb <- gsNBCalendar(
-  x = nb_ss,               # Input fixed design for negative binomial
-  k = 3,                   # 3 analyses
-  test.type = 4,           # Two-sided asymmetric, non-binding futility
-  sfu = sfLinear,          # Linear spending function for upper bound
-  sfupar = c(.5, .5),      # Identity function
-  sfl = sfHSD,             # HSD spending for lower bound
-  sflpar = -8,             # Conservative futility bound
-  usTime = c(.1, .18, 1),  # Upper spending timing
-  lsTime = NULL,           # Spending based on information
-  analysis_times = analysis_times  # Calendar times in months
+  x = nb_ss, # Input fixed design for negative binomial
+  k = 3, # 3 analyses
+  test.type = 4, # Two-sided asymmetric, non-binding futility
+  sfu = sfLinear, # Linear spending function for upper bound
+  sfupar = c(.5, .5), # Identity function
+  sfl = sfHSD, # HSD spending for lower bound
+  sflpar = -8, # Conservative futility bound
+  usTime = c(.1, .18, 1), # Upper spending timing
+  lsTime = NULL, # Spending based on information
+  analysis_times = analysis_times # Calendar times in months
 ) |> gsDesignNB::toInteger() # Round to integer sample size
 ```
 
@@ -113,9 +113,9 @@ summary(gs_nb)
 Tabular summary:
 
 ```{r}
-gs_nb |> 
+gs_nb |>
   gsDesign::gsBoundSummary(
-    deltaname = "RR", 
+    deltaname = "RR",
     logdelta = TRUE,
     Nname = "Information",
     timename = "Month",
@@ -125,19 +125,21 @@ gs_nb |>
   gt() |>
   tab_header(
     title = "Group Sequential Design Bounds for Negative Binomial Outcome",
-    subtitle = paste0("N = ", ceiling(gs_nb$n_total[gs_nb$k]), 
-                      ", Expected events = ", round(gs_nb$nb_design$total_events, 1))
+    subtitle = paste0(
+      "N = ", ceiling(gs_nb$n_total[gs_nb$k]),
+      ", Expected events = ", round(gs_nb$nb_design$total_events, 1)
+    )
   )
 ```
 
 
 
-## Simulation Study
+## Simulation study
 
 We now simulate `r 50` trials to evaluate the power
 of the group sequential design assuming design parameters above are correct.
 
-### Simulation Setup
+### Simulation setup
 
 ```{r simulation-setup}
 set.seed(42)
@@ -145,12 +147,12 @@ n_sims <- 50
 
 # Enrollment rate (patients per month) to achieve target sample size
 n_target <- ceiling(nb_ss$n_total)
-enroll_rate_val <- n_target / 12  # All enrolled in 12 months
+enroll_rate_val <- n_target / 12 # All enrolled in 12 months
 
 # Define enrollment
 enroll_rate <- data.frame(
   rate = enroll_rate_val,
-  duration = 12  # 12 months enrollment
+  duration = 12 # 12 months enrollment
 )
 
 # Define failure rates (with dispersion)
@@ -169,10 +171,10 @@ dropout_rate <- data.frame(
 )
 
 # Maximum follow-up (trial duration from enrollment start)
-max_followup <- 12  # 12 months to match design
+max_followup <- 12 # 12 months to match design
 ```
 
-### Run Simulations
+### Run simulations
 
 ```{r run-simulations}
 # Storage for results
@@ -187,7 +189,7 @@ for (sim in 1:n_sims) {
     max_followup = max_followup,
     n = n_target
   )
-  
+
   # Analyze at each interim
   sim_results <- data.frame(
     sim = sim,
@@ -206,9 +208,9 @@ for (sim in 1:n_sims) {
     cross_upper = NA,
     cross_lower = NA
   )
-  
+
   stopped <- FALSE
-  
+
   for (k in 1:3) {
     if (stopped) {
       # Trial already stopped at earlier analysis
@@ -216,46 +218,46 @@ for (sim in 1:n_sims) {
       sim_results$cross_lower[k] <- FALSE
       next
     }
-    
+
     # Cut data at analysis time
     cut_time <- analysis_times[k]
     cut_data <- cut_data_by_date(sim_data, cut_date = cut_time, event_gap = event_gap_val)
-    
+
     # Count enrolled subjects (those with enroll_time <= cut_time)
     enrolled <- unique(sim_data$id[sim_data$enroll_time <= cut_time])
     cut_data <- cut_data[cut_data$id %in% enrolled, ]
-    
+
     # Summary by treatment
     summary_dt <- as.data.table(cut_data)[
       ,
       .(n = .N, events = sum(events), exposure = sum(tte)),
       by = treatment
     ]
-    
+
     ctrl_row <- summary_dt[treatment == "Control"]
     exp_row <- summary_dt[treatment == "Experimental"]
-    
+
     sim_results$n_enrolled[k] <- nrow(cut_data)
     sim_results$events_ctrl[k] <- if (nrow(ctrl_row) > 0) ctrl_row$events else 0
     sim_results$events_exp[k] <- if (nrow(exp_row) > 0) exp_row$events else 0
     sim_results$events_total[k] <- sim_results$events_ctrl[k] + sim_results$events_exp[k]
     sim_results$exposure_ctrl[k] <- if (nrow(ctrl_row) > 0) ctrl_row$exposure else 0
     sim_results$exposure_exp[k] <- if (nrow(exp_row) > 0) exp_row$exposure else 0
-    
+
     # Run Mütze test
     if (nrow(cut_data) >= 4 && sim_results$events_total[k] >= 2) {
       test_result <- tryCatch(
         mutze_test(cut_data),
         error = function(e) NULL
       )
-      
+
       if (!is.null(test_result)) {
         sim_results$z_stat[k] <- test_result$z
         sim_results$p_value[k] <- test_result$p_value
-        
+
         # Calculate unblinded information using the variance from the GLM
         sim_results$unblinded_info[k] <- 1 / test_result$se^2
-        
+
         # Calculate blinded information and update bounds
         blinded_est <- calculate_blinded_info(
           cut_data,
@@ -265,7 +267,7 @@ for (sim in 1:n_sims) {
           event_gap = event_gap_val
         )
         sim_results$blinded_info[k] <- blinded_est$blinded_info
-        
+
         # Update design with observed information fraction
         max_info <- gs_nb$n.fix
         # If observed info >= max info, this must be the final analysis
@@ -281,42 +283,42 @@ for (sim in 1:n_sims) {
             frac <- 1
           }
         } else if (k == 3) {
-            frac <- 1
+          frac <- 1
         } else {
-            frac <- blinded_est$blinded_info / max_info
+          frac <- blinded_est$blinded_info / max_info
         }
-        
+
         # Current timing
         current_timing <- gs_nb$timing
         current_timing[k] <- frac
-        
+
         # Safety check for timing order
-        if (k > 1 && current_timing[k] <= current_timing[k-1]) current_timing[k] <- current_timing[k-1] + 0.001
-        
+        if (k > 1 && current_timing[k] <= current_timing[k - 1]) current_timing[k] <- current_timing[k - 1] + 0.001
+
         # If we have reached full information early (frac >= 1), adjust timing
         if (frac >= 1 && k < 3) {
-           # Set current timing to 1
-           current_timing[k] <- 1
-           # Set subsequent timings to 1 as well (though they won't be reached ideally, 
-           # gsDesign needs valid input)
-           current_timing[(k+1):3] <- 1
-           # Note: gsDesign might complain if timing is 1 at interim.
-           # Actually gsDesign requires timing to be increasing and < 1 for interims usually.
-           # If information fraction > 1, we should probably stop the trial.
-           stopped <- TRUE
+          # Set current timing to 1
+          current_timing[k] <- 1
+          # Set subsequent timings to 1 as well (though they won't be reached ideally,
+          # gsDesign needs valid input)
+          current_timing[(k + 1):3] <- 1
+          # Note: gsDesign might complain if timing is 1 at interim.
+          # Actually gsDesign requires timing to be increasing and < 1 for interims usually.
+          # If information fraction > 1, we should probably stop the trial.
+          stopped <- TRUE
         }
-        
-        if (k < 3 && current_timing[k+1] <= current_timing[k]) {
+
+        if (k < 3 && current_timing[k + 1] <= current_timing[k]) {
           # Ensure strict monotonicity if not already at 1
           if (current_timing[k] < 1) {
-             current_timing[k+1] <- min(current_timing[k] + 0.001, 0.999)
+            current_timing[k + 1] <- min(current_timing[k] + 0.001, 0.999)
           }
         }
-        
+
         # Recompute bounds
         # We only recompute if we haven't exceeded information
         if (frac <= 1 || k == 3) {
-           temp_gs <- gsDesign::gsDesign(
+          temp_gs <- gsDesign::gsDesign(
             k = 3,
             test.type = 4,
             alpha = 0.025,
@@ -327,30 +329,30 @@ for (sim in 1:n_sims) {
             timing = current_timing,
             n.fix = max_info
           )
-          
+
           upper_bound <- temp_gs$upper$bound[k]
           lower_bound <- temp_gs$lower$bound[k]
-          
+
           # Check boundaries (one-sided: reject if z < -upper bound for benefit)
           # For rate ratio < 1 (experimental better), log(RR) < 0, so z < 0
-          z_eff <- -test_result$z  # Flip sign for efficacy direction
-          
+          z_eff <- -test_result$z # Flip sign for efficacy direction
+
           sim_results$cross_upper[k] <- z_eff > upper_bound
           sim_results$cross_lower[k] <- z_eff < lower_bound
-          
+
           if (sim_results$cross_upper[k] || sim_results$cross_lower[k]) {
             stopped <- TRUE
           }
         } else {
-           # Information limit reached early
-           # We should check against final bound, but technically this is an overrun
-           # For simplicity here, we stop.
-           stopped <- TRUE
+          # Information limit reached early
+          # We should check against final bound, but technically this is an overrun
+          # For simplicity here, we stop.
+          stopped <- TRUE
         }
       }
     }
   }
-  
+
   results[[sim]] <- sim_results
 }
 
@@ -358,9 +360,9 @@ for (sim in 1:n_sims) {
 all_results <- do.call(rbind, results)
 ```
 
-## Simulation Results Summary
+## Simulation results summary
 
-### Events and Exposure by Analysis
+### Events and exposure by analysis
 
 ```{r summary-events}
 # Summarize by analysis
@@ -397,10 +399,10 @@ summary_by_analysis |>
   fmt_number(decimals = 2)
 ```
 
-### Statistical Information
+### Statistical information
 
-The statistical information at each analysis is proportional to the precision 
-of the treatment effect estimate. For negative binomial outcomes, this relates 
+The statistical information at each analysis is proportional to the precision
+of the treatment effect estimate. For negative binomial outcomes, this relates
 to the total exposure and event counts.
 
 ```{r info-summary}
@@ -438,7 +440,7 @@ info_by_analysis |>
   fmt_number(decimals = 3)
 ```
 
-### Boundary Crossings and Power
+### Boundary crossings and power
 
 ```{r power-summary}
 # Calculate crossing probabilities
@@ -478,7 +480,7 @@ crossing_summary[, .(analysis, n_cross_upper, cum_prob_cross_upper, design_cum_p
   fmt_number(columns = contains("power"), decimals = 3)
 ```
 
-### Overall Power
+### Overall power
 
 ```{r overall-power}
 # Determine if each simulation crossed the efficacy boundary at any analysis
@@ -506,12 +508,12 @@ cat(sprintf("Futility Stopping Rate: %.1f%%\n", overall_futility * 100))
 cat(sprintf("Design Power (target): %.1f%%\n", (1 - gs_nb$beta) * 100))
 ```
 
-### Visualization of Z-Statistics
+### Visualization of Z-statistics
 
 ```{r plot-z-stats, fig.width=7, fig.height=5, fig.alt="Z-statistics across analyses with group sequential boundaries"}
 # Prepare data for plotting
 plot_data <- all_results
-plot_data$z_flipped <- -plot_data$z_stat  # Flip for efficacy direction
+plot_data$z_flipped <- -plot_data$z_stat # Flip for efficacy direction
 
 # Boundary data
 bounds_df <- data.frame(
@@ -524,10 +526,14 @@ ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
   geom_violin(fill = "steelblue", alpha = 0.5, color = "steelblue") +
   geom_boxplot(width = 0.1, fill = "white", outlier.shape = NA) +
   # Draw bounds as lines connecting analyses
-  geom_line(data = bounds_df, aes(x = analysis, y = upper, group = 1), 
-             linetype = "dashed", color = "darkgreen", linewidth = 1) +
-  geom_line(data = bounds_df, aes(x = analysis, y = lower, group = 1), 
-             linetype = "dashed", color = "darkred", linewidth = 1) +
+  geom_line(
+    data = bounds_df, aes(x = analysis, y = upper, group = 1),
+    linetype = "dashed", color = "darkgreen", linewidth = 1
+  ) +
+  geom_line(
+    data = bounds_df, aes(x = analysis, y = lower, group = 1),
+    linetype = "dashed", color = "darkred", linewidth = 1
+  ) +
   # Draw points for bounds
   geom_point(data = bounds_df, aes(x = analysis, y = upper), color = "darkgreen") +
   geom_point(data = bounds_df, aes(x = analysis, y = lower), color = "darkred") +
@@ -542,7 +548,7 @@ ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
   ylim(c(-4, 6))
 ```
 
-## Design Summary
+## Design summary
 
 The `summary()` function provides a textual overview of the group sequential design:
 
@@ -550,27 +556,30 @@ The `summary()` function provides a textual overview of the group sequential des
 summary(gs_nb)
 ```
 
-For detailed boundary information, use `gsBoundSummary()`. We set `logdelta = TRUE` 
-since the test statistic is based on the log rate ratio. The `~RR at bound` displays the 
+For detailed boundary information, use `gsBoundSummary()`. We set `logdelta = TRUE`
+since the test statistic is based on the log rate ratio. The `~RR at bound` displays the
 rate ratio ($\lambda_2/\lambda_1$), where values < 1 indicate treatment benefit:
 
 ```{r bounds-table}
-gsDesign::gsBoundSummary(gs_nb, 
-                         deltaname = "RR", 
-                         logdelta = TRUE,
-                         Nname = "Information",
-                         timename = "Month",
-                         digits = 4,
-                         ddigits = 2) |>
+gsDesign::gsBoundSummary(gs_nb,
+  deltaname = "RR",
+  logdelta = TRUE,
+  Nname = "Information",
+  timename = "Month",
+  digits = 4,
+  ddigits = 2
+) |>
   gt() |>
   tab_header(
     title = "Group Sequential Design Bounds for Negative Binomial Outcome",
-    subtitle = paste0("N = ", ceiling(gs_nb$n_total[gs_nb$k]), 
-                      ", Expected events = ", round(gs_nb$nb_design$total_events, 1))
+    subtitle = paste0(
+      "N = ", ceiling(gs_nb$n_total[gs_nb$k]),
+      ", Expected events = ", round(gs_nb$nb_design$total_events, 1)
+    )
   )
 ```
 
-Note that `P(Cross) if RR=0.67` corresponds to the design's alternate hypothesis 
+Note that `P(Cross) if RR=0.67` corresponds to the design's alternate hypothesis
 (treatment rate / control rate = `r round(nb_ss$inputs$lambda2 / nb_ss$inputs$lambda1, 2)`).
 
 Sample sizes at each analysis:
@@ -597,7 +606,7 @@ summary(gs_nb_int)
 
 ## Notes
 
-This simulation demonstrates the basic workflow for group sequential designs with 
+This simulation demonstrates the basic workflow for group sequential designs with
 negative binomial outcomes:
 
 1. **Sample size calculation** using `sample_size_nbinom()` for a fixed design
@@ -606,10 +615,9 @@ negative binomial outcomes:
 4. **Analysis** using `cut_data_by_date()` and `mutze_test()` at each interim
 5. **Boundary checking** against the group sequential bounds
 
-The `usTime = c(0.1, 0.2, 1)` specification provides conservative alpha spending 
-at early analyses, preserving most of the Type I error for later analyses when 
+The `usTime = c(0.1, 0.2, 1)` specification provides conservative alpha spending
+at early analyses, preserving most of the Type I error for later analyses when
 more information is available.
 
-With only `r n_sims` simulations, the estimated power has substantial Monte Carlo 
+With only `r n_sims` simulations, the estimated power has substantial Monte Carlo
 error. For more precise estimates, increase `n_sims` to 1000 or more.
-
