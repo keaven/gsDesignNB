@@ -40,7 +40,7 @@ The simulation parameters are chosen to yield a sample size of approximately 200
 *   **Dispersion**: $k = 0.5$.
 *   **Power**: 90%.
 *   **Alpha**: 0.025 (one-sided).
-*   **Dropout**: 10% per unit time ($\delta = 0.1$).
+*   **Dropout**: 10% per year adjusted to monthly rate ($\delta = 0.1 / 12$).
 *   **Trial Duration**: 24 months.
 *   **Max Follow-up**: 12 months.
 *   **Event Gap**: 30 days (approx 0.082 years).
@@ -57,10 +57,10 @@ lambda2 <- 0.3
 dispersion <- 0.5
 power <- 0.9
 alpha <- 0.025
-dropout_rate <- 0.1
+dropout_rate <- 0.1 / 12
 max_followup <- 12
 trial_duration <- 24
-event_gap <- 30 / 365.25
+event_gap <- 20 / 30.42 # 20 days
 
 # Accrual targeting N ~ 200
 # (Pre-calculated rates)
@@ -85,7 +85,7 @@ print(design)
 
 ## Simulation results
 
-We simulated 10,000 trials using the parameters defined above. The simulation script is located in `data-raw/generate_simulation_data.R`.
+We simulated 3,600 trials using the parameters defined above. This number of simulations was chosen to achieve a standard error for the power estimate of approximately 0.005 when the true power is 90% ($\sqrt{0.9 \times 0.1 / 3600} = 0.005$). The simulation script is located in `data-raw/generate_simulation_data.R`.
 
 ```{r load_results}
 # Load pre-computed simulation results

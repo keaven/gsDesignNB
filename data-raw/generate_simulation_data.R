@@ -17,43 +17,18 @@ lambda2 <- 0.3
 dispersion <- 0.5
 power <- 0.9
 alpha <- 0.025
-dropout_rate <- 0.1
+dropout_rate <- 0.1 / 12
 max_followup <- 12
 trial_duration <- 24
-event_gap <- 30 / 365.25 # 30 days gap
+event_gap <- 20 / 30.42 # 20 days
 
-# Piecewise accrual: Ramp up
-# Let's target N ~ 200
-# First calculate required N with fixed accrual to get an idea
-design_prelim <- sample_size_nbinom(
-  lambda1 = lambda1, lambda2 = lambda2, dispersion = dispersion,
-  power = power, alpha = alpha, sided = 1,
-  accrual_rate = 10, accrual_duration = 12, # dummy
-  trial_duration = trial_duration,
-  dropout_rate = dropout_rate,
-  max_followup = max_followup,
-  event_gap = event_gap,
-  method = "friede"
-)
-
-# Target N total
-N_target <- design_prelim$n_total
-# Create a piecewise accrual that achieves this N in, say, 12 months
-# Rate 1 for first 6 months, Rate 2 for next 6 months
-# R1 * 6 + R2 * 6 = N
-# Let R2 = 2 * R1 -> 3 * R1 * 6 = N -> 18 * R1 = N -> R1 = N / 18
-R1 <- N_target / 18
-R2 <- 2 * R1
-
-accrual_rate <- c(R1, R2)
+# Accrual targeting N ~ 200
+accrual_rate <- c(11, 22)
 accrual_duration <- c(6, 6)
-# Ensure total accrual duration <= trial duration
-# 12 <= 24. OK.
 
-# Recalculate design with specific accrual to get exact power/info
 design <- sample_size_nbinom(
   lambda1 = lambda1, lambda2 = lambda2, dispersion = dispersion,
-  power = NULL, # Calculate power for fixed N (implied by rates)
+  power = NULL, # Calculate power for this specific design
   alpha = alpha, sided = 1,
   accrual_rate = accrual_rate,
   accrual_duration = accrual_duration,
@@ -65,7 +40,7 @@ design <- sample_size_nbinom(
 )
 
 # 2. Simulation Setup
-nsim <- 10000
+nsim <- 3600
 n_cores <- future::availableCores()
 if (is.na(n_cores) || n_cores < 1) n_cores <- 1
 
@@ -156,7 +131,7 @@ run_one_sim <- function(i) {
 }
 
 # 2. Simulation Setup
-nsim <- 10000
+nsim <- 3600
 n_cores <- future::availableCores()
 if (is.na(n_cores) || n_cores < 1) n_cores <- 1
 

@@ -42,6 +42,9 @@ We design a trial with the following characteristics:
 * **Dispersion:** 0.5
 * **Power:** 90% (beta = 0.1)
 * **Alpha:** 0.025 (one-sided)
+# **event gap:** 20 days
+# **dropout rate:** 5% at 1 year
+# **max followup:** 12 months
 
 ### Sample size calculation
 
@@ -63,7 +66,7 @@ nb_ss <- sample_size_nbinom(
   accrual_duration = 12, # 12 months enrollment
   trial_duration = 24, # 24 months trial
   max_followup = 12, # 12 months of follow-up per patient
-  dropout_rate = -log(0.95), # 5% dropout rate at 1 year
+  dropout_rate = -log(0.95) / 12, # 5% dropout rate at 1 year
   event_gap = event_gap_val,
   method = "zhu" # Zhu and Lakkis sample size method
 )
@@ -80,8 +83,8 @@ Now we convert this a group sequential design with 3 analyses after
 Note that the final analysis time must be the same as for the fixed design.
 The relative enrollment rates will be increased to increase the sample size
 as with standard group sequential design theory.
-We specify `usTime = c(0.1, 0.18, 1)` which along with the `sfLinear()` spending
-function will spend 10%, 18% and 100% of the cumulative $\alpha$ at the 3
+We specify `usTime = c(0.1, 0.14, 1)` which along with the `sfLinear()` spending
+function will spend 10%, 14% and 100% of the cumulative $\alpha$ at the 3
 planned analyses regardless of the observed statistical information at each
 analysis.
 
@@ -98,7 +101,7 @@ gs_nb <- gsNBCalendar(
   sfupar = c(.5, .5), # Identity function
   sfl = sfHSD, # HSD spending for lower bound
   sflpar = -8, # Conservative futility bound
-  usTime = c(.1, .18, 1), # Upper spending timing
+  usTime = c(.1, .14, 1), # Upper spending timing
   lsTime = NULL, # Spending based on information
   analysis_times = analysis_times # Calendar times in months
 ) |> gsDesignNB::toInteger() # Round to integer sample size
@@ -404,6 +407,9 @@ summary_by_analysis |>
 The statistical information at each analysis is proportional to the precision
 of the treatment effect estimate. For negative binomial outcomes, this relates
 to the total exposure and event counts.
+We note that the asymptotic information approximation overstates the information at the each analysis.
+However, the power approximation still worked reasonably well. 
+This evaluated in a larger simulation study in the vignette `verification-simulation.Rmd`.
 
 ```{r info-summary}
 # Summarize information (using blinded estimate from simulation)
@@ -546,61 +552,6 @@ ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
   ) +
   theme_minimal() +
   ylim(c(-4, 6))
-```
-
-## Design summary
-
-The `summary()` function provides a textual overview of the group sequential design:
-
-```{r design-summary}
-summary(gs_nb)
-```
-
-For detailed boundary information, use `gsBoundSummary()`. We set `logdelta = TRUE`
-since the test statistic is based on the log rate ratio. The `~RR at bound` displays the
-rate ratio ($\lambda_2/\lambda_1$), where values < 1 indicate treatment benefit:
-
-```{r bounds-table}
-gsDesign::gsBoundSummary(gs_nb,
-  deltaname = "RR",
-  logdelta = TRUE,
-  Nname = "Information",
-  timename = "Month",
-  digits = 4,
-  ddigits = 2
-) |>
-  gt() |>
-  tab_header(
-    title = "Group Sequential Design Bounds for Negative Binomial Outcome",
-    subtitle = paste0(
-      "N = ", ceiling(gs_nb$n_total[gs_nb$k]),
-      ", Expected events = ", round(gs_nb$nb_design$total_events, 1)
-    )
-  )
-```
-
-Note that `P(Cross) if RR=0.67` corresponds to the design's alternate hypothesis
-(treatment rate / control rate = `r round(nb_ss$inputs$lambda2 / nb_ss$inputs$lambda1, 2)`).
-
-Sample sizes at each analysis:
-
-```{r sample-sizes}
-data.frame(
-  Analysis = 1:gs_nb$k,
-  n1 = gs_nb$n1,
-  n2 = gs_nb$n2,
-  n_total = gs_nb$n_total
-) |>
-  gt() |>
-  tab_header(title = "Sample Sizes at Each Analysis") |>
-  fmt_number(columns = c(n1, n2, n_total), decimals = 1)
-```
-
-After rounding to integer sample sizes with `toInteger()`:
-
-```{r integer-design}
-gs_nb_int <- toInteger(gs_nb)
-summary(gs_nb_int)
 ```
 
 
