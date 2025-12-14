@@ -22,15 +22,16 @@ max_followup <- 12
 trial_duration <- 24
 event_gap <- 20 / 30.42 # 20 days
 
-# Accrual targeting N ~ 200
-accrual_rate <- c(11, 22)
+# Accrual targeting 90% power
+# We provide relative rates (1:2) and the function scales them to achieve power
+accrual_rate_rel <- c(1, 2)
 accrual_duration <- c(6, 6)
 
 design <- sample_size_nbinom(
   lambda1 = lambda1, lambda2 = lambda2, dispersion = dispersion,
-  power = NULL, # Calculate power for this specific design
+  power = power, 
   alpha = alpha, sided = 1,
-  accrual_rate = accrual_rate,
+  accrual_rate = accrual_rate_rel,
   accrual_duration = accrual_duration,
   trial_duration = trial_duration,
   dropout_rate = dropout_rate,
@@ -38,6 +39,9 @@ design <- sample_size_nbinom(
   event_gap = event_gap,
   method = "friede"
 )
+
+# Extract calculated absolute accrual rates
+accrual_rate <- design$accrual_rate
 
 # 2. Simulation Setup
 nsim <- 3600

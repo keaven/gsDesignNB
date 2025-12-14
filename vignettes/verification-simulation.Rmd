@@ -25,6 +25,7 @@ library(ggplot2)
 This vignette verifies the accuracy of the `sample_size_nbinom` function by comparing its theoretical predictions for average exposure, statistical information, and power against results from a large-scale simulation.
 
 We specifically test a scenario with:
+
 *   Piecewise constant accrual rates.
 *   Piecewise exponential dropout (constant in this example).
 *   Negative binomial outcomes.
