@@ -466,12 +466,8 @@ crossing_summary[, prob_cross_lower := n_cross_lower / n_sims]
 crossing_summary[, cum_prob_cross_upper := cumsum(prob_cross_upper)]
 
 # Cumulative power (Design)
-# Drift parameter for alternative: |log(RR)| * sqrt(I_max)
-# Note: gs_nb$n.fix is the information at final analysis
-log_rr <- log(nb_ss$inputs$lambda2 / nb_ss$inputs$lambda1)
-theta <- abs(log_rr) * sqrt(gs_nb$n.fix)
-design_probs <- gsDesign::gsProbability(d = gs_nb, theta = theta)
-crossing_summary[, design_cum_power := cumsum(design_probs$upper$prob)[analysis]]
+# The design object gs_nb already contains power probabilities in the second column of upper$prob
+crossing_summary[, design_cum_power := cumsum(gs_nb$upper$prob[, 2])[analysis]]
 
 crossing_summary[, .(analysis, n_cross_upper, cum_prob_cross_upper, design_cum_power)] |>
   gt() |>
