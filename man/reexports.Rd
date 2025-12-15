@@ -27,103 +27,12 @@
 \alias{sfXG3}
 \alias{gsBoundSummary}
 \title{Objects exported from other packages}
-\usage{
-gsDesign(
-  k = 3,
-  test.type = 4,
-  alpha = 0.025,
-  beta = 0.1,
-  astar = 0,
-  delta = 0,
-  n.fix = 1,
-  timing = 1,
-  sfu = sfHSD,
-  sfupar = -4,
-  sfl = sfHSD,
-  sflpar = -2,
-  tol = 1e-06,
-  r = 18,
-  n.I = 0,
-  maxn.IPlan = 0,
-  nFixSurv = 0,
-  endpoint = NULL,
-  delta1 = 1,
-  delta0 = 0,
-  overrun = 0,
-  usTime = NULL,
-  lsTime = NULL
-)
-
-sfBetaDist(alpha, t, param)
-
-sfCauchy(alpha, t, param)
-
-sfExponential(alpha, t, param)
-
-sfExtremeValue(alpha, t, param)
-
-sfExtremeValue2(alpha, t, param)
-
-sfGapped(alpha, t, param)
-
-sfHSD(alpha, t, param)
-
-sfLDOF(alpha, t, param = NULL)
-
-sfLDPocock(alpha, t, param)
-
-sfLinear(alpha, t, param)
-
-sfLogistic(alpha, t, param)
-
-sfNormal(alpha, t, param)
-
-sfPoints(alpha, t, param)
-
-sfPower(alpha, t, param)
-
-sfStep(alpha, t, param)
-
-sfTDist(alpha, t, param)
-
-sfTrimmed(alpha, t, param)
-
-sfTruncated(alpha, t, param)
-
-sfXG1(alpha, t, param)
-
-sfXG2(alpha, t, param)
-
-sfXG3(alpha, t, param)
-
-gsBoundSummary(
-  x,
-  deltaname = NULL,
-  logdelta = FALSE,
-  Nname = NULL,
-  digits = 4,
-  ddigits = 2,
-  tdigits = 0,
-  timename = "Month",
-  prior = normalGrid(mu = x$delta/2, sigma = 10/sqrt(x$n.fix)),
-  POS = FALSE,
-  ratio = NULL,
-  exclude = c("B-value", "Spending", "CP", "CP H1", "PP"),
-  r = 18,
-  alpha = NULL,
-  ...
-)
-}
-\value{
-See the original documentation in the gsDesign package for details.
-}
-\description{
-These objects are imported from other packages.
-Follow the links below to see their documentation.
-}
-\examples{
-x <- gsDesign(k = 2, test.type = 2)
-gsBoundSummary(x)
-
-}
 \keyword{internal}
+\description{
+These objects are imported from other packages. Follow the links
+below to see their documentation.
+
+\describe{
+  \item{gsDesign}{\code{\link[gsDesign]{gsBoundSummary}}, \code{\link[gsDesign]{gsDesign}}, \code{\link[gsDesign:sfDistribution]{sfBetaDist}}, \code{\link[gsDesign:sfDistribution]{sfCauchy}}, \code{\link[gsDesign]{sfExponential}}, \code{\link[gsDesign:sfDistribution]{sfExtremeValue}}, \code{\link[gsDesign:sfDistribution]{sfExtremeValue2}}, \code{\link[gsDesign:sfSpecial]{sfGapped}}, \code{\link[gsDesign]{sfHSD}}, \code{\link[gsDesign]{sfLDOF}}, \code{\link[gsDesign:sfLDOF]{sfLDPocock}}, \code{\link[gsDesign]{sfLinear}}, \code{\link[gsDesign:sfDistribution]{sfLogistic}}, \code{\link[gsDesign:sfDistribution]{sfNormal}}, \code{\link[gsDesign]{sfPoints}}, \code{\link[gsDesign]{sfPower}}, \code{\link[gsDesign:sfLinear]{sfStep}}, \code{\link[gsDesign]{sfTDist}}, \code{\link[gsDesign:sfSpecial]{sfTrimmed}}, \code{\link[gsDesign:sfSpecial]{sfTruncated}}, \code{\link[gsDesign:sfXG]{sfXG1}}, \code{\link[gsDesign:sfXG]{sfXG2}}, \code{\link[gsDesign:sfXG]{sfXG3}}}
+}}
+
