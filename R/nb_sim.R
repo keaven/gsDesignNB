@@ -3,21 +3,12 @@
 #' Simulates recurrent events for a clinical trial with piecewise constant enrollment,
 #' exponential failure rates (Poisson process), and piecewise exponential dropout.
 #'
+#' @details
 #' The simulation generates data consistent with the negative binomial models described
-#' by Friede and Schmidli (2010) and Mutze et al. (2019). Specifically, it simulates
+#' by Friede and Schmidli (2010) and Mütze et al. (2019). Specifically, it simulates
 #' a Gamma-distributed frailty variable for each individual (if dispersion > 0),
 #' which acts as a multiplier for that individual's event rate. Events are then
 #' generated according to a Poisson process with this subject-specific rate.
-#'
-#' @references
-#' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with
-#' count data: methods and applications in multiple sclerosis.
-#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3861}
-#'
-#' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
-#' Group sequential designs for negative binomial outcomes.
-#' _Statistical Methods in Medical Research_,
-#' 28(8), 2326--2347. \doi{10.1177/0962280218773115}
 #'
 #' @param enroll_rate A data frame with columns `rate` and `duration` defining
 #'   the piecewise constant enrollment rates.
@@ -52,14 +43,36 @@
 #'   }
 #'   Multiple rows per subject are returned (one for each event, plus one for the final censoring time).
 #'
-#' @export
-#'
 #' @import data.table
 #' @importFrom stats rexp rgamma
 #' @importFrom utils tail
 #' @importFrom simtrial rpwexp_enroll
-nb_sim <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL,
-                   block = c(rep("Control", 2), rep("Experimental", 2)), event_gap = 0) {
+#'
+#' @export
+#'
+#' @references
+#' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with
+#' count data: methods and applications in multiple sclerosis.
+#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3861}
+#'
+#' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
+#' Group sequential designs for negative binomial outcomes.
+#' _Statistical Methods in Medical Research_,
+#' 28(8), 2326--2347. \doi{10.1177/0962280218773115}
+#'
+#' @examples
+#' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
+#' fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
+#' dropout_rate <- data.frame(
+#'   treatment = c("Control", "Experimental"),
+#'   rate = c(0.1, 0.05), duration = c(100, 100)
+#' )
+#' sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
+#' head(sim)
+nb_sim <- function(
+  enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL, n = NULL,
+  block = c(rep("Control", 2), rep("Experimental", 2)), event_gap = 0
+) {
   # 1. Generate Enrollment
   # Simplified implementation of piecewise constant enrollment
   # If n is provided, we simulate until n. If not, we assume enroll_rate defines the full period.

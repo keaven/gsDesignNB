@@ -47,12 +47,14 @@
 #'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
 #'   }
 #'
+#' @importFrom gsDesign gsDesign sfHSD
+#'
+#' @export
+#'
 #' @references
 #' Jennison, C. and Turnbull, B.W. (2000),
 #' _Group Sequential Methods with Applications to Clinical Trials_.
 #' Boca Raton: Chapman and Hall.
-#'
-#' @export
 #'
 #' @examples
 #' # First create a sample size calculation
@@ -66,25 +68,25 @@
 #'   k = 3, test.type = 4,
 #'   analysis_times = c(10, 18, 24)
 #' )
-#'
-#' @importFrom gsDesign gsDesign sfHSD
-gsNBCalendar <- function(x,
-                         k = 3,
-                         test.type = 4,
-                         alpha = 0.025,
-                         beta = 0.1,
-                         astar = 0,
-                         delta = 0,
-                         timing = 1,
-                         sfu = gsDesign::sfHSD,
-                         sfupar = -4,
-                         sfl = gsDesign::sfHSD,
-                         sflpar = -2,
-                         tol = 1e-06,
-                         r = 18,
-                         usTime = NULL,
-                         lsTime = NULL,
-                         analysis_times = NULL) {
+gsNBCalendar <- function(
+  x,
+  k = 3,
+  test.type = 4,
+  alpha = 0.025,
+  beta = 0.1,
+  astar = 0,
+  delta = 0,
+  timing = 1,
+  sfu = gsDesign::sfHSD,
+  sfupar = -4,
+  sfl = gsDesign::sfHSD,
+  sflpar = -2,
+  tol = 1e-06,
+  r = 18,
+  usTime = NULL,
+  lsTime = NULL,
+  analysis_times = NULL
+) {
   # Validate input
 
   if (!inherits(x, "sample_size_nbinom_result")) {
@@ -187,9 +189,21 @@ gsNBCalendar <- function(x,
 #' @return The statistical information (inverse of variance) at the analysis time.
 #'
 #' @export
-compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
-                                 lambda1, lambda2, dispersion, ratio = 1,
-                                 dropout_rate = 0, event_gap = 0) {
+#'
+#' @examples
+#' compute_info_at_time(
+#'   analysis_time = 12,
+#'   accrual_rate = 10,
+#'   accrual_duration = 10,
+#'   lambda1 = 0.5,
+#'   lambda2 = 0.3,
+#'   dispersion = 0.1
+#' )
+compute_info_at_time <- function(
+  analysis_time, accrual_rate, accrual_duration,
+  lambda1, lambda2, dispersion, ratio = 1,
+  dropout_rate = 0, event_gap = 0
+) {
   # Number of subjects enrolled by analysis_time
   enrollment_time <- min(analysis_time, accrual_duration)
   n_total <- accrual_rate * enrollment_time
@@ -282,8 +296,8 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
 #' gs_design <- gsNBCalendar(nb_ss, k = 3)
 #' summary(gs_design)
 #'
-#' # For tabular bounds summary, use gsBoundSummary directly:
-#' # gsDesign::gsBoundSummary(gs_design)
+#' # For tabular bounds summary, use gsBoundSummary() directly:
+#' gsBoundSummary(gs_design)
 summary.gsNB <- function(object, ...) {
   # Extract negative binomial design information
   nb <- object$nb_design
@@ -320,14 +334,22 @@ summary.gsNB <- function(object, ...) {
 
   # Spending function descriptions
   upper_spend <- if (!is.null(object$upper$name)) {
-    paste0("Upper spending: ", object$upper$name, 
-           if (!is.null(object$upper$parname)) paste0(" (", object$upper$parname, " = ", object$upper$param, ")") else "")
-  } else "Upper spending: Custom"
-  
+    paste0(
+      "Upper spending: ", object$upper$name,
+      if (!is.null(object$upper$parname)) paste0(" (", object$upper$parname, " = ", object$upper$param, ")") else ""
+    )
+  } else {
+    "Upper spending: Custom"
+  }
+
   lower_spend <- if (!is.null(object$lower$name)) {
-    paste0("Lower spending: ", object$lower$name, 
-           if (!is.null(object$lower$parname)) paste0(" (", object$lower$parname, " = ", object$lower$param, ")") else "")
-  } else "Lower spending: Custom"
+    paste0(
+      "Lower spending: ", object$lower$name,
+      if (!is.null(object$lower$parname)) paste0(" (", object$lower$parname, " = ", object$lower$param, ")") else ""
+    )
+  } else {
+    "Lower spending: Custom"
+  }
 
   summary_text <- sprintf(
     paste0(
@@ -376,6 +398,15 @@ summary.gsNB <- function(object, ...) {
 #' @return Invisibly returns the input object.
 #'
 #' @export
+#'
+#' @examples
+#' nb_ss <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' gs_design <- gsNBCalendar(nb_ss, k = 3)
+#' s <- summary(gs_design)
+#' print(s)
 print.gsNBsummary <- function(x, ...) {
   cat(strwrap(x, width = 80), sep = "\n")
   cat("\n")
@@ -412,6 +443,7 @@ toInteger <- function(x, ...) {
 #' @param ratio Randomization ratio (n2/n1).
 #' @param roundUpFinal Logical flag indicating whether to round the final analysis
 #'   sample size up to meet or exceed the target size.
+#'
 #' @export
 toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
   gsDesign::toInteger(x, ratio = ratio, roundUpFinal = roundUpFinal)

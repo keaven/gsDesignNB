@@ -20,6 +20,11 @@
 #'   * `dispersion`: estimated dispersion (theta) when `method = "nb"`.
 #'   * `group_summary`: observed subjects/events/exposure per treatment.
 #'
+#' @importFrom stats pnorm poisson qnorm
+#' @importFrom utils tail
+#'
+#' @export
+#'
 #' @examples
 #' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
 #' fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
@@ -30,11 +35,6 @@
 #' sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 40)
 #' cut <- cut_data_by_date(sim, cut_date = 1.5)
 #' mutze_test(cut)
-#'
-#' @export
-#'
-#' @importFrom stats pnorm poisson qnorm
-#' @importFrom utils tail
 mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95) {
   method <- match.arg(method)
   df <- as.data.frame(data)

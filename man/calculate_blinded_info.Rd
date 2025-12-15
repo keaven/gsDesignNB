@@ -40,3 +40,12 @@ Estimates the blinded dispersion and event rate from aggregated interim data
 and calculates the observed statistical information for the log rate ratio,
 assuming the planned allocation ratio and treatment effect.
 }
+\examples{
+interim <- data.frame(events = c(1, 2, 1, 3), tte = c(0.8, 1.0, 1.2, 0.9))
+calculate_blinded_info(
+  interim,
+  ratio = 1,
+  lambda1_planning = 0.5,
+  lambda2_planning = 0.3
+)
+}

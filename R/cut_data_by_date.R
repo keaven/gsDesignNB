@@ -15,6 +15,8 @@
 #' @return A data frame with one row per subject randomized prior to `cut_date` containing
 #'   the truncated follow-up time (`tte`) and total number of observed events (`events`).
 #'
+#' @export
+#'
 #' @examples
 #' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
 #' fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
@@ -24,7 +26,6 @@
 #' )
 #' sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
 #' cut_data_by_date(sim, cut_date = 1)
-#' @export
 cut_data_by_date <- function(data, cut_date, event_gap = 5 / 365.25, ...) {
   UseMethod("cut_data_by_date")
 }

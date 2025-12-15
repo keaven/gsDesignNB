@@ -89,7 +89,6 @@ x2 <- sample_size_nbinom(
   trial_duration = 12
 )
 summary(x2)
-
 }
 \references{
 Zhu, H., & Lakkis, H. (2014).

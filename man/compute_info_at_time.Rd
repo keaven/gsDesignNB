@@ -43,3 +43,13 @@ The statistical information (inverse of variance) at the analysis time.
 Computes the statistical information for the log rate ratio at a given
 analysis time, accounting for staggered enrollment and varying exposure times.
 }
+\examples{
+compute_info_at_time(
+  analysis_time = 12,
+  accrual_rate = 10,
+  accrual_duration = 10,
+  lambda1 = 0.5,
+  lambda2 = 0.3,
+  dispersion = 0.1
+)
+}

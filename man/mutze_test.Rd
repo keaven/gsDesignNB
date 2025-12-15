@@ -43,5 +43,4 @@ dropout_rate <- data.frame(
 sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 40)
 cut <- cut_data_by_date(sim, cut_date = 1.5)
 mutze_test(cut)
-
 }

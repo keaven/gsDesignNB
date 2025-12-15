@@ -12,6 +12,8 @@
 #'   If the dataset contains fewer than `planned_events`, returns the maximum
 #'   calendar time in the dataset and prints a message.
 #'
+#' @export
+#'
 #' @examples
 #' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
 #' fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
@@ -21,7 +23,6 @@
 #' )
 #' sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 40)
 #' get_analysis_date(sim, planned_events = 15)
-#' @export
 get_analysis_date <- function(data, planned_events, event_gap = 5 / 365.25) {
   dt <- data.table::as.data.table(data)
 

@@ -17,10 +17,29 @@
 #'   `event=0` indicates censoring or end of a seasonal interval at `end`.
 #'
 #' @import data.table
+#'
 #' @export
-nb_sim_seasonal <- function(enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL,
-                            randomization_start_date = NULL, n = NULL,
-                            block = c(rep("Control", 2), rep("Experimental", 2))) {
+#'
+#' @examples
+#' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
+#' fail_rate <- data.frame(
+#'   treatment = rep(c("Control", "Experimental"), each = 4),
+#'   season = rep(c("Winter", "Spring", "Summer", "Fall"), times = 2),
+#'   rate = c(0.6, 0.5, 0.4, 0.5, 0.4, 0.3, 0.2, 0.3)
+#' )
+#' sim <- nb_sim_seasonal(
+#'   enroll_rate = enroll_rate,
+#'   fail_rate = fail_rate,
+#'   max_followup = 1,
+#'   randomization_start_date = as.Date("2020-01-01"),
+#'   n = 20
+#' )
+#' head(sim)
+nb_sim_seasonal <- function(
+  enroll_rate, fail_rate, dropout_rate = NULL, max_followup = NULL,
+  randomization_start_date = NULL, n = NULL,
+  block = c(rep("Control", 2), rep("Experimental", 2))
+) {
   if (is.null(randomization_start_date)) stop("randomization_start_date is required")
   start_date <- as.Date(randomization_start_date)
 

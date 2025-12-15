@@ -54,6 +54,8 @@
 #' `vignette("sample-size-nbinom", package = "gsDesignNB")`
 #' for a detailed explanation of the methodology.
 #'
+#' @importFrom stats pnorm qnorm
+#'
 #' @export
 #'
 #' @examples
@@ -75,13 +77,13 @@
 #'   trial_duration = 12
 #' )
 #' summary(x2)
-#'
-#' @importFrom stats pnorm qnorm
-sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
-                               alpha = 0.025, sided = 1, ratio = 1,
-                               accrual_rate, accrual_duration,
-                               trial_duration, dropout_rate = 0,
-                               max_followup = NULL, event_gap = NULL, method = "zhu") {
+sample_size_nbinom <- function(
+  lambda1, lambda2, dispersion, power = NULL,
+  alpha = 0.025, sided = 1, ratio = 1,
+  accrual_rate, accrual_duration,
+  trial_duration, dropout_rate = 0,
+  max_followup = NULL, event_gap = NULL, method = "zhu"
+) {
   if (lambda1 <= 0 || lambda2 <= 0) {
     stop("Rates lambda1 and lambda2 must be positive.")
   }
@@ -403,6 +405,13 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
 #'
 #' @return Invisibly returns the input object.
 #'
+#' @examples
+#' x <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' print(x)
+#'
 #' @export
 print.sample_size_nbinom_result <- function(x, ...) {
   cat("Sample size for negative binomial outcome\n")
@@ -524,6 +533,14 @@ summary.sample_size_nbinom_result <- function(object, ...) {
 #' @param ... Additional arguments (currently ignored).
 #'
 #' @return Invisibly returns the input object.
+#'
+#' @examples
+#' x <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' s <- summary(x)
+#' print(s)
 #'
 #' @export
 print.sample_size_nbinom_summary <- function(x, ...) {

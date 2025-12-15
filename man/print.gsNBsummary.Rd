@@ -17,3 +17,12 @@ Invisibly returns the input object.
 \description{
 Print method for gsNBsummary objects
 }
+\examples{
+nb_ss <- sample_size_nbinom(
+  lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+  accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+)
+gs_design <- gsNBCalendar(nb_ss, k = 3)
+s <- summary(gs_design)
+print(s)
+}

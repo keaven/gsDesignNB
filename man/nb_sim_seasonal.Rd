@@ -39,3 +39,19 @@ Rows represent intervals of risk or events. \code{event=1} indicates an event at
 \description{
 Simulates recurrent events where event rates depend on the season.
 }
+\examples{
+enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
+fail_rate <- data.frame(
+  treatment = rep(c("Control", "Experimental"), each = 4),
+  season = rep(c("Winter", "Spring", "Summer", "Fall"), times = 2),
+  rate = c(0.6, 0.5, 0.4, 0.5, 0.4, 0.3, 0.2, 0.3)
+)
+sim <- nb_sim_seasonal(
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  max_followup = 1,
+  randomization_start_date = as.Date("2020-01-01"),
+  n = 20
+)
+head(sim)
+}

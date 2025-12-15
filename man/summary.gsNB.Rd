@@ -29,6 +29,6 @@ nb_ss <- sample_size_nbinom(
 gs_design <- gsNBCalendar(nb_ss, k = 3)
 summary(gs_design)
 
-# For tabular bounds summary, use gsBoundSummary directly:
-# gsDesign::gsBoundSummary(gs_design)
+# For tabular bounds summary, use gsBoundSummary() directly:
+gsBoundSummary(gs_design)
 }

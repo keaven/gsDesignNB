@@ -20,3 +20,13 @@ calendar time in the dataset and prints a message.
 Finds the calendar time (since start of randomization) at which a specified
 number of subjects have completed their follow-up.
 }
+\examples{
+enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
+fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.1, 0.05), duration = c(100, 100)
+)
+sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
+cut_date_for_completers(sim, target_completers = 5)
+}

@@ -13,6 +13,8 @@
 #' @return A data frame with one row per subject randomized prior to `cut_date`.
 #'   Contains the truncated follow-up time (`tte`) and total number of observed events (`events`).
 #'
+#' @export
+#'
 #' @examples
 #' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
 #' fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
@@ -25,7 +27,6 @@
 #' date_5 <- cut_date_for_completers(sim, 5)
 #' # Get analysis dataset for this cut date (includes partial follow-up)
 #' cut_completers(sim, date_5)
-#' @export
 cut_completers <- function(data, cut_date, event_gap = 5 / 365.25) {
   cut_data_by_date(data, cut_date, event_gap = event_gap)
 }
@@ -43,6 +44,16 @@ cut_completers <- function(data, cut_date, event_gap = 5 / 365.25) {
 #'   calendar time in the dataset and prints a message.
 #'
 #' @export
+#'
+#' @examples
+#' enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
+#' fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
+#' dropout_rate <- data.frame(
+#'   treatment = c("Control", "Experimental"),
+#'   rate = c(0.1, 0.05), duration = c(100, 100)
+#' )
+#' sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
+#' cut_date_for_completers(sim, target_completers = 5)
 cut_date_for_completers <- function(data, target_completers) {
   dt <- data.table::as.data.table(data)
 

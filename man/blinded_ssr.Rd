@@ -55,7 +55,6 @@ Default is NULL (no gap).}
 \value{
 A list containing:
 \describe{
-\item{n_total_unadjusted}{Original planned total sample size (based on planning parameters).}
 \item{n_total_blinded}{Re-estimated total sample size using blinded estimates.}
 \item{dispersion_blinded}{Estimated dispersion parameter (k) from blinded data.}
 \item{lambda_blinded}{Estimated overall event rate from blinded data.}
@@ -67,9 +66,23 @@ A list containing:
 \description{
 Estimates the blinded dispersion and event rate from aggregated interim data
 and calculates the required sample size to maintain power, assuming the
-planned treatment effect holds. This function supports constant rates (Friede &
-Schmidli 2010) and accommodates future extensions for time-varying rates
-(Schneider et al. 2013) by using the exposure-adjusted rate.
+planned treatment effect holds. This function supports constant rates
+(Friede & Schmidli 2010) and accommodates future extensions for time-varying
+rates (Schneider et al. 2013) by using the exposure-adjusted rate.
+}
+\examples{
+interim <- data.frame(events = c(1, 2, 1, 3), tte = c(0.8, 1.0, 1.2, 0.9))
+blinded_ssr(
+  interim,
+  ratio = 1,
+  lambda1_planning = 0.5,
+  lambda2_planning = 0.3,
+  power = 0.8,
+  alpha = 0.025,
+  accrual_rate = 10,
+  accrual_duration = 12,
+  trial_duration = 18
+)
 }
 \references{
 Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with
