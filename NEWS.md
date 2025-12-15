@@ -3,14 +3,15 @@
 ## Sample size and power
 
 - `sample_size_nbinom()` computes sample size or power for fixed designs with
-  two treatment groups. Supports piecewise accrual, dropout, maximum follow-up,
-  and event gaps. Implements the Zhu and Lakkis (2014) and
+  two treatment groups. Supports piecewise accrual, exponential dropout,
+  maximum follow-up, and event gaps. Implements the Zhu and Lakkis (2014) and
   Friede and Schmidli (2010) methods.
 
 ## Group sequential designs
 
 - `gsNBCalendar()` creates group sequential designs for negative binomial
-  outcomes by adding calendar-time analysis schedules compatible with gsDesign.
+  outcomes, optionally attaching calendar-time analysis schedules (via
+  `analysis_times`) compatible with gsDesign.
   Inherits from both `gsDesign` and `sample_size_nbinom_result` classes.
 - `compute_info_at_time()` computes statistical information for the log rate
   ratio at a given analysis time, accounting for staggered enrollment.
