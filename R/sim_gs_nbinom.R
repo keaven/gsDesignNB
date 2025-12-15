@@ -10,10 +10,17 @@
 #' @param max_followup Maximum follow-up time.
 #' @param event_gap Event gap duration.
 #' @param analysis_times Vector of calendar times for interim and final analyses.
+#'   Optional if `cuts` is provided.
 #' @param n_target Total sample size to enroll (optional, if not defined by `enroll_rate`).
 #' @param design An object of class `gsNB` or `sample_size_nbinom_result`.
 #'   Used to extract planning parameters (`lambda1`, `lambda2`, `ratio`) for blinded
 #'   information estimation.
+#' @param data_cut Function to cut data for analysis. Defaults to [cut_data_by_date()].
+#'   The function must accept `sim_data`, `cut_date`, and `event_gap` as arguments.
+#' @param cuts A list of cutting criteria for each analysis. Each element of the list
+#'   should be a list of arguments for [get_cut_date()] (e.g., `planned_calendar`,
+#'   `target_events`, `target_info`). If provided, `analysis_times` is ignored
+#'   (or used as a fallback if `planned_calendar` is missing in a cut).
 #'
 #' @return A data frame containing simulation results for each analysis of each trial.
 #'   Columns include:
@@ -35,12 +42,23 @@
 #' @export
 #' @importFrom data.table as.data.table
 sim_gs_nbinom <- function(n_sims, enroll_rate, fail_rate, dropout_rate = NULL,
-                          max_followup, event_gap = 0, analysis_times,
-                          n_target = NULL, design = NULL) {
+                          max_followup, event_gap = 0, analysis_times = NULL,
+                          n_target = NULL, design = NULL,
+                          data_cut = cut_data_by_date, cuts = NULL) {
   # Validate inputs
   if (is.null(design)) {
     stop("design object must be provided to extract planning parameters.")
   }
+
+  if (is.null(cuts)) {
+    if (is.null(analysis_times)) {
+      stop("Either analysis_times or cuts must be provided.")
+    }
+    # Create default cuts based on calendar times
+    cuts <- lapply(analysis_times, function(t) list(planned_calendar = t))
+  }
+  
+  n_analyses <- length(cuts)
 
   # Extract planning parameters for blinded info estimation
   inputs <- if (inherits(design, "gsNB")) design$nb_design$inputs else design$inputs
@@ -60,15 +78,30 @@ sim_gs_nbinom <- function(n_sims, enroll_rate, fail_rate, dropout_rate = NULL,
       event_gap = event_gap
     )
 
-    # Analyze at each interim
-    n_analyses <- length(analysis_times)
     res_list <- vector("list", n_analyses)
+    
+    # Keep track of previous cut time to ensure monotonicity if needed
+    last_cut_time <- 0
 
     for (k in seq_len(n_analyses)) {
-      cut_time <- analysis_times[k]
+      # Determine cut date based on criteria
+      cut_args <- cuts[[k]]
+      
+      # Inject data and parameters if not present (though get_cut_date expects them)
+      cut_args$data <- sim_data
+      cut_args$event_gap <- event_gap
+      cut_args$ratio <- ratio_plan
+      cut_args$lambda1 <- lambda1_plan
+      cut_args$lambda2 <- lambda2_plan
+      cut_args$min_date <- last_cut_time
+      # Default max_date to something reasonable if not provided?
+      # get_cut_date defaults to Inf.
+      
+      cut_time <- do.call(get_cut_date, cut_args)
+      last_cut_time <- cut_time
       
       # Cut data
-      cut_data <- cut_data_by_date(sim_data, cut_date = cut_time, event_gap = event_gap)
+      cut_data <- data_cut(sim_data, cut_date = cut_time, event_gap = event_gap)
       
       # Filter enrolled subjects
       enrolled <- unique(sim_data$id[sim_data$enroll_time <= cut_time])

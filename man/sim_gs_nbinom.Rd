@@ -11,9 +11,11 @@ sim_gs_nbinom(
   dropout_rate = NULL,
   max_followup,
   event_gap = 0,
-  analysis_times,
+  analysis_times = NULL,
   n_target = NULL,
-  design = NULL
+  design = NULL,
+  data_cut = cut_data_by_date,
+  cuts = NULL
 )
 }
 \arguments{
@@ -29,13 +31,22 @@ sim_gs_nbinom(
 
 \item{event_gap}{Event gap duration.}
 
-\item{analysis_times}{Vector of calendar times for interim and final analyses.}
+\item{analysis_times}{Vector of calendar times for interim and final analyses.
+Optional if \code{cuts} is provided.}
 
 \item{n_target}{Total sample size to enroll (optional, if not defined by \code{enroll_rate}).}
 
 \item{design}{An object of class \code{gsNB} or \code{sample_size_nbinom_result}.
 Used to extract planning parameters (\code{lambda1}, \code{lambda2}, \code{ratio}) for blinded
 information estimation.}
+
+\item{data_cut}{Function to cut data for analysis. Defaults to \code{\link[=cut_data_by_date]{cut_data_by_date()}}.
+The function must accept \code{sim_data}, \code{cut_date}, and \code{event_gap} as arguments.}
+
+\item{cuts}{A list of cutting criteria for each analysis. Each element of the list
+should be a list of arguments for \code{\link[=get_cut_date]{get_cut_date()}} (e.g., \code{planned_calendar},
+\code{target_events}, \code{target_info}). If provided, \code{analysis_times} is ignored
+(or used as a fallback if \code{planned_calendar} is missing in a cut).}
 }
 \value{
 A data frame containing simulation results for each analysis of each trial.

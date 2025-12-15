@@ -189,7 +189,7 @@ sim_res <- sim_gs_nbinom(
   dropout_rate = dropout_rate,
   max_followup = max_followup,
   event_gap = event_gap_val,
-  analysis_times = analysis_times,
+  cuts = lapply(analysis_times, function(x) list(planned_calendar = x)),
   design = gs_nb,
   n_target = n_target
 )
