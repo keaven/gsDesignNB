@@ -7,14 +7,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-```{r setup}
+```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
 library(gsDesign)
 library(data.table)
@@ -164,10 +164,10 @@ info_asymp_final <- compute_info_at_time(
   dropout_rate = dropout_rate$rate[1]
 )
 
-cat("Asymptotic Information (Interim):", round(info_asymp_interim, 2), "\n")
-cat("Mean Simulated Information (Interim):", round(mean(results$interim_info), 2), "\n")
-cat("Asymptotic Information (Final):", round(info_asymp_final, 2), "\n")
-cat("Mean Simulated Information (Final):", round(mean(results$final_info), 2), "\n")
+message("Asymptotic Information (Interim): ", round(info_asymp_interim, 2))
+message("Mean Simulated Information (Interim): ", round(mean(results$interim_info), 2))
+message("Asymptotic Information (Final): ", round(info_asymp_final, 2))
+message("Mean Simulated Information (Final): ", round(mean(results$final_info), 2))
 ```
 
 ## Results summary
@@ -185,7 +185,7 @@ Comparison of Z-scores at Interim vs Final Analysis.
 ```{r plot, fig.width=6, fig.height=6}
 # Correlation between interim and final Z-scores
 cor_z <- cor(results$interim_z, results$final_z)
-cat("Correlation between interim and final Z-scores:", round(cor_z, 3), "\n")
+message("Correlation between interim and final Z-scores: ", round(cor_z, 3))
 
 ggplot(results, aes(x = interim_z, y = final_z)) +
   geom_point(alpha = 0.7) +
@@ -254,5 +254,5 @@ for (i in 1:n_sims) {
   }
 }
 
-cat("Power (Empirical Rejection Rate):", mean(reject), "\n")
+message("Power (Empirical Rejection Rate): ", mean(reject))
 ```

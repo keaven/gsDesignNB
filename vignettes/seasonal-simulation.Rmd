@@ -7,14 +7,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-```{r setup}
+```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
 library(data.table)
 library(dplyr)
@@ -162,8 +162,8 @@ print(coef_summary)
 
 # Estimated Rate Ratio (Experimental / Control)
 rr <- exp(coef(fit)["treatmentExperimental"])
-cat("Estimated Rate Ratio (Experimental / Control):", round(rr, 3), "\n")
-cat("True Design Rate Ratio:", 0.7, "\n")
+message("Estimated Rate Ratio (Experimental / Control): ", round(rr, 3))
+message("True Design Rate Ratio: ", 0.7)
 ```
 
 ### Variance and information
@@ -173,9 +173,9 @@ The variance of the treatment effect estimate can be extracted from the covarian
 ```{r information}
 # Variance of the treatment effect coefficient
 var_beta <- vcov(fit)["treatmentExperimental", "treatmentExperimental"]
-cat("Variance of Treatment Effect (log-scale):", var_beta, "\n")
+message("Variance of Treatment Effect (log-scale): ", var_beta)
 
 # Statistical Information
 info <- 1 / var_beta
-cat("Statistical Information:", info, "\n")
+message("Statistical Information: ", info)
 ```

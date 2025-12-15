@@ -7,14 +7,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-```{r setup}
+```{r, message=FALSE, warning=FALSE}
 library(gsDesign)
 library(gsDesignNB)
 library(data.table)
@@ -72,7 +72,7 @@ nb_ss <- sample_size_nbinom(
 )
 
 # Print key results
-cat("Fixed design\n")
+message("Fixed design")
 nb_ss
 ```
 
@@ -507,11 +507,11 @@ futility_by_sim <- as.data.table(all_results)[
 
 overall_futility <- mean(futility_by_sim$futility, na.rm = TRUE)
 
-cat("\n=== Overall Operating Characteristics ===\n")
-cat(sprintf("Number of simulations: %d\n", n_sims))
-cat(sprintf("Overall Power (P[reject H0]): %.1f%%\n", overall_power * 100))
-cat(sprintf("Futility Stopping Rate: %.1f%%\n", overall_futility * 100))
-cat(sprintf("Design Power (target): %.1f%%\n", (1 - gs_nb$beta) * 100))
+message("=== Overall Operating Characteristics ===")
+message(sprintf("Number of simulations: %d", n_sims))
+message(sprintf("Overall Power (P[reject H0]): %.1f%%", overall_power * 100))
+message(sprintf("Futility Stopping Rate: %.1f%%", overall_futility * 100))
+message(sprintf("Design Power (target): %.1f%%", (1 - gs_nb$beta) * 100))
 ```
 
 ### Visualization of Z-statistics
