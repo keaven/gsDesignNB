@@ -1,15 +1,19 @@
 Package: gsDesignNB
-Title: Sample Size Calculation and Simulation for Negative Binomial Outcomes
 Version: 0.2.0
-Authors@R: 
-    person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre"))
-Author: Keaven Anderson [aut, cre]
-Maintainer: Keaven Anderson <keaven_anderson@merck.com>
-Description: Provides sample size calculation methods for negative binomial outcomes,
-    including the methods by Zhu and Lakkis (2014) and Friede and Schmidli (2010).
+Title: Sample Size Calculation and Simulation for Negative Binomial Outcomes
+Authors@R: c(
+    person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
+    person("Merck & Co., Inc., Rahway, NJ, USA and its affiliates", role = "cph",
+           comment = c(ROR = "02891sr49"))
+    )
+Description: Provides sample size calculation methods for
+    negative binomial outcomes, including the methods by
+    Zhu and Lakkis (2014) <doi:10.1002/sim.5947> and
+    Friede and Schmidli (2010) <doi:10.3414/ME09-02-0060>.
     Supports piecewise constant accrual rates.
 License: GPL (>= 3)
-URL: https://keaven.github.io/gsDesignNB/
+URL: https://keaven.github.io/gsDesignNB/, https://github.com/keaven/gsDesignNB
+BugReports: https://github.com/keaven/gsDesignNB/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
