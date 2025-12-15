@@ -23,7 +23,7 @@ library(gt)
 ```
 
 This vignette demonstrates how to create a group sequential design for
-negative binomial outcomes using `gsNBCalendar()` and simulate the design to confirm design operating characteristicsusing `nb_sim()`.
+negative binomial outcomes using `gsNBCalendar()` and simulate the design to confirm design operating characteristics using `nb_sim()`.
 
 ## Trial design parameters
 
@@ -408,7 +408,7 @@ The statistical information at each analysis is proportional to the precision
 of the treatment effect estimate. For negative binomial outcomes, this relates
 to the total exposure and event counts.
 We note that the asymptotic information approximation overstates the information at the each analysis.
-However, the power approximation still worked reasonably well. 
+However, the power approximation still worked reasonably well.
 This evaluated in a larger simulation study in the vignette `verification-simulation.Rmd`.
 
 ```{r info-summary}

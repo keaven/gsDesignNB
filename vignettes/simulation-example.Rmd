@@ -1,6 +1,7 @@
 ---
 title: "Simulation of recurrent events"
 output: rmarkdown::html_vignette
+bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{Simulation of recurrent events}
   %\VignetteEngine{knitr::rmarkdown}
@@ -182,10 +183,9 @@ cut_summary <- cut_data_by_date(sim_data, cut_date = 1.5)
 head(cut_summary)
 ```
 
-## Wald test (Mütze et al.)
+## Wald test [@mutze2019group]
 
-Using the truncated data we can run a negative binomial Wald test as described by
-Mütze et al. (2018).
+Using the truncated data we can run a negative binomial Wald test as described by @mutze2019group.
 
 ```{r}
 mutze_res <- mutze_test(cut_summary)
@@ -279,3 +279,5 @@ print(paste("True Dispersion:", 0.5))
 print(paste("Estimated Dispersion (MoM):", signif(k_mom, 4)))
 print(paste("Estimated Dispersion (GLM):", signif(k_glm, 4)))
 ```
+
+## References

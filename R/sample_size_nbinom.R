@@ -20,7 +20,7 @@
 #' @param event_gap Gap duration after each event during which no new events are counted.
 #'   Default is NULL (no gap). If provided, the effective event rate is reduced.
 #' @param method Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
-#'   or "friede" for Friede and Schmidli (2010) / Mütze et al. (2018).
+#'   or "friede" for Friede and Schmidli (2010) / Mütze et al. (2019).
 #'
 #' @return An object of class `sample_size_nbinom_result`, which is a list containing:
 #' \describe{
@@ -34,17 +34,21 @@
 #' }
 #'
 #' @references
-#' Zhu, H., & Lakkis, H. (2014). Sample size calculation for comparing two negative
-#' binomial rates in clinical trials. _Statistics in Biopharmaceutical Research_,
-#' 6(1), 107--115. \doi{10.1080/19466315.2013.870533}
+#' Zhu, H., & Lakkis, H. (2014).
+#' Sample size calculation for comparing two negative binomial rates.
+#' _Statistics in Medicine_,
+#' 33(3), 376--387. \doi{10.1002/sim.5947}
 #'
-#' Friede, T., & Schmidli, H. (2010). Sample size estimation for clinical trials
-#' with negative binomial rates. _Methods of Information in Medicine_,
-#' 49(6), 623--631. \doi{10.3414/ME09-01-0058}
+#' Friede, T., & Schmidli, H. (2010).
+#' Blinded sample size reestimation with negative binomial counts in
+#' superiority and non-inferiority trials.
+#' _Methods of Information in Medicine_,
+#' 49(06), 618--624. \doi{10.3414/ME09-02-0060}
 #'
-#' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs
-#' for negative binomial outcomes. _Statistical Methods in Medical Research_,
-#' 27(10), 2978--2993. \doi{10.1177/0962280218773115}
+#' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
+#' Group sequential designs for negative binomial outcomes.
+#' _Statistical Methods in Medical Research_,
+#' 28(8), 2326--2347. \doi{10.1177/0962280218773115}
 #'
 #' @seealso
 #' `vignette("sample-size-nbinom", package = "gsDesignNB")`

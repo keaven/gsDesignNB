@@ -61,16 +61,18 @@ exponential failure rates (Poisson process), and piecewise exponential dropout.
 }
 \details{
 The simulation generates data consistent with the negative binomial models described
-by Friede and Schmidli (2010) and Mutze et al. (2018). Specifically, it simulates
+by Friede and Schmidli (2010) and Mutze et al. (2019). Specifically, it simulates
 a Gamma-distributed frailty variable for each individual (if dispersion > 0),
 which acts as a multiplier for that individual's event rate. Events are then
 generated according to a Poisson process with this subject-specific rate.
 }
 \references{
-Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-\emph{Statistics in Medicine}, 29(10), 1145--1156. \doi{10.1002/sim.3891}
+Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with
+count data: methods and applications in multiple sclerosis.
+\emph{Statistics in Medicine}, 29(10), 1145--1156. \doi{10.1002/sim.3861}
 
-Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs
-for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
-27(10), 2978--2993. \doi{10.1177/0962280218773115}
+Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
+Group sequential designs for negative binomial outcomes.
+\emph{Statistical Methods in Medical Research},
+28(8), 2326--2347. \doi{10.1177/0962280218773115}
 }

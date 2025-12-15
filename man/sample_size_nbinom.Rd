@@ -52,7 +52,7 @@ as \code{accrual_rate}.}
 Default is NULL (no gap). If provided, the effective event rate is reduced.}
 
 \item{method}{Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
-or "friede" for Friede and Schmidli (2010) / Mütze et al. (2018).}
+or "friede" for Friede and Schmidli (2010) / Mütze et al. (2019).}
 }
 \value{
 An object of class \code{sample_size_nbinom_result}, which is a list containing:
@@ -92,17 +92,21 @@ summary(x2)
 
 }
 \references{
-Zhu, H., & Lakkis, H. (2014). Sample size calculation for comparing two negative
-binomial rates in clinical trials. \emph{Statistics in Biopharmaceutical Research},
-6(1), 107--115. \doi{10.1080/19466315.2013.870533}
+Zhu, H., & Lakkis, H. (2014).
+Sample size calculation for comparing two negative binomial rates.
+\emph{Statistics in Medicine},
+33(3), 376--387. \doi{10.1002/sim.5947}
 
-Friede, T., & Schmidli, H. (2010). Sample size estimation for clinical trials
-with negative binomial rates. \emph{Methods of Information in Medicine},
-49(6), 623--631. \doi{10.3414/ME09-01-0058}
+Friede, T., & Schmidli, H. (2010).
+Blinded sample size reestimation with negative binomial counts in
+superiority and non-inferiority trials.
+\emph{Methods of Information in Medicine},
+49(06), 618--624. \doi{10.3414/ME09-02-0060}
 
-Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs
-for negative binomial outcomes. \emph{Statistical Methods in Medical Research},
-27(10), 2978--2993. \doi{10.1177/0962280218773115}
+Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
+Group sequential designs for negative binomial outcomes.
+\emph{Statistical Methods in Medical Research},
+28(8), 2326--2347. \doi{10.1177/0962280218773115}
 }
 \seealso{
 \code{vignette("sample-size-nbinom", package = "gsDesignNB")}

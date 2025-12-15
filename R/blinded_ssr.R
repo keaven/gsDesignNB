@@ -21,11 +21,13 @@
 #'   as `accrual_rate`.
 #'
 #' @references
-#' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with count data: methods and applications.
-#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3891}
+#' Friede, T., & Schmidli, H. (2010). Blinded sample size reestimation with
+#' count data: methods and applications in multiple sclerosis.
+#' _Statistics in Medicine_, 29(10), 1145--1156. \doi{10.1002/sim.3861}
 #'
-#' Schneider, S., Schmidli, H., & Friede, T. (2013). Blinded sample size reestimation for recurrent event data with time trends.
-#' _Statistics in Medicine_, 32(30), 5448--5457. \doi{10.1002/sim.5920}
+#' Schneider, S., Schmidli, H., & Friede, T. (2013). Blinded sample size
+#' re-estimation for recurrent event data with time trends.
+#' _Statistics in Medicine_, 32(30), 5448--5457. \doi{10.1002/sim.5977}
 #'
 #' @param trial_duration Total planned duration of the trial.
 #' @param dropout_rate Dropout rate (hazard rate). Default is 0.
@@ -47,10 +49,12 @@
 #' @importFrom MASS glm.nb
 #' @importFrom stats qnorm fitted
 #' @importFrom utils tail
-blinded_ssr <- function(data, ratio = 1, lambda1_planning, lambda2_planning,
-                        power = 0.8, alpha = 0.025, method = "friede",
-                        accrual_rate, accrual_duration, trial_duration,
-                        dropout_rate = 0, max_followup = NULL, event_gap = NULL) {
+blinded_ssr <- function(
+  data, ratio = 1, lambda1_planning, lambda2_planning,
+  power = 0.8, alpha = 0.025, method = "friede",
+  accrual_rate, accrual_duration, trial_duration,
+  dropout_rate = 0, max_followup = NULL, event_gap = NULL
+) {
   # Use calculate_blinded_info for parameter estimation and info calculation
   blind_info_res <- calculate_blinded_info(data, ratio, lambda1_planning, lambda2_planning)
 

@@ -1,6 +1,7 @@
 ---
 title: "Sample size calculation for negative binomial outcomes"
 output: rmarkdown::html_vignette
+bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{Sample size calculation for negative binomial outcomes}
   %\VignetteEngine{knitr::rmarkdown}
@@ -32,7 +33,7 @@ We wish to test the null hypothesis $H_0: \lambda_1 = \lambda_2$ against the alt
 
 The function implements two methods:
 
-### Method 1: Zhu and Lakkis (2014)
+### Method 1: @zhu2014sample
 
 This method is based on the asymptotic normality of the log rate ratio. The sample size for the control group ($n_1$) is:
 
@@ -43,7 +44,7 @@ $$ V = \left(\frac{1}{\mu_1} + k\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k\r
 
 where $r = n_2/n_1$ is the allocation ratio, and $\mu_i = \lambda_i \cdot t$ is the expected mean count over exposure duration $t$.
 
-### Method 2: Friede and Schmidli (2010) / Mütze et al. (2018)
+### Method 2: @friede2010blinded / @mutze2019group
 
 This method uses a Wald test statistic and is commonly used in group sequential designs (as implemented in the `gscounts` package). The total sample size $n_{total}$ is calculated as:
 
@@ -95,7 +96,7 @@ $$ \bar{t} = \frac{\sum_{j=1}^J N_j E_j}{\sum_{j=1}^J N_j} $$
 
 When follow-up times are variable (due to accrual, dropout, or administrative censoring), simply using the average follow-up time $\bar{t}$ in the variance formula underestimates the true variance of the rate estimator. This is because the variance of the negative binomial distribution depends on the exposure time in a non-linear way ($Var(Y) = \mu + k\mu^2 = \lambda t + k (\lambda t)^2$).
 
-To account for this, we apply a variance inflation factor $Q$ to the dispersion parameter $k$, as derived by Zhu and Lakkis (2014):
+To account for this, we apply a variance inflation factor $Q$ to the dispersion parameter $k$, as derived by @zhu2014sample:
 
 $$ Q = \frac{E[t^2]}{(E[t])^2} $$
 
@@ -111,7 +112,7 @@ This adjusted rate is then used in the sample size calculations. The effective e
 
 ## Examples
 
-### Basic calculation (Zhu and Lakkis)
+### Basic calculation [@zhu2014sample]
 
 Calculate sample size for:
 
@@ -138,7 +139,7 @@ sample_size_nbinom(
 )
 ```
 
-### Using Friede et al. method
+### Using @friede2010blinded method
 
 ```{r}
 sample_size_nbinom(
@@ -274,9 +275,3 @@ sample_size_nbinom(
 The output shows both the "Avg exposure (calendar)" and the "Avg exposure (at-risk)" for each group.
 
 ## References
-
-Zhu, H., & Lakkis, H. (2014). Sample size calculation for comparing two negative binomial rates in clinical trials. *Statistics in Biopharmaceutical Research*, 6(1), 107-115. <https://doi.org/10.1080/19466315.2013.870533>
-
-Friede, T., & Schmidli, H. (2010). Sample size estimation for clinical trials with negative binomial rates. *Methods of Information in Medicine*, 49(6), 623-631. <https://doi.org/10.3414/ME09-01-0058>
-
-Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2018). Group sequential designs for negative binomial outcomes. *Statistical Methods in Medical Research*, 27(10), 2978-2993. <https://doi.org/10.1177/0962280218773115>

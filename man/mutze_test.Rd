@@ -30,7 +30,7 @@ A list containing the fitted model summary with elements:
 \description{
 Fits a negative binomial (or Poisson) log-rate model to the aggregated
 subject-level data produced by \code{\link[=cut_data_by_date]{cut_data_by_date()}}. The method matches the
-Wald test described by Mütze et al. (2018) for comparing treatment arms with
+Wald test described by Mütze et al. (2019) for comparing treatment arms with
 recurrent event outcomes.
 }
 \examples{

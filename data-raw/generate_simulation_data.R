@@ -29,7 +29,7 @@ accrual_duration <- c(6, 6)
 
 design <- sample_size_nbinom(
   lambda1 = lambda1, lambda2 = lambda2, dispersion = dispersion,
-  power = power, 
+  power = power,
   alpha = alpha, sided = 1,
   accrual_rate = accrual_rate_rel,
   accrual_duration = accrual_duration,
@@ -87,10 +87,10 @@ run_one_sim <- function(i) {
       # with 'tte' already adjusted for event gaps (exposure at risk).
 
       analysis_dt <- cut_dt_dt
-      
+
       # Rename tte to exposure for clarity in model formula
       analysis_dt[, exposure := tte]
-      
+
       # Ensure non-negative (should be if simulation is correct)
       analysis_dt[exposure < 0, exposure := 0]
 
