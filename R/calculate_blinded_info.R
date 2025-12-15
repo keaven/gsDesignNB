@@ -20,9 +20,20 @@
 #'     \item{lambda1_adjusted}{Re-estimated control rate.}
 #'     \item{lambda2_adjusted}{Re-estimated experimental rate.}
 #'   }
-#' @export
+#'
 #' @importFrom MASS glm.nb
 #' @importFrom stats coef
+#'
+#' @export
+#'
+#' @examples
+#' interim <- data.frame(events = c(1, 2, 1, 3), tte = c(0.8, 1.0, 1.2, 0.9))
+#' calculate_blinded_info(
+#'   interim,
+#'   ratio = 1,
+#'   lambda1_planning = 0.5,
+#'   lambda2_planning = 0.3
+#' )
 calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_planning, event_gap = NULL) {
   df <- as.data.frame(data)
   if (!all(c("events", "tte") %in% names(df))) {
