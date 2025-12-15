@@ -2,7 +2,7 @@
 % Please edit documentation in R/gsNBCalendar.R
 \name{compute_info_at_time}
 \alias{compute_info_at_time}
-\title{Compute Statistical Information at Analysis Time}
+\title{Compute statistical information at analysis time}
 \usage{
 compute_info_at_time(
   analysis_time,

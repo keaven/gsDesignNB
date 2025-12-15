@@ -2,7 +2,7 @@
 % Please edit documentation in R/gsNBCalendar.R
 \name{print.gsNBsummary}
 \alias{print.gsNBsummary}
-\title{Print Method for gsNBsummary Objects}
+\title{Print method for gsNBsummary objects}
 \usage{
 \method{print}{gsNBsummary}(x, ...)
 }
@@ -15,5 +15,5 @@
 Invisibly returns the input object.
 }
 \description{
-Print Method for gsNBsummary Objects
+Print method for gsNBsummary objects
 }

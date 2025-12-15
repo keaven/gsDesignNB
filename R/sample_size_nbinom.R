@@ -394,7 +394,7 @@ sample_size_nbinom <- function(lambda1, lambda2, dispersion, power = NULL,
 }
 
 
-#' Print Method for sample_size_nbinom_result Objects
+#' Print method for sample_size_nbinom_result objects
 #'
 #' Prints a concise summary of the sample size calculation results.
 #'
@@ -457,7 +457,7 @@ print.sample_size_nbinom_result <- function(x, ...) {
 }
 
 
-#' Summary for sample_size_nbinom_result Objects
+#' Summary for sample_size_nbinom_result objects
 #'
 #' Provides a textual summary of the sample size calculation for negative binomial
 #' outcomes, similar to the summary for gsNB objects.
@@ -518,7 +518,7 @@ summary.sample_size_nbinom_result <- function(object, ...) {
 }
 
 
-#' Print Method for sample_size_nbinom_summary Objects
+#' Print method for sample_size_nbinom_summary objects
 #'
 #' @param x An object of class `sample_size_nbinom_summary`.
 #' @param ... Additional arguments (currently ignored).

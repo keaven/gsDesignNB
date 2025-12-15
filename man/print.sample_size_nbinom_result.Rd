@@ -2,7 +2,7 @@
 % Please edit documentation in R/sample_size_nbinom.R
 \name{print.sample_size_nbinom_result}
 \alias{print.sample_size_nbinom_result}
-\title{Print Method for sample_size_nbinom_result Objects}
+\title{Print method for sample_size_nbinom_result objects}
 \usage{
 \method{print}{sample_size_nbinom_result}(x, ...)
 }

@@ -4,7 +4,7 @@
 \alias{toInteger}
 \alias{toInteger.gsDesign}
 \alias{toInteger.gsNB}
-\title{Convert Group Sequential Design to Integer Sample Sizes}
+\title{Convert group sequential design to integer sample sizes}
 \usage{
 toInteger(x, ...)
 

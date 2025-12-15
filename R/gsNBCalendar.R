@@ -168,7 +168,7 @@ gsNBCalendar <- function(x,
 }
 
 
-#' Compute Statistical Information at Analysis Time
+#' Compute statistical information at analysis time
 #'
 #' Computes the statistical information for the log rate ratio at a given
 #' analysis time, accounting for staggered enrollment and varying exposure times.
@@ -259,7 +259,7 @@ compute_info_at_time <- function(analysis_time, accrual_rate, accrual_duration,
 }
 
 
-#' Summary for gsNB Objects
+#' Summary for gsNB objects
 #'
 #' Provides a textual summary of a group sequential design for negative binomial
 #' outcomes, similar to the summary provided by [gsDesign::gsDesign()].
@@ -368,7 +368,7 @@ summary.gsNB <- function(object, ...) {
 }
 
 
-#' Print Method for gsNBsummary Objects
+#' Print method for gsNBsummary objects
 #'
 #' @param x An object of class `gsNBsummary`.
 #' @param ... Additional arguments (currently ignored).
@@ -383,7 +383,7 @@ print.gsNBsummary <- function(x, ...) {
 }
 
 
-#' Convert Group Sequential Design to Integer Sample Sizes
+#' Convert group sequential design to integer sample sizes
 #'
 #' Generic function to round sample sizes in a group sequential design to integers.
 #' This extends the [gsDesign::toInteger()] function from the gsDesign

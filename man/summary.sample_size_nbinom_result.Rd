@@ -2,7 +2,7 @@
 % Please edit documentation in R/sample_size_nbinom.R
 \name{summary.sample_size_nbinom_result}
 \alias{summary.sample_size_nbinom_result}
-\title{Summary for sample_size_nbinom_result Objects}
+\title{Summary for sample_size_nbinom_result objects}
 \usage{
 \method{summary}{sample_size_nbinom_result}(object, ...)
 }

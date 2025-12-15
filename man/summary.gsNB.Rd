@@ -2,7 +2,7 @@
 % Please edit documentation in R/gsNBCalendar.R
 \name{summary.gsNB}
 \alias{summary.gsNB}
-\title{Summary for gsNB Objects}
+\title{Summary for gsNB objects}
 \usage{
 \method{summary}{gsNB}(object, ...)
 }

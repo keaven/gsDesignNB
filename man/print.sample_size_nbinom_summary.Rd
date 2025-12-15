@@ -2,7 +2,7 @@
 % Please edit documentation in R/sample_size_nbinom.R
 \name{print.sample_size_nbinom_summary}
 \alias{print.sample_size_nbinom_summary}
-\title{Print Method for sample_size_nbinom_summary Objects}
+\title{Print method for sample_size_nbinom_summary objects}
 \usage{
 \method{print}{sample_size_nbinom_summary}(x, ...)
 }
@@ -15,5 +15,5 @@
 Invisibly returns the input object.
 }
 \description{
-Print Method for sample_size_nbinom_summary Objects
+Print method for sample_size_nbinom_summary objects
 }
