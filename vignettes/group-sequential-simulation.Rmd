@@ -37,7 +37,6 @@ We design a trial with the following characteristics:
   - Final: 24 months
 * **Event Rates:**
   - Control: 0.125 events per month (1.5 per year)
-
   - Experimental: 0.0833 events per month (1.0 per year; rate ratio = 0.67)
 * **Dispersion:** 0.5
 * **Power:** 90% (beta = 0.1)
@@ -48,7 +47,7 @@ We design a trial with the following characteristics:
 
 ### Sample size calculation
 
-First, we calculate the required sample size for a fixed design:
+First, we calculate the required sample size for a fixed design using the Zhu and Lakkis method:
 
 ```{r sample-size}
 # Sample size calculation
@@ -62,7 +61,7 @@ nb_ss <- sample_size_nbinom(
   dispersion = 0.5, # Overdispersion parameter
   power = 0.9, # 90% power
   alpha = 0.025, # One-sided alpha
-  accrual_rate = 100 / 12, # Patients per month (will determine total n)
+  accrual_rate = 1, # This will be scaled to achieve the target power
   accrual_duration = 12, # 12 months enrollment
   trial_duration = 24, # 24 months trial
   max_followup = 12, # 12 months of follow-up per patient
@@ -83,8 +82,8 @@ Now we convert this a group sequential design with 3 analyses after
 Note that the final analysis time must be the same as for the fixed design.
 The relative enrollment rates will be increased to increase the sample size
 as with standard group sequential design theory.
-We specify `usTime = c(0.1, 0.14, 1)` which along with the `sfLinear()` spending
-function will spend 10%, 14% and 100% of the cumulative $\alpha$ at the 3
+We specify `usTime = c(0.1, 0.18, 1)` which along with the `sfLinear()` spending
+function will spend 10%, 18% and 100% of the cumulative $\alpha$ at the 3
 planned analyses regardless of the observed statistical information at each
 analysis.
 
@@ -101,7 +100,7 @@ gs_nb <- gsNBCalendar(
   sfupar = c(.5, .5), # Identity function
   sfl = sfHSD, # HSD spending for lower bound
   sflpar = -8, # Conservative futility bound
-  usTime = c(.1, .14, 1), # Upper spending timing
+  usTime = c(.1, .18, 1), # Upper spending timing
   lsTime = NULL, # Spending based on information
   analysis_times = analysis_times # Calendar times in months
 ) |> gsDesignNB::toInteger() # Round to integer sample size
@@ -408,7 +407,7 @@ The statistical information at each analysis is proportional to the precision
 of the treatment effect estimate. For negative binomial outcomes, this relates
 to the total exposure and event counts.
 We note that the asymptotic information approximation overstates the information at the each analysis.
-However, the power approximation still worked reasonably well.
+However, the power approximation still worked reasonably well. 
 This evaluated in a larger simulation study in the vignette `verification-simulation.Rmd`.
 
 ```{r info-summary}
