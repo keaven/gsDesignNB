@@ -13,7 +13,8 @@ compute_info_at_time(
   dispersion,
   ratio = 1,
   dropout_rate = 0,
-  event_gap = 0
+  event_gap = 0,
+  max_followup = Inf
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ compute_info_at_time(
 
 \item{event_gap}{Gap duration after each event during which no new events are counted.
 Default is 0.}
+
+\item{max_followup}{Maximum follow-up time per subject. Exposure time is
+truncated at this value. Default is \code{Inf} (no truncation).}
 }
 \value{
 The statistical information (inverse of variance) at the analysis time.
