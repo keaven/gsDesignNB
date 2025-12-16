@@ -36,7 +36,8 @@ cut_completers <- function(data, cut_date, event_gap = 5 / 365.25) {
 #' Finds the calendar time (since start of randomization) at which a specified
 #' number of subjects have completed their follow-up.
 #'
-#' @param data A data frame of simulated data, typically from [nb_sim()].
+#' @param data A data frame of simulated data, typically from [nb_sim()] or
+#'   [nb_sim_seasonal()].
 #' @param target_completers Integer. The target number of completers.
 #'
 #' @return Numeric. The calendar date when `target_completers` is achieved.
@@ -57,28 +58,50 @@ cut_completers <- function(data, cut_date, event_gap = 5 / 365.25) {
 cut_date_for_completers <- function(data, target_completers) {
   dt <- data.table::as.data.table(data)
 
-  # Determine max_followup
-  max_f <- max(dt$tte)
+  followup_var <- NULL
+  if ("tte" %in% names(dt)) {
+    followup_var <- "tte"
+  } else if ("end" %in% names(dt)) {
+    # nb_sim_seasonal() stores follow-up interval end times in `end`
+    followup_var <- "end"
+  } else {
+    stop("Data must contain a follow-up time column named 'tte' (nb_sim) or 'end' (nb_sim_seasonal).")
+  }
 
-  # Identify completers and their completion times
-  # Completers are those who reached max_f (did not drop out)
-  # Their completion time is enroll_time + tte (where tte = max_f)
-  # We look at the last record for each ID which holds the max tte
+  if (!"id" %in% names(dt)) {
+    stop("Data must contain an 'id' column.")
+  }
 
-  # Get last row per ID
-  last_rows <- dt[, .SD[.N], by = id]
+  # Ensure we have a numeric completion time for each record.
+  # Prefer `calendar_time` when available; otherwise compute enroll_time + follow-up.
+  if ("calendar_time" %in% names(dt)) {
+    dt[, completion_time := calendar_time]
+  } else {
+    if (!"enroll_time" %in% names(dt)) {
+      stop("Data must contain 'enroll_time' to compute completion times.")
+    }
+    dt[, completion_time := enroll_time + get(followup_var)]
+  }
 
-  # Filter for completers
-  # tte must be max_f
-  completers <- last_rows[tte >= max_f - 1e-8]
+  # Determine max_followup (from the observed maximum follow-up in the dataset)
+  max_f <- max(dt[[followup_var]], na.rm = TRUE)
+
+  # One row per subject: take their max follow-up and max completion time
+  last_rows <- dt[, .(
+    followup = max(get(followup_var), na.rm = TRUE),
+    completion_time = max(completion_time, na.rm = TRUE)
+  ), by = id]
+
+  # Completers are those who reached (approximately) the max follow-up
+  completers <- last_rows[followup >= max_f - 1e-8]
 
   if (nrow(completers) < target_completers) {
     message(sprintf("Only %d completers in trial (target: %d)", nrow(completers), target_completers))
-    return(max(dt$calendar_time))
+    return(max(dt$completion_time, na.rm = TRUE))
   }
 
   # Sort completion times
-  completion_times <- sort(completers$calendar_time)
+  completion_times <- sort(completers$completion_time)
 
   # Return the date the target-th completer finished
   return(completion_times[target_completers])

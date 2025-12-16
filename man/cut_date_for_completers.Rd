@@ -7,7 +7,8 @@
 cut_date_for_completers(data, target_completers)
 }
 \arguments{
-\item{data}{A data frame of simulated data, typically from \code{\link[=nb_sim]{nb_sim()}}.}
+\item{data}{A data frame of simulated data, typically from \code{\link[=nb_sim]{nb_sim()}} or
+\code{\link[=nb_sim_seasonal]{nb_sim_seasonal()}}.}
 
 \item{target_completers}{Integer. The target number of completers.}
 }

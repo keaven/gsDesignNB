@@ -40,6 +40,40 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
     stop("Data must contain 'events' and 'tte' columns.")
   }
 
+  # Drop non-positive exposure rows (cannot contribute to information)
+  df <- df[df$tte > 0, , drop = FALSE]
+  if (nrow(df) == 0) {
+    return(list(
+      blinded_info = 0,
+      dispersion_blinded = NA_real_,
+      lambda_blinded = NA_real_,
+      lambda1_adjusted = NA_real_,
+      lambda2_adjusted = NA_real_
+    ))
+  }
+
+  .blinded_info_from_tte <- function(tte, lambda1, lambda2, dispersion, ratio) {
+    p1 <- 1 / (1 + ratio)
+    p2 <- ratio / (1 + ratio)
+
+    mu1 <- lambda1 * tte
+    mu2 <- lambda2 * tte
+
+    # Fisher information for the log-rate in NB2 with log link and offset(log(tte)):
+    # sum(mu / (1 + dispersion * mu))
+    w1 <- sum(mu1 / (1 + dispersion * mu1))
+    w2 <- sum(mu2 / (1 + dispersion * mu2))
+    if (!is.finite(w1) || !is.finite(w2) || w1 <= 0 || w2 <= 0) {
+      return(0)
+    }
+
+    var_log_rr <- 1 / (p1 * w1) + 1 / (p2 * w2)
+    if (!is.finite(var_log_rr) || var_log_rr <= 0) {
+      return(0)
+    }
+    1 / var_log_rr
+  }
+
   # 1. Blinded Parameter Estimation
   # Fit negative binomial model to pooled data (intercept only)
   fit_blind <- tryCatch(
@@ -83,15 +117,13 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
   lambda1_new <- lambda_est / (p1 + p2 * rate_ratio_planning)
   lambda2_new <- lambda1_new * rate_ratio_planning
 
-  n_current <- nrow(df)
-  avg_exposure <- sum(df$tte) / n_current
-
-  mu1_new <- lambda1_new * avg_exposure
-  mu2_new <- lambda2_new * avg_exposure
-
-  V_bar_blind <- (1 / mu1_new + dispersion_est) / p1 + (1 / mu2_new + dispersion_est) / p2
-
-  observed_info <- n_current / V_bar_blind
+  observed_info <- .blinded_info_from_tte(
+    tte = df$tte,
+    lambda1 = lambda1_new,
+    lambda2 = lambda2_new,
+    dispersion = dispersion_est,
+    ratio = ratio
+  )
 
   list(
     blinded_info = observed_info,

@@ -62,3 +62,25 @@ test_that("cut_completers and cut_date_for_completers work as expected", {
   cut_empty <- cut_completers(sim, 0)
   expect_equal(nrow(cut_empty), 0)
 })
+
+test_that("cut_date_for_completers works with nb_sim_seasonal output", {
+  enroll_rate <- data.frame(rate = 50, duration = 0.2)
+  fail_rate <- data.frame(
+    treatment = rep(c("Control", "Experimental"), each = 4),
+    season = rep(c("Winter", "Spring", "Summer", "Fall"), times = 2),
+    rate = rep(0.5, 8)
+  )
+
+  sim <- nb_sim_seasonal(
+    enroll_rate = enroll_rate,
+    fail_rate = fail_rate,
+    max_followup = 1,
+    randomization_start_date = as.Date("2020-01-01"),
+    n = 40
+  )
+
+  # Should not error even though nb_sim_seasonal doesn't have `tte`
+  d10 <- cut_date_for_completers(sim, target_completers = 10)
+  expect_true(is.numeric(d10))
+  expect_true(is.finite(d10))
+})
