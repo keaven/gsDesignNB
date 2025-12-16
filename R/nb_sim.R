@@ -10,6 +10,14 @@
 #' which acts as a multiplier for that individual's event rate. Events are then
 #' generated according to a Poisson process with this subject-specific rate.
 #'
+#' More explicitly, for a subject with baseline rate \eqn{\lambda} and exposure time
+#' \eqn{t}, the model used here is a Gamma--Poisson mixture:
+#' \deqn{\Lambda_i \sim \mathrm{Gamma}(\text{shape}=1/k,\ \text{scale}=k\lambda), \quad Y_i \mid \Lambda_i \sim \mathrm{Poisson}(\Lambda_i t).}
+#' Marginally, \eqn{Y_i} follows a negative binomial distribution with
+#' \eqn{E[Y_i]=\mu=\lambda t} and \eqn{Var(Y_i)=\mu + k\mu^2}.
+#' This \eqn{k} is the package dispersion parameter (and corresponds to
+#' \eqn{1/\theta} in \code{MASS::glm.nb()} terminology).
+#'
 #' @param enroll_rate A data frame with columns `rate` and `duration` defining
 #'   the piecewise constant enrollment rates.
 #' @param fail_rate A data frame with columns `treatment` and `rate` defining
