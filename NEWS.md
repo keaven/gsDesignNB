@@ -25,6 +25,10 @@
   Supports negative binomial overdispersion via gamma frailty and event gaps.
 - `nb_sim_seasonal()` simulates recurrent events where event rates vary by
   season (Spring, Summer, Fall, Winter).
+- Group sequential simulation helpers: `sim_gs_nbinom()` runs repeated
+  simulations with flexible cut rules via `get_cut_date()`,
+  `check_gs_bound()` updates spending bounds based on observed information,
+  and `summarize_gs_sim()` summarizes operating characteristics across analyses.
 
 ## Interim data handling
 
