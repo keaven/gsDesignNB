@@ -86,6 +86,7 @@ We specify `usTime = c(0.1, 0.18, 1)` which along with the `sfLinear()` spending
 function will spend 10%, 18% and 100% of the cumulative $\alpha$ at the 3
 planned analyses regardless of the observed statistical information at each
 analysis.
+The interim spending is intended to achieve a nominal p-value of 0.0025 (one-sided) at both interim analyses.
 
 ```{r gs-design}
 # Analysis times (in months)
@@ -109,7 +110,7 @@ gs_nb <- gsNBCalendar(
 Textual group sequential design summary:
 
 ```{r}
-summary(gs_nb)
+print(summary(gs_nb))
 ```
 
 Tabular summary:
