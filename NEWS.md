@@ -1,4 +1,4 @@
-# gsDesignNB 0.2.1
+# gsDesignNB 0.2.2
 
 ## Sample size and power
 
