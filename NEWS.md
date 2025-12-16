@@ -1,3 +1,10 @@
+# gsDesignNB 0.2.3
+
+- Fix `toInteger.gsNB()` to avoid unintended power changes by correctly recomputing
+  information with `max_followup`, preserving `delta1`, and improving ratio-aware
+  integer rounding.
+- Vignette updates and documentation fixes.
+
 # gsDesignNB 0.2.2
 
 ## Sample size and power
