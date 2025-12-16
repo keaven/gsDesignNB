@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_cut_date.R
 \name{get_cut_date}
 \alias{get_cut_date}
-\title{Determine Analysis Date based on Criteria}
+\title{Determine analysis date based on criteria}
 \usage{
 get_cut_date(
   data,
@@ -49,4 +49,14 @@ within \code{max_date} (or data limits), returns \code{max_date} (or max data ti
 Finds the earliest calendar date at which all specified criteria are met.
 Criteria can include a specific calendar date, a target number of events,
 a target number of completers, or a target amount of blinded information.
+}
+\examples{
+set.seed(456)
+enroll_rate <- data.frame(rate = 15, duration = 1)
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.6, 0.4)
+)
+sim_data <- nb_sim(enroll_rate, fail_rate, max_followup = 1, n = 20)
+get_cut_date(sim_data, planned_calendar = 0.5, target_events = 5, event_gap = 0)
 }
