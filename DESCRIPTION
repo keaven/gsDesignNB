@@ -1,8 +1,14 @@
 Package: gsDesignNB
 Version: 0.2.2
 Title: Sample Size Calculation and Simulation for Negative Binomial Outcomes
+Author: Keaven Anderson [aut, cre],
+    Nan Xiao [ctb],
+    Hongtao Zhang [ctb]
+Maintainer: Keaven Anderson <keaven_anderson@merck.com>
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
+    person("Nan", "Xiao", role = "ctb"),
+    person("Hongtao", "Zhang", role = "ctb"),
     person("Merck & Co., Inc., Rahway, NJ, USA and its affiliates", role = "cph",
            comment = c(ROR = "02891sr49"))
     )
