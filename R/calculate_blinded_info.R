@@ -59,15 +59,16 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
     mu1 <- lambda1 * tte
     mu2 <- lambda2 * tte
 
-    # Fisher information for the log-rate in NB2 with log link and offset(log(tte)):
-    # sum(mu / (1 + dispersion * mu))
-    w1 <- sum(mu1 / (1 + dispersion * mu1))
-    w2 <- sum(mu2 / (1 + dispersion * mu2))
+    # Fisher information for NB2 with log link and offset(log(tte)).
+    # For each subject, weight = mu / (1 + k * mu).
+    # With blinded data, expected group weights multiply by allocation probs p1/p2.
+    w1 <- p1 * sum(mu1 / (1 + dispersion * mu1))
+    w2 <- p2 * sum(mu2 / (1 + dispersion * mu2))
     if (!is.finite(w1) || !is.finite(w2) || w1 <= 0 || w2 <= 0) {
       return(0)
     }
 
-    var_log_rr <- 1 / (p1 * w1) + 1 / (p2 * w2)
+    var_log_rr <- 1 / w1 + 1 / w2
     if (!is.finite(var_log_rr) || var_log_rr <= 0) {
       return(0)
     }

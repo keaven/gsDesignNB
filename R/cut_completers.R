@@ -73,9 +73,13 @@ cut_date_for_completers <- function(data, target_completers) {
   }
 
   # Ensure we have a numeric completion time for each record.
-  # Prefer `calendar_time` when available; otherwise compute enroll_time + follow-up.
+  # Prefer calendar columns when available; otherwise compute enroll_time + follow-up.
   if ("calendar_time" %in% names(dt)) {
     dt[, completion_time := calendar_time]
+  } else if ("cal_end" %in% names(dt)) {
+    # Convert Date to relative time (years) using earliest calendar start as origin.
+    origin_date <- min(dt$cal_start, na.rm = TRUE)
+    dt[, completion_time := as.numeric(cal_end - origin_date) / 365.25]
   } else {
     if (!"enroll_time" %in% names(dt)) {
       stop("Data must contain 'enroll_time' to compute completion times.")

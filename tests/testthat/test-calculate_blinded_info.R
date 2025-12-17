@@ -32,3 +32,26 @@ test_that("calculate_blinded_info uses subject-level tte (not just an average)",
   expect_true(is.finite(res_b$blinded_info))
   expect_false(isTRUE(all.equal(res_a$blinded_info, res_b$blinded_info, tolerance = 1e-12)))
 })
+
+test_that("calculate_blinded_info blends allocation into Fisher weights", {
+  # Different allocation ratio should scale information via p1/p2 weighting.
+  df <- data.frame(tte = c(0.5, 1.0, 1.5, 2.0), events = c(1, 2, 3, 4))
+
+  res_equal <- calculate_blinded_info(
+    df,
+    ratio = 1,
+    lambda1_planning = 0.5,
+    lambda2_planning = 0.5
+  )
+
+  res_two_to_one <- calculate_blinded_info(
+    df,
+    ratio = 2,
+    lambda1_planning = 0.5,
+    lambda2_planning = 0.5
+  )
+
+  expect_true(is.finite(res_equal$blinded_info))
+  expect_true(is.finite(res_two_to_one$blinded_info))
+  expect_gt(res_equal$blinded_info, res_two_to_one$blinded_info)
+})
