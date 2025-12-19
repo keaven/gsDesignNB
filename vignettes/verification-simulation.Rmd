@@ -22,7 +22,7 @@ library(ggplot2)
 
 ## Introduction
 
-This vignette verifies the accuracy of the `sample_size_nbinom` function by comparing its theoretical predictions for average exposure,
+This vignette verifies the accuracy of the `sample_size_nbinom()` function by comparing its theoretical predictions for average exposure,
  statistical information, and power against results from a large-scale simulation study.
 
 We specifically test a scenario with:
@@ -51,7 +51,7 @@ The parameters for both the theoretical calculation and the simulation study are
 
 ### Theoretical calculation
 
-First, we calculate the required sample size and expected properties using `sample_size_nbinom`.
+First, we calculate the required sample size and expected properties using `sample_size_nbinom()`.
 
 ```{r design}
 # Parameters
@@ -118,7 +118,7 @@ if (results_file != "") {
 
 ### 1. Average exposure verification
 
-We compare the theoretical average exposure calculated by `sample_size_nbinom` with the observed average exposure in the simulation.
+We compare the theoretical average exposure calculated by `sample_size_nbinom()` with the observed average exposure in the simulation.
 
 ```{r exposure, eval=!is.null(results)}
 # Theoretical Exposure
@@ -145,10 +145,10 @@ The theoretical exposure should closely match the simulated average exposure.
 
 The theoretical variance of the log rate ratio estimator (Wald test) is given by:
 
-$$ V_{theo} = \frac{1/\mu_1 + k_{adj}}{n_1} + \frac{1/\mu_2 + k_{adj}}{n_2} $$
+$$ V_{\text{theo}} = \frac{1/\mu_1 + k_{\text{adj}}}{n_1} + \frac{1/\mu_2 + k_{\text{adj}}}{n_2} $$
 
-where $\mu_i = \lambda_{i,eff} \bar{t}$ is the expected number of events per subject in group $i$ 
-(using effective rates adjusted for event gaps), and $k_{adj} = k \cdot Q$ is the dispersion parameter inflated for variable follow-up.
+where $\mu_i = \lambda_{i,\text{eff}} \bar{t}$ is the expected number of events per subject in group $i$ 
+(using effective rates adjusted for event gaps), and $k_{\text{adj}} = k \cdot Q$ is the dispersion parameter inflated for variable follow-up.
 
 
 The dispersion parameter $k$ directly increases the variance of the estimator. 
@@ -213,7 +213,7 @@ binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), nrow(re
 
 ## Conclusion
 
-The simulation results confirm that `sample_size_nbinom` reasonably predicts average exposure, variance (information), 
+The simulation results confirm that `sample_size_nbinom()` reasonably predicts average exposure, variance (information), 
 and power for this complex design with piecewise accrual and dropout.
 However, given the slight underpowering that the simulation study suggests, 
 it may be useful to consider a larger sample size than the Friede approximation suggests, with power verified by simulation.

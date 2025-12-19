@@ -133,7 +133,7 @@ sum(interim_data$events)
 
 ## Blinded Sample Size Re-estimation
 
-We use the `blinded_ssr` function to estimate the nuisance parameters (dispersion and overall rate) from the blinded data and recalculate the sample size.
+We use the `blinded_ssr()` function to estimate the nuisance parameters (dispersion and overall rate) from the blinded data and recalculate the sample size.
 
 The method assumes the treatment effect (rate ratio) is maintained as planned, but updates the sample size based on the observed variance structure.
 

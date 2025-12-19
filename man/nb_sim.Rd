@@ -22,7 +22,7 @@ the piecewise constant enrollment rates.}
 the exponential failure rate for each treatment group.
 Optionally, a \code{dispersion} column can be provided to generate data from
 a negative binomial distribution. The dispersion parameter \code{k} is
-such that \eqn{Var(Y) = \mu + k \mu^2}.}
+such that \eqn{\mathrm{Var}(Y) = \mu + k \mu^2}.}
 
 \item{dropout_rate}{A data frame with columns \code{treatment}, \code{rate},
 and \code{duration} defining the piecewise constant dropout rates.}
@@ -70,7 +70,7 @@ More explicitly, for a subject with baseline rate \eqn{\lambda} and exposure tim
 \eqn{t}, the model used here is a Gamma--Poisson mixture:
 \deqn{\Lambda_i \sim \mathrm{Gamma}(\text{shape}=1/k,\ \text{scale}=k\lambda), \quad Y_i \mid \Lambda_i \sim \mathrm{Poisson}(\Lambda_i t).}
 Marginally, \eqn{Y_i} follows a negative binomial distribution with
-\eqn{E[Y_i]=\mu=\lambda t} and \eqn{Var(Y_i)=\mu + k\mu^2}.
+\eqn{\mathrm{E}[Y_i]=\mu=\lambda t} and \eqn{\mathrm{Var}(Y_i)=\mu + k\mu^2}.
 This \eqn{k} is the package dispersion parameter (and corresponds to
 \eqn{1/\theta} in \code{\link[MASS:glm.nb]{MASS::glm.nb()}} terminology).
 }

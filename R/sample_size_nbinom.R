@@ -5,7 +5,7 @@
 #'
 #' @param lambda1 Rate in group 1 (control).
 #' @param lambda2 Rate in group 2 (treatment).
-#' @param dispersion Dispersion parameter `k` such that \eqn{Var(Y) = \mu + k \mu^2}.
+#' @param dispersion Dispersion parameter `k` such that \eqn{\mathrm{Var}(Y) = \mu + k \mu^2}.
 #'   Note that this is equivalent to `1/size` in R's [stats::rnbinom()] parameterization.
 #' @param power Power of the test (1 - beta). Default is 0.9.
 #' @param alpha Significance level. Default is 0.025.

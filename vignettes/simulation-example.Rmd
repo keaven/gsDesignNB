@@ -89,8 +89,9 @@ head(sim_data)
 ```
 
 The output contains multiple rows per subject:
-*   `event = 1`: An actual recurrent event.
-*   `event = 0`: The censoring time (either due to dropout or reaching `max_followup`).
+
+- `event = 1`: An actual recurrent event.
+- `event = 0`: The censoring time (either due to dropout or reaching `max_followup`).
 
 ## Analyzing the data
 
@@ -219,7 +220,7 @@ sum(cut_events$events)
 
 ## Generating and verifying negative binomial data
 
-The `nb_sim()` function can also generate data where the counts follow a negative binomial distribution. This is achieved by providing a `dispersion` parameter in the `fail_rate` data frame. The dispersion parameter $k$ relates the variance to the mean as $Var(Y) = \mu + k\mu^2$.
+The `nb_sim()` function can also generate data where the counts follow a negative binomial distribution. This is achieved by providing a `dispersion` parameter in the `fail_rate` data frame. The dispersion parameter $k$ relates the variance to the mean as $\mathrm{Var}(Y) = \mu + k\mu^2$.
 
 ### Simulation with dispersion
 
@@ -253,7 +254,7 @@ sim_nb <- nb_sim(
 
 We can verify that the simulated data reflects the input dispersion parameter by estimating it back from the data. We use the Method of Moments (MoM) estimator:
 
-$$ \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2} $$
+$$ \hat{k} = \frac{\mathrm{Var}(Y) - \bar{Y}}{\bar{Y}^2} $$
 
 ```{r}
 # Count events per subject
