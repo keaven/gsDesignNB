@@ -1,20 +1,21 @@
 ---
-title: "Sample Size Re-estimation Example"
+title: "Sample size re-estimation example"
 output: rmarkdown::html_vignette
+bibliography: gsDesignNB.bib
 vignette: >
-  %\VignetteIndexEntry{Sample Size Re-estimation Example}
+  %\VignetteIndexEntry{Sample size re-estimation example}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-```{r setup}
+```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
 library(data.table)
 library(MASS)
@@ -22,7 +23,7 @@ library(MASS)
 
 ## Introduction
 
-This vignette demonstrates a group sequential trial with a single interim analysis where information-based sample size re-estimation (SSR) is performed. We follow the methodology suggested by Friede and Schmidli (2010) for blinded sample size re-estimation with negative binomial counts.
+This vignette demonstrates a group sequential trial with a single interim analysis where information-based sample size re-estimation (SSR) is performed. We follow the methodology suggested by @friede2010blinded for blinded sample size re-estimation with negative binomial counts.
 
 We simulate a single trial where the actual dispersion parameter is higher than the planned dispersion parameter. This scenario typically leads to a loss of power if the sample size is not adjusted. We will show how to increase the sample size based on both blinded and unblinded interim data to maintain the desired power.
 
@@ -213,3 +214,5 @@ knitr::kable(comparison, digits = 3, caption = "Comparison of Sample Size Estima
 In this example, the true dispersion was higher than planned. Both blinded and unblinded SSR detected the increased variability and suggested increasing the sample size to maintain power. The blinded method is often preferred to maintain trial integrity, assuming the treatment effect is not far from the planning assumption. The unblinded method adapts to both the variance and the observed effect size, which can lead to larger or smaller sample sizes depending on the observed efficacy.
 
 **Note:** In practice, sample size is typically not reduced if the re-estimated size is smaller than planned. We would take `max(n_planned, n_reestimated)`.
+
+## References
