@@ -26,8 +26,7 @@ sample_size_nbinom(
 \item{lambda2}{Rate in group 2 (treatment).}
 
 \item{dispersion}{Dispersion parameter \code{k} such that \eqn{Var(Y) = \mu + k \mu^2}.
-Note that this is equivalent to \code{1/size} in R's \code{\link[stats:NegBinomial]{stats::rnbinom()}} parameterization.
-Can be a scalar (common dispersion) or a vector of length 2 (dispersion for control and treatment groups, respectively).}
+Note that this is equivalent to \code{1/size} in R's \code{\link[stats:NegBinomial]{stats::rnbinom()}} parameterization.}
 
 \item{power}{Power of the test (1 - beta). Default is 0.9.}
 
@@ -44,7 +43,7 @@ as \code{accrual_rate}.}
 
 \item{trial_duration}{Total planned duration of the trial.}
 
-\item{dropout_rate}{Dropout rate (hazard rate). Default is 0.}
+\item{dropout_rate}{Dropout rate (hazard rate). Default is 0. Can be a vector of length 2.}
 
 \item{max_followup}{Maximum follow-up time for any patient. Default is NULL (infinite).}
 
@@ -58,7 +57,7 @@ An object of class \code{sample_size_nbinom_result}, which is a list containing:
 \item{n1}{Sample size for group 1}
 \item{n2}{Sample size for group 2}
 \item{n_total}{Total sample size}
-\item{exposure}{Average exposure time used in calculation (calendar time)}
+\item{exposure}{Average exposure time used in calculation (calendar time). Vector of length 2.}
 \item{exposure_at_risk_n1}{Average at-risk exposure time for group 1 (accounts for event gap)}
 \item{exposure_at_risk_n2}{Average at-risk exposure time for group 2 (accounts for event gap)}
 }
