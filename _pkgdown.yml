@@ -1,6 +1,10 @@
 url: https://keaven.github.io/gsDesignNB/
+
 template:
   bootstrap: 5
+  bslib:
+    preset: "bootstrap"
+  math-rendering: "mathjax"
 
 reference:
   - title: "Sample size calculation"
