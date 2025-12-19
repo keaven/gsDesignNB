@@ -81,4 +81,5 @@ articles:
       - verification-simulation
       - group-sequential-simulation
       - completers-interim-example
+      - ssr-example
       - seasonal-simulation
