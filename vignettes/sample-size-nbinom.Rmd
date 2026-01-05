@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 ```
 
-This vignette describes the methodology used in the `sample_size_nbinom` function for calculating sample sizes when comparing two treatment groups with negative binomial outcomes. It covers two available methods and how to account for variable accrual rates.
+This vignette describes the methodology used in the `sample_size_nbinom()` function for calculating sample sizes when comparing two treatment groups with negative binomial outcomes. It covers two available methods and how to account for variable accrual rates.
 
 ## Methodology
 
@@ -30,9 +30,10 @@ The usual null hypothesis is that the rates are equal ($H_0: \lambda_1 = \lambda
 However, non-inferiority or equivalence tests can also be performed by specifying an appropriate null hypothesis.
 
 ### Negative binomial distribution
+
 We assume the outcome $Y$ follows a negative binomial distribution with mean $\mu$ and a common dispersion parameter $k$ for both treatment groups, such that the variance is given by:
 
-$$ Var(Y) = \mu + k \mu^2 $$
+$$ \mathrm{Var}(Y) = \mu + k \mu^2 $$
 
 Note that in R's `rnbinom` parameterization, $k = 1/\texttt{size}$.
 
@@ -40,15 +41,15 @@ Note that in R's `rnbinom` parameterization, $k = 1/\texttt{size}$.
 
 The negative binomial distribution can be motivated by a Gamma-Poisson mixture model.
 Suppose that for each subject $i$, the event rate $\Lambda_i$ is a random variable following a Gamma distribution with shape $\alpha = 1/k$ and rate $\beta = 1/(k \lambda)$, where $\lambda$ is the underlying population event rate and $k$ is the dispersion parameter.
-The mean of this Gamma distribution is $E[\Lambda_i] = \alpha / \beta = \lambda$ and the variance is $Var(\Lambda_i) = \alpha / \beta^2 = k \lambda^2$.
+The mean of this Gamma distribution is $\mathrm{E}[\Lambda_i] = \alpha / \beta = \lambda$ and the variance is $\mathrm{Var}(\Lambda_i) = \alpha / \beta^2 = k \lambda^2$.
 
 Given the subject-specific rate $\Lambda_i$, the number of events $Y_i$ observed over a time period $t_i$ follows a Poisson distribution with rate $\Lambda_i t_i$:
 $$ Y_i | \Lambda_i \sim \text{Poisson}(\Lambda_i t_i) $$
 
 The marginal distribution of $Y_i$ (integrating out $\Lambda_i$) is then a negative binomial distribution with mean $\mu_i = \lambda t_i$ and dispersion parameter $k$.
 The variance is:
-$$ Var(Y_i) = E[Var(Y_i|\Lambda_i)] + Var(E[Y_i|\Lambda_i]) $$
-$$ = E[\Lambda_i t_i] + Var(\Lambda_i t_i) $$
+$$ \mathrm{Var}(Y_i) = \mathrm{E}[\mathrm{Var}(Y_i|\Lambda_i)] + \mathrm{Var}(\mathrm{E}[Y_i|\Lambda_i]) $$
+$$ = \mathrm{E}[\Lambda_i t_i] + \mathrm{Var}(\Lambda_i t_i) $$
 $$ = \lambda t_i + t_i^2 (k \lambda^2) $$
 $$ = \mu_i + k \mu_i^2 $$
 
@@ -56,11 +57,11 @@ This formulation connects the event rate $\lambda$ (used in the hypothesis testi
 
 ### Graphical representation of negative binomial distributions
 
-In the following panel, we illustrate an expected value of 5 events over a fixed time period for different dispersion parameters $k$ (0, 0.5, 1). 
+In the following panel, we illustrate an expected value of 5 events over a fixed time period for different dispersion parameters $k$ (0, 0.5, 1).
 As $k$ increases, the variance increases, leading to a wider spread of possible event counts.
 
 ```{r fig.width=8, fig.height=4}
-par(mfrow=c(1,3))
+par(mfrow = c(1, 3))
 k_values <- c(0, 0.5, 1)
 for (k in k_values) {
   mu <- 5
@@ -71,22 +72,24 @@ for (k in k_values) {
     size <- 1 / k
     probs <- dnbinom(x, size = size, mu = mu)
   }
-  barplot(probs, names.arg = x, horiz = TRUE, main = paste("k =", k), 
-          xlab = "Probability", ylab = "Event Count", las = 1, xlim = c(0, 0.2))
+  barplot(probs,
+    names.arg = x, horiz = TRUE, main = paste("k =", k),
+    xlab = "Probability", ylab = "Event Count", las = 1, xlim = c(0, 0.2)
+  )
 }
 ```
 
 
 ### Sample size formula
 
-The sample size calculation is based on the asymptotic normality of the log rate ratio, $\theta = \log(\lambda_2 / \lambda_1)$. 
-This approach corresponds to **Method 3** of @zhu2014sample, which uses a Wald statistic for the log rate ratio. 
+The sample size calculation is based on the asymptotic normality of the log rate ratio, $\theta = \log(\lambda_2 / \lambda_1)$.
+This approach corresponds to **Method 3** of @zhu2014sample, which uses a Wald statistic for the log rate ratio.
 It is also the method described by @friede2010blinded and @mutze2019group (as implemented in the `gscounts` package).
 
 
-The total sample size $n_{total}$ is calculated as:
+The total sample size $n_{\text{total}}$ is calculated as:
 
-$$ n_{total} = \frac{(z_{\alpha/s} + z_{\beta})^2 \cdot \tilde{V}}{(\theta - \theta_0)^2} $$
+$$ n_{\text{total}} = \frac{(z_{\alpha/s} + z_{\beta})^2 \cdot \tilde{V}}{(\theta - \theta_0)^2} $$
 
 where:
 
@@ -99,15 +102,15 @@ $$ \tilde{V} = \frac{1/ \mu_1 + k}{p_1} + \frac{1/ \mu_2 + k}{p_2} $$
 
 where:
 
-*   $p_1 = n_1/n_{total}$ and $p_2 = n_2/n_{total}$ are the allocation proportions.
+*   $p_1 = n_1/n_{\text{total}}$ and $p_2 = n_2/n_{\text{total}}$ are the allocation proportions.
 *   $\mu_i = \lambda_i \cdot \bar{t}$ is the expected mean count for group $i$ over the average exposure duration $\bar{t}$.
-*   $k$ is the dispersion parameter. While the cited literature assumes a common dispersion parameter across groups, `sample_size_nbinom` allows for different dispersion parameters $k_1$ and $k_2$ for the control and treatment groups, respectively. In this case, the variance formula becomes:
+*   $k$ is the dispersion parameter. While the cited literature assumes a common dispersion parameter across groups, `sample_size_nbinom()` allows for different dispersion parameters $k_1$ and $k_2$ for the control and treatment groups, respectively. In this case, the variance formula becomes:
 
 $$ \tilde{V} = \frac{1/ \mu_1 + k_1}{p_1} + \frac{1/ \mu_2 + k_2}{p_2} $$
 
 This formula assumes that the exposure duration is the same for both groups (or uses an average exposure $\bar{t}$).
-However, `sample_size_nbinom` allows for different dropout rates for the two groups, 
-which results in different average exposure durations $\bar{t}_1$ and $\bar{t}_2$. 
+However, `sample_size_nbinom()` allows for different dropout rates for the two groups,
+which results in different average exposure durations $\bar{t}_1$ and $\bar{t}_2$.
 In this case, $\mu_1 = \lambda_1 \bar{t}_1$ and $\mu_2 = \lambda_2 \bar{t}_2$.
 Also, when the assumed gap between events is > 0, the expected exposure is impacted differently for each group based on their event rates.
 
@@ -137,27 +140,27 @@ If `dropout_rate` ($\delta$) > 0, the average exposure is calculated by integrat
 
 $$
 \begin{aligned}
-E_j &= \frac{1}{D_j}\int_{u_{min}}^{u_{max}} \frac{1 - e^{-\delta u}}{\delta} du \\
-&= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta u_{min}} - e^{-\delta u_{max}} \right)
+E_j &= \frac{1}{D_j}\int_{u_{\min}}^{u_{\max}} \frac{1 - e^{-\delta u}}{\delta} du \\
+&= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta u_{\min}} - e^{-\delta u_{\max}} \right)
 \end{aligned}
 $$
-where $u_{max}$ and $u_{min}$ are the maximum and minimum potential follow-up times for patients in that segment ($T - S_{j-1}$ and $T - (S_{j-1} + D_j)$ respectively).
+where $u_{\max}$ and $u_{\min}$ are the maximum and minimum potential follow-up times for patients in that segment ($T - S_{j-1}$ and $T - (S_{j-1} + D_j)$ respectively).
 
 ### Group-specific parameters
 
-The function supports specifying `dropout_rate` as a vector of length 2, corresponding to the control and treatment groups respectively. 
+The function supports specifying `dropout_rate` as a vector of length 2, corresponding to the control and treatment groups respectively.
 This allows for scenarios where the dropout rate differs between arms.
 
-If these parameters differ, the average exposure is calculated separately for each group ($\bar{t}_1$ and $\bar{t}_2$). 
+If these parameters differ, the average exposure is calculated separately for each group ($\bar{t}_1$ and $\bar{t}_2$).
 The variance inflation factor $Q$ (see below) is also calculated separately for each group ($Q_1$ and $Q_2$).
 
 ### Maximum follow-up
 
 If `max_followup` ($F$) is specified, the follow-up time for any individual is capped at $F$. This creates three scenarios for a recruitment segment:
 
-1.  **All truncated:** If $u_{min} \ge F$, all patients in the segment have potential follow-up $\ge F$, so their actual follow-up is $F$ (subject to dropout).
-2.  **None truncated:** If $u_{max} \le F$, no patients reach the cap $F$ before the trial ends. The calculation is as above.
-3.  **Partial truncation:** If $u_{min} < F < u_{max}$, patients recruited earlier in the segment are capped at $F$, while those recruited later are followed until the trial end. The segment is split into two parts for calculation.
+1.  **All truncated:** If $u_{\min} \ge F$, all patients in the segment have potential follow-up $\ge F$, so their actual follow-up is $F$ (subject to dropout).
+2.  **None truncated:** If $u_{\max} \le F$, no patients reach the cap $F$ before the trial ends. The calculation is as above.
+3.  **Partial truncation:** If $u_{\min} < F < u_{\max}$, patients recruited earlier in the segment are capped at $F$, while those recruited later are followed until the trial end. The segment is split into two parts for calculation.
 
 The overall average exposure used for the calculation is the weighted average:
 
@@ -165,20 +168,20 @@ $$ \bar{t} = \frac{\sum_{j=1}^J N_j E_j}{\sum_{j=1}^J N_j} $$
 
 ### Variance inflation for variable follow-up
 
-When follow-up times are variable (due to accrual, dropout, or administrative censoring), simply using the average follow-up time $\bar{t}$ in the variance formula underestimates the true variance of the rate estimator. This is because the variance of the negative binomial distribution depends on the exposure time in a non-linear way ($Var(Y) = \mu + k\mu^2 = \lambda t + k (\lambda t)^2$).
+When follow-up times are variable (due to accrual, dropout, or administrative censoring), simply using the average follow-up time $\bar{t}$ in the variance formula underestimates the true variance of the rate estimator. This is because the variance of the negative binomial distribution depends on the exposure time in a non-linear way ($\mathrm{Var}(Y) = \mu + k\mu^2 = \lambda t + k (\lambda t)^2$).
 
 To account for this, we apply a variance inflation factor $Q$ to the dispersion parameter $k$, as derived by @zhu2014sample:
 
-$$ Q = \frac{E[t^2]}{(E[t])^2} $$
+$$ Q = \frac{\mathrm{E}[t^2]}{(\mathrm{E}[t])^2} $$
 
-The adjusted dispersion parameter used in the sample size calculation is $k_{adj} = k \cdot Q$. The function automatically calculates $E[t]$ and $E[t^2]$ based on the accrual, dropout, and trial duration parameters. If exposure differs between groups, $Q$ is calculated separately for each group.
+The adjusted dispersion parameter used in the sample size calculation is $k_{\text{adj}} = k \cdot Q$. The function automatically calculates $\mathrm{E}[t]$ and $\mathrm{E}[t^2]$ based on the accrual, dropout, and trial duration parameters. If exposure differs between groups, $Q$ is calculated separately for each group.
 
 ### Event gaps
 
 In some clinical trials, there is a mandatory "dead time" or gap after an event during which no new events can occur (e.g., a recovery period). If an `event_gap` is specified, the effective exposure time for a subject is reduced by the time spent in these gaps.
 
 The function approximates the effective event rate as:
-$$ \lambda_{eff} \approx \frac{\lambda}{1 + \lambda \cdot \text{gap}} $$
+$$ \lambda_{\text{eff}} \approx \frac{\lambda}{1 + \lambda \cdot \text{gap}} $$
 This adjusted rate is then used in the sample size calculations. The effective exposure time reported is also adjusted similarly.
 
 ## Extension to non-inferiority and super-superiority testing
@@ -325,8 +328,8 @@ In some recurrent event trials, there may be a mandatory "gap" period after each
 
 If an `event_gap` ($g$) is specified, the function adjusts the calculation as follows:
 
-1.  **Effective Rates**: The event rates are adjusted to $\lambda^* = \lambda / (1 + \lambda g)$ for the sample size calculation (Zhu and Lakkis method).
-2.  **At-Risk Exposure**: The function reports the "average at-risk exposure" $E_{risk} = E_{cal} / (1 + \lambda g)$ alongside the standard calendar exposure. This provides transparency on the actual time subjects are at risk for events.
+1.  **Effective rates**: The event rates are adjusted to $\lambda^* = \lambda / (1 + \lambda g)$ for the sample size calculation (Zhu and Lakkis method).
+2.  **At-risk exposure**: The function reports the "average at-risk exposure" $\mathrm{E}_{\text{risk}} = \mathrm{E}_{\text{cal}} / (1 + \lambda g)$ alongside the standard calendar exposure. This provides transparency on the actual time subjects are at risk for events.
 
 Since the gap reduction depends on the event rate ($\lambda$), the at-risk exposure differs between treatment groups if their rates differ, even if the calendar exposure is the same. This is a key reason why average exposure may differ between groups in the output.
 
