@@ -140,11 +140,11 @@ If `dropout_rate` ($\delta$) > 0, the average exposure is calculated by integrat
 
 $$
 \begin{aligned}
-E_j &= \frac{1}{D_j}\int_{u_{\min}}^{u_{\max}} \frac{1 - e^{-\delta u}}{\delta} du \\
-&= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta u_{\min}} - e^{-\delta u_{\max}} \right)
+E_j &= \frac{1}{D_j}\int_{u_\text{min}}^{u_\text{max}} \frac{1 - e^{-\delta u}}{\delta} du \\
+&= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta u_\text{min}} - e^{-\delta u_\text{max}} \right)
 \end{aligned}
 $$
-where $u_{\max}$ and $u_{\min}$ are the maximum and minimum potential follow-up times for patients in that segment ($T - S_{j-1}$ and $T - (S_{j-1} + D_j)$ respectively).
+where $u_\text{max}$ and $u_\text{min}$ are the maximum and minimum potential follow-up times for patients in that segment ($T - S_{j-1}$ and $T - (S_{j-1} + D_j)$ respectively).
 
 ### Group-specific parameters
 
@@ -158,9 +158,9 @@ The variance inflation factor $Q$ (see below) is also calculated separately for 
 
 If `max_followup` ($F$) is specified, the follow-up time for any individual is capped at $F$. This creates three scenarios for a recruitment segment:
 
-1.  **All truncated:** If $u_{\min} \ge F$, all patients in the segment have potential follow-up $\ge F$, so their actual follow-up is $F$ (subject to dropout).
-2.  **None truncated:** If $u_{\max} \le F$, no patients reach the cap $F$ before the trial ends. The calculation is as above.
-3.  **Partial truncation:** If $u_{\min} < F < u_{\max}$, patients recruited earlier in the segment are capped at $F$, while those recruited later are followed until the trial end. The segment is split into two parts for calculation.
+1.  **All truncated:** If $u_\text{min} \ge F$, all patients in the segment have potential follow-up $\ge F$, so their actual follow-up is $F$ (subject to dropout).
+2.  **None truncated:** If $u_\text{max} \le F$, no patients reach the cap $F$ before the trial ends. The calculation is as above.
+3.  **Partial truncation:** If $u_\text{min} < F < u_\text{max}$, patients recruited earlier in the segment are capped at $F$, while those recruited later are followed until the trial end. The segment is split into two parts for calculation.
 
 The overall average exposure used for the calculation is the weighted average:
 
