@@ -78,7 +78,10 @@ test_that("sample_size_nbinom calculates correctly", {
   # Error checks for accrual
   expect_error(sample_size_nbinom(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, accrual_rate = 10, trial_duration = 10)) # Missing duration
   expect_error(sample_size_nbinom(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, accrual_rate = 10, accrual_duration = c(5, 5), trial_duration = 10)) # Mismatch
-  expect_error(sample_size_nbinom(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, accrual_rate = 10, accrual_duration = 11, trial_duration = 10)) # Accrual > Trial
+  
+  # Accrual > Trial is now allowed (truncated)
+  res_trunc <- sample_size_nbinom(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = NULL, accrual_rate = 10, accrual_duration = 11, trial_duration = 10)
+  expect_equal(res_trunc$n_total, 100) # 10 * 10
 })
 
 # Test Exposure Reporting with Event Gap

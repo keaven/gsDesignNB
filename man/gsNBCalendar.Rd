@@ -12,7 +12,6 @@ gsNBCalendar(
   beta = 0.1,
   astar = 0,
   delta = 0,
-  timing = 1,
   sfu = gsDesign::sfHSD,
   sfupar = -4,
   sfl = gsDesign::sfHSD,
@@ -50,10 +49,6 @@ Default is 0.}
 
 \item{delta}{Standardized effect size. Default is 0 (computed from design).}
 
-\item{timing}{Timing of interim analyses. May be a vector of length k-1
-with values between 0 and 1 representing information fractions.
-Default is 1 (equally spaced).}
-
 \item{sfu}{Spending function for upper bound. Default is \code{gsDesign::sfHSD}.}
 
 \item{sfupar}{Parameter for upper spending function. Default is -4.}
@@ -71,20 +66,29 @@ Default is 18.}
 
 \item{lsTime}{Spending time for lower bound (optional).}
 
-\item{analysis_times}{Optional vector of calendar times for each analysis.
-If provided, must have length k. These times are stored in the \code{T}
+\item{analysis_times}{Vector of calendar times for each analysis.
+Must have length k. These times are stored in the \code{T}
 element and displayed by \code{\link[gsDesign:gsBoundSummary]{gsDesign::gsBoundSummary()}}.}
 }
 \value{
 An object of class \code{gsNB} which inherits from \code{gsDesign}
-and \code{sample_size_nbinom_result}. Contains all elements from
+and \code{sample_size_nbinom_result}.
+While the final sample size would be planned total enrollment, interim analysis
+sample sizes are the expected number enrolled at the times specified in \code{analysis_times}.
+Output value contains all elements from
 \code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}} plus:
 \describe{
 \item{nb_design}{The original \code{sample_size_nbinom_result} object}
-\item{n1}{Sample size per analysis for group 1}
-\item{n2}{Sample size per analysis for group 2}
+\item{n1}{A vector with sample size per analysis for group 1}
+\item{n2}{A vector with sample size per analysis for group 2}
+\item{n_total}{A vector with total sample size per analysis}
+\item{events}{A vector with expected total events per analysis}
+\item{events1}{A vector with expected events per analysis for group 1}
+\item{events2}{A vector with expected events per analysis for group 2}
 \item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
 }
+Note that \code{n.I} in the returned object represents the statistical information
+at each analysis.
 }
 \description{
 Creates a group sequential design for negative binomial outcomes based on

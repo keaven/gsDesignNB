@@ -18,7 +18,9 @@
 #' @param accrual_rate Vector of accrual rates (patients per unit time).
 #' @param accrual_duration Vector of durations for each accrual rate. Must be same length
 #'   as `accrual_rate`.
-#' @param trial_duration Total planned duration of the trial.
+#' @param trial_duration Total planned duration of the trial. If `trial_duration`
+#'   is less than the sum of `accrual_duration`, accrual is truncated at
+#'   `trial_duration`.
 #' @param dropout_rate Dropout rate (hazard rate). Default is 0. Can be a vector of length 2.
 #' @param max_followup Maximum follow-up time for any patient. Default is NULL (infinite).
 #' @param event_gap Gap duration after each event during which no new events are counted.
@@ -30,9 +32,18 @@
 #'   \item{n1}{Sample size for group 1}
 #'   \item{n2}{Sample size for group 2}
 #'   \item{n_total}{Total sample size}
+#'   \item{alpha}{Significance level}
+#'   \item{sided}{One-sided or two-sided test}
+#'   \item{power}{Power of the test}
 #'   \item{exposure}{Average exposure time used in calculation (calendar time). Vector of length 2.}
 #'   \item{exposure_at_risk_n1}{Average at-risk exposure time for group 1 (accounts for event gap)}
 #'   \item{exposure_at_risk_n2}{Average at-risk exposure time for group 2 (accounts for event gap)}
+#'   \item{events_n1}{Expected number of events in group 1}
+#'   \item{events_n2}{Expected number of events in group 2}
+#'   \item{total_events}{Total expected number of events}
+#'   \item{variance}{Variance of the log rate ratio}
+#'   \item{accrual_rate}{Accrual rate used in calculation}
+#'   \item{accrual_duration}{Accrual duration used in calculation}
 #' }
 #'
 #' @references
@@ -120,12 +131,30 @@ sample_size_nbinom <- function(
     if (any(max_followup <= 0)) {
       stop("max_followup must be positive.")
     }
-    if (length(max_followup) != 1) {
-      stop("max_followup must be a scalar.")
+    if (length(max_followup) == 1) {
+      max_followup <- rep(max_followup, 2)
+    } else if (length(max_followup) != 2) {
+      stop("max_followup must be a scalar or a vector of length 2.")
     }
-    max_followup <- rep(max_followup, 2)
   } else {
     max_followup <- c(Inf, Inf)
+  }
+
+  # Truncate accrual if trial_duration < sum(accrual_duration)
+  cum_accrual_duration <- cumsum(accrual_duration)
+  total_accrual_duration <- utils::tail(cum_accrual_duration, 1)
+  
+  if (trial_duration < total_accrual_duration) {
+    # Find which period contains trial_duration
+    idx <- which(cum_accrual_duration >= trial_duration)[1]
+    
+    # Truncate vectors
+    accrual_rate <- accrual_rate[1:idx]
+    accrual_duration <- accrual_duration[1:idx]
+    
+    # Adjust the last duration
+    prev_dur <- if (idx == 1) 0 else cum_accrual_duration[idx - 1]
+    accrual_duration[idx] <- trial_duration - prev_dur
   }
 
   power_input <- power

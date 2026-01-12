@@ -19,7 +19,8 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 ```
 
-This vignette describes the methodology used in the `sample_size_nbinom()` function for calculating sample sizes when comparing two treatment groups with negative binomial outcomes. It covers two available methods and how to account for variable accrual rates.
+This vignette describes the methodology used in the `sample_size_nbinom` function for calculating sample sizes when comparing two 
+treatment groups with negative binomial outcomes.
 
 ## Methodology
 

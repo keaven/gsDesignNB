@@ -17,43 +17,47 @@ knitr::opts_chunk$set(
 
 ```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
+library(gsDesign)
 library(data.table)
 library(MASS)
+library(gt)
+library(gt)
 ```
 
 ## Introduction
 
-This vignette demonstrates a group sequential trial with a single interim analysis where information-based sample size re-estimation (SSR) is performed. We follow the methodology suggested by @friede2010blinded for blinded sample size re-estimation with negative binomial counts.
+This vignette demonstrates a group sequential trial with a single interim analysis where unblinded sample size re-estimation (SSR) is performed. 
 
-We simulate a single trial where the actual dispersion parameter is higher than the planned dispersion parameter. This scenario typically leads to a loss of power if the sample size is not adjusted. We will show how to increase the sample size based on both blinded and unblinded interim data to maintain the desired power.
+We simulate a scenario where the **control event rate is lower than assumed** and the **dispersion is higher than assumed**. Both factors lead to slower information accumulation (or higher variance) than planned. We will show how to:
+
+1.  Monitor information accumulation at an interim analysis.
+2.  Re-estimate the required sample size (or duration) to achieve the target power.
+3.  Adjust the final analysis bounds if the final information differs from the plan.
 
 ## Trial setup and initial design
 
-We plan a trial to compare two treatment groups (Control vs. Experimental) with respect to recurrent event rates.
-
 **Planned parameters:**
 
-*   Control rate ($\lambda_1$): 2.0 events/year
-*   Experimental rate ($\lambda_2$): 1.5 events/year (Hazard Ratio = 0.75)
+*   Control rate ($\lambda_1$): 0.1 events/month
+*   Experimental rate ($\lambda_2$): 0.075 events/month (Hazard Ratio = 0.75)
 *   Dispersion ($k$): 0.5
 *   Power: 90%
 *   One-sided Type I error ($\alpha$): 0.025
-*   Enrollment: 20 patients/month for 12 months
-*   Study duration: 24 months (12 months accrual + 12 months follow-up)
+*   Enrollment: 20 patients/month for 12 months (Total N = 240)
+*   Study duration: 24 months
 
 **Actual parameters (simulation truth):**
 
-*   Dispersion ($k$): 0.8 (Higher than planned, implying higher variability)
-*   Rates are as planned.
+*   Control rate ($\lambda_1$): 0.08 events/month (Lower than planned)
+*   Experimental rate ($\lambda_2$): 0.06 events/month (HR = 0.75 maintained)
+*   Dispersion ($k$): 0.65 (Higher than planned)
 
 ### Initial sample size calculation
 
-First, we calculate the required sample size under the *planned* parameters.
-
 ```{r initial_design}
 # Planned parameters
-lambda1_plan <- 2.0
-lambda2_plan <- 1.5
+lambda1_plan <- 0.1
+lambda2_plan <- 0.075
 k_plan <- 0.5
 power_plan <- 0.9
 alpha_plan <- 0.025
@@ -70,28 +74,61 @@ design_plan <- sample_size_nbinom(
   alpha = alpha_plan,
   accrual_rate = accrual_rate_plan,
   accrual_duration = accrual_dur_plan,
-  trial_duration = trial_dur_plan
+  trial_duration = trial_dur_plan,
+  max_followup = 12
 )
 
-print(design_plan)
+# Convert to group sequential design
+gs_plan <- design_plan |> 
+   gsNBCalendar(
+     k = 2,
+     test.type = 4, # Non-binding futility
+     alpha = alpha_plan,
+     sfu = sfHSD,
+     sfupar = -2, # Moderately aggressive alpha-spending
+     sfl = sfHSD,
+     sflpar = 1, # Pocock-like futility spending
+     analysis_times = c(accrual_dur_plan - 2, trial_dur_plan)
+   ) |> gsDesignNB::toInteger() # Round to integer sample size
+
 ```
 
-The design requires a total of `r ceiling(design_plan$n_total)` patients.
+```{r}
+summary(gs_plan)
+```
 
-## Simulation of a single trial
+```{r}
+gsBoundSummary(gs_plan,
+    deltaname = "RR",
+    logdelta = TRUE,
+    Nname = "Information",
+    timename = "Month",
+    digits = 4,
+    ddigits = 2) |> gt() |>
+  tab_header(
+    title = "Group Sequential Design Bounds for Negative Binomial Outcome",
+    subtitle = paste0(
+      "N = ", ceiling(gs_plan$n_total[gs_plan$k]),
+      ", Expected events = ", round(gs_plan$nb_design$total_events, 1)
+    )
+  )
+```
+## Simulation
 
-We simulate a single realization of the trial using the *actual* parameters (higher dispersion).
+We simulate the trial with the same rate ratio, but lower actual rates and a higher dispersion.
+We will limit the maximum sample size to 40% more than the planned size (i.e., max N = ) to avoid unbounded increases.
 
 ```{r simulation}
 set.seed(1234)
 
 # Actual parameters
-k_true <- 0.8
-lambda1_true <- 2.0
-lambda2_true <- 1.5
+lambda1_true <- 0.08 # Lower event rates, same rr
+lambda2_true <- 0.06
+k_true <- 0.65 # Higher dispersion
 
 # Enrollment and rates for simulation
-enroll_rate <- data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan)
+# We simulate a larger pool to allow for potential sample size increase
+enroll_rate <- data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2) 
 fail_rate <- data.frame(
   treatment = c("Control", "Experimental"),
   rate = c(lambda1_true, lambda2_true),
@@ -103,44 +140,48 @@ dropout_rate <- data.frame(
   duration = c(100, 100)
 )
 
-# Simulate trial
-# We simulate enough patients to cover the planned sample size and potential increase
-# Let's simulate a large pool and then we will cut it.
 sim_data <- nb_sim(
   enroll_rate = enroll_rate,
   fail_rate = fail_rate,
   dropout_rate = dropout_rate,
-  max_followup = trial_dur_plan, # Max follow-up is effectively trial duration here
-  n = 400 # Simulate more than planned ~200 to allow for SSR increase
+  max_followup = trial_dur_plan, 
+  n = 600 
 )
 
-head(sim_data)
+# Limit to planned enrollment for the initial cut
+# We will "open" more enrollment if needed
+sim_data_planned <- sim_data[1:ceiling(design_plan$n_total), ]
 ```
 
 ## Interim analysis
 
-We perform an interim analysis 9 months after the start of the trial. At this point, enrollment is still ongoing (planned 12 months).
+We perform an interim analysis at **Month 10**, which is 2 months prior to the end of planned enrollment (Month 12).
 
 ```{r interim_cut}
-interim_time <- 9
+interim_time <- 10
+interim_data <- cut_data_by_date(sim_data_planned, cut_date = interim_time)
 
-# Cut data at interim
-interim_data <- cut_data_by_date(sim_data, cut_date = interim_time)
-
-# Summary of interim data
+# Summary
 table(interim_data$treatment)
 sum(interim_data$events)
+mean(interim_data$tte)
 ```
 
-## Blinded sample size re-estimation
+### Information computation
 
-We use the `blinded_ssr()` function to estimate the nuisance parameters (dispersion and overall rate) from the blinded data and recalculate the sample size.
+We calculate the statistical information accumulated so far.
 
-The method assumes the treatment effect (rate ratio) is maintained as planned, but updates the sample size based on the observed variance structure.
+**Blinded Information:**
+Calculated assuming a common rate and dispersion, often used for monitoring without unblinding.
 
-```{r blinded_ssr}
-# Perform blinded SSR
-blinded_result <- blinded_ssr(
+**Unblinded Information:**
+Calculated using the observed rates and dispersion in each group. This is the true Fisher information for the log rate ratio.
+
+$$ \mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}_{trt})} \right) $$
+
+```{r info_calc}
+# Blinded SSR
+blinded_res <- blinded_ssr(
   data = interim_data,
   ratio = 1,
   lambda1_planning = lambda1_plan,
@@ -152,41 +193,12 @@ blinded_result <- blinded_ssr(
   trial_duration = trial_dur_plan
 )
 
-print(blinded_result)
-```
-
-The blinded estimate of dispersion is `r round(blinded_result$dispersion_blinded, 3)`, which is higher than the planned `r k_plan`. Consequently, the re-estimated sample size `r ceiling(blinded_result$n_total_blinded)` is larger than the planned `r ceiling(design_plan$n_total)`.
-
-## Unblinded sample size re-estimation
-
-Alternatively, if the interim analysis is performed by an Independent Data Monitoring Committee (IDMC) with access to unblinded data, we can estimate the rates and dispersion separately for each group.
-
-```{r unblinded_ssr}
-# Fit Negative Binomial model to unblinded interim data
-# We use glm.nb from MASS package
-fit <- glm.nb(events ~ treatment + offset(log(tte)), data = interim_data)
-summary(fit)
-
-# Extract estimates
-# Intercept is log(lambda_control)
-# treatmentExperimental is log(RR)
-# theta is 1/k
-
-est_lambda1 <- exp(coef(fit)["(Intercept)"])
-est_lambda2 <- exp(coef(fit)["(Intercept)"] + coef(fit)["treatmentExperimental"])
-est_k <- 1 / fit$theta
-
-cat("Unblinded Estimates:\n")
-cat("Lambda 1:", est_lambda1, "\n")
-cat("Lambda 2:", est_lambda2, "\n")
-cat("Dispersion (k):", est_k, "\n")
-
-# Recalculate sample size with unblinded estimates
-# We keep the original power and alpha
-unblinded_design <- sample_size_nbinom(
-  lambda1 = est_lambda1,
-  lambda2 = est_lambda2,
-  dispersion = est_k,
+# Unblinded SSR
+ssr_res <- unblinded_ssr(
+  data = interim_data,
+  ratio = 1,
+  lambda1_planning = lambda1_plan,
+  lambda2_planning = lambda2_plan,
   power = power_plan,
   alpha = alpha_plan,
   accrual_rate = accrual_rate_plan,
@@ -194,25 +206,135 @@ unblinded_design <- sample_size_nbinom(
   trial_duration = trial_dur_plan
 )
 
-print(unblinded_design)
+cat("Blinded SSR N:", ceiling(blinded_res$n_total_blinded), "\n")
+cat("Unblinded SSR N:", ceiling(ssr_res$n_total_unblinded), "\n")
+print(ssr_res)
 ```
 
-The unblinded re-estimation uses the observed rates and dispersion. In this specific simulation, the observed dispersion `r round(est_k, 3)` is close to the true value `r k_true`. The rates might also fluctuate. The resulting sample size `r ceiling(unblinded_design$n_total)` reflects the actual variability and effect size observed so far.
+The estimated control rate is `r round(ssr_res$lambda1_unblinded, 3)`, which is lower than the planned `r lambda1_plan`.
+The information fraction is `r round(ssr_res$info_fraction, 3)`.
 
-## Comparison and conclusion
+### Sample size re-estimation
 
-```{r comparison}
-comparison <- data.frame(
-  Method = c("Planned", "Blinded SSR", "Unblinded SSR"),
-  Dispersion = c(k_plan, blinded_result$dispersion_blinded, est_k),
-  Sample_Size = c(design_plan$n_total, blinded_result$n_total_blinded, unblinded_design$n_total)
+Since the control rate is lower and dispersion is higher, the information accumulates slower than planned. 
+To maintain power, we need to increase the sample size or follow-up.
+
+The `unblinded_ssr` function estimates the required total sample size to be `r ceiling(ssr_res$n_total_unblinded)`. We ensure the sample size is at least as large as the planned sample size.
+
+```{r update_design}
+n_planned <- ceiling(design_plan$n_total)
+n_estimated <- ceiling(ssr_res$n_total_unblinded)
+
+# Ensure we don't decrease sample size
+n_final <- max(n_planned, n_estimated)
+
+if (n_final > n_planned) {
+  cat("Increasing sample size from", n_planned, "to", n_final, "\n")
+  
+  # Calculate new durations based on constant accrual rate
+  # We extend enrollment to reach the new target N
+  new_accrual_dur <- n_final / accrual_rate_plan
+  
+  # We maintain the planned max follow-up of 12 months
+  # So the trial duration extends by the same amount as the accrual duration
+  new_trial_dur <- new_accrual_dur + 12 
+  
+  cat("New Accrual Duration:", round(new_accrual_dur, 2), "months\n")
+  cat("New Trial Duration:", round(new_trial_dur, 2), "months\n")
+} else {
+  cat("No sample size increase needed.\n")
+  new_accrual_dur <- accrual_dur_plan
+  new_trial_dur <- trial_dur_plan
+  n_final <- n_planned
+}
+```
+
+## Final analysis
+
+We proceed to the final analysis at Month `r round(new_trial_dur, 1)`. We include the additional patients if the sample size was increased.
+
+```{r final_analysis}
+# Update the dataset to include the additional patients
+sim_data_final <- sim_data[1:n_final, ]
+
+# Cut at final analysis time
+final_data <- cut_data_by_date(sim_data_final, cut_date = new_trial_dur)
+
+# Average exposure
+mean(final_data$tte)
+
+# Fit final model
+fit_final <- glm.nb(events ~ treatment + offset(log(tte)), data = final_data)
+summary(fit_final)
+
+# Calculate final information
+var_beta <- vcov(fit_final)[2, 2]
+final_info <- 1 / var_beta
+cat("Final Information:", final_info, "\n")
+cat("Target Information:", ssr_res$target_info, "\n")
+```
+
+### Updating bounds
+
+If the final information differs from the target (e.g., it is lower), we need to adjust the critical values to ensure we spend exactly $\alpha$. We use the `gsDesign` package with `usTime` (user-specified information fraction) to update the bounds.
+
+```{r update_bounds}
+# Information fraction at final analysis
+# If final_info < target_info, fraction < 1. 
+# However, for the final analysis, we typically want to spend all remaining alpha.
+# We can treat the current info as the "maximum" info for the spending function.
+
+# Example group sequential design (O'Brien-Fleming spending)
+# We assume the interim was at the observed information fraction
+info_fractions <- c(ssr_res$info_fraction, final_info / ssr_res$target_info)
+
+# If final fraction < 1, we can force it to 1 to spend all alpha, 
+# effectively accepting the lower power.
+# Or we can use the actual information fractions in a spending function approach.
+
+# Let's assume we want to spend all alpha at the final analysis regardless of info.
+# We set the final timing to 1.
+info_fractions_spending <- c(ssr_res$info_fraction, 1)
+
+# Update bounds
+gs_update <- gsDesign(
+  k = 2,
+  test.type = 1,
+  alpha = alpha_plan,
+  sfu = sfLDOF,
+  usTime = info_fractions_spending,
+  n.I = c(ssr_res$unblinded_info, final_info)
 )
 
-knitr::kable(comparison, digits = 3, caption = "Comparison of Sample Size Estimates")
+gsBoundSummary(gs_update,
+    deltaname = "RR",
+    logdelta = TRUE,
+    Nname = "Information",
+    timename = "Month",
+    digits = 4,
+    ddigits = 2) |> gt() |>
+  tab_header(
+    title = "Updated Group Sequential Design Bounds",
+    subtitle = paste0(
+      "Final Information = ", round(final_info, 2)
+    )
+  )
+
+# Test statistic
+z_score <- coef(fit_final)["treatmentExperimental"] / sqrt(var_beta)
+# Note: gsDesign assumes Z > 0 for efficacy. 
+# Our model gives log(RR) < 0 for efficacy.
+# So Z_stat = - (log(RR)) / SE
+z_stat <- -coef(fit_final)["treatmentExperimental"] / sqrt(var_beta)
+
+cat("Z-statistic:", z_stat, "\n")
+cat("Final Bound:", gs_update$upper$bound[2], "\n")
+
+if (z_stat > gs_update$upper$bound[2]) {
+  cat("Reject Null Hypothesis\n")
+} else {
+  cat("Fail to Reject Null Hypothesis\n")
+}
 ```
-
-In this example, the true dispersion was higher than planned. Both blinded and unblinded SSR detected the increased variability and suggested increasing the sample size to maintain power. The blinded method is often preferred to maintain trial integrity, assuming the treatment effect is not far from the planning assumption. The unblinded method adapts to both the variance and the observed effect size, which can lead to larger or smaller sample sizes depending on the observed efficacy.
-
-**Note:** In practice, sample size is typically not reduced if the re-estimated size is smaller than planned. We would take `max(n_planned, n_reestimated)`.
 
 ## References

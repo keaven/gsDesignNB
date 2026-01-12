@@ -18,14 +18,20 @@ The time at risk is reduced by the sum of these gaps (truncated by the cut date)
 \item{...}{Additional arguments passed to methods.}
 }
 \value{
-A data frame with one row per subject randomized prior to \code{cut_date} containing
-the truncated follow-up time (\code{tte}) and total number of observed events (\code{events}).
+A data frame with one row per subject randomized prior to \code{cut_date} containing:
+\describe{
+\item{id}{Subject identifier}
+\item{treatment}{Treatment group}
+\item{enroll_time}{Time of enrollment relative to trial start}
+\item{tte}{Time at risk (total follow-up minus event gap periods)}
+\item{tte_total}{Total follow-up time (calendar time, not adjusted for gaps)}
+\item{events}{Number of observed events}
+}
 }
 \description{
 Censors follow-up at a specified calendar time and aggregates events per subject.
 Returns one row per subject randomized before the cut date, with the total
-number of observed events and the truncated follow-up time (adjusted for any
-event gaps).
+number of observed events and follow-up times.
 }
 \examples{
 enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)

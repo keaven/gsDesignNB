@@ -4,7 +4,13 @@
 \alias{mutze_test}
 \title{Wald test for treatment effect using negative binomial model (Mütze et al.)}
 \usage{
-mutze_test(data, method = c("nb", "poisson"), conf_level = 0.95)
+mutze_test(
+  data,
+  method = c("nb", "poisson"),
+  conf_level = 0.95,
+  sided = 1,
+  poisson_threshold = 1000
+)
 }
 \arguments{
 \item{data}{A data frame with at least the columns \code{treatment}, \code{events}, and
@@ -14,14 +20,23 @@ mutze_test(data, method = c("nb", "poisson"), conf_level = 0.95)
 GLM via \code{\link[MASS:glm.nb]{MASS::glm.nb()}}, "poisson" fits a Poisson GLM.}
 
 \item{conf_level}{Confidence level for the rate ratio interval. Default 0.95.}
+
+\item{sided}{Number of sides for the test: 1 (default) or 2.}
+
+\item{poisson_threshold}{When \code{method = "nb"}, the model falls back to
+Poisson regression if theta (the NB shape parameter) is outside the range
+\verb{[1/poisson_threshold, poisson_threshold]}. Very large theta indicates
+near-Poisson data, while very small theta indicates extreme overdispersion
+with unstable estimates. Default is 1000.}
 }
 \value{
-A list containing the fitted model summary with elements:
+An object of class \code{mutze_test} containing the fitted model summary with elements:
 \itemize{
+\item \code{method}: A string indicating the test method used.
 \item \code{estimate}: log rate ratio (experimental vs control).
 \item \code{se}: standard error for the log rate ratio.
 \item \code{z}: Wald statistic.
-\item \code{p_value}: two-sided p-value.
+\item \code{p_value}: one-sided or two-sided p-value.
 \item \code{rate_ratio}: estimated rate ratio and its confidence interval.
 \item \code{dispersion}: estimated dispersion (theta) when \code{method = "nb"}.
 \item \code{group_summary}: observed subjects/events/exposure per treatment.
