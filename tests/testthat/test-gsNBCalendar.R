@@ -6,7 +6,7 @@ test_that("gsNBCalendar creates valid gsNB object", {
   )
 
   # Create group sequential design
-  gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4)
+  gs_design <- gsNBCalendar(nb_ss, k = 3, test.type = 4, analysis_times = c(12, 18, 24))
 
   # Check class inheritance
   expect_s3_class(gs_design, "gsNB")
@@ -48,7 +48,7 @@ test_that("gsNBCalendar respects allocation ratio", {
     accrual_rate = 10, accrual_duration = 20, trial_duration = 24
   )
 
-  gs_design <- gsNBCalendar(nb_ss, k = 2)
+  gs_design <- gsNBCalendar(nb_ss, k = 2, analysis_times = c(12, 24))
 
   # Check ratio is preserved
   expect_equal(gs_design$n2[2] / gs_design$n1[2], 2)
@@ -61,15 +61,15 @@ test_that("gsNBCalendar works with different test types", {
   )
 
   # One-sided
-  gs1 <- gsNBCalendar(nb_ss, k = 2, test.type = 1)
+  gs1 <- gsNBCalendar(nb_ss, k = 2, test.type = 1, analysis_times = c(12, 24))
   expect_s3_class(gs1, "gsNB")
 
   # Two-sided symmetric
-  gs2 <- gsNBCalendar(nb_ss, k = 2, test.type = 2)
+  gs2 <- gsNBCalendar(nb_ss, k = 2, test.type = 2, analysis_times = c(12, 24))
   expect_s3_class(gs2, "gsNB")
 
   # Two-sided asymmetric non-binding
-  gs4 <- gsNBCalendar(nb_ss, k = 2, test.type = 4)
+  gs4 <- gsNBCalendar(nb_ss, k = 2, test.type = 4, analysis_times = c(12, 24))
   expect_s3_class(gs4, "gsNB")
 })
 
@@ -86,7 +86,8 @@ test_that("gsNBCalendar works with custom spending functions", {
     sfu = gsDesign::sfHSD,
     sfupar = -4,
     sfl = gsDesign::sfHSD,
-    sflpar = -2
+    sflpar = -2,
+    analysis_times = c(12, 18, 24)
   )
 
   expect_s3_class(gs_design, "gsNB")

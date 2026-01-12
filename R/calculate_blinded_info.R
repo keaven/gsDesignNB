@@ -5,7 +5,7 @@
 #' assuming the planned allocation ratio and treatment effect.
 #'
 #' @param data A data frame containing the blinded interim data. Must include
-#'   columns `events` (number of events) and `tte` (total exposure/follow-up time).
+#'   columns `events` (number of events) and `tte` (total exposure=follow-up time).
 #' @param ratio Planned allocation ratio (experimental / control). Default is 1.
 #' @param lambda1_planning Planned event rate for the control group.
 #' @param lambda2_planning Planned event rate for the experimental group.

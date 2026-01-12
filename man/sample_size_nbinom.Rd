@@ -47,7 +47,9 @@ For super-superiority, use a value < 1 (e.g., 0.8).}
 \item{accrual_duration}{Vector of durations for each accrual rate. Must be same length
 as \code{accrual_rate}.}
 
-\item{trial_duration}{Total planned duration of the trial.}
+\item{trial_duration}{Total planned duration of the trial. If \code{trial_duration}
+is less than the sum of \code{accrual_duration}, accrual is truncated at
+\code{trial_duration}.}
 
 \item{dropout_rate}{Dropout rate (hazard rate). Default is 0. Can be a vector of length 2.}
 
@@ -63,9 +65,18 @@ An object of class \code{sample_size_nbinom_result}, which is a list containing:
 \item{n1}{Sample size for group 1}
 \item{n2}{Sample size for group 2}
 \item{n_total}{Total sample size}
+\item{alpha}{Significance level}
+\item{sided}{One-sided or two-sided test}
+\item{power}{Power of the test}
 \item{exposure}{Average exposure time used in calculation (calendar time). Vector of length 2.}
 \item{exposure_at_risk_n1}{Average at-risk exposure time for group 1 (accounts for event gap)}
 \item{exposure_at_risk_n2}{Average at-risk exposure time for group 2 (accounts for event gap)}
+\item{events_n1}{Expected number of events in group 1}
+\item{events_n2}{Expected number of events in group 2}
+\item{total_events}{Total expected number of events}
+\item{variance}{Variance of the log rate ratio}
+\item{accrual_rate}{Accrual rate used in calculation}
+\item{accrual_duration}{Accrual duration used in calculation}
 }
 }
 \description{

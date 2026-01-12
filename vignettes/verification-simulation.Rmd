@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
+library(gt)
 ```
 
 ## Introduction
@@ -116,99 +117,288 @@ if (results_file != "") {
 }
 ```
 
-### 1. Average exposure verification
+### Summary of verification results
 
-We compare the theoretical average exposure calculated by `sample_size_nbinom()` with the observed average exposure in the simulation.
+We compare the theoretical predictions from `sample_size_nbinom()` with the observed simulation results across multiple metrics.
 
-```{r exposure, eval=!is.null(results)}
-# Theoretical Exposure
-theo_exposure <- design_ref$exposure
+**Key distinction: Total Exposure vs Exposure at Risk**
 
-# Observed Exposure (Average across all trials and arms)
-# Note: Exposure is the same for both arms in this design (randomized)
-obs_exposure <- mean(c(results$exposure_control, results$exposure_experimental))
+*   **Total Exposure** (`tte_total`): The calendar time a subject is on study, from randomization 
+    to the analysis cut date (or censoring). This is the same for both treatment arms by design.
+*   **Exposure at Risk** (`tte`): The time during which a subject can experience a *new* event. 
+    After each event, there is an "event gap" period during which new events are not counted 
+    (e.g., representing recovery time or treatment effect). This differs by treatment group 
+    because the group with more events loses more time to gaps.
 
-comparison_exp <- data.frame(
-  Metric = "Average Exposure",
-  Theoretical = theo_exposure,
-  Simulated = obs_exposure,
-  Difference = obs_exposure - theo_exposure,
-  Rel_Diff_Pct = 100 * (obs_exposure - theo_exposure) / theo_exposure
-)
+The theoretical sample size calculation uses exposure at risk internally, but reports both 
+metrics for transparency.
 
-knitr::kable(comparison_exp, digits = 4, caption = "Comparison of Average Exposure")
-```
+```{r summary_table, eval=!is.null(results)}
+# ---- Compute all metrics ----
 
-The theoretical exposure should closely match the simulated average exposure.
+# Number of simulations
+n_sims <- sum(!is.na(results$estimate))
 
-### 2. Statistical information and variance
+# Total Exposure (calendar follow-up time)
+# Note: exposure is the same for both arms in the design (by symmetry)
+theo_exposure <- design_ref$exposure[1]
 
-The theoretical variance of the log rate ratio estimator (Wald test) is given by:
+# Check which column names are available in the results
+# (Support both old and new naming conventions)
+has_new_cols <- "exposure_total_control" %in% names(results)
 
-$$ V_{\text{theo}} = \frac{1/\mu_1 + k_{\text{adj}}}{n_1} + \frac{1/\mu_2 + k_{\text{adj}}}{n_2} $$
+if (has_new_cols) {
+  obs_exposure_ctrl <- mean(results$exposure_total_control)
+  obs_exposure_exp <- mean(results$exposure_total_experimental)
+  obs_exposure_at_risk_ctrl <- mean(results$exposure_at_risk_control)
+  obs_exposure_at_risk_exp <- mean(results$exposure_at_risk_experimental)
+} else {
+  # Legacy: old simulation used 'exposure_control' which was actually at-risk time
+  obs_exposure_ctrl <- NA
 
-where $\mu_i = \lambda_{i,\text{eff}} \bar{t}$ is the expected number of events per subject in group $i$ 
-(using effective rates adjusted for event gaps), and $k_{\text{adj}} = k \cdot Q$ is the dispersion parameter inflated for variable follow-up.
+  obs_exposure_exp <- NA
+  obs_exposure_at_risk_ctrl <- mean(results$exposure_control)
+  obs_exposure_at_risk_exp <- mean(results$exposure_experimental)
+}
 
+# Exposure at risk (time at risk excluding event gaps)
+theo_exposure_at_risk_ctrl <- design_ref$exposure_at_risk_n1
+theo_exposure_at_risk_exp <- design_ref$exposure_at_risk_n2
 
-The dispersion parameter $k$ directly increases the variance of the estimator. 
-In a standard Poisson model, $k=0$, and the variance depends only on the expected number of events. 
-With negative binomial dispersion ($k > 0$), the variance is inflated, reflecting the extra variability (overdispersion) in the data.
+# Events by treatment group
+theo_events_ctrl <- design_ref$events_n1
+theo_events_exp <- design_ref$events_n2
+obs_events_ctrl <- mean(results$events_control)
+obs_events_exp <- mean(results$events_experimental)
 
-We compare this with the variance of the estimates from the simulation.
+# Treatment effect
+true_rr <- lambda2 / lambda1
+true_log_rr <- log(true_rr)
+mean_log_rr <- mean(results$estimate, na.rm = TRUE)
 
-```{r variance, eval=!is.null(results)}
-# Theoretical Variance (from design object)
+# Variance
 theo_var <- design_ref$variance
-
-# Empirical Variance of the Log Hazard Ratio estimates
+# Use median of SE^2 for robust estimate
+median_se_sq <- median(results$se^2, na.rm = TRUE)
+# Empirical variance of estimates
 emp_var <- var(results$estimate, na.rm = TRUE)
 
-# Average Squared Standard Error (mean of the estimated variances)
-avg_se_sq <- mean(results$se^2, na.rm = TRUE)
-
-comparison_var <- data.frame(
-  Metric = c("Variance of Estimator"),
-  Theoretical = theo_var,
-  Empirical_Var = emp_var,
-  Avg_Estimated_Var = avg_se_sq
-)
-
-knitr::kable(comparison_var, digits = 5, caption = "Comparison of Variance")
-```
-
-*   **Empirical var**: The actual variability of the estimated log rate ratios across 3,600 trials.
-*   **Avg estimated var**: The average of the variance estimates ($\text{SE}^2$) produced by the Wald test in each trial.
-
-While there is reasonable agreement, the sample size formula may slightly underestimate the variability of the test statistic 
-and thus may overstate power.
-
-### 3. Power verification
-
-Finally, we compare the theoretical power with the empirical power (proportion of trials rejecting the null hypothesis).
-
-```{r power, eval=!is.null(results)}
-# Theoretical Power
+# Power
 theo_power <- design_ref$power
-
-# Empirical Power
 emp_power <- mean(results$p_value < design_ref$inputs$alpha, na.rm = TRUE)
 
-comparison_pwr <- data.frame(
-  Metric = "Power",
-  Theoretical = theo_power,
-  Simulated = emp_power,
-  Difference = emp_power - theo_power
+# Sample size reproduction
+z_alpha <- qnorm(1 - design_ref$inputs$alpha)
+z_beta <- qnorm(design_ref$inputs$power)
+n_sim_total <- design_ref$n_total
+n_reproduced <- n_sim_total * (emp_var * (z_alpha + z_beta)^2) / (mean_log_rr^2)
+
+# ---- Build summary table ----
+summary_df <- data.frame(
+  Metric = c(
+    "Total Exposure (months) - Control",
+    "Total Exposure (months) - Experimental",
+    "Exposure at Risk (months) - Control",
+    "Exposure at Risk (months) - Experimental",
+    "Events per Subject - Control",
+    "Events per Subject - Experimental",
+    "Treatment Effect: log(RR)",
+    "Variance of log(RR)",
+    "Power",
+    "Sample Size"
+  ),
+  Theoretical = c(
+    theo_exposure,
+    theo_exposure,
+    theo_exposure_at_risk_ctrl,
+    theo_exposure_at_risk_exp,
+    theo_events_ctrl / (n_sim_total / 2),
+    theo_events_exp / (n_sim_total / 2),
+    true_log_rr,
+    theo_var,
+    theo_power,
+    n_sim_total
+  ),
+  Simulated = c(
+    obs_exposure_ctrl,
+    obs_exposure_exp,
+    obs_exposure_at_risk_ctrl,
+    obs_exposure_at_risk_exp,
+    obs_events_ctrl / (n_sim_total / 2),
+    obs_events_exp / (n_sim_total / 2),
+    mean_log_rr,
+    median_se_sq,
+    emp_power,
+    n_reproduced
+  ),
+  stringsAsFactors = FALSE
 )
 
-knitr::kable(comparison_pwr, digits = 4, caption = "Comparison of Power")
+summary_df$Difference <- summary_df$Simulated - summary_df$Theoretical
+summary_df$Rel_Diff_Pct <- 100 * summary_df$Difference / abs(summary_df$Theoretical)
+
+summary_df |>
+  gt() |>
+  tab_header(
+    title = md("**Verification of sample_size_nbinom() Predictions**"),
+    subtitle = paste0("Based on ", n_sims, " simulated trials")
+  ) |>
+  tab_row_group(
+    label = md("**Sample Size**"),
+    rows = Metric == "Sample Size"
+  ) |>
+  tab_row_group(
+    label = md("**Power**"),
+    rows = Metric == "Power"
+  ) |>
+  tab_row_group(
+    label = md("**Variance**"),
+    rows = Metric == "Variance of log(RR)"
+  ) |>
+  tab_row_group(
+    label = md("**Treatment Effect**"),
+    rows = Metric == "Treatment Effect: log(RR)"
+  ) |>
+  tab_row_group(
+    label = md("**Events**"),
+    rows = grepl("Events", Metric)
+  ) |>
+  tab_row_group(
+    label = md("**Exposure**"),
+    rows = grepl("Exposure", Metric)
+  ) |>
+  row_group_order(groups = c("**Exposure**", "**Events**", "**Treatment Effect**",
+                              "**Variance**", "**Power**", "**Sample Size**")) |>
+  fmt_number(columns = c(Theoretical, Simulated, Difference), decimals = 4) |>
+  fmt_number(columns = Rel_Diff_Pct, decimals = 2) |>
+  cols_label(
+    Metric = "",
+    Theoretical = "Theoretical",
+    Simulated = "Simulated",
+    Difference = "Difference",
+    Rel_Diff_Pct = "Rel. Diff (%)"
+  ) |>
+  sub_missing(missing_text = "—")
 ```
 
-A 95% confidence interval for the empirical power can be calculated to check if the theoretical power falls 
-within the simulation error bounds.
+**Notes:**
+
+*   **Total Exposure** is the average calendar follow-up time per subject. The theoretical value is 
+    the same for both arms (symmetric design), while simulated values may differ slightly due to 
+    sampling variability in enrollment and dropout.
+*   **Exposure at Risk** is the time during which new events can occur, after subtracting the 
+    "event gap" periods following each event. The control group has lower exposure at risk because 
+    it experiences more events (higher rate), each followed by a gap period.
+*   **Events per Subject** is the mean number of events per subject in each treatment group.
+*   **Variance** uses the median of the estimated variances (SE²) from each simulation, which is robust 
+    to outliers from unstable model fits.
+*   **Sample Size** is back-calculated using the standard asymptotic formula with the observed 
+    treatment effect and variance.
+
+#### Power confidence interval
+
+A 95% confidence interval for the empirical power confirms that the theoretical power falls within 
+the simulation error bounds.
 
 ```{r power_ci, eval=!is.null(results)}
-binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), nrow(results))$conf.int
+power_ci <- binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), 
+   nrow(results))$conf.int
+cat("95% CI for empirical power: [", round(power_ci[1], 4), ", ", round(power_ci[2], 4), "]\n", sep = "")
+cat("Theoretical power:", round(theo_power, 4), "\n")
+```
+
+### Distribution of the test statistic
+
+Here we plot the density of the Wald Z-scores from the simulation and compare it to the expected normal distribution centered at the theoretical mean Z-score.
+
+```{r z_score_dist, eval=!is.null(results)}
+# Calculate Z-scores using estimated variance (Wald statistic)
+# Z = (hat(delta) - 0) / SE_est
+z_scores <- results$estimate / results$se
+
+# Theoretical mean Z-score under the alternative
+# E[Z] = log(RR) / sqrt(V_theo)
+theo_se <- sqrt(theo_var)
+theo_mean_z <- log(lambda2 / lambda1) / theo_se
+
+# Critical value for 1-sided alpha (since we are looking at lower tail for RR < 1)
+# However, the Z-scores here are negative (log(0.3/0.4) < 0).
+# Rejection region is Z < qnorm(alpha)
+crit_val <- qnorm(design_ref$inputs$alpha)
+
+# Proportion of simulations rejecting the null
+prop_reject <- mean(z_scores < crit_val, na.rm = TRUE)
+
+# Plot
+ggplot(data.frame(z = z_scores), aes(x = z)) +
+  geom_density(aes(color = "Simulated Density"), linewidth = 1) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = theo_mean_z, sd = 1),
+    aes(color = "Theoretical Normal"),
+    linewidth = 1,
+    linetype = "dashed"
+  ) +
+  geom_vline(xintercept = crit_val, linetype = "dotted", color = "black") +
+  annotate(
+    "text",
+    x = crit_val, y = 0.05,
+    label = paste0("  Reject: ", round(prop_reject * 100, 1), "%"),
+    hjust = 0, vjust = 0
+  ) +
+  labs(
+    title = "Distribution of Wald Z-scores",
+    subtitle = paste("Theoretical Mean Z =", round(theo_mean_z, 3)),
+    x = "Z-score (Estimate / Estimated SE)",
+    y = "Density",
+    color = "Distribution"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+Given the apparent location difference in the above plot for the simulation versus theoretical normal distribution, 
+we can also examine the theoretical versus simulation mean and standard deviation of $log(\theta)$ .
+
+```{r log_rr_stats, eval=!is.null(results)}
+# Theoretical mean and SD of log(RR)
+# Let's also add median, skewness, and kurtosis
+theo_mean_log_rr <- log(lambda2 / lambda1)
+theo_sd_log_rr <- sqrt(theo_var)
+emp_mean_log_rr <- mean(results$estimate, na.rm = TRUE)
+emp_sd_log_rr <- sd(results$estimate, na.rm = TRUE)
+emp_median_log_rr <- median(results$estimate, na.rm = TRUE)
+
+# Skewness and Kurtosis (using trimmed data to reduce outlier influence)
+# Trim extreme 1% on each tail for robust estimates
+ests <- results$estimate[!is.na(results$estimate)]
+q_low <- quantile(ests, 0.01)
+q_high <- quantile(ests, 0.99)
+ests_trimmed <- ests[ests >= q_low & ests <= q_high]
+n_trimmed <- length(ests_trimmed)
+m3 <- sum((ests_trimmed - mean(ests_trimmed))^3) / n_trimmed
+m4 <- sum((ests_trimmed - mean(ests_trimmed))^4) / n_trimmed
+s2 <- sum((ests_trimmed - mean(ests_trimmed))^2) / n_trimmed
+emp_skew_log_rr <- m3 / s2^(3/2)
+emp_kurt_log_rr <- m4 / s2^2
+
+comparison_log_rr <- data.frame(
+  Metric = c("Mean", "SD", "Median", "Skewness (trimmed)", "Kurtosis (trimmed)"),
+  Theoretical = c(theo_mean_log_rr, theo_sd_log_rr, theo_mean_log_rr, 0, 3),
+  Simulated = c(emp_mean_log_rr, emp_sd_log_rr, emp_median_log_rr, emp_skew_log_rr, emp_kurt_log_rr),
+  Difference = c(
+    emp_mean_log_rr - theo_mean_log_rr,
+    emp_sd_log_rr - theo_sd_log_rr,
+    emp_median_log_rr - theo_mean_log_rr,
+    emp_skew_log_rr - 0,
+    emp_kurt_log_rr - 3
+  )
+)
+# Display table
+comparison_log_rr |>
+  gt() |>
+  tab_header(title = md("**Comparison of log(RR) Statistics**")) |>
+  fmt_number(columns = where(is.numeric), decimals = 4)
 ```
 
 ## Conclusion

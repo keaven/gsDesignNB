@@ -14,7 +14,7 @@ calculate_blinded_info(
 }
 \arguments{
 \item{data}{A data frame containing the blinded interim data. Must include
-columns \code{events} (number of events) and \code{tte} (total exposure/follow-up time).}
+columns \code{events} (number of events) and \code{tte} (total exposure=follow-up time).}
 
 \item{ratio}{Planned allocation ratio (experimental / control). Default is 1.}
 

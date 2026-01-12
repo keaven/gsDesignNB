@@ -21,9 +21,6 @@
 #' @param astar Allocated Type I error for lower bound for test.type = 5 or 6.
 #'   Default is 0.
 #' @param delta Standardized effect size. Default is 0 (computed from design).
-#' @param timing Timing of interim analyses. May be a vector of length k-1
-#'   with values between 0 and 1 representing information fractions.
-#'   Default is 1 (equally spaced).
 #' @param sfu Spending function for upper bound. Default is `gsDesign::sfHSD`.
 #' @param sfupar Parameter for upper spending function. Default is -4.
 #' @param sfl Spending function for lower bound. Default is `gsDesign::sfHSD`.
@@ -33,19 +30,28 @@
 #'   Default is 18.
 #' @param usTime Spending time for upper bound (optional).
 #' @param lsTime Spending time for lower bound (optional).
-#' @param analysis_times Optional vector of calendar times for each analysis.
-#'   If provided, must have length k. These times are stored in the `T`
+#' @param analysis_times Vector of calendar times for each analysis.
+#'   Must have length k. These times are stored in the `T`
 #'   element and displayed by [gsDesign::gsBoundSummary()].
 #'
 #' @return An object of class `gsNB` which inherits from `gsDesign`
-#'   and `sample_size_nbinom_result`. Contains all elements from
+#'   and `sample_size_nbinom_result`. 
+#'   While the final sample size would be planned total enrollment, interim analysis
+#'   sample sizes are the expected number enrolled at the times specified in `analysis_times`.
+#' Output value contains all elements from
 #'   [gsDesign::gsDesign()] plus:
 #'   \describe{
 #'     \item{nb_design}{The original `sample_size_nbinom_result` object}
-#'     \item{n1}{Sample size per analysis for group 1}
-#'     \item{n2}{Sample size per analysis for group 2}
+#'     \item{n1}{A vector with sample size per analysis for group 1}
+#'     \item{n2}{A vector with sample size per analysis for group 2}
+#'     \item{n_total}{A vector with total sample size per analysis}
+#'     \item{events}{A vector with expected total events per analysis}
+#'     \item{events1}{A vector with expected events per analysis for group 1}
+#'     \item{events2}{A vector with expected events per analysis for group 2}
 #'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
 #'   }
+#'   Note that `n.I` in the returned object represents the statistical information
+#'   at each analysis.
 #'
 #' @importFrom gsDesign gsDesign sfHSD
 #'
@@ -76,7 +82,6 @@ gsNBCalendar <- function(
   beta = 0.1,
   astar = 0,
   delta = 0,
-  timing = 1,
   sfu = gsDesign::sfHSD,
   sfupar = -4,
   sfl = gsDesign::sfHSD,
@@ -93,7 +98,14 @@ gsNBCalendar <- function(
     stop("x must be an object of class 'sample_size_nbinom_result'")
   }
 
-  # Calculate delta1 based on the log rate ratio
+  if (is.null(analysis_times)) {
+    stop("analysis_times must be provided")
+  }
+
+  if (length(analysis_times) != k) {
+    stop("analysis_times must have length k (", k, ")")
+  }
+
   # For NB, the test statistic is based on log(lambda2/lambda1)
   # RR = lambda2/lambda1, so delta1 = log(RR)
   # When treatment is beneficial (lambda2 < lambda1), RR < 1 and delta1 < 0
@@ -116,7 +128,6 @@ gsNBCalendar <- function(
     delta1 = delta1,
     delta0 = 0,
     n.fix = info_fixed,
-    timing = timing,
     sfu = sfu,
     sfupar = sfupar,
     sfl = sfl,
@@ -130,16 +141,58 @@ gsNBCalendar <- function(
   # Calculate sample sizes per analysis based on information fraction
   # gs$n.I contains the statistical information at each analysis
   # Scale to get sample sizes using the relationship: info / info_fixed = n / n_fixed
-  n_total_fixed <- x$n_total
+  
+  # Inflate accrual rate to match the max information required by the group sequential design
+  inflation_factor <- utils::tail(gs$n.I, 1) / info_fixed
+  # Use the computed accrual rate from the fixed design (which might be scaled)
+  # and inflate it further.
+  # Note: x$accrual_rate is the rate used in the fixed design calculation.
+  base_accrual_rate <- x$accrual_rate
+  new_accrual_rate <- base_accrual_rate * inflation_factor
+  
+  # Calculate expected enrollment and information at each analysis time
+  n_total_at_analysis <- numeric(k)
+  info_at_analysis <- numeric(k)
+  events_at_analysis <- numeric(k)
+  events1_at_analysis <- numeric(k)
+  events2_at_analysis <- numeric(k)
+  
+  for (i in 1:k) {
+    # We use sample_size_nbinom to calculate the properties at time t
+    # We pass power = NULL to force calculation based on accrual/duration
+    # sample_size_nbinom will handle truncation of accrual if analysis_times[i] < total accrual duration
+    res_i <- sample_size_nbinom(
+      lambda1 = x$inputs$lambda1,
+      lambda2 = x$inputs$lambda2,
+      rr0 = x$inputs$rr0,
+      dispersion = x$inputs$dispersion,
+      power = NULL, # Calculate based on fixed N/duration
+      alpha = x$inputs$alpha,
+      sided = x$inputs$sided,
+      ratio = x$inputs$ratio,
+      accrual_rate = new_accrual_rate,
+      accrual_duration = x$inputs$accrual_duration,
+      trial_duration = analysis_times[i],
+      dropout_rate = x$inputs$dropout_rate,
+      max_followup = x$inputs$max_followup,
+      event_gap = x$inputs$event_gap
+    )
+    
+    n_total_at_analysis[i] <- res_i$n_total
+    info_at_analysis[i] <- 1 / res_i$variance
+    events_at_analysis[i] <- res_i$total_events
+    events1_at_analysis[i] <- res_i$events_n1
+    events2_at_analysis[i] <- res_i$events_n2
+  }
+
+  # Update the gsDesign object with the actual information and timing
+  gs$n.I <- info_at_analysis
+  gs$timing <- info_at_analysis / utils::tail(info_at_analysis, 1)
+  
+  # Per-group sample sizes
   ratio <- x$inputs$ratio
-
-  # Calculate cumulative sample sizes at each analysis
-  # n.I / n.fix gives the information fraction, multiply by fixed sample size
-  n_cumulative <- (gs$n.I / info_fixed) * n_total_fixed
-
-  # Per-group sample sizes (cumulative)
-  n1_cumulative <- n_cumulative / (1 + ratio)
-  n2_cumulative <- n_cumulative * ratio / (1 + ratio)
+  n1_at_analysis <- n_total_at_analysis / (1 + ratio)
+  n2_at_analysis <- n_total_at_analysis * ratio / (1 + ratio)
 
   # Build result object
 
@@ -148,20 +201,16 @@ gsNBCalendar <- function(
 
   # Add negative binomial specific components
   result$nb_design <- x
-  result$n1 <- n1_cumulative
-  result$n2 <- n2_cumulative
-  result$n_total <- n_cumulative
+  result$n1 <- n1_at_analysis
+  result$n2 <- n2_at_analysis
+  result$n_total <- n_total_at_analysis
+  result$events <- events_at_analysis
+  result$events1 <- events1_at_analysis
+  result$events2 <- events2_at_analysis
   result$ratio <- ratio
   result$usTime <- usTime
   result$lsTime <- lsTime
-
-  # Add calendar times if provided (for gsBoundSummary display)
-  if (!is.null(analysis_times)) {
-    if (length(analysis_times) != k) {
-      stop("analysis_times must have length k (", k, ")")
-    }
-    result$T <- analysis_times
-  }
+  result$T <- analysis_times
 
   # Set the class to inherit from both gsDesign and sample_size_nbinom_result
   class(result) <- c("gsNB", "gsDesign", "sample_size_nbinom_result")

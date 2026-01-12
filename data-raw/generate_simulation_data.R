@@ -36,8 +36,7 @@ design <- sample_size_nbinom(
   trial_duration = trial_duration,
   dropout_rate = dropout_rate,
   max_followup = max_followup,
-  event_gap = event_gap,
-  method = "friede"
+  event_gap = event_gap
 )
 
 # Extract calculated absolute accrual rates
@@ -81,110 +80,28 @@ run_one_sim <- function(i) {
       cut_dt <- cut_data_by_date(sim_data, cut_date = trial_duration, event_gap = event_gap)
       cut_dt_dt <- data.table::as.data.table(cut_dt)
 
-      # Analyze
-      # The sample size formula assumes we analyze the counts.
-      # cut_data_by_date now returns aggregated data (one row per subject)
-      # with 'tte' already adjusted for event gaps (exposure at risk).
+      # Analyze with mutze_test (defaults to sided=1 as updated)
+      res <- mutze_test(cut_dt, method = "nb", sided = 1)
 
-      analysis_dt <- cut_dt_dt
-
-      # Rename tte to exposure for clarity in model formula
-      analysis_dt[, exposure := tte]
-
-      # Ensure non-negative (should be if simulation is correct)
-      analysis_dt[exposure < 0, exposure := 0]
-
-      # Fit NB model
-      # glm.nb with offset(log(exposure))
-
-      fit <- tryCatch(
-        {
-          MASS::glm.nb(events ~ treatment + offset(log(exposure)), data = analysis_dt)
-        },
-        error = function(e) NULL
-      )
-
-      if (is.null(fit)) {
-        return(NULL)
-      }
-
-      coefs <- summary(fit)$coefficients
-      # Treatment effect (Experimental vs Control)
-      # Assuming factor levels: Control is ref?
-      # We need to check levels.
-      # nb_sim assigns "Control", "Experimental". Alphabetically Control comes first.
-
-      est <- coefs["treatmentExperimental", "Estimate"]
-      se <- coefs["treatmentExperimental", "Std. Error"]
-      p_val <- coefs["treatmentExperimental", "Pr(>|z|)"]
-
-      # One-sided p-value (assuming H1: Experimental < Control, i.e. est < 0)
-      # If est < 0, p = p_val / 2. If est > 0, p = 1 - p_val / 2.
-      p_one_sided <- if (est < 0) p_val / 2 else 1 - p_val / 2
-
-      list(
-        estimate = est,
-        se = se,
-        p_value = p_one_sided,
-        exposure_control = mean(analysis_dt[treatment == "Control"]$exposure),
-        exposure_experimental = mean(analysis_dt[treatment == "Experimental"]$exposure)
-      )
-    },
-    error = function(e) NULL
-  )
-}
-
-# 2. Simulation Setup
-nsim <- 3600
-n_cores <- future::availableCores()
-if (is.na(n_cores) || n_cores < 1) n_cores <- 1
-
-# Helper function for one simulation
-run_one_sim <- function(i) {
-  tryCatch(
-    {
-      # Generate data
-      enroll_rate_df <- data.frame(
-        rate = accrual_rate,
-        duration = accrual_duration
-      )
-      fail_rate_df <- data.frame(
-        treatment = c("Control", "Experimental"),
-        rate = c(lambda1, lambda2),
-        dispersion = c(dispersion, dispersion)
-      )
-      dropout_rate_df <- data.frame(
-        treatment = c("Control", "Experimental"),
-        rate = c(dropout_rate, dropout_rate),
-        duration = c(100, 100) # Long duration
-      )
-
-      sim_data <- nb_sim(
-        enroll_rate = enroll_rate_df,
-        fail_rate = fail_rate_df,
-        dropout_rate = dropout_rate_df,
-        max_followup = max_followup,
-        n = NULL # Determined by enrollment
-      )
-
-      # Cut data at trial duration (administrative censoring)
-      cut_dt <- cut_data_by_date(sim_data, cut_date = trial_duration)
-      cut_dt_dt <- data.table::as.data.table(cut_dt)
-
-      # Analyze
-      res <- mutze_test(cut_dt, method = "nb")
-
-      # Calculate observed exposure
-      exposure_obs <- cut_dt_dt[, .(exposure = mean(tte)), by = treatment]
+      # Calculate observed exposure metrics by treatment group
+      # tte = exposure at risk (time available for events, gaps subtracted)
+      # tte_total = total follow-up (calendar time on study)
+      exposure_obs <- cut_dt_dt[, .(
+        exposure_at_risk = mean(tte),
+        exposure_total = mean(tte_total)
+      ), by = treatment]
 
       list(
         p_value = res$p_value,
         z = res$z,
         estimate = res$estimate,
         se = res$se,
-        converged = !is.null(res$model),
-        exposure_control = exposure_obs[treatment == "Control", exposure],
-        exposure_experimental = exposure_obs[treatment == "Experimental", exposure],
+        method_used = res$method,
+        dispersion = res$dispersion,
+        exposure_at_risk_control = exposure_obs[treatment == "Control", exposure_at_risk],
+        exposure_at_risk_experimental = exposure_obs[treatment == "Experimental", exposure_at_risk],
+        exposure_total_control = exposure_obs[treatment == "Control", exposure_total],
+        exposure_total_experimental = exposure_obs[treatment == "Experimental", exposure_total],
         events_control = res$group_summary[res$group_summary$treatment == "Control", "events"],
         events_experimental = res$group_summary[res$group_summary$treatment == "Experimental", "events"],
         n_control = res$group_summary[res$group_summary$treatment == "Control", "subjects"],
@@ -214,8 +131,8 @@ if (length(results_list) < nsim) {
   warning("Some simulations failed. Proceeding with ", length(results_list), " replicates.")
 }
 
-# Bind results
-results_dt <- rbindlist(results_list)
+# Bind results - convert to data.table properly
+results_dt <- rbindlist(lapply(results_list, as.data.frame), fill = TRUE)
 
 # 4. Save Results
 output_path <- file.path("inst", "extdata", "simulation_results.rds")

@@ -30,13 +30,13 @@ We will simulate a small trial with the following parameters:
 
 *   **Enrollment:** 20 patients total, recruited over 5 months with a constant rate.
 *   **Treatments:** Two groups (Control vs. Experimental) with a 1:1 allocation ratio.
-*   **Event rates:**
+*   **Event Rates:**
     *   Control: 0.5 events per year.
     *   Experimental: 0.3 events per year.
 *   **Dropout:**
     *   Control: 10% annual dropout rate.
     *   Experimental: 5% annual dropout rate.
-*   **Maximum follow-up:** Each patient is followed for a maximum of 2 years from randomization.
+*   **Maximum Follow-up:** Each patient is followed for a maximum of 2 years from randomization.
 
 ### Defining input parameters
 
@@ -90,8 +90,8 @@ head(sim_data)
 
 The output contains multiple rows per subject:
 
-- `event = 1`: An actual recurrent event.
-- `event = 0`: The censoring time (either due to dropout or reaching `max_followup`).
+*   `event = 1`: An actual recurrent event.
+*   `event = 0`: The censoring time (either due to dropout or reaching `max_followup`).
 
 ## Analyzing the data
 
@@ -190,11 +190,7 @@ Using the truncated data we can run a negative binomial Wald test as described b
 
 ```{r}
 mutze_res <- mutze_test(cut_summary)
-mutze_res$group_summary |>
-  gt() |>
-  tab_header(title = "Mütze Test: Group Summary") |>
-  fmt_number(columns = c(events, exposure), decimals = 2)
-mutze_res$rate_ratio
+mutze_res
 ```
 
 ## Finding analysis date for target events
@@ -220,7 +216,7 @@ sum(cut_events$events)
 
 ## Generating and verifying negative binomial data
 
-The `nb_sim()` function can also generate data where the counts follow a negative binomial distribution. This is achieved by providing a `dispersion` parameter in the `fail_rate` data frame. The dispersion parameter $k$ relates the variance to the mean as $\mathrm{Var}(Y) = \mu + k\mu^2$.
+The `nb_sim()` function can also generate data where the counts follow a negative binomial distribution. This is achieved by providing a `dispersion` parameter in the `fail_rate` data frame. The dispersion parameter $k$ relates the variance to the mean as $Var(Y) = \mu + k\mu^2$.
 
 ### Simulation with dispersion
 
@@ -231,7 +227,7 @@ We define a scenario with a known dispersion of 0.5.
 fail_rate_nb <- data.frame(
   treatment = "Control",
   rate = 10, # Mean event rate
-  dispersion = 0.5 # Variance = mean + 0.5 * mean^2
+  dispersion = 2 # Variance = mean + 2 * mean^2
 )
 
 enroll_rate_nb <- data.frame(
@@ -240,21 +236,22 @@ enroll_rate_nb <- data.frame(
 )
 
 set.seed(1)
-# Simulate 500 subjects to get a stable estimate
+# Simulate 50000 subjects to get a stable estimate
 sim_nb <- nb_sim(
   enroll_rate = enroll_rate_nb,
   fail_rate = fail_rate_nb,
   max_followup = 1,
-  n = 500,
+  n = 50000,
   block = "Control" # Assign all to Control for simplicity
 )
 ```
 
 ### Verifying the dispersion parameter
 
-We can verify that the simulated data reflects the input dispersion parameter by estimating it back from the data. We use the Method of Moments (MoM) estimator:
+We can verify that the simulated data reflects the input dispersion parameter by estimating it back from the data. 
+We use the Method of Moments (MoM) estimator:
 
-$$ \hat{k} = \frac{\mathrm{Var}(Y) - \bar{Y}}{\bar{Y}^2} $$
+$$ \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2} $$
 
 ```{r}
 # Count events per subject
@@ -263,6 +260,11 @@ counts_nb <- as.data.table(sim_nb)[, .(events = sum(event)), by = id]
 m <- mean(counts_nb$events)
 v <- var(counts_nb$events)
 k_mom <- (v - m) / (m^2)
+
+# Theoretical values
+mu_true <- 10
+k_true <- 2
+v_true <- mu_true + k_true * mu_true^2
 
 # Also estimate using GLM
 # We use MASS::glm.nb to fit the negative binomial model
@@ -276,9 +278,55 @@ k_glm <- tryCatch(
   error = function(e) NA
 )
 
-print(paste("True Dispersion:", 0.5))
+print(paste("True Mean:", mu_true, "| Observed Mean:", signif(m, 4)))
+print(paste("True Variance:", v_true, "| Observed Variance:", signif(v, 4)))
+print(paste("True Dispersion:", k_true))
 print(paste("Estimated Dispersion (MoM):", signif(k_mom, 4)))
 print(paste("Estimated Dispersion (GLM):", signif(k_glm, 4)))
+```
+
+### Visualizing the distribution
+
+We can compare the observed distribution of event counts to the theoretical negative binomial distribution.
+
+```{r}
+# Calculate observed proportions
+obs_dist <- counts_nb[, .N, by = events]
+obs_dist[, prop := N / sum(N)]
+obs_dist[, type := "Observed"]
+
+# Calculate theoretical probabilities
+# Parameters: mu = 10, size = 1/k = 1/2 = 0.5
+mu <- 10
+k <- 2
+size <- 1/k
+max_events <- max(obs_dist$events)
+theo_probs <- dnbinom(0:max_events, size = size, mu = mu)
+theo_dist <- data.table(
+  events = 0:max_events,
+  N = NA,
+  prop = theo_probs,
+  type = "Theoretical"
+)
+
+# Combine for plotting
+plot_data <- rbind(obs_dist, theo_dist)
+
+# Filter for visualization (limit x-axis to 50)
+plot_data <- plot_data[events <= 50]
+
+# Plot
+ggplot(plot_data, aes(x = events, y = prop, fill = type)) +
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+  scale_y_log10(labels = scales::label_number()) +
+  labs(
+    title = "Observed vs. Theoretical Negative Binomial Distribution",
+    subtitle = paste("Mean =", mu, ", Dispersion =", k, "(Log Scale)"),
+    x = "Number of Events",
+    y = "Proportion",
+    fill = "Distribution"
+  ) +
+  theme_minimal()
 ```
 
 ## References
