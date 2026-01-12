@@ -1,0 +1,16 @@
+pandoc: 3.1.11
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  completers-interim-example: completers-interim-example.html
+  group-sequential-simulation: group-sequential-simulation.html
+  non-inferiority-example: non-inferiority-example.html
+  sample-size-nbinom: sample-size-nbinom.html
+  seasonal-simulation: seasonal-simulation.html
+  simulation-example: simulation-example.html
+  ssr-example: ssr-example.html
+  verification-simulation: verification-simulation.html
+last_built: 2026-01-12T12:40Z
+urls:
+  reference: https://keaven.github.io/gsDesignNB/reference
+  article: https://keaven.github.io/gsDesignNB/articles
