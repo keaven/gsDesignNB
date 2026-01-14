@@ -1,0 +1,316 @@
+---
+title: "Diagnosing Blinded Information Calculation Issues"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Diagnosing Blinded Information Calculation Issues}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+This vignette examines two problematic datasets where the blinded information calculation produced extreme values. Understanding these edge cases helps inform potential improvements to the `calculate_blinded_info()` function.
+
+We examine two scenarios:
+
+1. **Near-zero blinded information**: Cases where `blinded_info` is essentially 0 despite reasonable `unblinded_info`
+2. **Extreme high blinded information**: Cases where `blinded_info` is astronomically large (10^38)
+
+Both scenarios arise from instability in the negative binomial model fitting on blinded (pooled) data.
+
+```{r load-packages, message=FALSE}
+library(gsDesignNB)
+library(data.table)
+library(ggplot2)
+library(MASS)
+```
+
+## Dataset 1: Near-Zero Blinded Information
+
+This dataset was identified from simulations where `blinded_info = 0.02` while `unblinded_info = 48.6` — a ratio of 0.0004.
+
+```{r load-data-1}
+# Load the problematic dataset
+# Try package location first, fall back to relative path for development
+data_path <- system.file("extdata", "problematic_dataset.rds", package = "gsDesignNB")
+if (data_path == "") {
+  # During development, find the package root
+  data_path <- file.path("..", "inst", "extdata", "problematic_dataset.rds")
+}
+cut_data <- readRDS(data_path)
+dt <- as.data.table(cut_data)
+```
+
+### Event Counts Summary
+
+```{r event-summary-1}
+# Overall summary
+cat("Total subjects:", nrow(dt), "\n")
+cat("Total events:", sum(dt$events), "\n")
+cat("Mean events per subject:", round(mean(dt$events), 3), "\n")
+cat("Variance of events:", round(var(dt$events), 3), "\n")
+cat("Variance/Mean ratio:", round(var(dt$events) / mean(dt$events), 3), "\n")
+
+# By treatment
+dt[, .(
+  n = .N,
+  total_events = sum(events),
+  mean_events = round(mean(events), 3),
+  var_events = round(var(events), 3),
+  pct_zero_events = round(100 * mean(events == 0), 1)
+), by = treatment]
+```
+
+### Event Distribution
+
+```{r event-distribution-1}
+# Event count distribution
+event_dist <- dt[, .(count = .N), by = .(treatment, events)]
+event_dist[order(treatment, events)]
+```
+
+A key observation is the high proportion of subjects with zero events, particularly in the experimental arm.
+
+### Event Rates by Patient
+
+We calculate the event rate as events divided by follow-up duration (`tte`).
+
+```{r event-rates-1}
+dt[, event_rate := events / tte]
+
+# Summary of event rates
+dt[, .(
+  n = .N,
+  mean_rate = round(mean(event_rate), 4),
+  median_rate = round(median(event_rate), 4),
+  sd_rate = round(sd(event_rate), 4),
+  pct_zero_rate = round(100 * mean(event_rate == 0), 1)
+), by = treatment]
+```
+
+### Violin Plot of Event Rates
+
+```{r violin-plot-1, fig.height=6}
+# Add overall group for comparison
+dt_plot <- rbind(
+  dt[, .(treatment = treatment, event_rate = event_rate)],
+  dt[, .(treatment = "Overall (Pooled)", event_rate = event_rate)]
+)
+
+ggplot(dt_plot, aes(x = treatment, y = event_rate, fill = treatment)) +
+  geom_violin(alpha = 0.7, scale = "width") +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.8) +
+  labs(
+    title = "Distribution of Patient-Level Event Rates",
+    subtitle = "Dataset with Near-Zero Blinded Information",
+    x = "Treatment Group",
+    y = "Event Rate (events / follow-up time)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Set2")
+```
+
+The violin plot shows that many subjects have zero event rates, creating a spike at zero. The control arm has higher event rates than the experimental arm, as expected given the simulation parameters.
+
+### What Happened with the Information Calculations
+
+```{r info-calc-1}
+# Blinded information calculation
+blinded_res <- calculate_blinded_info(
+  cut_data,
+  ratio = 1,
+  lambda1_planning = 1.5/12,
+  lambda2_planning = 1.0/12
+)
+
+cat("Blinded Information Results:\n")
+cat("  blinded_info:", blinded_res$blinded_info, "\n")
+cat("  dispersion_blinded:", blinded_res$dispersion_blinded, "\n")
+cat("  lambda_blinded:", blinded_res$lambda_blinded, "\n")
+
+# Unblinded calculation via mutze_test
+mutze_res <- mutze_test(cut_data)
+
+cat("\nUnblinded (Mutze Test) Results:\n")
+cat("  method:", mutze_res$method, "\n")
+cat("  SE:", round(mutze_res$se, 4), "\n")
+cat("  unblinded_info (1/SE^2):", round(1/mutze_res$se^2, 2), "\n")
+cat("  dispersion:", mutze_res$dispersion, "\n")
+```
+
+#### Root Cause Analysis
+
+The issue stems from the blinded `glm.nb` fit:
+
+```{r glm-analysis-1}
+df <- as.data.frame(cut_data)
+df <- df[df$tte > 0, ]
+
+# Blinded fit (no treatment effect)
+fit_blinded <- suppressWarnings(MASS::glm.nb(events ~ 1 + offset(log(tte)), data = df))
+
+cat("Blinded glm.nb fit:\n")
+cat("  theta:", fit_blinded$theta, "\n")
+cat("  1/theta (dispersion):", 1/fit_blinded$theta, "\n")
+
+# Unblinded fit (with treatment effect)
+fit_unblinded <- suppressWarnings(MASS::glm.nb(events ~ treatment + offset(log(tte)), data = df))
+
+cat("\nUnblinded glm.nb fit:\n")
+cat("  theta:", fit_unblinded$theta, "\n")
+cat("  1/theta (dispersion):", 1/fit_unblinded$theta, "\n")
+```
+
+**The Problem**: The blinded `glm.nb` fit returns an extremely small `theta` (≈ 0.0002), which translates to `dispersion_blinded = 1/theta ≈ 4454`. 
+
+The blinded information formula is:
+$$w_j = p_j \sum_i \frac{\mu_{ij}}{1 + k \cdot \mu_{ij}}$$
+
+where $k$ is the dispersion and $\mu_{ij} = \lambda_j \cdot t_i$.
+
+When $k$ is very large (4454), the denominator becomes huge:
+$$1 + 4454 \times 0.5 \approx 2228$$
+
+This makes $w_j$ approximately 2000 times smaller than it should be, causing the information to collapse to near-zero.
+
+## Dataset 2: Extreme High Blinded Information
+
+This dataset was identified from simulation 630 in the group-sequential simulation, where `blinded_info = 1.84 × 10^38` — an astronomically large value indicating numerical overflow.
+
+```{r load-data-2}
+# Load the extreme high dataset (reproduced from simulation 630)
+data_path_2 <- system.file("extdata", "extreme_high_dataset.rds", package = "gsDesignNB")
+if (data_path_2 == "") {
+  data_path_2 <- file.path("..", "inst", "extdata", "extreme_high_dataset.rds")
+}
+cut_data_2 <- readRDS(data_path_2)
+dt2 <- as.data.table(cut_data_2)
+```
+
+### Event Counts Summary
+
+```{r event-summary-2}
+# Overall summary
+cat("Total subjects:", nrow(dt2), "\n")
+cat("Total events:", sum(dt2$events), "\n")
+cat("Mean events per subject:", round(mean(dt2$events), 3), "\n")
+cat("Variance of events:", round(var(dt2$events), 3), "\n")
+cat("Variance/Mean ratio:", round(var(dt2$events) / mean(dt2$events), 3), "\n")
+
+# By treatment
+dt2[, .(
+  n = .N,
+  total_events = sum(events),
+  mean_events = round(mean(events), 3),
+  var_events = round(var(events), 3),
+  pct_zero_events = round(100 * mean(events == 0), 1)
+), by = treatment]
+```
+
+### What Happened with the Information Calculations
+
+```{r info-calc-2}
+# Blinded information calculation
+blinded_res_2 <- calculate_blinded_info(
+  cut_data_2,
+  ratio = 1,
+  lambda1_planning = 1.5/12,
+  lambda2_planning = 1.0/12
+)
+
+cat("Blinded Information Results:\n")
+cat("  blinded_info:", format(blinded_res_2$blinded_info, scientific = TRUE), "\n")
+cat("  dispersion_blinded:", format(blinded_res_2$dispersion_blinded, scientific = TRUE), "\n")
+cat("  lambda_blinded:", round(blinded_res_2$lambda_blinded, 4), "\n")
+
+# Unblinded calculation via mutze_test
+mutze_res_2 <- mutze_test(cut_data_2)
+
+cat("\nUnblinded (Mutze Test) Results:\n")
+cat("  method:", mutze_res_2$method, "\n")
+cat("  SE:", round(mutze_res_2$se, 4), "\n")
+cat("  unblinded_info (1/SE^2):", round(1/mutze_res_2$se^2, 2), "\n")
+cat("  dispersion:", mutze_res_2$dispersion, "\n")
+```
+
+#### Root Cause Analysis
+
+```{r glm-analysis-2}
+df2 <- as.data.frame(cut_data_2)
+df2 <- df2[df2$tte > 0, ]
+
+# Blinded fit (no treatment effect)
+fit_blinded_2 <- tryCatch(
+  suppressWarnings(MASS::glm.nb(events ~ 1 + offset(log(tte)), data = df2)),
+  error = function(e) NULL
+)
+
+if (!is.null(fit_blinded_2)) {
+  cat("Blinded glm.nb fit:\n")
+  cat("  theta:", format(fit_blinded_2$theta, scientific = TRUE), "\n")
+  cat("  1/theta (dispersion):", format(1/fit_blinded_2$theta, scientific = TRUE), "\n")
+} else {
+  cat("Blinded glm.nb fit FAILED\n")
+}
+
+# Unblinded fit (with treatment effect)
+fit_unblinded_2 <- tryCatch(
+  suppressWarnings(MASS::glm.nb(events ~ treatment + offset(log(tte)), data = df2)),
+  error = function(e) NULL
+)
+
+if (!is.null(fit_unblinded_2)) {
+  cat("\nUnblinded glm.nb fit:\n")
+  cat("  theta:", round(fit_unblinded_2$theta, 4), "\n")
+  cat("  1/theta (dispersion):", round(1/fit_unblinded_2$theta, 4), "\n")
+} else {
+  cat("\nUnblinded glm.nb fit FAILED - this explains the Poisson fallback\n")
+}
+```
+
+**The Problem**: The blinded `glm.nb` returns an astronomically large `theta` (≈ 1.7 × 10^41), which translates to `dispersion_blinded ≈ 5.9 × 10^-42` — essentially zero.
+
+The information formula depends on:
+$$w_j = p_j \sum_i \frac{\mu_{ij}}{1 + k \cdot \mu_{ij}}$$
+
+When $k \to 0$:
+$$w_j \approx p_j \sum_i \mu_{ij}$$
+
+This makes $w_j$ very large, and since variance = $1/w_1 + 1/w_2$, the variance approaches zero, causing information = 1/variance to overflow to infinity.
+
+### Why the Mutze Test Falls Back to Poisson
+
+Note that `mutze_test` reports `dispersion = Inf` and uses the "Poisson Wald (fallback)" method. This happens because `glm.nb` with the treatment effect also struggles with this dataset — the theta estimate becomes unstable, and the function falls back to a simpler Poisson model.
+
+## Summary of Issues
+
+| Issue | Blinded Info | Cause | Dispersion (blinded) |
+|-------|-------------|-------|---------------------|
+| Near-zero | 0.02 | Extremely large dispersion estimate | 4454 |
+| Near-infinite | 1.84×10^38 | Extremely small dispersion estimate | ~0 |
+
+Both issues arise from instability in `glm.nb` when fitting to pooled (blinded) data. The pooling can create artificial variance patterns that don't represent the true data-generating process.
+
+## Recommendations
+
+1. **Bound the dispersion estimate**: Cap `dispersion_blinded` to a reasonable range (e.g., 0.01 to 100)
+
+2. **Use assumed dispersion**: Consider using the planned/assumed dispersion from the design rather than estimating from blinded data
+
+3. **Add sanity checks**: Flag cases where blinded info differs from unblinded info by more than a factor of 2-3
+
+4. **Fallback to unblinded**: When blinded estimation produces extreme values, fall back to the unblinded information
+
+```{r session-info}
+sessionInfo()
+```

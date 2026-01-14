@@ -86,6 +86,7 @@ articles:
       - verification-simulation
       - non-inferiority-example
       - group-sequential-simulation
+      - blinded-info-diagnostics
       - completers-interim-example
       - ssr-example
       - seasonal-simulation
