@@ -2,6 +2,7 @@ pandoc: 3.1.11
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
+  blinded-info-diagnostics: blinded-info-diagnostics.html
   completers-interim-example: completers-interim-example.html
   group-sequential-simulation: group-sequential-simulation.html
   non-inferiority-example: non-inferiority-example.html
@@ -10,7 +11,7 @@ articles:
   simulation-example: simulation-example.html
   ssr-example: ssr-example.html
   verification-simulation: verification-simulation.html
-last_built: 2026-01-12T12:40Z
+last_built: 2026-01-14T22:57Z
 urls:
   reference: https://keaven.github.io/gsDesignNB/reference
   article: https://keaven.github.io/gsDesignNB/articles

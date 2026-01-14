@@ -12,6 +12,8 @@
   designs](https://keaven.github.io/gsDesignNB/articles/non-inferiority-example.md):
 - [Group sequential design and
   simulation](https://keaven.github.io/gsDesignNB/articles/group-sequential-simulation.md):
+- [Diagnosing Blinded Information Calculation
+  Issues](https://keaven.github.io/gsDesignNB/articles/blinded-info-diagnostics.md):
 - [Group sequential simulation with completers
   analysis](https://keaven.github.io/gsDesignNB/articles/completers-interim-example.md):
 - [Sample size re-estimation
