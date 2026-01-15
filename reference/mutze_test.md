@@ -1,9 +1,9 @@
-# Wald test for treatment effect using negative binomial model (Mütze et al.)
+# Wald test for treatment effect using negative binomial model (Mutze et al.)
 
 Fits a negative binomial (or Poisson) log-rate model to the aggregated
 subject-level data produced by
 [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md).
-The method matches the Wald test described by Mütze et al. (2019) for
+The method matches the Wald test described by Mutze et al. (2019) for
 comparing treatment arms with recurrent event outcomes.
 
 ## Usage
@@ -81,7 +81,7 @@ dropout_rate <- data.frame(
 sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 40)
 cut <- cut_data_by_date(sim, cut_date = 1.5)
 mutze_test(cut)
-#> Mütze Test Results
+#> Mutze Test Results
 #> ==================
 #> 
 #> Method:     Poisson Wald (fallback) 

@@ -169,14 +169,24 @@ sim_results <- sim_gs_nbinom(
   cuts = cuts
 )
 head(sim_results)
-#>   sim analysis analysis_time n_enrolled events_total events_ctrl events_exp
-#> 1   1        1             2         23           10           8          2
-#> 2   1        2             4         30           34          25          9
-#> 3   2        1             2         15            4           3          1
-#> 4   2        2             4         30           24          18          6
-#>   exposure_ctrl exposure_exp     z_stat blinded_info unblinded_info
-#> 1      13.14534    12.328930 -1.6724385     2.391287      1.6000076
-#> 2      37.48061    38.937872 -2.7264734     8.157183      6.6184888
-#> 3       7.44672     5.387439 -0.6710972     0.959958      0.7500145
-#> 4      31.08699    26.047756 -1.7504986     3.842925      3.8548194
+#>   sim analysis analysis_time n_enrolled n_ctrl n_exp events_total events_ctrl
+#> 1   1        1             2         23     11    12           10           8
+#> 2   1        2             4         30     15    15           34          25
+#> 3   2        1             2         15      8     7            4           3
+#> 4   2        2             4         30     15    15           24          18
+#>   events_exp exposure_at_risk_ctrl exposure_at_risk_exp exposure_total_ctrl
+#> 1          2              13.14534            12.328930            13.14534
+#> 2          9              37.48061            38.937872            37.48061
+#> 3          1               7.44672             5.387439             7.44672
+#> 4          6              31.08699            26.047756            31.08699
+#>   exposure_total_exp     z_stat   estimate        se             method_used
+#> 1          12.328930 -1.6724385 -1.3221756 0.7905675 Poisson Wald (fallback)
+#> 2          38.937872 -2.7264734 -1.0597950 0.3887054 Poisson Wald (fallback)
+#> 3           5.387439 -0.6710972 -0.7749088 1.1546894 Poisson Wald (fallback)
+#> 4          26.047756 -1.7504986 -0.8915788 0.5093285  Negative binomial Wald
+#>   dispersion blinded_info unblinded_info
+#> 1        Inf     2.391287      1.6000076
+#> 2        Inf     8.157183      6.6184888
+#> 3        Inf     0.959958      0.7500145
+#> 4   4.406507     3.842925      3.8548194
 ```

@@ -83,14 +83,42 @@ is also printed to the console.</p>
 <span class="r-in"><span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>, lambda2 <span class="op">=</span> <span class="fl">0.3</span>, dispersion <span class="op">=</span> <span class="fl">0.1</span>, power <span class="op">=</span> <span class="fl">0.9</span>,</span></span>
 <span class="r-in"><span>  accrual_rate <span class="op">=</span> <span class="fl">10</span>, accrual_duration <span class="op">=</span> <span class="fl">20</span>, trial_duration <span class="op">=</span> <span class="fl">24</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">gs_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="gsNBCalendar.html">gsNBCalendar</a></span><span class="op">(</span><span class="va">nb_ss</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in gsNBCalendar(nb_ss, k = 3):</span> analysis_times must be provided</span>
+<span class="r-in"><span><span class="va">gs_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="gsNBCalendar.html">gsNBCalendar</a></span><span class="op">(</span><span class="va">nb_ss</span>, k <span class="op">=</span> <span class="fl">3</span>, analysis_times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">18</span>, <span class="fl">24</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">gs_design</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'gs_design' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Asymmetric two-sided with non-binding futility bound group sequential design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> for negative binomial outcomes, 3 analyses, total sample size 53.5, 90 percent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> power, 2.5 percent (1-sided) Type I error. Control rate 0.5000, treatment rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3000, risk ratio 0.6000, dispersion 0.1000. Accrual duration 20.0, trial</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> duration 24.0, max follow-up Inf, average exposure 14.00. Randomization ratio</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -4) Lower spending:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hwang-Shih-DeCani (gamma = -2)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Asymmetric two-sided with non-binding futility bound group sequential design</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> for negative binomial outcomes, 3 analyses, total sample size 53.5, 90 percent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> power, 2.5 percent (1-sided) Type I error. Control rate 0.5000, treatment rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0.3000, risk ratio 0.6000, dispersion 0.1000. Accrual duration 20.0, trial</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> duration 24.0, max follow-up Inf, average exposure 14.00. Randomization ratio</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -4) Lower spending:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hwang-Shih-DeCani (gamma = -2)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># For tabular bounds summary, use gsBoundSummary() directly:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://keaven.github.io/gsDesign/reference/gsBoundSummary.html" class="external-link">gsBoundSummary</a></span><span class="op">(</span><span class="va">gs_design</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'gs_design' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Analysis                   Value Efficacy Futility</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  IA 1: 32%                       Z   3.0107  -0.2387</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      N: 14             p (1-sided)   0.0013   0.5943</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Month: 12         ~delta at bound  -0.8118   0.0644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                P(Cross) if delta=0   0.0013   0.4057</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            P(Cross) if delta=-0.51   0.1412   0.0148</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  IA 2: 64%                       Z   2.5465   0.9411</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      N: 29             p (1-sided)   0.0054   0.1733</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Month: 18         ~delta at bound  -0.4834  -0.1786</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                P(Cross) if delta=0   0.0062   0.8347</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            P(Cross) if delta=-0.51   0.5815   0.0437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Final                       Z   1.9992   1.9992</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      N: 44             p (1-sided)   0.0228   0.0228</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Month: 24         ~delta at bound  -0.3046  -0.3046</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                P(Cross) if delta=0   0.0233   0.9767</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            P(Cross) if delta=-0.51   0.9000   0.1000</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

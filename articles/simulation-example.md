@@ -5,6 +5,7 @@ library(gsDesignNB)
 library(data.table)
 library(ggplot2)
 library(gt)
+library(scales)
 ```
 
 This vignette demonstrates how to use the
@@ -223,7 +224,7 @@ described by Mütze et al. (2019).
 ``` r
 mutze_res <- mutze_test(cut_summary)
 mutze_res
-#> Mütze Test Results
+#> Mutze Test Results
 #> ==================
 #> 
 #> Method:     Negative binomial Wald 
