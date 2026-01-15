@@ -2,7 +2,7 @@
 % Please edit documentation in R/mutze_test.R
 \name{mutze_test}
 \alias{mutze_test}
-\title{Wald test for treatment effect using negative binomial model (Mütze et al.)}
+\title{Wald test for treatment effect using negative binomial model (Mutze et al.)}
 \usage{
 mutze_test(
   data,
@@ -45,7 +45,7 @@ An object of class \code{mutze_test} containing the fitted model summary with el
 \description{
 Fits a negative binomial (or Poisson) log-rate model to the aggregated
 subject-level data produced by \code{\link[=cut_data_by_date]{cut_data_by_date()}}. The method matches the
-Wald test described by Mütze et al. (2019) for comparing treatment arms with
+Wald test described by Mutze et al. (2019) for comparing treatment arms with
 recurrent event outcomes.
 }
 \examples{

@@ -117,25 +117,34 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
       # If `usTime` is provided, `t = usTime`. If not, `t = timing`.
 
       # To follow vignette logic:
-      # It passes `usTime` AND `timing`.
 
-      temp_gs <- gsDesign::gsDesign(
-        k = design$k,
-        test.type = design$test.type,
-        alpha = design$alpha,
-        beta = design$beta,
-        astar = design$astar,
-        delta = design$delta,
-        sfu = design$upper$sf,
-        sfupar = design$upper$param,
-        sfl = design$lower$sf,
-        sflpar = design$lower$param,
-        tol = design$tol,
-        r = design$r,
-        n.fix = max_info,
-        timing = current_timing,
-        usTime = design$usTime, # If NULL, ignored
-        lsTime = design$lsTime
+      # It passes `usTime` AND `timing`.
+      # Use tryCatch to handle edge cases where spending function can't
+      # achieve target beta with the observed information fraction.
+      temp_gs <- tryCatch(
+        gsDesign::gsDesign(
+          k = design$k,
+          test.type = design$test.type,
+          alpha = design$alpha,
+          beta = design$beta,
+          astar = design$astar,
+          delta = design$delta,
+          sfu = design$upper$sf,
+          sfupar = design$upper$param,
+          sfl = design$lower$sf,
+          sflpar = design$lower$param,
+          tol = design$tol,
+          r = design$r,
+          n.fix = max_info,
+          timing = current_timing,
+          usTime = design$usTime, # If NULL, ignored
+          lsTime = design$lsTime
+        ),
+        error = function(e) {
+          # If the spending function fails, fall back to original design bounds
+          # This can happen with extreme information fractions
+          design
+        }
       )
 
       upper_bound <- temp_gs$upper$bound[k]

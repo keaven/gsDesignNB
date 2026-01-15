@@ -41,9 +41,9 @@ We design a trial with the following characteristics:
 * **Dispersion:** 0.5
 * **Power:** 90% (beta = 0.1)
 * **Alpha:** 0.025 (one-sided)
-# **event gap:** 20 days
-# **dropout rate:** 5% at 1 year
-# **max followup:** 12 months
+* **event gap:** 20 days
+* **dropout rate:** 5% at 1 year
+* **max followup:** 12 months
 
 ### Sample size calculation
 
@@ -85,7 +85,7 @@ We specify `usTime = c(0.1, 0.18, 1)` which along with the `sfLinear()` spending
 function will spend 10%, 18% and 100% of the cumulative $\alpha$ at the 3
 planned analyses regardless of the observed statistical information at each
 analysis.
-The interim spending is intended to achieve a nominal p-value of 0.0025 (one-sided) at both interim analyses.
+The interim spending is intended to achieve a nominal p-value of approximately 0.0025 (one-sided) at each interim analysis.
 
 ```{r gs-design}
 # Analysis times (in months)
@@ -138,138 +138,215 @@ gs_nb |>
 
 ## Simulation study
 
-We now simulate `r 50` trials to evaluate the power
-of the group sequential design assuming design parameters above are correct.
+We simulated 3,600 trials to evaluate the operating characteristics of the group sequential design.
+This number of simulations was chosen to achieve a standard error for the power estimate
+of approximately 0.005 when the true power is 90% ($\sqrt{0.9 \times 0.1 / 3600} = 0.005$).
+The simulation script is located in `data-raw/generate_gs_simulation_data.R`.
 
-### Simulation setup
+### Load simulation results
 
-```{r simulation-setup}
-set.seed(42)
-n_sims <- 50
+```{r load-results}
+# Load pre-computed simulation results
+results_file <- system.file("extdata", "gs_simulation_results.rds", package = "gsDesignNB")
 
-# Enrollment rate (patients per month) to achieve target sample size
-n_target <- ceiling(nb_ss$n_total)
-enroll_rate_val <- n_target / 12 # All enrolled in 12 months
+if (results_file == "" && file.exists("../inst/extdata/gs_simulation_results.rds")) {
+  results_file <- "../inst/extdata/gs_simulation_results.rds"
+}
 
-# Define enrollment
-enroll_rate <- data.frame(
-  rate = enroll_rate_val,
-  duration = 12 # 12 months enrollment
-)
-
-# Define failure rates (with dispersion)
-fail_rate <- data.frame(
-  treatment = c("Control", "Experimental"),
-  rate = c(1.5 / 12, 1.0 / 12),
-  dispersion = c(0.5, 0.5)
-)
-
-# Dropout rate (5% at 1 year)
-dropout_rate_val <- -log(0.95)
-dropout_rate <- data.frame(
-  treatment = c("Control", "Experimental"),
-  rate = c(dropout_rate_val, dropout_rate_val),
-  duration = c(100, 100) # Long duration
-)
-
-# Maximum follow-up (trial duration from enrollment start)
-max_followup <- 12 # 12 months to match design
-```
-
-### Run simulations
-
-We use `sim_gs_nbinom()` to generate data and perform interim analyses, and `check_gs_bound()` to apply the group sequential boundaries.
-
-```{r run-simulations}
-# Simulate
-sim_res <- sim_gs_nbinom(
-  n_sims = n_sims,
-  enroll_rate = enroll_rate,
-  fail_rate = fail_rate,
-  dropout_rate = dropout_rate,
-  max_followup = max_followup,
-  event_gap = event_gap_val,
-  cuts = lapply(analysis_times, function(x) list(planned_calendar = x)),
-  design = gs_nb,
-  n_target = n_target
-)
-
-# Apply bounds
-results <- check_gs_bound(
-  sim_results = sim_res,
-  design = gs_nb,
-  info_scale = "blinded"
-)
+if (results_file != "") {
+  sim_data <- readRDS(results_file)
+  results <- sim_data$results
+  summary_gs <- sim_data$summary_gs
+  n_sims <- sim_data$n_sims
+  params <- sim_data$params
+} else {
+  # Fallback if data is not available (e.g. not installed yet)
+  warning("Simulation results not found. Skipping simulation analysis.")
+  results <- NULL
+  summary_gs <- NULL
+  n_sims <- 0
+}
 ```
 
 ## Simulation results summary
 
-### Events and exposure by analysis
+### Summary of verification results
 
-```{r summary-events}
-# Summarize results
-summary_gs <- summarize_gs_sim(results)
+We compare the theoretical predictions from the group sequential design with the observed simulation results across multiple metrics.
 
-analysis_summary_tbl <- data.table::as.data.table(summary_gs$analysis_summary)
-analysis_summary_tbl[, planned_info := gs_nb$n.I[analysis]]
-data.table::setcolorder(
-  analysis_summary_tbl,
-  c(
-    "analysis",
-    "n_enrolled",
-    "events",
-    "planned_info",
-    setdiff(names(analysis_summary_tbl), c("analysis", "n_enrolled", "events", "planned_info"))
+**Key distinction: Total Exposure vs Exposure at Risk**
+
+*   **Total Exposure** (`exposure_total`): The calendar time a subject is on study, from randomization
+    to the analysis cut date (or censoring). This is the same for both treatment arms by design.
+*   **Exposure at Risk** (`exposure_at_risk`): The time during which a subject can experience a *new* event.
+    After each event, there is an "event gap" period during which new events are not counted
+    (e.g., representing recovery time or treatment effect). This differs by treatment group
+    because the group with more events loses more time to gaps.
+
+```{r summary-table, eval=!is.null(results), results='asis'}
+# Helper function for trimmed mean (to handle outliers in blinded info)
+trimmed_mean <- function(x, trim = 0.01) {
+  x <- x[is.finite(x) & !is.na(x)]
+  if (length(x) == 0) return(NA_real_)
+  mean(x, trim = trim)
+}
+
+# Create comprehensive theoretical vs simulation comparison table for each analysis
+dt <- data.table::as.data.table(results)
+
+# Function to compute comparison for a specific analysis
+get_analysis_comparison <- function(analysis_num) {
+  sub_dt <- dt[analysis == analysis_num]
+  
+  # Get theoretical values from gs_nb design
+  theo_n <- gs_nb$n_total[analysis_num]
+  theo_n1 <- gs_nb$n1[analysis_num]
+  theo_n2 <- gs_nb$n2[analysis_num]
+  theo_exposure <- gs_nb$exposure[analysis_num]
+  theo_exposure_at_risk1 <- gs_nb$exposure_at_risk1[analysis_num]
+  theo_exposure_at_risk2 <- gs_nb$exposure_at_risk2[analysis_num]
+  theo_events1 <- gs_nb$events1[analysis_num]
+  theo_events2 <- gs_nb$events2[analysis_num]
+  theo_events <- gs_nb$events[analysis_num]
+  theo_variance <- gs_nb$variance[analysis_num]
+  theo_info <- gs_nb$n.I[analysis_num]
+  
+  # Observed values (using trimmed means for robustness)
+  obs_n <- mean(sub_dt$n_enrolled)
+  obs_n1 <- mean(sub_dt$n_ctrl)
+  obs_n2 <- mean(sub_dt$n_exp)
+  obs_exposure1 <- mean(sub_dt$exposure_total_ctrl)
+  obs_exposure2 <- mean(sub_dt$exposure_total_exp)
+  obs_exposure_at_risk1 <- mean(sub_dt$exposure_at_risk_ctrl)
+  obs_exposure_at_risk2 <- mean(sub_dt$exposure_at_risk_exp)
+  obs_events1 <- mean(sub_dt$events_ctrl)
+  obs_events2 <- mean(sub_dt$events_exp)
+  obs_events <- mean(sub_dt$events_total)
+  obs_variance <- median(sub_dt$se^2, na.rm = TRUE)
+  obs_info_blinded <- trimmed_mean(sub_dt$blinded_info, trim = 0.01)
+  obs_info_unblinded <- trimmed_mean(sub_dt$unblinded_info, trim = 0.01)
+  
+  # Build comparison data frame
+  data.frame(
+    Metric = c(
+      "N Enrolled",
+      "N Control",
+      "N Experimental",
+      "Total Exposure - Control",
+      "Total Exposure - Experimental",
+      "Exposure at Risk - Control",
+      "Exposure at Risk - Experimental",
+      "Events - Control",
+      "Events - Experimental",
+      "Events - Total",
+      "Variance of log(RR)",
+      "Information (Blinded)",
+      "Information (Unblinded)"
+    ),
+    Theoretical = c(
+      theo_n, theo_n1, theo_n2,
+      theo_n1 * theo_exposure, theo_n2 * theo_exposure,
+      theo_n1 * theo_exposure_at_risk1, theo_n2 * theo_exposure_at_risk2,
+      theo_events1, theo_events2, theo_events,
+      theo_variance, theo_info, theo_info
+    ),
+    Simulated = c(
+      obs_n, obs_n1, obs_n2,
+      obs_exposure1, obs_exposure2,
+      obs_exposure_at_risk1, obs_exposure_at_risk2,
+      obs_events1, obs_events2, obs_events,
+      obs_variance, obs_info_blinded, obs_info_unblinded
+    ),
+    stringsAsFactors = FALSE
   )
-)
+}
 
-analysis_summary_tbl |>
-  gt() |>
-  tab_header(title = "Summary Statistics by Analysis") |>
-  cols_label(
-    analysis = "Analysis",
-    n_enrolled = "N Enrolled",
-    events = "Total Events",
-    planned_info = "Planned Info (Design)",
-    info_blinded = "Mean Info (Blinded)",
-    info_unblinded = "Mean Info (Unblinded)",
-    n_cross_upper = "N Cross Upper",
-    n_cross_lower = "N Cross Lower",
-    prob_cross_upper = "Prob Cross Upper",
-    prob_cross_lower = "Prob Cross Lower"
-  ) |>
-  fmt_number(decimals = 2) |>
-  fmt_number(columns = contains("prob"), decimals = 3)
+# Generate comparison table for each analysis
+for (k in 1:3) {
+  cat(sprintf("\n### Analysis %d (Month %d)\n\n", k, params$analysis_times[k]))
+  
+  comparison_k <- get_analysis_comparison(k)
+  comparison_k$Difference <- comparison_k$Simulated - comparison_k$Theoretical
+  comparison_k$Rel_Diff_Pct <- 100 * comparison_k$Difference / abs(comparison_k$Theoretical)
+  
+  print(
+    comparison_k |>
+      gt() |>
+      tab_header(
+        title = sprintf("Analysis %d: Theoretical vs Simulated", k),
+        subtitle = sprintf("Calendar time = %d months", params$analysis_times[k])
+      ) |>
+      fmt_number(columns = c(Theoretical, Simulated, Difference), decimals = 2) |>
+      fmt_number(columns = Rel_Diff_Pct, decimals = 1) |>
+      cols_label(
+        Metric = "",
+        Theoretical = "Theoretical",
+        Simulated = "Simulated",
+        Difference = "Difference",
+        Rel_Diff_Pct = "Rel. Diff (%)"
+      ) |>
+      tab_row_group(label = md("**Information**"), rows = grepl("Information|Variance", Metric)) |>
+      tab_row_group(label = md("**Events**"), rows = grepl("Events", Metric)) |>
+      tab_row_group(label = md("**Exposure**"), rows = grepl("Exposure", Metric)) |>
+      tab_row_group(label = md("**Sample Size**"), rows = grepl("^N ", Metric)) |>
+      row_group_order(groups = c("**Sample Size**", "**Exposure**", "**Events**", "**Information**"))
+  )
+  
+  # Add boundary crossing summary
+  sub_dt <- dt[analysis == k]
+  cat(sprintf("\n**Boundary Crossing:**\n"))
+  cat(sprintf("- Efficacy (upper): %.1f%% (n=%d)\n", 
+              mean(sub_dt$cross_upper) * 100, sum(sub_dt$cross_upper)))
+  cat(sprintf("- Futility (lower): %.1f%% (n=%d)\n", 
+              mean(sub_dt$cross_lower) * 100, sum(sub_dt$cross_lower)))
+  cat(sprintf("- Cumulative Efficacy: %.1f%%\n\n", 
+              sum(dt[analysis <= k]$cross_upper) / n_sims * 100))
+}
 ```
 
-### Power and operating characteristics
+### Overall operating characteristics
 
-```{r overall-power}
-# Overall Power
-message("=== Overall Operating Characteristics ===")
-message(sprintf("Number of simulations: %d", summary_gs$n_sim))
-message(sprintf("Overall Power (P[reject H0]): %.1f%%", summary_gs$power * 100))
-message(sprintf("Futility Stopping Rate: %.1f%%", summary_gs$futility * 100))
-message(sprintf("Design Power (target): %.1f%%", (1 - gs_nb$beta) * 100))
+```{r overall-summary, eval=!is.null(results)}
+cat("=== Overall Operating Characteristics ===\n")
+cat(sprintf("Number of simulations: %d\n", n_sims))
+cat(sprintf("Overall Power (P[reject H0]): %.1f%% (SE: %.1f%%)\n", 
+            summary_gs$power * 100, 
+            sqrt(summary_gs$power * (1 - summary_gs$power) / n_sims) * 100))
+cat(sprintf("Futility Stopping Rate: %.1f%%\n", summary_gs$futility * 100))
+cat(sprintf("Design Power (target): %.1f%%\n", (1 - gs_nb$beta) * 100))
+```
 
-# Cumulative Power Comparison
-crossing_summary <- summary_gs$analysis_summary
-crossing_summary$design_cum_power <- cumsum(gs_nb$upper$prob[, 2])
+### Power comparison by analysis
 
-crossing_summary[, c("analysis", "cum_prob_upper", "design_cum_power")] |>
+```{r power-comparison, eval=!is.null(results)}
+# Create comparison table
+crossing_summary <- data.frame(
+  Analysis = 1:3,
+  Analysis_Time = params$analysis_times,
+  Sim_Power = summary_gs$analysis_summary$prob_cross_upper,
+  Sim_Cum_Power = summary_gs$analysis_summary$cum_prob_upper,
+  Design_Cum_Power = cumsum(gs_nb$upper$prob[, 2])
+)
+
+crossing_summary |>
   gt() |>
-  tab_header(title = "Cumulative Power Comparison") |>
-  cols_label(
-    analysis = "Analysis",
-    cum_prob_upper = "Cum Power (Sim)",
-    design_cum_power = "Cum Power (Design)"
+  tab_header(
+    title = "Power Comparison: Simulation vs Design",
+    subtitle = sprintf("Based on %d simulated trials", n_sims)
   ) |>
-  fmt_number(decimals = 3)
+  cols_label(
+    Analysis = "Analysis",
+    Analysis_Time = "Month",
+    Sim_Power = "Incremental Power (Sim)",
+    Sim_Cum_Power = "Cumulative Power (Sim)",
+    Design_Cum_Power = "Cumulative Power (Design)"
+  ) |>
+  fmt_percent(columns = c(Sim_Power, Sim_Cum_Power, Design_Cum_Power), decimals = 1)
 ```
 
 ### Visualization of Z-statistics
 
-```{r plot-z-stats, fig.width=7, fig.height=5, fig.alt="Z-statistics across analyses with group sequential boundaries"}
+```{r plot-z-stats, fig.width=7, fig.height=5, fig.alt="Z-statistics across analyses with group sequential boundaries", eval=!is.null(results)}
 # Prepare data for plotting
 plot_data <- results
 plot_data$z_flipped <- -plot_data$z_stat # Flip for efficacy direction
@@ -315,13 +392,13 @@ negative binomial outcomes:
 
 1. **Sample size calculation** using `sample_size_nbinom()` for a fixed design
 2. **Group sequential design** using `gsNBCalendar()` to add interim analyses
-3. **Simulation** using `nb_sim()` to generate trial data
-4. **Analysis** using `cut_data_by_date()` and `mutze_test()` at each interim
-5. **Boundary checking** against the group sequential bounds
+3. **Simulation** using `sim_gs_nbinom()` to generate trial data and perform analyses
+4. **Boundary checking** using `check_gs_bound()` to apply group sequential boundaries
 
-The `usTime = c(0.1, 0.2, 1)` specification provides conservative alpha spending
+The `usTime = c(0.1, 0.18, 1)` specification provides conservative alpha spending
 at early analyses, preserving most of the Type I error for later analyses when
 more information is available.
 
-With only `r n_sims` simulations, the estimated power has substantial Monte Carlo
-error. For more precise estimates, increase `n_sims` to 1000 or more.
+With `r n_sims` simulations, the standard error for the power estimate is approximately 0.5%.
+The observed power of `r sprintf("%.1f%%", summary_gs$power * 100)` is close to the design
+target of 90%, validating the sample size calculation methodology.

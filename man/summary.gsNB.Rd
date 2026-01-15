@@ -26,7 +26,7 @@ nb_ss <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 )
-gs_design <- gsNBCalendar(nb_ss, k = 3)
+gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 18, 24))
 summary(gs_design)
 
 # For tabular bounds summary, use gsBoundSummary() directly:

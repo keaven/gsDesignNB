@@ -29,12 +29,20 @@
 #'     \item{analysis}{Analysis index}
 #'     \item{analysis_time}{Calendar time of analysis}
 #'     \item{n_enrolled}{Number of subjects enrolled}
+#'     \item{n_ctrl}{Number of subjects in control group}
+#'     \item{n_exp}{Number of subjects in experimental group}
 #'     \item{events_total}{Total events observed}
 #'     \item{events_ctrl}{Events in control group}
 #'     \item{events_exp}{Events in experimental group}
-#'     \item{exposure_ctrl}{Total exposure in control group}
-#'     \item{exposure_exp}{Total exposure in experimental group}
+#'     \item{exposure_at_risk_ctrl}{Exposure at risk in control group (adjusted for event gaps)}
+#'     \item{exposure_at_risk_exp}{Exposure at risk in experimental group (adjusted for event gaps)}
+#'     \item{exposure_total_ctrl}{Total exposure in control group (calendar follow-up)}
+#'     \item{exposure_total_exp}{Total exposure in experimental group (calendar follow-up)}
 #'     \item{z_stat}{Z-statistic from the Wald test (positive favors experimental if rate ratio < 1)}
+#'     \item{estimate}{Estimated log rate ratio from the model}
+#'     \item{se}{Standard error of the estimate}
+#'     \item{method_used}{Method used for inference ("nb" or "poisson")}
+#'     \item{dispersion}{Estimated dispersion parameter from the model}
 #'     \item{blinded_info}{Estimated blinded statistical information}
 #'     \item{unblinded_info}{Observed unblinded statistical information}
 #'   }
@@ -146,16 +154,35 @@ sim_gs_nbinom <- function(
 
       # Summarize counts
       dt <- data.table::as.data.table(cut_data)
-      counts <- dt[, .(events = sum(events), exposure = sum(tte)), by = treatment]
+      counts <- dt[, .(
+        events = sum(events),
+        exposure_at_risk = sum(tte),
+        exposure_total = sum(tte_total),
+        n = .N
+      ), by = treatment]
+
+      # Helper to safely extract values (returns 0 if not found)
+      get_val <- function(col, trt) {
+        val <- counts[treatment == trt][[col]]
+        if (length(val) == 0) 0 else val
+      }
 
       n_enrolled <- nrow(cut_data)
-      events_ctrl <- sum(counts[treatment == "Control"]$events)
-      events_exp <- sum(counts[treatment == "Experimental"]$events)
-      exp_ctrl <- sum(counts[treatment == "Control"]$exposure)
-      exp_exp <- sum(counts[treatment == "Experimental"]$exposure)
+      n_ctrl <- get_val("n", "Control")
+      n_exp <- get_val("n", "Experimental")
+      events_ctrl <- get_val("events", "Control")
+      events_exp <- get_val("events", "Experimental")
+      exp_at_risk_ctrl <- get_val("exposure_at_risk", "Control")
+      exp_at_risk_exp <- get_val("exposure_at_risk", "Experimental")
+      exp_total_ctrl <- get_val("exposure_total", "Control")
+      exp_total_exp <- get_val("exposure_total", "Experimental")
       events_total <- events_ctrl + events_exp
 
       z_stat <- NA_real_
+      estimate <- NA_real_
+      se <- NA_real_
+      method_used <- NA_character_
+      dispersion <- NA_real_
       blinded_info <- NA_real_
       unblinded_info <- NA_real_
 
@@ -165,6 +192,10 @@ sim_gs_nbinom <- function(
 
         if (!is.null(test_res)) {
           z_stat <- test_res$z
+          estimate <- test_res$estimate
+          se <- test_res$se
+          method_used <- test_res$method
+          dispersion <- test_res$dispersion
           unblinded_info <- 1 / test_res$se^2
 
           # Blinded info estimation
@@ -184,12 +215,20 @@ sim_gs_nbinom <- function(
         analysis = k,
         analysis_time = cut_time,
         n_enrolled = n_enrolled,
+        n_ctrl = n_ctrl,
+        n_exp = n_exp,
         events_total = events_total,
         events_ctrl = events_ctrl,
         events_exp = events_exp,
-        exposure_ctrl = exp_ctrl,
-        exposure_exp = exp_exp,
+        exposure_at_risk_ctrl = exp_at_risk_ctrl,
+        exposure_at_risk_exp = exp_at_risk_exp,
+        exposure_total_ctrl = exp_total_ctrl,
+        exposure_total_exp = exp_total_exp,
         z_stat = z_stat,
+        estimate = estimate,
+        se = se,
+        method_used = method_used,
+        dispersion = dispersion,
         blinded_info = blinded_info,
         unblinded_info = unblinded_info
       )

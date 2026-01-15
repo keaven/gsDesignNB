@@ -48,6 +48,10 @@
 #'     \item{events}{A vector with expected total events per analysis}
 #'     \item{events1}{A vector with expected events per analysis for group 1}
 #'     \item{events2}{A vector with expected events per analysis for group 2}
+#'     \item{exposure}{A vector with expected average calendar exposure per analysis}
+#'     \item{exposure_at_risk1}{A vector with expected at-risk exposure per analysis for group 1}
+#'     \item{exposure_at_risk2}{A vector with expected at-risk exposure per analysis for group 2}
+#'     \item{variance}{A vector with variance of log rate ratio per analysis}
 #'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
 #'   }
 #'   Note that `n.I` in the returned object represents the statistical information
@@ -156,6 +160,10 @@ gsNBCalendar <- function(
   events_at_analysis <- numeric(k)
   events1_at_analysis <- numeric(k)
   events2_at_analysis <- numeric(k)
+  exposure_at_analysis <- numeric(k)
+  exposure_at_risk1_at_analysis <- numeric(k)
+  exposure_at_risk2_at_analysis <- numeric(k)
+  variance_at_analysis <- numeric(k)
   
   for (i in 1:k) {
     # We use sample_size_nbinom to calculate the properties at time t
@@ -183,6 +191,10 @@ gsNBCalendar <- function(
     events_at_analysis[i] <- res_i$total_events
     events1_at_analysis[i] <- res_i$events_n1
     events2_at_analysis[i] <- res_i$events_n2
+    exposure_at_analysis[i] <- res_i$exposure[1]
+    exposure_at_risk1_at_analysis[i] <- res_i$exposure_at_risk_n1
+    exposure_at_risk2_at_analysis[i] <- res_i$exposure_at_risk_n2
+    variance_at_analysis[i] <- res_i$variance
   }
 
   # Update the gsDesign object with the actual information and timing
@@ -207,6 +219,10 @@ gsNBCalendar <- function(
   result$events <- events_at_analysis
   result$events1 <- events1_at_analysis
   result$events2 <- events2_at_analysis
+  result$exposure <- exposure_at_analysis
+  result$exposure_at_risk1 <- exposure_at_risk1_at_analysis
+  result$exposure_at_risk2 <- exposure_at_risk2_at_analysis
+  result$variance <- variance_at_analysis
   result$ratio <- ratio
   result$usTime <- usTime
   result$lsTime <- lsTime
@@ -375,7 +391,7 @@ compute_info_at_time <- function(
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
 #'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 #' )
-#' gs_design <- gsNBCalendar(nb_ss, k = 3)
+#' gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 18, 24))
 #' summary(gs_design)
 #'
 #' # For tabular bounds summary, use gsBoundSummary() directly:
@@ -505,7 +521,7 @@ summary.gsNB <- function(object, ...) {
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
 #'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 #' )
-#' gs_design <- gsNBCalendar(nb_ss, k = 3)
+#' gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 18, 24))
 #' s <- summary(gs_design)
 #' print(s)
 print.gsNBsummary <- function(x, ...) {
@@ -533,7 +549,7 @@ print.gsNBsummary <- function(x, ...) {
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
 #'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
 #' )
-#' gs_design <- gsNBCalendar(nb_ss, k = 3)
+#' gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 18, 24))
 #' gs_integer <- toInteger(gs_design)
 toInteger <- function(x, ...) {
   UseMethod("toInteger")

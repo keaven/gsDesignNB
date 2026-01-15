@@ -20,6 +20,7 @@ library(gsDesignNB)
 library(data.table)
 library(ggplot2)
 library(gt)
+library(scales)
 ```
 
 This vignette demonstrates how to use the `nb_sim()` function to simulate a 2-arm clinical trial with recurrent event outcomes.

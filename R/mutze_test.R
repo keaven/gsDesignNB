@@ -1,8 +1,8 @@
-#' Wald test for treatment effect using negative binomial model (Mütze et al.)
+#' Wald test for treatment effect using negative binomial model (Mutze et al.)
 #'
 #' Fits a negative binomial (or Poisson) log-rate model to the aggregated
 #' subject-level data produced by [cut_data_by_date()]. The method matches the
-#' Wald test described by Mütze et al. (2019) for comparing treatment arms with
+#' Wald test described by Mutze et al. (2019) for comparing treatment arms with
 #' recurrent event outcomes.
 #'
 #' @param data A data frame with at least the columns `treatment`, `events`, and
@@ -132,7 +132,7 @@ mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95, sid
 
 #' @export
 print.mutze_test <- function(x, ...) {
-  cat("Mütze Test Results\n")
+  cat("Mutze Test Results\n")
   cat("==================\n\n")
   cat(paste("Method:    ", x$method, "\n"))
   cat(sprintf("Estimate:   %.4f\n", x$estimate))
