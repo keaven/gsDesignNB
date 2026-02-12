@@ -85,6 +85,10 @@ Output value contains all elements from
 \item{events}{A vector with expected total events per analysis}
 \item{events1}{A vector with expected events per analysis for group 1}
 \item{events2}{A vector with expected events per analysis for group 2}
+\item{exposure}{A vector with expected average calendar exposure per analysis}
+\item{exposure_at_risk1}{A vector with expected at-risk exposure per analysis for group 1}
+\item{exposure_at_risk2}{A vector with expected at-risk exposure per analysis for group 2}
+\item{variance}{A vector with variance of log rate ratio per analysis}
 \item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
 }
 Note that \code{n.I} in the returned object represents the statistical information

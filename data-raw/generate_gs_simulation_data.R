@@ -36,9 +36,9 @@ gs_nb <- gsNBCalendar(
   lsTime = NULL, # Spending based on information
 
 ) |> gsDesignNB::toInteger()
-cat("  n per arm:", gs_nb$n.I, "\n")
-cat("  timing:", gs_nb$timing, "\n")
-
+cat("  n per arm:", gs_nb$n1[gs_nb$k], "\n")
+cat("  IF:", gs_nb$timing, "\n")
+cat("  alpha-spending:L ", cumsum(gs_nb$upper$spend), "\n")
 n_target <- ceiling(nb_ss$n_total)
 enroll_rate <- data.frame(rate = n_target / 12, duration = 12)
 fail_rate <- data.frame(

@@ -36,11 +36,19 @@ cut_data_by_date <- function(data, cut_date, event_gap = 0, ...) {
   UseMethod("cut_data_by_date")
 }
 
+#' @describeIn cut_data_by_date Default method.
+#'
+#' @return A data frame with one row per subject randomized prior to `cut_date`.
+#'   This method stops with an error for unsupported classes.
 #' @export
 cut_data_by_date.default <- function(data, cut_date, event_gap = 0, ...) {
   stop("No cut_data_by_date() method for objects of class ", class(data)[1], call. = FALSE)
 }
 
+#' @describeIn cut_data_by_date Method for `nb_sim` data.
+#'
+#' @return A data frame with one row per subject randomized prior to `cut_date`.
+#'   Includes total events and follow-up time within the cut window.
 #' @export
 cut_data_by_date.nb_sim_data <- function(data, cut_date, event_gap = 0, ...) {
   if (is.null(cut_date) || length(cut_date) != 1L || !is.finite(cut_date)) {
@@ -111,6 +119,10 @@ cut_data_by_date.nb_sim_data <- function(data, cut_date, event_gap = 0, ...) {
   out
 }
 
+#' @describeIn cut_data_by_date Method for `nb_sim_seasonal` data.
+#'
+#' @return A data frame with one row per subject randomized prior to `cut_date`.
+#'   Includes season and follow-up time within the cut window.
 #' @export
 cut_data_by_date.nb_sim_seasonal <- function(data, cut_date, event_gap = 0, ...) {
   if (is.null(cut_date) || length(cut_date) != 1L || !is.finite(cut_date)) {

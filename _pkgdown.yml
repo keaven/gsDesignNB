@@ -42,7 +42,9 @@ reference:
       - blinded_ssr
       - unblinded_ssr
       - calculate_blinded_info
+      - estimate_nb_mom
       - mutze_test
+      - print.mutze_test
       - cut_data_by_date
       - cut_completers
       - cut_date_for_completers

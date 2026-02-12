@@ -56,14 +56,26 @@ Columns include:
 \item{analysis}{Analysis index}
 \item{analysis_time}{Calendar time of analysis}
 \item{n_enrolled}{Number of subjects enrolled}
+\item{n_ctrl}{Number of subjects in control group}
+\item{n_exp}{Number of subjects in experimental group}
 \item{events_total}{Total events observed}
 \item{events_ctrl}{Events in control group}
 \item{events_exp}{Events in experimental group}
-\item{exposure_ctrl}{Total exposure in control group}
-\item{exposure_exp}{Total exposure in experimental group}
+\item{exposure_at_risk_ctrl}{Exposure at risk in control group (adjusted for event gaps)}
+\item{exposure_at_risk_exp}{Exposure at risk in experimental group (adjusted for event gaps)}
+\item{exposure_total_ctrl}{Total exposure in control group (calendar follow-up)}
+\item{exposure_total_exp}{Total exposure in experimental group (calendar follow-up)}
 \item{z_stat}{Z-statistic from the Wald test (positive favors experimental if rate ratio < 1)}
-\item{blinded_info}{Estimated blinded statistical information}
-\item{unblinded_info}{Observed unblinded statistical information}
+\item{estimate}{Estimated log rate ratio from the model}
+\item{se}{Standard error of the estimate}
+\item{method_used}{Method used for inference ("nb" or "poisson")}
+\item{dispersion}{Estimated dispersion parameter from the model}
+\item{blinded_info}{Estimated blinded statistical information (ML)}
+\item{unblinded_info}{Observed unblinded statistical information (ML)}
+\item{info_unblinded_ml}{Observed unblinded statistical information (ML)}
+\item{info_blinded_ml}{Estimated blinded statistical information (ML)}
+\item{info_unblinded_mom}{Observed unblinded statistical information (Method of Moments)}
+\item{info_blinded_mom}{Estimated blinded statistical information (Method of Moments)}
 }
 }
 \description{

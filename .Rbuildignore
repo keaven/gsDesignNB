@@ -10,3 +10,4 @@
 \.DS_Store$
 ^codecov\.yml$
 ^AGENTS\.md$
+^cran-comments\.md$

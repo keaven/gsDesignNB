@@ -2,6 +2,7 @@
 % Please edit documentation in R/mutze_test.R
 \name{mutze_test}
 \alias{mutze_test}
+\alias{print.mutze_test}
 \title{Wald test for treatment effect using negative binomial model (Mutze et al.)}
 \usage{
 mutze_test(
@@ -11,6 +12,8 @@ mutze_test(
   sided = 1,
   poisson_threshold = 1000
 )
+
+\method{print}{mutze_test}(x, ...)
 }
 \arguments{
 \item{data}{A data frame with at least the columns \code{treatment}, \code{events}, and
@@ -28,6 +31,10 @@ Poisson regression if theta (the NB shape parameter) is outside the range
 \verb{[1/poisson_threshold, poisson_threshold]}. Very large theta indicates
 near-Poisson data, while very small theta indicates extreme overdispersion
 with unstable estimates. Default is 1000.}
+
+\item{x}{An object of class \code{mutze_test}.}
+
+\item{...}{Additional arguments (currently ignored).}
 }
 \value{
 An object of class \code{mutze_test} containing the fitted model summary with elements:
@@ -41,6 +48,8 @@ An object of class \code{mutze_test} containing the fitted model summary with el
 \item \code{dispersion}: estimated dispersion (theta) when \code{method = "nb"}.
 \item \code{group_summary}: observed subjects/events/exposure per treatment.
 }
+
+Invisibly returns the input object.
 }
 \description{
 Fits a negative binomial (or Poisson) log-rate model to the aggregated
@@ -48,6 +57,11 @@ subject-level data produced by \code{\link[=cut_data_by_date]{cut_data_by_date()
 Wald test described by Mutze et al. (2019) for comparing treatment arms with
 recurrent event outcomes.
 }
+\section{Methods (by generic)}{
+\itemize{
+\item \code{print(mutze_test)}: Print method for \code{mutze_test} objects.
+
+}}
 \examples{
 enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
 fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))

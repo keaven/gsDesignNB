@@ -130,6 +130,11 @@ mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95, sid
   res
 }
 
+#' @describeIn mutze_test Print method for `mutze_test` objects.
+#' @param x An object of class `mutze_test`.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @return Invisibly returns the input object.
 #' @export
 print.mutze_test <- function(x, ...) {
   cat("Mutze Test Results\n")

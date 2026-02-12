@@ -39,6 +39,24 @@
 #' @importFrom utils tail
 #'
 #' @export
+#'
+#' @examples
+#' interim <- data.frame(
+#'   events = c(1, 2, 1, 3),
+#'   tte = c(0.8, 1.0, 1.2, 0.9),
+#'   treatment = c("Control", "Control", "Experimental", "Experimental")
+#' )
+#' unblinded_ssr(
+#'   interim,
+#'   ratio = 1,
+#'   lambda1_planning = 0.5,
+#'   lambda2_planning = 0.3,
+#'   power = 0.8,
+#'   alpha = 0.025,
+#'   accrual_rate = 10,
+#'   accrual_duration = 12,
+#'   trial_duration = 18
+#' )
 unblinded_ssr <- function(data,
                           ratio = 1,
                           lambda1_planning,

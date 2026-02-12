@@ -1,3 +1,7 @@
+# gsDesignNB 0.2.6
+
+- First CRAN release.
+
 # gsDesignNB 0.2.5
 
 - Added `rr0` parameter to `sample_size_nbinom()` and `blinded_ssr()` to support non-inferiority and super-superiority testing.

@@ -43,8 +43,12 @@
 #'     \item{se}{Standard error of the estimate}
 #'     \item{method_used}{Method used for inference ("nb" or "poisson")}
 #'     \item{dispersion}{Estimated dispersion parameter from the model}
-#'     \item{blinded_info}{Estimated blinded statistical information}
-#'     \item{unblinded_info}{Observed unblinded statistical information}
+#'     \item{blinded_info}{Estimated blinded statistical information (ML)}
+#'     \item{unblinded_info}{Observed unblinded statistical information (ML)}
+#'     \item{info_unblinded_ml}{Observed unblinded statistical information (ML)}
+#'     \item{info_blinded_ml}{Estimated blinded statistical information (ML)}
+#'     \item{info_unblinded_mom}{Observed unblinded statistical information (Method of Moments)}
+#'     \item{info_blinded_mom}{Estimated blinded statistical information (Method of Moments)}
 #'   }
 #'
 #' @importFrom data.table as.data.table
@@ -183,11 +187,21 @@ sim_gs_nbinom <- function(
       se <- NA_real_
       method_used <- NA_character_
       dispersion <- NA_real_
+      
+      # Information estimates
+      info_unblinded_ml <- NA_real_
+      info_blinded_ml <- NA_real_
+      info_unblinded_mom <- NA_real_
+      info_blinded_mom <- NA_real_
+      
+      # Legacy columns (mapped to ML)
       blinded_info <- NA_real_
       unblinded_info <- NA_real_
 
       # Run analysis if sufficient data
       if (n_enrolled >= 4 && events_total >= 2) {
+        
+        # --- 1. Unblinded ML ---
         test_res <- tryCatch(mutze_test(cut_data), error = function(e) NULL)
 
         if (!is.null(test_res)) {
@@ -196,17 +210,90 @@ sim_gs_nbinom <- function(
           se <- test_res$se
           method_used <- test_res$method
           dispersion <- test_res$dispersion
-          unblinded_info <- 1 / test_res$se^2
+          
+          info_unblinded_ml <- 1 / test_res$se^2
+          unblinded_info <- info_unblinded_ml
+        }
 
-          # Blinded info estimation
-          blinded_res <- calculate_blinded_info(
+        # --- 2. Blinded ML ---
+        blinded_res <- calculate_blinded_info(
             cut_data,
             ratio = ratio_plan,
             lambda1_planning = lambda1_plan,
             lambda2_planning = lambda2_plan,
             event_gap = event_gap
-          )
-          blinded_info <- blinded_res$blinded_info
+        )
+        info_blinded_ml <- blinded_res$blinded_info
+        blinded_info <- info_blinded_ml
+        
+        # --- Helper for Info Calculation ---
+        # Calculates Fisher info for log-rate-ratio given specific parameters and data
+        calc_info <- function(dat, lam1, lam2, k) {
+          # Unblinded calculation: sum per group
+          dat_c <- dat[dat$treatment == "Control", ]
+          dat_e <- dat[dat$treatment == "Experimental", ]
+          
+          # Info = 1 / (1/Info_C + 1/Info_E)
+          # Info_group = sum( mu / (1 + k*mu) )
+          
+          mu_c <- lam1 * dat_c$tte
+          term_c <- sum(mu_c / (1 + k * mu_c))
+          
+          mu_e <- lam2 * dat_e$tte
+          term_e <- sum(mu_e / (1 + k * mu_e))
+          
+          if(term_c <= 0 || term_e <= 0) return(0)
+          
+          1 / (1/term_c + 1/term_e)
+        }
+        
+        # --- 3. Unblinded MoM ---
+        mom_unblinded <- tryCatch(estimate_nb_mom(cut_data, group = "treatment"), error = function(e) NULL)
+        if (!is.null(mom_unblinded) && !any(is.na(mom_unblinded$lambda))) {
+             # lambda is named vector c("Control" = ..., "Experimental" = ...)
+             # Ensure we map correctly
+             l1_mom <- mom_unblinded$lambda["Control"]
+             l2_mom <- mom_unblinded$lambda["Experimental"]
+             k_mom <- mom_unblinded$dispersion
+             
+             # If names missing or different, try positional (usually factor order Control, Exp)
+             if(is.na(l1_mom)) l1_mom <- mom_unblinded$lambda[1]
+             if(is.na(l2_mom)) l2_mom <- mom_unblinded$lambda[2]
+             
+             info_unblinded_mom <- calc_info(cut_data, l1_mom, l2_mom, k_mom)
+        }
+        
+        # --- 4. Blinded MoM ---
+        mom_blinded <- tryCatch(estimate_nb_mom(cut_data), error = function(e) NULL)
+        if (!is.null(mom_blinded)) {
+             l_agg <- mom_blinded$lambda
+             k_agg <- mom_blinded$dispersion
+             
+             # Split lambda using planning ratio (similar to calculate_blinded_info)
+             # Assumption: lambda_agg is mixture of l1 and l2 weighted by sample size/allocation
+             p1 <- 1 / (1 + ratio_plan)
+             p2 <- ratio_plan / (1 + ratio_plan)
+             rr_plan <- lambda2_plan / lambda1_plan
+             
+             l1_adj <- l_agg / (p1 + p2 * rr_plan)
+             l2_adj <- l1_adj * rr_plan
+             
+             # For Blinded Info, we treat the data as if we don't know the treatment,
+             # effectively calculating the expected information.
+             # Using the .blinded_info_from_tte logic locally:
+             
+             mu1 <- l1_adj * cut_data$tte
+             mu2 <- l2_adj * cut_data$tte
+             
+             w1 <- p1 * sum(mu1 / (1 + k_agg * mu1))
+             w2 <- p2 * sum(mu2 / (1 + k_agg * mu2))
+             
+             if (w1 > 0 && w2 > 0) {
+                var_log_rr <- 1/w1 + 1/w2
+                info_blinded_mom <- 1 / var_log_rr
+             } else {
+                info_blinded_mom <- 0
+             }
         }
       }
 
@@ -230,7 +317,11 @@ sim_gs_nbinom <- function(
         method_used = method_used,
         dispersion = dispersion,
         blinded_info = blinded_info,
-        unblinded_info = unblinded_info
+        unblinded_info = unblinded_info, # Legacy
+        info_unblinded_ml = info_unblinded_ml,
+        info_blinded_ml = info_blinded_ml,
+        info_unblinded_mom = info_unblinded_mom,
+        info_blinded_mom = info_blinded_mom
       )
     }
     do.call(rbind, res_list)
