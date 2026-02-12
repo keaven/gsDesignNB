@@ -154,8 +154,12 @@ analysis_data %>%
     TotalEvents = sum(events),
     Rate = sum(events) / sum(tte)
   )
-#> `summarise()` has grouped output by 'season'. You can override using the
-#> `.groups` argument.
+#> `summarise()` has regrouped the output.
+#> ℹ Summaries were computed grouped by season and treatment.
+#> ℹ Output is grouped by season.
+#> ℹ Use `summarise(.groups = "drop_last")` to silence this message.
+#> ℹ Use `summarise(.by = c(season, treatment))` for per-operation grouping
+#>   (`?dplyr::dplyr_by`) instead.
 #> # A tibble: 8 × 6
 #> # Groups:   season [4]
 #>   season treatment    Subjects TotalExposure TotalEvents  Rate
@@ -245,10 +249,10 @@ inverse of this variance.
 # Variance of the treatment effect coefficient
 var_beta <- vcov(fit)["treatmentExperimental", "treatmentExperimental"]
 message("Variance of Treatment Effect (log-scale): ", var_beta)
-#> Variance of Treatment Effect (log-scale): 1.37404900110776
+#> Variance of Treatment Effect (log-scale): 1.37404900110775
 
 # Statistical Information
 info <- 1 / var_beta
 message("Statistical Information: ", info)
-#> Statistical Information: 0.727776083090051
+#> Statistical Information: 0.727776083090052
 ```

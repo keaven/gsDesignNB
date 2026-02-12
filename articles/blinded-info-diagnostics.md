@@ -226,6 +226,28 @@ When \\k\\ is very large (4454), the denominator becomes huge: \\1 +
 This makes \\w_j\\ approximately 2000 times smaller than it should be,
 causing the information to collapse to near-zero.
 
+### Method of Moments Comparison
+
+Here we compare the problematic MLE estimate with the Method of Moments
+(MoM) estimator.
+
+``` r
+# Calculate MoM estimates
+mom_res <- estimate_nb_mom(df)
+
+cat("Method of Moments (Blinded) Estimation:\n")
+#> Method of Moments (Blinded) Estimation:
+cat("  Lambda (Rate):", round(mom_res$lambda, 4), "\n")
+#>   Lambda (Rate): 0.1169
+cat("  Dispersion (k):", round(mom_res$dispersion, 4), "\n")
+#>   Dispersion (k): 0.3292
+```
+
+The MoM estimator produces a much more reasonable dispersion estimate
+compared to the MLE’s 4454. This suggests the MoM approach is more
+robust to this specific data distribution where the “blinded” assumption
+(single rate) is violated by the treatment effect.
+
 ## Dataset 2: Extreme High Blinded Information
 
 This dataset was identified from simulation 630 in the group-sequential
@@ -360,6 +382,26 @@ This makes \\w_j\\ very large, and since variance = \\1/w_1 + 1/w_2\\,
 the variance approaches zero, causing information = 1/variance to
 overflow to infinity.
 
+### Method of Moments Comparison
+
+Again, we compare with the Method of Moments (MoM) estimator.
+
+``` r
+# Calculate MoM estimates
+mom_res_2 <- estimate_nb_mom(df2)
+
+cat("Method of Moments (Blinded) Estimation:\n")
+#> Method of Moments (Blinded) Estimation:
+cat("  Lambda (Rate):", round(mom_res_2$lambda, 4), "\n")
+#>   Lambda (Rate): 0.0926
+cat("  Dispersion (k):", mom_res_2$dispersion, "\n")
+#>   Dispersion (k): 0.403252
+```
+
+In this case, the MoM estimator likely returns a positive dispersion (or
+0 if underdispersed), avoiding the numerical instability of the infinite
+theta from the MLE.
+
 ### Why the Mutze Test Falls Back to Poisson
 
 Note that `mutze_test` reports `dispersion = Inf` and uses the “Poisson
@@ -393,6 +435,12 @@ don’t represent the true data-generating process.
 4.  **Fallback to unblinded**: When blinded estimation produces extreme
     values, fall back to the unblinded information
 
+5.  **Use Method of Moments (MoM)**: The analysis above demonstrates
+    that a simple Method of Moments estimator is far more robust than
+    `glm.nb` for blinded parameter estimation in these edge cases. It
+    provides reasonable dispersion estimates even when the blinded MLE
+    fails or returns boundary values.
+
 ``` r
 sessionInfo()
 #> R version 4.5.2 (2025-10-31)
@@ -416,11 +464,12 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] MASS_7.3-65       ggplot2_4.0.1     data.table_1.18.0 gsDesignNB_0.2.5 
+#> [1] MASS_7.3-65         ggplot2_4.0.2       data.table_1.18.2.1
+#> [4] gsDesignNB_0.2.6   
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gt_1.2.0            sass_0.4.10         future_1.68.0      
-#>  [4] generics_0.1.4      tidyr_1.3.2         xml2_1.5.1         
+#>  [1] gt_1.3.0            sass_0.4.10         future_1.69.0      
+#>  [4] generics_0.1.4      tidyr_1.3.2         xml2_1.5.2         
 #>  [7] r2rtf_1.3.0         lattice_0.22-7      listenv_0.10.0     
 #> [10] digest_0.6.39       magrittr_2.0.4      evaluate_1.0.5     
 #> [13] grid_4.5.2          RColorBrewer_1.1-3  iterators_1.0.14   
@@ -431,13 +480,13 @@ sessionInfo()
 #> [28] cli_3.6.5           rlang_1.1.7         parallelly_1.46.1  
 #> [31] future.apply_1.20.1 splines_4.5.2       withr_3.0.2        
 #> [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.8.0     
-#> [37] tools_4.5.2         parallel_4.5.2      doFuture_1.1.3     
-#> [40] dplyr_1.1.4         globals_0.18.0      vctrs_0.6.5        
+#> [37] tools_4.5.2         parallel_4.5.2      doFuture_1.2.0     
+#> [40] dplyr_1.2.0         globals_0.19.0      vctrs_0.7.1        
 #> [43] R6_2.6.1            lifecycle_1.0.5     fs_1.6.6           
 #> [46] htmlwidgets_1.6.4   ragg_1.5.0          pkgconfig_2.0.3    
 #> [49] desc_1.4.3          pkgdown_2.2.0       pillar_1.11.1      
-#> [52] bslib_0.9.0         gtable_0.3.6        glue_1.8.0         
-#> [55] Rcpp_1.1.1          systemfonts_1.3.1   xfun_0.55          
+#> [52] bslib_0.10.0        gtable_0.3.6        glue_1.8.0         
+#> [55] Rcpp_1.1.1          systemfonts_1.3.1   xfun_0.56          
 #> [58] tibble_3.3.1        tidyselect_1.2.1    knitr_1.51         
 #> [61] farver_2.1.2        xtable_1.8-4        htmltools_0.5.9    
 #> [64] labeling_0.4.3      rmarkdown_2.30      compiler_4.5.2     

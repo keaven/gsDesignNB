@@ -15,7 +15,7 @@ binomial outcomes, performing interim analyses at specified calendar times."></h
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -134,6 +134,12 @@ Columns include:</p><dl><dt>sim</dt>
 <dt>n_enrolled</dt>
 <dd><p>Number of subjects enrolled</p></dd>
 
+<dt>n_ctrl</dt>
+<dd><p>Number of subjects in control group</p></dd>
+
+<dt>n_exp</dt>
+<dd><p>Number of subjects in experimental group</p></dd>
+
 <dt>events_total</dt>
 <dd><p>Total events observed</p></dd>
 
@@ -143,20 +149,50 @@ Columns include:</p><dl><dt>sim</dt>
 <dt>events_exp</dt>
 <dd><p>Events in experimental group</p></dd>
 
-<dt>exposure_ctrl</dt>
-<dd><p>Total exposure in control group</p></dd>
+<dt>exposure_at_risk_ctrl</dt>
+<dd><p>Exposure at risk in control group (adjusted for event gaps)</p></dd>
 
-<dt>exposure_exp</dt>
-<dd><p>Total exposure in experimental group</p></dd>
+<dt>exposure_at_risk_exp</dt>
+<dd><p>Exposure at risk in experimental group (adjusted for event gaps)</p></dd>
+
+<dt>exposure_total_ctrl</dt>
+<dd><p>Total exposure in control group (calendar follow-up)</p></dd>
+
+<dt>exposure_total_exp</dt>
+<dd><p>Total exposure in experimental group (calendar follow-up)</p></dd>
 
 <dt>z_stat</dt>
 <dd><p>Z-statistic from the Wald test (positive favors experimental if rate ratio &lt; 1)</p></dd>
 
+<dt>estimate</dt>
+<dd><p>Estimated log rate ratio from the model</p></dd>
+
+<dt>se</dt>
+<dd><p>Standard error of the estimate</p></dd>
+
+<dt>method_used</dt>
+<dd><p>Method used for inference ("nb" or "poisson")</p></dd>
+
+<dt>dispersion</dt>
+<dd><p>Estimated dispersion parameter from the model</p></dd>
+
 <dt>blinded_info</dt>
-<dd><p>Estimated blinded statistical information</p></dd>
+<dd><p>Estimated blinded statistical information (ML)</p></dd>
 
 <dt>unblinded_info</dt>
-<dd><p>Observed unblinded statistical information</p></dd>
+<dd><p>Observed unblinded statistical information (ML)</p></dd>
+
+<dt>info_unblinded_ml</dt>
+<dd><p>Observed unblinded statistical information (ML)</p></dd>
+
+<dt>info_blinded_ml</dt>
+<dd><p>Estimated blinded statistical information (ML)</p></dd>
+
+<dt>info_unblinded_mom</dt>
+<dd><p>Observed unblinded statistical information (Method of Moments)</p></dd>
+
+<dt>info_blinded_mom</dt>
+<dd><p>Estimated blinded statistical information (Method of Moments)</p></dd>
 
 
 </dl></div>
@@ -210,11 +246,16 @@ Columns include:</p><dl><dt>sim</dt>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2          38.937872 -2.7264734 -1.0597950 0.3887054 Poisson Wald (fallback)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3           5.387439 -0.6710972 -0.7749088 1.1546894 Poisson Wald (fallback)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4          26.047756 -1.7504986 -0.8915788 0.5093285  Negative binomial Wald</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   dispersion blinded_info unblinded_info</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Inf     2.391287      1.6000076</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Inf     8.157183      6.6184888</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Inf     0.959958      0.7500145</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4.406507     3.842925      3.8548194</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   dispersion blinded_info unblinded_info info_unblinded_ml info_blinded_ml</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Inf     2.391287      1.6000076         1.6000076        2.391287</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Inf     8.157183      6.6184888         6.6184888        8.157183</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Inf     0.959958      0.7500145         0.7500145        0.959958</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   4.406507     3.842925      3.8548194         3.8548194        3.842925</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   info_unblinded_mom info_blinded_mom</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1.600000         2.394325</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           6.617647         8.160000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           0.750000         0.960000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           4.006873         4.097126</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

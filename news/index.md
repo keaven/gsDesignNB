@@ -1,5 +1,9 @@
 # Changelog
 
+## gsDesignNB 0.2.6
+
+- First CRAN release.
+
 ## gsDesignNB 0.2.5
 
 - Added `rr0` parameter to

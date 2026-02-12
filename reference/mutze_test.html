@@ -19,7 +19,7 @@ recurrent event outcomes."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,10 @@ recurrent event outcomes.</p>
 <span>  conf_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  sided <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  poisson_threshold <span class="op">=</span> <span class="fl">1000</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'mutze_test'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -93,6 +96,14 @@ Poisson regression if theta (the NB shape parameter) is outside the range
 near-Poisson data, while very small theta indicates extreme overdispersion
 with unstable estimates. Default is 1000.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>An object of class <code>mutze_test</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments (currently ignored).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -104,6 +115,12 @@ with unstable estimates. Default is 1000.</p></dd>
 <li><p><code>rate_ratio</code>: estimated rate ratio and its confidence interval.</p></li>
 <li><p><code>dispersion</code>: estimated dispersion (theta) when <code>method = "nb"</code>.</p></li>
 <li><p><code>group_summary</code>: observed subjects/events/exposure per treatment.</p></li>
+</ul><p>Invisibly returns the input object.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="methods-by-generic-">Methods (by generic)<a class="anchor" aria-label="anchor" href="#methods-by-generic-"></a></h2>
+
+<ul><li><p><code>print(mutze_test)</code>: Print method for <code>mutze_test</code> objects.</p></li>
 </ul></div>
 
     <div class="section level2">

@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,7 +107,7 @@ fitting on blinded (pooled) data.</p>
 <span>  <span class="va">data_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">".."</span>, <span class="st">"inst"</span>, <span class="st">"extdata"</span>, <span class="st">"problematic_dataset.rds"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="va">cut_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">data_path</span><span class="op">)</span></span>
-<span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cut_data</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cut_data</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="event-counts-summary">Event Counts Summary<a class="anchor" aria-label="anchor" href="#event-counts-summary"></a>
 </h3>
@@ -285,6 +285,26 @@ denominator becomes huge: <span class="math display">\[1 + 4454 \times
 collapse to near-zero.</p>
 </div>
 </div>
+<div class="section level3">
+<h3 id="method-of-moments-comparison">Method of Moments Comparison<a class="anchor" aria-label="anchor" href="#method-of-moments-comparison"></a>
+</h3>
+<p>Here we compare the problematic MLE estimate with the Method of
+Moments (MoM) estimator.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Calculate MoM estimates</span></span>
+<span><span class="va">mom_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_nb_mom.html">estimate_nb_mom</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Method of Moments (Blinded) Estimation:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Method of Moments (Blinded) Estimation:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Lambda (Rate):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mom_res</span><span class="op">$</span><span class="va">lambda</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Lambda (Rate): 0.1169</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Dispersion (k):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mom_res</span><span class="op">$</span><span class="va">dispersion</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Dispersion (k): 0.3292</span></span></code></pre></div>
+<p>The MoM estimator produces a much more reasonable dispersion estimate
+compared to the MLE’s 4454. This suggests the MoM approach is more
+robust to this specific data distribution where the “blinded” assumption
+(single rate) is violated by the treatment effect.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="dataset-2-extreme-high-blinded-information">Dataset 2: Extreme High Blinded Information<a class="anchor" aria-label="anchor" href="#dataset-2-extreme-high-blinded-information"></a>
@@ -293,18 +313,18 @@ collapse to near-zero.</p>
 group-sequential simulation, where
 <code>blinded_info = 1.84 × 10^38</code> — an astronomically large value
 indicating numerical overflow.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load the extreme high dataset (reproduced from simulation 630)</span></span>
 <span><span class="va">data_path_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"extreme_high_dataset.rds"</span>, package <span class="op">=</span> <span class="st">"gsDesignNB"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="va">data_path_2</span> <span class="op">==</span> <span class="st">""</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">data_path_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">".."</span>, <span class="st">"inst"</span>, <span class="st">"extdata"</span>, <span class="st">"extreme_high_dataset.rds"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="va">cut_data_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">data_path_2</span><span class="op">)</span></span>
-<span><span class="va">dt2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cut_data_2</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">dt2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cut_data_2</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="event-counts-summary-1">Event Counts Summary<a class="anchor" aria-label="anchor" href="#event-counts-summary-1"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Overall summary</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Total subjects:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dt2</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Total subjects: 313</span></span>
@@ -333,7 +353,7 @@ indicating numerical overflow.</p>
 <div class="section level3">
 <h3 id="what-happened-with-the-information-calculations-1">What Happened with the Information Calculations<a class="anchor" aria-label="anchor" href="#what-happened-with-the-information-calculations-1"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Blinded information calculation</span></span>
 <span><span class="va">blinded_res_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_blinded_info.html">calculate_blinded_info</a></span><span class="op">(</span></span>
 <span>  <span class="va">cut_data_2</span>,</span>
@@ -368,7 +388,7 @@ indicating numerical overflow.</p>
 <div class="section level4">
 <h4 id="root-cause-analysis-1">Root Cause Analysis<a class="anchor" aria-label="anchor" href="#root-cause-analysis-1"></a>
 </h4>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">cut_data_2</span><span class="op">)</span></span>
 <span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="va">df2</span><span class="op">[</span><span class="va">df2</span><span class="op">$</span><span class="va">tte</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="op">]</span></span>
 <span></span>
@@ -416,6 +436,24 @@ since variance = <span class="math inline">\(1/w_1 + 1/w_2\)</span>, the
 variance approaches zero, causing information = 1/variance to overflow
 to infinity.</p>
 </div>
+</div>
+<div class="section level3">
+<h3 id="method-of-moments-comparison-1">Method of Moments Comparison<a class="anchor" aria-label="anchor" href="#method-of-moments-comparison-1"></a>
+</h3>
+<p>Again, we compare with the Method of Moments (MoM) estimator.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Calculate MoM estimates</span></span>
+<span><span class="va">mom_res_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_nb_mom.html">estimate_nb_mom</a></span><span class="op">(</span><span class="va">df2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Method of Moments (Blinded) Estimation:\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Method of Moments (Blinded) Estimation:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Lambda (Rate):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mom_res_2</span><span class="op">$</span><span class="va">lambda</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Lambda (Rate): 0.0926</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  Dispersion (k):"</span>, <span class="va">mom_res_2</span><span class="op">$</span><span class="va">dispersion</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   Dispersion (k): 0.403252</span></span></code></pre></div>
+<p>In this case, the MoM estimator likely returns a positive dispersion
+(or 0 if underdispersed), avoiding the numerical instability of the
+infinite theta from the MLE.</p>
 </div>
 <div class="section level3">
 <h3 id="why-the-mutze-test-falls-back-to-poisson">Why the Mutze Test Falls Back to Poisson<a class="anchor" aria-label="anchor" href="#why-the-mutze-test-falls-back-to-poisson"></a>
@@ -477,8 +515,13 @@ blinded data</p></li>
 differs from unblinded info by more than a factor of 2-3</p></li>
 <li><p><strong>Fallback to unblinded</strong>: When blinded estimation
 produces extreme values, fall back to the unblinded information</p></li>
+<li><p><strong>Use Method of Moments (MoM)</strong>: The analysis above
+demonstrates that a simple Method of Moments estimator is far more
+robust than <code>glm.nb</code> for blinded parameter estimation in
+these edge cases. It provides reasonable dispersion estimates even when
+the blinded MLE fails or returns boundary values.</p></li>
 </ol>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -501,11 +544,12 @@ produces extreme values, fall back to the unblinded information</p></li>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] MASS_7.3-65       ggplot2_4.0.1     data.table_1.18.0 gsDesignNB_0.2.5 </span></span>
+<span><span class="co">#&gt; [1] MASS_7.3-65         ggplot2_4.0.2       data.table_1.18.2.1</span></span>
+<span><span class="co">#&gt; [4] gsDesignNB_0.2.6   </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] gt_1.2.0            sass_0.4.10         future_1.68.0      </span></span>
-<span><span class="co">#&gt;  [4] generics_0.1.4      tidyr_1.3.2         xml2_1.5.1         </span></span>
+<span><span class="co">#&gt;  [1] gt_1.3.0            sass_0.4.10         future_1.69.0      </span></span>
+<span><span class="co">#&gt;  [4] generics_0.1.4      tidyr_1.3.2         xml2_1.5.2         </span></span>
 <span><span class="co">#&gt;  [7] r2rtf_1.3.0         lattice_0.22-7      listenv_0.10.0     </span></span>
 <span><span class="co">#&gt; [10] digest_0.6.39       magrittr_2.0.4      evaluate_1.0.5     </span></span>
 <span><span class="co">#&gt; [13] grid_4.5.2          RColorBrewer_1.1-3  iterators_1.0.14   </span></span>
@@ -516,13 +560,13 @@ produces extreme values, fall back to the unblinded information</p></li>
 <span><span class="co">#&gt; [28] cli_3.6.5           rlang_1.1.7         parallelly_1.46.1  </span></span>
 <span><span class="co">#&gt; [31] future.apply_1.20.1 splines_4.5.2       withr_3.0.2        </span></span>
 <span><span class="co">#&gt; [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.8.0     </span></span>
-<span><span class="co">#&gt; [37] tools_4.5.2         parallel_4.5.2      doFuture_1.1.3     </span></span>
-<span><span class="co">#&gt; [40] dplyr_1.1.4         globals_0.18.0      vctrs_0.6.5        </span></span>
+<span><span class="co">#&gt; [37] tools_4.5.2         parallel_4.5.2      doFuture_1.2.0     </span></span>
+<span><span class="co">#&gt; [40] dplyr_1.2.0         globals_0.19.0      vctrs_0.7.1        </span></span>
 <span><span class="co">#&gt; [43] R6_2.6.1            lifecycle_1.0.5     fs_1.6.6           </span></span>
 <span><span class="co">#&gt; [46] htmlwidgets_1.6.4   ragg_1.5.0          pkgconfig_2.0.3    </span></span>
 <span><span class="co">#&gt; [49] desc_1.4.3          pkgdown_2.2.0       pillar_1.11.1      </span></span>
-<span><span class="co">#&gt; [52] bslib_0.9.0         gtable_0.3.6        glue_1.8.0         </span></span>
-<span><span class="co">#&gt; [55] Rcpp_1.1.1          systemfonts_1.3.1   xfun_0.55          </span></span>
+<span><span class="co">#&gt; [52] bslib_0.10.0        gtable_0.3.6        glue_1.8.0         </span></span>
+<span><span class="co">#&gt; [55] Rcpp_1.1.1          systemfonts_1.3.1   xfun_0.56          </span></span>
 <span><span class="co">#&gt; [58] tibble_3.3.1        tidyselect_1.2.1    knitr_1.51         </span></span>
 <span><span class="co">#&gt; [61] farver_2.1.2        xtable_1.8-4        htmltools_0.5.9    </span></span>
 <span><span class="co">#&gt; [64] labeling_0.4.3      rmarkdown_2.30      compiler_4.5.2     </span></span>

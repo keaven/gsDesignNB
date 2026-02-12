@@ -101,6 +101,14 @@ trial. Columns include:
 
   Number of subjects enrolled
 
+- n_ctrl:
+
+  Number of subjects in control group
+
+- n_exp:
+
+  Number of subjects in experimental group
+
 - events_total:
 
   Total events observed
@@ -113,26 +121,66 @@ trial. Columns include:
 
   Events in experimental group
 
-- exposure_ctrl:
+- exposure_at_risk_ctrl:
 
-  Total exposure in control group
+  Exposure at risk in control group (adjusted for event gaps)
 
-- exposure_exp:
+- exposure_at_risk_exp:
 
-  Total exposure in experimental group
+  Exposure at risk in experimental group (adjusted for event gaps)
+
+- exposure_total_ctrl:
+
+  Total exposure in control group (calendar follow-up)
+
+- exposure_total_exp:
+
+  Total exposure in experimental group (calendar follow-up)
 
 - z_stat:
 
   Z-statistic from the Wald test (positive favors experimental if rate
   ratio \< 1)
 
+- estimate:
+
+  Estimated log rate ratio from the model
+
+- se:
+
+  Standard error of the estimate
+
+- method_used:
+
+  Method used for inference ("nb" or "poisson")
+
+- dispersion:
+
+  Estimated dispersion parameter from the model
+
 - blinded_info:
 
-  Estimated blinded statistical information
+  Estimated blinded statistical information (ML)
 
 - unblinded_info:
 
-  Observed unblinded statistical information
+  Observed unblinded statistical information (ML)
+
+- info_unblinded_ml:
+
+  Observed unblinded statistical information (ML)
+
+- info_blinded_ml:
+
+  Estimated blinded statistical information (ML)
+
+- info_unblinded_mom:
+
+  Observed unblinded statistical information (Method of Moments)
+
+- info_blinded_mom:
+
+  Estimated blinded statistical information (Method of Moments)
 
 ## Examples
 
@@ -184,9 +232,14 @@ head(sim_results)
 #> 2          38.937872 -2.7264734 -1.0597950 0.3887054 Poisson Wald (fallback)
 #> 3           5.387439 -0.6710972 -0.7749088 1.1546894 Poisson Wald (fallback)
 #> 4          26.047756 -1.7504986 -0.8915788 0.5093285  Negative binomial Wald
-#>   dispersion blinded_info unblinded_info
-#> 1        Inf     2.391287      1.6000076
-#> 2        Inf     8.157183      6.6184888
-#> 3        Inf     0.959958      0.7500145
-#> 4   4.406507     3.842925      3.8548194
+#>   dispersion blinded_info unblinded_info info_unblinded_ml info_blinded_ml
+#> 1        Inf     2.391287      1.6000076         1.6000076        2.391287
+#> 2        Inf     8.157183      6.6184888         6.6184888        8.157183
+#> 3        Inf     0.959958      0.7500145         0.7500145        0.959958
+#> 4   4.406507     3.842925      3.8548194         3.8548194        3.842925
+#>   info_unblinded_mom info_blinded_mom
+#> 1           1.600000         2.394325
+#> 2           6.617647         8.160000
+#> 3           0.750000         0.960000
+#> 4           4.006873         4.097126
 ```

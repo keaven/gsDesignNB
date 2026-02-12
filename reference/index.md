@@ -54,7 +54,10 @@ re-estimation and interim analysis.
   : Unblinded sample size re-estimation for recurrent events
 - [`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md)
   : Calculate blinded statistical information
+- [`estimate_nb_mom()`](https://keaven.github.io/gsDesignNB/reference/estimate_nb_mom.md)
+  : Method of Moments Estimation for Negative Binomial Parameters
 - [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
+  [`print(`*`<mutze_test>`*`)`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
   : Wald test for treatment effect using negative binomial model (Mutze
   et al.)
 - [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md)

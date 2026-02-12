@@ -165,6 +165,22 @@ plus:
 
   A vector with expected events per analysis for group 2
 
+- exposure:
+
+  A vector with expected average calendar exposure per analysis
+
+- exposure_at_risk1:
+
+  A vector with expected at-risk exposure per analysis for group 1
+
+- exposure_at_risk2:
+
+  A vector with expected at-risk exposure per analysis for group 2
+
+- variance:
+
+  A vector with variance of log rate ratio per analysis
+
 - T:
 
   Calendar time at each analysis (if `analysis_times` provided)

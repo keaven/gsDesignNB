@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -176,12 +176,12 @@ reaching <code>max_followup</code>).</li>
 <p>We can aggregate the data to calculate the observed event rates and
 total follow-up time for each group.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sim_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">sim_data</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">sim_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">sim_data</span><span class="op">)</span></span>
 <span><span class="va">sim_dt</span><span class="op">[</span>, <span class="va">censor_followup</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">event</span> <span class="op">==</span> <span class="fl">0</span>, <span class="va">tte</span>, <span class="fl">0</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">summary_stats</span> <span class="op">&lt;-</span> <span class="va">sim_dt</span><span class="op">[</span></span>
 <span>  ,</span>
 <span>  <span class="fu">.</span><span class="op">(</span></span>
-<span>    n_subjects <span class="op">=</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/duplicated.html" class="external-link">uniqueN</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span>,</span>
+<span>    n_subjects <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html" class="external-link">uniqueN</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span>,</span>
 <span>    total_events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">event</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>    total_followup <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">censor_followup</span><span class="op">)</span>,</span>
 <span>    observed_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">event</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">censor_followup</span><span class="op">)</span></span>
@@ -855,7 +855,7 @@ Moments (MoM) estimator:</p>
 \bar{Y}}{\bar{Y}^2} \]</span></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Count events per subject</span></span>
-<span><span class="va">counts_nb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">sim_nb</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span>events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">event</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">id</span><span class="op">]</span></span>
+<span><span class="va">counts_nb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">sim_nb</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span>events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">event</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">id</span><span class="op">]</span></span>
 <span></span>
 <span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">counts_nb</span><span class="op">$</span><span class="va">events</span><span class="op">)</span></span>
 <span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">counts_nb</span><span class="op">$</span><span class="va">events</span><span class="op">)</span></span>
@@ -907,7 +907,7 @@ theoretical negative binomial distribution.</p>
 <span><span class="va">size</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">/</span><span class="va">k</span></span>
 <span><span class="va">max_events</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">obs_dist</span><span class="op">$</span><span class="va">events</span><span class="op">)</span></span>
 <span><span class="va">theo_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/NegBinomial.html" class="external-link">dnbinom</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="va">max_events</span>, size <span class="op">=</span> <span class="va">size</span>, mu <span class="op">=</span> <span class="va">mu</span><span class="op">)</span></span>
-<span><span class="va">theo_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
+<span><span class="va">theo_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
 <span>  events <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="va">max_events</span>,</span>
 <span>  N <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  prop <span class="op">=</span> <span class="va">theo_probs</span>,</span>

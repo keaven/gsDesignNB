@@ -117,3 +117,50 @@ A list containing:
 - target_info:
 
   Target statistical information required for the planned power.
+
+## Examples
+
+``` r
+interim <- data.frame(
+  events = c(1, 2, 1, 3),
+  tte = c(0.8, 1.0, 1.2, 0.9),
+  treatment = c("Control", "Control", "Experimental", "Experimental")
+)
+unblinded_ssr(
+  interim,
+  ratio = 1,
+  lambda1_planning = 0.5,
+  lambda2_planning = 0.3,
+  power = 0.8,
+  alpha = 0.025,
+  accrual_rate = 10,
+  accrual_duration = 12,
+  trial_duration = 18
+)
+#> Warning: iteration limit reached
+#> Warning: iteration limit reached
+#> $n_total_unblinded
+#> (Intercept) 
+#>          10 
+#> 
+#> $dispersion_unblinded
+#> [1] 1.428899e-05
+#> 
+#> $lambda1_unblinded
+#> (Intercept) 
+#>    1.666666 
+#> 
+#> $lambda2_unblinded
+#> (Intercept) 
+#>    1.904767 
+#> 
+#> $info_fraction
+#> [1] 0.0569915
+#> 
+#> $unblinded_info
+#> [1] 1.714243
+#> 
+#> $target_info
+#> [1] 30.07893
+#> 
+```

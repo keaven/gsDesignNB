@@ -16,6 +16,9 @@ mutze_test(
   sided = 1,
   poisson_threshold = 1000
 )
+
+# S3 method for class 'mutze_test'
+print(x, ...)
 ```
 
 ## Arguments
@@ -48,6 +51,14 @@ mutze_test(
   near-Poisson data, while very small theta indicates extreme
   overdispersion with unstable estimates. Default is 1000.
 
+- x:
+
+  An object of class `mutze_test`.
+
+- ...:
+
+  Additional arguments (currently ignored).
+
 ## Value
 
 An object of class `mutze_test` containing the fitted model summary with
@@ -68,6 +79,12 @@ elements:
 - `dispersion`: estimated dispersion (theta) when `method = "nb"`.
 
 - `group_summary`: observed subjects/events/exposure per treatment.
+
+Invisibly returns the input object.
+
+## Methods (by generic)
+
+- `print(mutze_test)`: Print method for `mutze_test` objects.
 
 ## Examples
 

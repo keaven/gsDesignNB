@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Sample Size Calculation and Simulation for Negative Binomial Outcomes • gsDesignNB</title>
+<title>Sample Size and Simulation for Negative Binomial Outcomes • gsDesignNB</title>
 <!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
   window.MathJax = {
     chtml: {
@@ -16,7 +16,7 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Sample Size Calculation and Simulation for Negative Binomial Outcomes">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Sample Size and Simulation for Negative Binomial Outcomes">
 <meta name="description" content="Provides tools for planning and simulating recurrent event trials with overdispersed count endpoints analyzed using negative binomial (or Poisson) rate models. Implements sample size and power calculations for fixed designs with variable accrual, dropout, maximum follow-up, and event gaps, including methods of Zhu and Lakkis (2014) &lt;doi:10.1002/sim.5947&gt; and Friede and Schmidli (2010) &lt;doi:10.3414/ME09-02-0060&gt;. Supports group sequential designs by adding calendar-time analysis schedules compatible with the gsDesign package and by estimating blinded information at interim looks. Includes simulation utilities for recurrent events (including seasonal rates), interim data truncation, and Wald-based inference for treatment rate ratios.">
 <meta property="og:description" content="Provides tools for planning and simulating recurrent event trials with overdispersed count endpoints analyzed using negative binomial (or Poisson) rate models. Implements sample size and power calculations for fixed designs with variable accrual, dropout, maximum follow-up, and event gaps, including methods of Zhu and Lakkis (2014) &lt;doi:10.1002/sim.5947&gt; and Friede and Schmidli (2010) &lt;doi:10.3414/ME09-02-0060&gt;. Supports group sequential designs by adding calendar-time analysis schedules compatible with the gsDesign package and by estimating blinded information at interim looks. Includes simulation utilities for recurrent events (including seasonal rates), interim data truncation, and Wald-based inference for treatment rate ratios.">
 </head>
@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">

@@ -8,6 +8,15 @@ with the total number of observed events and follow-up times.
 
 ``` r
 cut_data_by_date(data, cut_date, event_gap = 0, ...)
+
+# Default S3 method
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
+
+# S3 method for class 'nb_sim_data'
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
+
+# S3 method for class 'nb_sim_seasonal'
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
 ```
 
 ## Arguments
@@ -60,6 +69,24 @@ containing:
 - events:
 
   Number of observed events
+
+A data frame with one row per subject randomized prior to `cut_date`.
+This method stops with an error for unsupported classes.
+
+A data frame with one row per subject randomized prior to `cut_date`.
+Includes total events and follow-up time within the cut window.
+
+A data frame with one row per subject randomized prior to `cut_date`.
+Includes season and follow-up time within the cut window.
+
+## Methods (by class)
+
+- `cut_data_by_date(default)`: Default method.
+
+- `cut_data_by_date(nb_sim_data)`: Method for `nb_sim` data.
+
+- `cut_data_by_date(nb_sim_seasonal)`: Method for `nb_sim_seasonal`
+  data.
 
 ## Examples
 
