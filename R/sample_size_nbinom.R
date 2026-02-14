@@ -65,6 +65,22 @@
 #' 2014) to account for the non-linear dependence of the NB variance on
 #' exposure.
 #'
+#' ## Event gap correction (Jensen's inequality)
+#'
+#' When `event_gap` > 0, the naive effective rate
+#' \eqn{\lambda / (1 + \lambda g)} overestimates the true population-level
+#' effective rate because of subject-level heterogeneity (frailty).
+#' In the Gamma-Poisson mixture, each subject's rate
+#' \eqn{\Lambda_i \sim \mathrm{Gamma}(1/k, k\lambda)} is random.
+#' Since \eqn{f(x) = x/(1+xg)} is concave, Jensen's inequality gives
+#' \eqn{\mathrm{E}[f(\Lambda)] < f(\mathrm{E}[\Lambda])}.
+#'
+#' A second-order Taylor correction is applied:
+#' \deqn{\lambda_{\mathrm{eff}} \approx \frac{\lambda}{1+\lambda g}
+#'   \left(1 - \frac{k \lambda g}{(1+\lambda g)^2}\right)}
+#' This uses \eqn{f''(\lambda) = -2g/(1+\lambda g)^3} and
+#' \eqn{\mathrm{Var}(\Lambda) = k\lambda^2}.
+#'
 #' @return An object of class `sample_size_nbinom_result`, which is a list
 #'   containing:
 #' \describe{
@@ -377,9 +393,31 @@ sample_size_nbinom <- function(
 
   # Setup effective rates and exposures based on event_gap
   if (!is.null(event_gap) && !is.na(event_gap) && event_gap > 0) {
-    # Adjusted rates for calculation
-    lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
-    lambda2_eff <- lambda2 / (1 + lambda2 * event_gap)
+    # Second-order Taylor correction for Jensen's inequality bias.
+    # With subject-level frailty Lambda ~ Gamma(1/k, k*lambda), the
+    # population-level effective rate is E[Lambda / (1 + Lambda*gap)].
+    # Since f(x) = x/(1+x*g) is concave, E[f(Lambda)] < f(E[Lambda])
+    # by Jensen's inequality.
+    #
+    # Taylor expansion around E[Lambda] = lambda:
+    #   E[f(Lambda)] ~ f(lambda) + f''(lambda) * Var(Lambda) / 2
+    # where f''(x) = -2g / (1+xg)^3 and Var(Lambda) = k * lambda^2.
+    #
+    # This gives:
+    #   lambda_eff ~ lambda/(1+lambda*g) * (1 - k*lambda*g / (1+lambda*g)^2)
+    #
+    # Note: dispersion has already been expanded to length 2. Use the
+    # *base* dispersion (before Q inflation) for this correction since Q
+    # addresses variable follow-up, not frailty.
+    lambda1_eff <- lambda1 / (1 + lambda1 * event_gap) *
+      (1 - dispersion[1] * lambda1 * event_gap / (1 + lambda1 * event_gap)^2)
+    lambda2_eff <- lambda2 / (1 + lambda2 * event_gap) *
+      (1 - dispersion[2] * lambda2 * event_gap / (1 + lambda2 * event_gap)^2)
+
+    # Ensure effective rates remain positive (correction is small for
+    # reasonable parameter combinations but could go negative in extreme cases)
+    lambda1_eff <- max(lambda1_eff, 0)
+    lambda2_eff <- max(lambda2_eff, 0)
 
     # Adjusted exposures for reporting (at-risk)
     exposure1_at_risk <- exposure_calendar[1] / (1 + lambda1 * event_gap)

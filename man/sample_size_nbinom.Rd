@@ -130,6 +130,23 @@ When follow-up times are variable, the dispersion is inflated by a factor
 2014) to account for the non-linear dependence of the NB variance on
 exposure.
 }
+
+\subsection{Event gap correction (Jensen's inequality)}{
+
+When \code{event_gap} > 0, the naive effective rate
+\eqn{\lambda / (1 + \lambda g)} overestimates the true population-level
+effective rate because of subject-level heterogeneity (frailty).
+In the Gamma-Poisson mixture, each subject's rate
+\eqn{\Lambda_i \sim \mathrm{Gamma}(1/k, k\lambda)} is random.
+Since \eqn{f(x) = x/(1+xg)} is concave, Jensen's inequality gives
+\eqn{\mathrm{E}[f(\Lambda)] < f(\mathrm{E}[\Lambda])}.
+
+A second-order Taylor correction is applied:
+\deqn{\lambda_{\mathrm{eff}} \approx \frac{\lambda}{1+\lambda g}
+  \left(1 - \frac{k \lambda g}{(1+\lambda g)^2}\right)}
+This uses \eqn{f''(\lambda) = -2g/(1+\lambda g)^3} and
+\eqn{\mathrm{Var}(\Lambda) = k\lambda^2}.
+}
 }
 \examples{
 # Basic sample size calculation

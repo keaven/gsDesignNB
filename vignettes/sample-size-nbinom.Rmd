@@ -262,17 +262,66 @@ The average of $m_2(u)$ across enrollment segments (with appropriate handling of
 In some recurrent event trials, there is a mandatory "dead time" or gap of duration $g$ after each event, during which no new events can occur (e.g., a recovery period).
 This reduces the effective time at risk.
 
-The function approximates the impact using the result that for a Poisson process with rate $\lambda$ and gap $g$, the effective rate is:
+**Naive approximation.**
+For a *single subject* with fixed event rate $\lambda$ and gap $g$, the long-run effective rate from renewal theory is:
 
-$$ \lambda_{\text{eff}} = \frac{\lambda}{1 + \lambda g} $$
+$$ \lambda_{\text{naive}} = \frac{\lambda}{1 + \lambda g} $$
 
-This adjusted rate is used in the expected count calculation: $\mu_g = \lambda_{g,\text{eff}} \cdot \bar{t}_g$.
+**Jensen's inequality correction.**
+In the negative binomial model, subjects do not share the same rate.
+Each subject's rate $\Lambda_i$ is drawn from a Gamma distribution with mean $\lambda$ and variance $k\lambda^2$ (the Gamma-Poisson mixture).
+The population-level effective rate is $\mathrm{E}[\Lambda_i / (1 + \Lambda_i g)]$, which by Jensen's inequality is strictly less than $\lambda / (1 + \lambda g)$ because $f(x) = x/(1+xg)$ is concave.
+
+The naive formula overestimates the effective rate (and thus the expected event count), leading to underestimated variance and slightly underpowered designs.
+The bias scales with both the dispersion $k$ and the gap $g$.
+
+To correct for this, `sample_size_nbinom()` applies a second-order Taylor expansion of $f(\Lambda)$ around $\mathrm{E}[\Lambda] = \lambda$:
+
+$$
+\mathrm{E}\!\left[\frac{\Lambda}{1+\Lambda g}\right]
+\approx \frac{\lambda}{1+\lambda g}
++ \frac{f''(\lambda)}{2}\,\mathrm{Var}(\Lambda)
+= \frac{\lambda}{1+\lambda g}
+\left(1 - \frac{k\lambda g}{(1+\lambda g)^2}\right)
+$$
+
+where $f''(\lambda) = -2g/(1+\lambda g)^3$ and $\mathrm{Var}(\Lambda) = k\lambda^2$.
+This corrected effective rate is used in the sample size formula:
+
+$$ \mu_g = \lambda_{g,\text{eff}} \cdot \bar{t}_g $$
 
 The function also reports the *at-risk exposure*, which is the calendar exposure reduced by the expected gap time:
 
 $$ \bar{t}_{g,\text{risk}} = \frac{\bar{t}_g}{1 + \lambda_g \cdot g} $$
 
 Since the gap correction depends on $\lambda_g$, the at-risk exposure differs between groups even when the calendar exposure is the same.
+
+**Magnitude of the correction.**
+The following table illustrates the correction factor $1 - k\lambda g / (1+\lambda g)^2$ for selected parameter combinations.
+The correction is negligible when $k$ or $g$ is small, but can reach 5--10% for high-dispersion, high-rate, large-gap scenarios.
+
+```{r gap-correction-table}
+# Show correction magnitude for various parameter combos
+params <- expand.grid(
+  lambda = c(0.3, 0.5, 1.0, 2.0),
+  k = c(0.1, 0.3, 0.5, 1.0),
+  gap = c(0.25, 0.5, 1.0)
+)
+params$naive_eff <- params$lambda / (1 + params$lambda * params$gap)
+params$correction <- 1 - params$k * params$lambda * params$gap /
+  (1 + params$lambda * params$gap)^2
+params$corrected_eff <- params$naive_eff * params$correction
+params$pct_reduction <- round(100 * (1 - params$correction), 2)
+
+# Show a subset
+subset_df <- params[params$pct_reduction > 0.5, ]
+subset_df <- subset_df[order(-subset_df$pct_reduction), ]
+knitr::kable(
+  head(subset_df[, c("lambda", "k", "gap", "naive_eff", "corrected_eff", "pct_reduction")], 12),
+  digits = 4, row.names = FALSE,
+  col.names = c("lambda", "k", "gap", "Naive eff. rate", "Corrected eff. rate", "Reduction (%)")
+)
+```
 
 ### Simulation verification of average exposure
 

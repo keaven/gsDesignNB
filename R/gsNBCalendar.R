@@ -355,10 +355,16 @@ compute_info_at_time <- function(
   avg_exposure1 <- calc_avg_exposure(min_f, max_f, dropout_rate[1], max_followup[1])
   avg_exposure2 <- calc_avg_exposure(min_f, max_f, dropout_rate[2], max_followup[2])
 
-  # Adjust rates for event gap
+  # Adjust rates for event gap with second-order Taylor correction for
+
+  # Jensen's inequality bias from subject-level frailty (see sample_size_nbinom)
   if (!is.null(event_gap) && event_gap > 0) {
-    lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
-    lambda2_eff <- lambda2 / (1 + lambda2 * event_gap)
+    lambda1_eff <- lambda1 / (1 + lambda1 * event_gap) *
+      (1 - dispersion[1] * lambda1 * event_gap / (1 + lambda1 * event_gap)^2)
+    lambda2_eff <- lambda2 / (1 + lambda2 * event_gap) *
+      (1 - dispersion[2] * lambda2 * event_gap / (1 + lambda2 * event_gap)^2)
+    lambda1_eff <- max(lambda1_eff, 0)
+    lambda2_eff <- max(lambda2_eff, 0)
   } else {
     lambda1_eff <- lambda1
     lambda2_eff <- lambda2
