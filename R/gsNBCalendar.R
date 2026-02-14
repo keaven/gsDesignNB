@@ -237,23 +237,34 @@ gsNBCalendar <- function(
 
 #' Compute statistical information at analysis time
 #'
-#' Computes the statistical information for the log rate ratio at a given
-#' analysis time, accounting for staggered enrollment and varying exposure times.
+#' Computes the statistical information \eqn{\mathcal{I}} for the log rate
+#' ratio \eqn{\theta = \log(\lambda_2/\lambda_1)} at a given calendar analysis
+#' time, accounting for staggered enrollment, dropout, maximum follow-up, and
+#' event gaps.
 #'
-#' @param analysis_time The calendar time of the analysis.
-#' @param accrual_rate The enrollment rate (subjects per time unit).
-#' @param accrual_duration The duration of the enrollment period.
-#' @param lambda1 Event rate for group 1 (control).
-#' @param lambda2 Event rate for group 2 (treatment).
-#' @param dispersion The negative binomial dispersion parameter.
-#' @param ratio Allocation ratio (n2/n1). Default is 1.
-#' @param dropout_rate Dropout rate (hazard rate). Default is 0.
-#' @param event_gap Gap duration after each event during which no new events are counted.
-#'   Default is 0.
-#' @param max_followup Maximum follow-up time per subject. Exposure time is
-#'   truncated at this value. Default is `Inf` (no truncation).
+#' @param analysis_time Calendar time of the analysis.
+#' @param accrual_rate Enrollment rate (subjects per time unit).
+#' @param accrual_duration Duration of the enrollment period.
+#' @param lambda1 Event rate \eqn{\lambda_1} for group 1 (control).
+#' @param lambda2 Event rate \eqn{\lambda_2} for group 2 (treatment).
+#' @param dispersion Dispersion parameter \eqn{k} such that
+#'   \eqn{\mathrm{Var}(Y) = \mu + k\mu^2}. Can be a vector of length 2.
+#' @param ratio Allocation ratio \eqn{r = n_2/n_1}. Default is 1.
+#' @param dropout_rate Dropout hazard rate. Default is 0. Can be a vector of
+#'   length 2 for group-specific rates (control, treatment).
+#' @param event_gap Gap duration after each event. Default is 0.
+#' @param max_followup Maximum follow-up time per subject. Default is `Inf`.
+#'   Can be a vector of length 2.
 #'
-#' @return The statistical information (inverse of variance) at the analysis time.
+#' @details
+#' The information is computed as \eqn{\mathcal{I} = 1/\mathrm{Var}(\hat\theta)}
+#' where:
+#' \deqn{\mathrm{Var}(\hat\theta) = \frac{1/\mu_1 + k_1}{n_1} + \frac{1/\mu_2 + k_2}{n_2}}
+#' and \eqn{\mu_g = \lambda_{g,\mathrm{eff}} \bar{t}_g} accounts for average
+#' exposure and event gap adjustments.
+#'
+#' @return The statistical information \eqn{\mathcal{I}} (inverse of variance)
+#'   at the analysis time.
 #'
 #' @export
 #'

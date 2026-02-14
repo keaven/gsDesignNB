@@ -1,49 +1,94 @@
-#' Sample size calculation for negative binomial distribution
+#' Sample size calculation for negative binomial outcomes
 #'
-#' Computes the sample size for comparing two treatment groups assuming a negative
-#' binomial distribution for the outcome.
+#' Computes the sample size (or power) for comparing two treatment groups
+#' assuming negative binomial distributed event counts. The test is based on
+#' the Wald statistic for the log rate ratio, corresponding to Method 3 of
+#' Zhu & Lakkis (2014). The same underlying variance formula is used by
+#' Friede & Schmidli (2010) and Mutze et al. (2019).
 #'
-#' @param lambda1 Rate in group 1 (control).
-#' @param lambda2 Rate in group 2 (treatment).
-#' @param rr0 Rate ratio under the null hypothesis (lambda2/lambda1).
-#'   Default is 1 (superiority).
+#' @param lambda1 Event rate for group 1 (control), in events per unit time.
+#' @param lambda2 Event rate for group 2 (treatment), in events per unit time.
+#' @param rr0 Rate ratio under the null hypothesis
+#'   (\eqn{\lambda_2 / \lambda_1}). Default is 1 (superiority).
 #'   For non-inferiority, use a value > 1 (e.g., 1.1).
 #'   For super-superiority, use a value < 1 (e.g., 0.8).
-#' @param dispersion Dispersion parameter `k` such that \eqn{\mathrm{Var}(Y) = \mu + k \mu^2}.
-#'   Note that this is equivalent to `1/size` in R's [stats::rnbinom()] parameterization.
-#' @param power Power of the test (1 - beta). Default is 0.9.
+#' @param dispersion Dispersion parameter \eqn{k} such that
+#'   \eqn{\mathrm{Var}(Y) = \mu + k\mu^2}.
+#'   Equivalent to `1/size` in [stats::rnbinom()]. Can be a scalar (common
+#'   dispersion) or a vector of length 2 (group-specific: control, treatment).
+#' @param power Target power (\eqn{1 - \beta}). If `NULL`, power is computed
+#'   for the given accrual rates (no sample size scaling). Default is 0.9.
 #' @param alpha Significance level. Default is 0.025.
-#' @param sided One-sided or two-sided test. 1 for one-sided, 2 for two-sided. Default is 1.
-#' @param ratio Allocation ratio n2/n1. Default is 1.
-#' @param accrual_rate Vector of accrual rates (patients per unit time).
-#' @param accrual_duration Vector of durations for each accrual rate. Must be same length
-#'   as `accrual_rate`.
-#' @param trial_duration Total planned duration of the trial. If `trial_duration`
-#'   is less than the sum of `accrual_duration`, accrual is truncated at
-#'   `trial_duration`.
-#' @param dropout_rate Dropout rate (hazard rate). Default is 0. Can be a vector of length 2.
-#' @param max_followup Maximum follow-up time for any patient. Default is NULL (infinite).
-#' @param event_gap Gap duration after each event during which no new events are counted.
-#'   Default is NULL (no gap). If provided, the effective event rate is reduced.
+#' @param sided Number of sides for the test: 1 (one-sided) or 2 (two-sided).
+#'   Default is 1.
+#' @param ratio Allocation ratio \eqn{r = n_2/n_1}. Default is 1 (equal
+#'   allocation).
+#' @param accrual_rate Vector of accrual rates (patients per unit time) for
+#'   each recruitment segment.
+#' @param accrual_duration Vector of durations for each accrual segment.
+#'   Must be the same length as `accrual_rate`.
+#' @param trial_duration Total planned duration of the trial. If
+#'   `trial_duration` is less than the sum of `accrual_duration`, accrual
+#'   is truncated at `trial_duration`.
+#' @param dropout_rate Dropout hazard rate. Default is 0. Can be a vector of
+#'   length 2 for group-specific dropout (control, treatment).
+#' @param max_followup Maximum follow-up time for any patient. Default is
+#'   `NULL` (infinite). Can be a vector of length 2 for group-specific caps.
+#' @param event_gap Gap duration after each event during which no new events
+#'   are counted (e.g., a recovery period). Default is `NULL` (no gap).
+#'   When specified, the effective rate is reduced to
+#'   \eqn{\lambda_{\mathrm{eff}} = \lambda / (1 + \lambda \cdot \mathrm{gap})}.
 #'
-#' @return An object of class `sample_size_nbinom_result`, which is a list containing:
+#' @details
+#' ## Sample size formula
+#'
+#' The sample size for group 1 is:
+#' \deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 \tilde{V}}{(\theta - \theta_0)^2}}
+#' where \eqn{\theta = \log(\lambda_2/\lambda_1)},
+#' \eqn{\theta_0 = \log(\mathrm{rr}_0)}, and:
+#' \deqn{\tilde{V} = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+#' with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
+#' \eqn{\bar{t}_g} the average exposure for group \eqn{g}.
+#'
+#' ## Average exposure
+#'
+#' The average exposure \eqn{\bar{t}_g} accounts for piecewise accrual,
+#' exponential dropout, and maximum follow-up truncation. When dropout rate
+#' \eqn{\delta > 0}, the expected exposure for a patient with potential
+#' follow-up \eqn{u} is \eqn{m(u) = (1 - e^{-\delta u})/\delta}.
+#' The overall average is a weighted mean across accrual segments.
+#'
+#' ## Variance inflation
+#'
+#' When follow-up times are variable, the dispersion is inflated by a factor
+#' \eqn{Q_g = \mathrm{E}[t_g^2] / (\mathrm{E}[t_g])^2 \ge 1} (Zhu & Lakkis,
+#' 2014) to account for the non-linear dependence of the NB variance on
+#' exposure.
+#'
+#' @return An object of class `sample_size_nbinom_result`, which is a list
+#'   containing:
 #' \describe{
 #'   \item{inputs}{Named list of the original function arguments.}
-#'   \item{n1}{Sample size for group 1}
-#'   \item{n2}{Sample size for group 2}
-#'   \item{n_total}{Total sample size}
-#'   \item{alpha}{Significance level}
-#'   \item{sided}{One-sided or two-sided test}
-#'   \item{power}{Power of the test}
-#'   \item{exposure}{Average exposure time used in calculation (calendar time). Vector of length 2.}
-#'   \item{exposure_at_risk_n1}{Average at-risk exposure time for group 1 (accounts for event gap)}
-#'   \item{exposure_at_risk_n2}{Average at-risk exposure time for group 2 (accounts for event gap)}
-#'   \item{events_n1}{Expected number of events in group 1}
-#'   \item{events_n2}{Expected number of events in group 2}
-#'   \item{total_events}{Total expected number of events}
-#'   \item{variance}{Variance of the log rate ratio}
-#'   \item{accrual_rate}{Accrual rate used in calculation}
-#'   \item{accrual_duration}{Accrual duration used in calculation}
+#'   \item{n1}{Sample size for group 1 (control).}
+#'   \item{n2}{Sample size for group 2 (treatment).}
+#'   \item{n_total}{Total sample size (\eqn{n_1 + n_2}).}
+#'   \item{alpha}{Significance level used.}
+#'   \item{sided}{One-sided or two-sided test.}
+#'   \item{power}{Power of the test.}
+#'   \item{exposure}{Average calendar exposure \eqn{\bar{t}_g} (vector of
+#'     length 2 for control and treatment).}
+#'   \item{exposure_at_risk_n1}{Average at-risk exposure for group 1
+#'     (adjusted for event gap).}
+#'   \item{exposure_at_risk_n2}{Average at-risk exposure for group 2
+#'     (adjusted for event gap).}
+#'   \item{events_n1}{Expected number of events in group 1.}
+#'   \item{events_n2}{Expected number of events in group 2.}
+#'   \item{total_events}{Total expected number of events.}
+#'   \item{variance}{Variance of the log rate ratio
+#'     \eqn{\mathrm{Var}(\hat\theta)}.}
+#'   \item{accrual_rate}{Accrual rate(s) used (possibly scaled to achieve
+#'     target power).}
+#'   \item{accrual_duration}{Accrual duration(s) used.}
 #' }
 #'
 #' @references
@@ -58,22 +103,24 @@
 #' _Methods of Information in Medicine_,
 #' 49(06), 618--624. \doi{10.3414/ME09-02-0060}
 #'
-#' Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
+#' Mutze, T., Glimm, E., Schmidli, H., & Friede, T. (2019).
 #' Group sequential designs for negative binomial outcomes.
 #' _Statistical Methods in Medical Research_,
 #' 28(8), 2326--2347. \doi{10.1177/0962280218773115}
 #'
 #' @seealso
-#' `vignette("sample-size-nbinom", package = "gsDesignNB")`
-#' for a detailed explanation of the methodology.
+#' [compute_info_at_time()] for computing statistical information at a given
+#' analysis time; [blinded_ssr()] for blinded sample size reestimation;
+#' [gsNBCalendar()] for group sequential designs;
+#' `vignette("sample-size-nbinom", package = "gsDesignNB")` for detailed
+#' methodology.
 #'
 #' @importFrom stats pnorm qnorm
 #'
 #' @export
 #'
 #' @examples
-#' # Calculate sample size for lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1
-#' # with fixed recruitment of 10/month for 20 months, 24 month trial duration
+#' # Basic sample size calculation
 #' x <- sample_size_nbinom(
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
 #'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
@@ -82,14 +129,18 @@
 #' summary(x)
 #'
 #' # With piecewise accrual
-#' # 5 patients/month for 3 months, then 10 patients/month for 3 months
-#' # Trial ends at month 12.
 #' x2 <- sample_size_nbinom(
 #'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
 #'   accrual_rate = c(5, 10), accrual_duration = c(3, 3),
 #'   trial_duration = 12
 #' )
 #' summary(x2)
+#'
+#' # Compute power for a fixed design (power = NULL)
+#' sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = NULL,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
 sample_size_nbinom <- function(
   lambda1, lambda2, dispersion, power = NULL,
   alpha = 0.025, sided = 1, ratio = 1, rr0 = 1,

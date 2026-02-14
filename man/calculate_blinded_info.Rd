@@ -14,31 +14,49 @@ calculate_blinded_info(
 }
 \arguments{
 \item{data}{A data frame containing the blinded interim data. Must include
-columns \code{events} (number of events) and \code{tte} (total exposure=follow-up time).}
+columns \code{events} (number of events) and \code{tte} (total exposure/follow-up
+time per subject).}
 
-\item{ratio}{Planned allocation ratio (experimental / control). Default is 1.}
+\item{ratio}{Planned allocation ratio \eqn{r = n_2/n_1}. Default is 1.}
 
-\item{lambda1_planning}{Planned event rate for the control group.}
+\item{lambda1_planning}{Planned event rate \eqn{\lambda_1} for the control
+group (used to determine the rate split).}
 
-\item{lambda2_planning}{Planned event rate for the experimental group.}
+\item{lambda2_planning}{Planned event rate \eqn{\lambda_2} for the
+experimental group (used to determine the rate split).}
 
-\item{event_gap}{Optional. Gap duration (numeric) to adjust planning rates if provided.
-If provided, planning rates are adjusted as lambda / (1 + lambda * gap).}
+\item{event_gap}{Optional gap duration (numeric). If provided, planning
+rates are adjusted to effective rates
+\eqn{\lambda_{\mathrm{eff}} = \lambda / (1 + \lambda \cdot \mathrm{gap})}
+before computing the rate split.}
 }
 \value{
 A list containing:
 \describe{
-\item{blinded_info}{Estimated statistical information.}
-\item{dispersion_blinded}{Estimated dispersion parameter (k).}
-\item{lambda_blinded}{Estimated overall event rate.}
-\item{lambda1_adjusted}{Re-estimated control rate.}
-\item{lambda2_adjusted}{Re-estimated experimental rate.}
+\item{blinded_info}{Estimated statistical information
+\eqn{\mathcal{I}}.}
+\item{dispersion_blinded}{Estimated dispersion parameter \eqn{k}.}
+\item{lambda_blinded}{Estimated overall (pooled) event rate.}
+\item{lambda1_adjusted}{Re-estimated control rate
+\eqn{\hat\lambda_1}.}
+\item{lambda2_adjusted}{Re-estimated experimental rate
+\eqn{\hat\lambda_2}.}
 }
 }
 \description{
-Estimates the blinded dispersion and event rate from aggregated interim data
-and calculates the observed statistical information for the log rate ratio,
-assuming the planned allocation ratio and treatment effect.
+Estimates the blinded dispersion \eqn{k} and event rate \eqn{\lambda} from
+pooled (blinded) interim data and calculates the observed statistical
+information \eqn{\mathcal{I}} for the log rate ratio. The estimation follows
+the approach of Friede & Schmidli (2010): a single negative binomial model
+is fit to the pooled data, then the estimated overall rate is split into
+group-specific rates using the \emph{planned} rate ratio.
+}
+\details{
+The statistical information is computed as:
+\deqn{\mathcal{I} = \frac{1}{1/W_1 + 1/W_2}}
+where \eqn{W_g = p_g \sum_i \mu_{g,i} / (1 + k\,\mu_{g,i})} and
+\eqn{\mu_{g,i} = \lambda_g t_i} is the expected count for subject \eqn{i}
+if they belonged to group \eqn{g}.
 }
 \examples{
 interim <- data.frame(events = c(1, 2, 1, 3), tte = c(0.8, 1.0, 1.2, 0.9))
@@ -48,4 +66,15 @@ calculate_blinded_info(
   lambda1_planning = 0.5,
   lambda2_planning = 0.3
 )
+}
+\references{
+Friede, T., & Schmidli, H. (2010).
+Blinded sample size reestimation with negative binomial counts in
+superiority and non-inferiority trials.
+\emph{Methods of Information in Medicine},
+49(06), 618--624. \doi{10.3414/ME09-02-0060}
+}
+\seealso{
+\code{\link[=blinded_ssr]{blinded_ssr()}} for blinded sample size reestimation;
+\code{\link[=sample_size_nbinom]{sample_size_nbinom()}} for the underlying sample size formula.
 }
