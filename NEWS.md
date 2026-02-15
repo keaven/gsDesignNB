@@ -1,3 +1,42 @@
+# gsDesignNB 0.3.0
+
+## Sample size methodology deep dive (#14)
+
+### Jensen's inequality correction for event gaps
+
+- Applied a second-order Taylor correction to the effective rate formula when
+  both dispersion ($k > 0$) and event gap ($g > 0$) are present. The naive
+  formula $\lambda/(1+\lambda g)$ overestimates the population-level effective
+  rate due to Jensen's inequality (subject-level frailty makes $f(x)=x/(1+xg)$
+  concave). The corrected formula is
+  $\lambda_{\text{eff}} \approx \frac{\lambda}{1+\lambda g}(1 - k\lambda g/(1+\lambda g)^2)$.
+- Correction applied in both `sample_size_nbinom()` and `compute_info_at_time()`.
+- Simulation study across multiple scenarios (10,000 replicates each) confirms
+  the corrected design maintains nominal or conservative power, while the naive
+  formula increasingly underpowers as $k$ and $g$ grow.
+
+### Documentation improvements
+
+- Restructured the `sample-size-nbinom` vignette with a consistent notation
+  table and comparison of Zhu-Lakkis, Friede-Schmidli, and Mutze et al. methods.
+- Expanded average exposure derivation covering no-dropout, exponential dropout,
+  max follow-up truncation, the $Q$ variance inflation factor, and event gaps.
+- Added a statistical information section covering per-subject Fisher
+  information, total information, blinded vs unblinded estimation (ML and MoM),
+  and the connection to sample size.
+- Added simulation verification of average exposure in the vignette.
+- Improved roxygen2 documentation for `sample_size_nbinom()`,
+  `calculate_blinded_info()`, and `compute_info_at_time()` with `@details`
+  sections, consistent notation, and cross-references.
+- Updated `verification-simulation` vignette with a scenario sweep table and
+  a discussion of why the correction is preferred despite partial cancellation
+  with model-based SE bias.
+
+### Other
+
+- Added DOIs to bibliography entries; added Schneider et al. (2013) reference.
+- Switched pkgdown math rendering from MathJax (CDN) to KaTeX (bundled).
+
 # gsDesignNB 0.2.6
 
 - First CRAN release.

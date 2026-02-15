@@ -4,7 +4,7 @@ template:
   bootstrap: 5
   bslib:
     preset: "bootstrap"
-  math-rendering: "mathjax"
+  math-rendering: "katex"
 
 reference:
   - title: "Sample size calculation"
