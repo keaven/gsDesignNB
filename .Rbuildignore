@@ -12,3 +12,4 @@
 ^AGENTS\.md$
 ^cran-comments\.md$
 ^RELEASE\.md$
+^create-release-tag\.sh$

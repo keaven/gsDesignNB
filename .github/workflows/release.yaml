@@ -27,7 +27,7 @@ jobs:
         run: |
           # Extract the section for this version from NEWS.md
           VERSION="${{ steps.get_version.outputs.VERSION }}"
-          awk "/# gsDesignNB $VERSION/,/^# gsDesignNB [0-9]/" NEWS.md | sed '1d;$d' > release_notes.md
+          sed -n "/^# gsDesignNB $VERSION/,/^# gsDesignNB /p" NEWS.md | sed '$d' | tail -n +2 > release_notes.md
           if [ ! -s release_notes.md ]; then
             echo "Release notes for version $VERSION" > release_notes.md
             echo "" >> release_notes.md
