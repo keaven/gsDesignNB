@@ -1,0 +1,242 @@
+---
+title: "gsDesignNB: Group Sequential Design and Sample Size Re-estimation for Negative Binomial Recurrent Event Trials"
+format:
+  pdf:
+    number-sections: true
+    documentclass: article
+    geometry:
+      - margin=1in
+    fontsize: 11pt
+    linkcolor: blue
+    urlcolor: blue
+    citecolor: blue
+bibliography: references.bib
+csl: https://www.zotero.org/styles/american-statistical-association
+abstract: |
+  We present the R package **gsDesignNB** for planning, monitoring, and adapting clinical trials
+  with recurrent event endpoints analyzed using negative binomial models. The package implements
+  sample size calculations that extend the methods of @zhu2014sample and @friede2010blinded to
+  handle piecewise accrual, exponential dropout, maximum follow-up truncation, and event gaps.
+  We derive and implement a second-order Taylor correction for Jensen's inequality bias in the
+  event gap effective rate, reducing the approximation error from 8% to 1% in representative
+  scenarios. The package supports group sequential designs via integration with the **gsDesign**
+  package, and provides both blinded and unblinded sample size re-estimation at interim analyses.
+  A simulation study across 13 scenarios demonstrates that sample size re-estimation effectively
+  recovers power when nuisance parameters are misspecified, provided the treatment effect is as
+  planned, while maintaining Type I error control. The package was developed with substantial
+  assistance from AI coding tools, and we discuss the implications of this workflow for
+  statistical software development.
+---
+
+# Introduction
+
+Recurrent event endpoints are common in clinical trials for conditions such as multiple sclerosis
+relapses, COPD exacerbations, and heart failure hospitalizations. The negative binomial (NB) model
+provides a natural framework for analyzing such data, accounting for both within-subject correlation
+(overdispersion) and variable follow-up through an exposure offset
+[@zhu2014sample; @friede2010blinded].
+
+Sample size calculation for NB outcomes requires specifying not only the event rates and treatment
+effect but also the dispersion parameter, average exposure time, and potentially event gap
+durations. In practice, several of these parameters may be uncertain at the design stage. Group
+sequential designs allow for interim monitoring, and sample size re-estimation (SSR) can adapt the
+trial size when nuisance parameters deviate from assumptions.
+
+The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
+
+1. Sample size and power for fixed designs with flexible enrollment, dropout, follow-up truncation,
+   and event gaps.
+2. Group sequential designs via calendar-time analysis schedules compatible with the **gsDesign**
+   package [@JTBook].
+3. Blinded and unblinded SSR at interim analyses.
+4. Simulation utilities for validating designs and evaluating operating characteristics.
+
+This paper describes the methodology, highlights a novel correction for Jensen's inequality bias
+in the event gap formula, and presents a simulation study of SSR across multiple scenarios. We also
+discuss the role of AI-assisted development in creating the package.
+
+# Sample size methodology
+
+## Negative binomial model
+
+For subject $i$ in treatment group $g$ with exposure time $t_i$, the event count $Y_i$ follows a
+negative binomial distribution with mean $\mu_i = \lambda_g t_i$ and variance
+$\text{Var}(Y_i) = \mu_i + k\mu_i^2$, where $\lambda_g$ is the group-specific event rate and $k$
+is the dispersion parameter. This arises from a Gamma--Poisson mixture: each subject has a latent
+rate $\Lambda_i \sim \text{Gamma}(1/k, k\lambda_g)$ and generates events from
+$\text{Poisson}(\Lambda_i t_i)$.
+
+## Wald test and sample size formula
+
+The treatment effect is the log rate ratio $\theta = \log(\lambda_2/\lambda_1)$, estimated via
+maximum likelihood under a negative binomial GLM with log link and exposure offset. The Fisher
+information per subject is $\mathcal{I}_i = \mu_i/(1 + k\mu_i)$, which leads to the sample size
+formula:
+
+$$
+n_1 = \frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2}
+\left[
+  \left(\frac{1}{\mu_1} + k_1\right)
+  + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)
+\right]
+$$
+
+where $\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, $r = n_2/n_1$, and
+$k_g$ may be inflated by a variance correction factor
+$Q_g = E[t_g^2]/(E[t_g])^2$ to account for variable follow-up [@zhu2014sample].
+
+This formula is equivalent across the three primary references: Method 3 of @zhu2014sample (fixed
+sample size), @friede2010blinded (blinded SSR), and @mutze2019group (group sequential designs).
+
+## Jensen's inequality correction for event gaps
+
+In trials with a mandatory gap of duration $\gamma$ after each event (e.g., a recovery period),
+the effective rate is commonly approximated as
+$\lambda_\text{eff} = \lambda/(1 + \lambda\gamma)$. However, this is a population-level average
+that ignores subject-level heterogeneity. Since
+$f(x) = x/(1 + x\gamma)$ is concave and subject rates $\Lambda_i$ are random
+(Gamma-distributed), Jensen's inequality gives $E[f(\Lambda)] < f(E[\Lambda])$.
+
+We derive a second-order Taylor correction:
+
+$$
+\lambda_\text{eff} \approx \frac{\lambda}{1 + \lambda\gamma}
+\left(1 - \frac{k\lambda\gamma}{(1 + \lambda\gamma)^2}\right)
+$$
+
+using $f''(\lambda) = -2\gamma/(1 + \lambda\gamma)^3$ and
+$\text{Var}(\Lambda) = k\lambda^2$. @tbl-jensen-correction shows the correction magnitude.
+
+| $\lambda$ | $k$ | $\gamma$ | Correction (%) |
+|:---------:|:---:|:--------:|:--------------:|
+| 1.0       | 1.0 | 1.0      | 25.0           |
+| 1.0       | 1.0 | 0.5      | 22.2           |
+| 0.5       | 1.0 | 1.0      | 22.2           |
+| 0.3       | 1.0 | 1.0      | 17.8           |
+| 0.5       | 1.0 | 0.5      | 16.0           |
+| 1.0       | 0.5 | 1.0      | 12.5           |
+| 0.3       | 1.0 | 0.5      | 11.3           |
+| 1.0       | 0.5 | 0.5      | 11.1           |
+
+: Jensen correction magnitude for selected parameter combinations. {#tbl-jensen-correction}
+
+A simulation study with 10,000 replicates per scenario confirmed that the corrected formula
+reduces the effective rate estimation error from approximately 8% to 1% and produces slightly
+conservative power (@tbl-power-comparison).
+
+| $k$ | Gap (days) | $n$ (corrected) | $n$ (naive) | Power (corr.) | Power (naive) |
+|:---:|:----------:|:---------------:|:-----------:|:--------------:|:-------------:|
+| 0.5 | 20         | 436             | 422         | 0.9061         | 0.8992        |
+| 1.0 | 20         | 712             | 684         | 0.9170         | 0.9033        |
+| 0.5 | 30         | 454             | 436         | 0.9042         | 0.8934        |
+| 1.0 | 30         | 740             | 700         | 0.9105         | 0.8988        |
+
+: Power comparison: Jensen-corrected vs naive formula (10,000 replicates each). {#tbl-power-comparison}
+
+# Group sequential design and sample size re-estimation
+
+## Integration with gsDesign
+
+The `gsNBCalendar()` function creates a group sequential design by computing the statistical
+information at each planned analysis time, accounting for staggered enrollment and variable
+exposure. It returns an object that inherits from `gsDesign`, enabling use of spending functions,
+boundary summaries, and integer rounding from the **gsDesign** package.
+
+## Blinded and unblinded SSR
+
+At interim analyses, nuisance parameters ($k$ and $\lambda_1$) can be re-estimated to update the
+required sample size. Blinded SSR [@friede2010blinded] fits a single NB model to pooled data and
+splits the estimated rate using the planned treatment effect ratio. Unblinded SSR uses
+treatment-specific estimates. Both methods accept a `target_info` parameter from the group
+sequential design to account for inflation due to interim alpha spending.
+
+The `calculate_blinded_info()` function includes a Poisson fallback threshold (matching
+`mutze_test()`) to guard against numerically unstable dispersion estimates that would produce
+extreme information values.
+
+## Spending function approach
+
+For the simulation study, bounds are computed using spending functions with
+`usTime = lsTime = min(planned IF, actual IF)` at the interim. This ensures that neither efficacy
+nor futility spending exceeds the planned rate, even when more information than expected is
+available. Futility assessment is deferred until at least 30% of the planned information is
+observed.
+
+# Simulation study
+
+## Design
+
+We evaluated SSR across 13 scenarios varying the control rate ($\lambda_1$), dispersion ($k$),
+accrual rate, and rate ratio (RR = 0.7, 0.8, 0.9, 1.0). The planned design targeted 90% power
+for RR = 0.7 with $k = 0.3$, $\lambda_1 = 0.5$/month, and accrual of 30/month over 12 months.
+Each non-null scenario used 3,600 simulations; the null scenario used 20,000.
+
+Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
+using a group sequential design with Hwang--Shih--DeCani spending functions.
+
+## Results
+
+The key findings from the simulation study are:
+
+- **Type I error control:** Under the null (RR = 1.0, misspecified nuisance parameters), all three
+  strategies maintained Type I error near or below the nominal 2.5% level (20,000 simulations,
+  SE $\approx$ 0.1%).
+- **Power recovery at RR = 0.7:** When the planned rate ratio was correct, both SSR methods
+  recovered power from as low as 60% (no adaptation, worst case) to approximately 85--90%, by
+  increasing the sample size up to 2$\times$ planned.
+- **Diminishing returns at smaller effects:** For RR = 0.8 and RR = 0.9, the planned sample size
+  (designed for RR = 0.7) was inherently insufficient. SSR compensated for nuisance parameter
+  misspecification but could not overcome the smaller treatment effect.
+- **Blinded vs unblinded:** Both methods performed similarly across scenarios, supporting the use
+  of blinded SSR to preserve trial integrity.
+
+# Role of AI in package development
+
+The **gsDesignNB** package was developed with substantial assistance from AI coding tools (Claude,
+via the Cursor IDE). The AI contributed to:
+
+- **Code generation:** Implementation of simulation engines, data cutting functions, and the group
+  sequential design interface.
+- **Mathematical derivation:** The Jensen's inequality correction was identified and derived
+  through an interactive dialogue analyzing simulation discrepancies. The AI performed Monte Carlo
+  verification and second-order Taylor expansion to pinpoint the bias source.
+- **Documentation:** Vignettes, roxygen2 documentation, and notation consistency were developed
+  collaboratively, with the AI drafting and the statistician reviewing for correctness.
+- **Debugging:** Several subtle bugs (e.g., `toInteger()` overwriting enrollment with
+  information-scaled values, positional argument mismatches in SSR calls, **gsDesign** collapsing
+  futility bounds when `n.I` is provided directly) were identified through systematic diagnosis.
+- **Simulation studies:** The multi-scenario SSR simulation was designed, coded, and iteratively
+  refined through conversation, with the statistician guiding the experimental design and the AI
+  implementing it.
+
+This workflow demonstrates that AI tools can accelerate statistical software development while
+requiring expert oversight for methodological correctness. The statistician's role shifts toward
+design decisions, mathematical validation, and interpretation, while the AI handles implementation,
+debugging, and large-scale computation.
+
+# Discussion
+
+The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent event
+trials with NB outcomes. While the **gscounts** package [@mutze2019group] implements group
+sequential designs for NB data, **gsDesignNB** extends this with piecewise accrual, event gaps
+with Jensen's correction, blinded and unblinded SSR, and comprehensive simulation utilities.
+
+The Jensen's inequality correction, while modest in many practical scenarios (1--8% effective rate
+reduction), becomes increasingly important as dispersion and event gap duration grow. The
+correction is principled (derived from the known Gamma frailty distribution) and conservative
+(slightly overpowering rather than underpowering).
+
+The simulation study confirms that SSR is an effective tool for maintaining power when nuisance
+parameters are uncertain, provided the treatment effect assumption is correct. This is consistent
+with the theoretical result that blinded SSR preserves Type I error while adapting to observed
+nuisance parameters [@friede2010blinded].
+
+# Software availability
+
+The **gsDesignNB** package is available on GitHub at
+<https://github.com/keaven/gsDesignNB> with documentation at
+<https://keaven.github.io/gsDesignNB/>.
+The package requires R $\geq$ 4.1.0 and depends on **gsDesign**, **data.table**, **simtrial**,
+and **MASS**.
+
+# References {.unnumbered}
