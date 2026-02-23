@@ -39,6 +39,8 @@ Suggests:
     ggplot2,
     dplyr,
     gt,
+    DT,
+    htmltools,
     scales,
     foreach,
     doFuture,

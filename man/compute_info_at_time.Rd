@@ -52,11 +52,11 @@ time, accounting for staggered enrollment, dropout, maximum follow-up, and
 event gaps.
 }
 \details{
-The information is computed as \eqn{\mathcal{I} = 1/\mathrm{Var}(\hat\theta)}
-where:
-\deqn{\mathrm{Var}(\hat\theta) = \frac{1/\mu_1 + k_1}{n_1} + \frac{1/\mu_2 + k_2}{n_2}}
-and \eqn{\mu_g = \lambda_{g,\mathrm{eff}} \bar{t}_g} accounts for average
-exposure and event gap adjustments.
+This function delegates to \code{\link[=sample_size_nbinom]{sample_size_nbinom()}} with \code{power = NULL} and
+returns \eqn{\mathcal{I} = 1/\mathrm{Var}(\hat\theta)} from the resulting
+variance. This ensures full consistency with package design calculations,
+including piecewise accrual, dropout, max follow-up truncation, event-gap
+correction, and follow-up variability inflation (\eqn{Q_g}).
 }
 \examples{
 compute_info_at_time(
