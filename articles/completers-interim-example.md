@@ -157,11 +157,11 @@ info_asymp_final <- compute_info_at_time(
 )
 
 message("Asymptotic Information (Interim): ", round(info_asymp_interim, 2))
-#> Asymptotic Information (Interim): 15.27
+#> Asymptotic Information (Interim): 15.54
 message("Mean Simulated Information (Interim): ", round(mean(results$interim_info), 2))
 #> Mean Simulated Information (Interim): 14.51
 message("Asymptotic Information (Final): ", round(info_asymp_final, 2))
-#> Asymptotic Information (Final): 22.49
+#> Asymptotic Information (Final): 22.81
 message("Mean Simulated Information (Final): ", round(mean(results$final_info), 2))
 #> Mean Simulated Information (Final): 17.34
 ```

@@ -1,53 +1,5 @@
 # Changelog
 
-## gsDesignNB 0.3.0
-
-### Sample size methodology deep dive ([\#14](https://github.com/keaven/gsDesignNB/issues/14))
-
-#### Jensen’s inequality correction for event gaps
-
-- Applied a second-order Taylor correction to the effective rate formula
-  when both dispersion (k \> 0) and event gap (g \> 0) are present. The
-  naive formula \lambda/(1+\lambda g) overestimates the population-level
-  effective rate due to Jensen’s inequality (subject-level frailty makes
-  f(x)=x/(1+xg) concave). The corrected formula is \lambda\_{\text{eff}}
-  \approx \frac{\lambda}{1+\lambda g}(1 - k\lambda g/(1+\lambda g)^2).
-- Correction applied in both
-  [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
-  and
-  [`compute_info_at_time()`](https://keaven.github.io/gsDesignNB/reference/compute_info_at_time.md).
-- Simulation study across multiple scenarios (10,000 replicates each)
-  confirms the corrected design maintains nominal or conservative power,
-  while the naive formula increasingly underpowers as k and g grow.
-
-#### Documentation improvements
-
-- Restructured the `sample-size-nbinom` vignette with a consistent
-  notation table and comparison of Zhu-Lakkis, Friede-Schmidli, and
-  Mutze et al. methods.
-- Expanded average exposure derivation covering no-dropout, exponential
-  dropout, max follow-up truncation, the Q variance inflation factor,
-  and event gaps.
-- Added a statistical information section covering per-subject Fisher
-  information, total information, blinded vs unblinded estimation (ML
-  and MoM), and the connection to sample size.
-- Added simulation verification of average exposure in the vignette.
-- Improved roxygen2 documentation for
-  [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md),
-  [`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md),
-  and
-  [`compute_info_at_time()`](https://keaven.github.io/gsDesignNB/reference/compute_info_at_time.md)
-  with `@details` sections, consistent notation, and cross-references.
-- Updated `verification-simulation` vignette with a scenario sweep table
-  and a discussion of why the correction is preferred despite partial
-  cancellation with model-based SE bias.
-
-#### Other
-
-- Added DOIs to bibliography entries; added Schneider et al. (2013)
-  reference.
-- Switched pkgdown math rendering from MathJax (CDN) to KaTeX (bundled).
-
 ## gsDesignNB 0.2.6
 
 CRAN release: 2026-02-16

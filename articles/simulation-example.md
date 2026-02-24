@@ -274,8 +274,8 @@ The
 [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
 function can also generate data where the counts follow a negative
 binomial distribution. This is achieved by providing a `dispersion`
-parameter in the `fail_rate` data frame. The dispersion parameter k
-relates the variance to the mean as Var(Y) = \mu + k\mu^2.
+parameter in the `fail_rate` data frame. The dispersion parameter \\k\\
+relates the variance to the mean as \\Var(Y) = \mu + k\mu^2\\.
 
 ### Simulation with dispersion
 
@@ -311,7 +311,7 @@ We can verify that the simulated data reflects the input dispersion
 parameter by estimating it back from the data. We use the Method of
 Moments (MoM) estimator:
 
-\hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2}
+\\ \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2} \\
 
 ``` r
 # Count events per subject
@@ -402,4 +402,3 @@ ggplot(plot_data, aes(x = events, y = prop, fill = type)) +
 Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
 “Group Sequential Designs for Negative Binomial Outcomes.” *Statistical
 Methods in Medical Research* 28 (8): 2326–47.
-<https://doi.org/10.1177/0962280218773115>.

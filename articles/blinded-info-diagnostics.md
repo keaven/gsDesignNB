@@ -215,15 +215,15 @@ cat("  1/theta (dispersion):", 1/fit_unblinded$theta, "\n")
 `theta` (≈ 0.0002), which translates to
 `dispersion_blinded = 1/theta ≈ 4454`.
 
-The blinded information formula is: w_j = p_j \sum_i
-\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}
+The blinded information formula is: \\w_j = p_j \sum_i
+\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}\\
 
-where k is the dispersion and \mu\_{ij} = \lambda_j \cdot t_i.
+where \\k\\ is the dispersion and \\\mu\_{ij} = \lambda_j \cdot t_i\\.
 
-When k is very large (4454), the denominator becomes huge: 1 + 4454
-\times 0.5 \approx 2228
+When \\k\\ is very large (4454), the denominator becomes huge: \\1 +
+4454 \times 0.5 \approx 2228\\
 
-This makes w_j approximately 2000 times smaller than it should be,
+This makes \\w_j\\ approximately 2000 times smaller than it should be,
 causing the information to collapse to near-zero.
 
 ### Method of Moments Comparison
@@ -373,14 +373,14 @@ if (!is.null(fit_unblinded_2)) {
 `theta` (≈ 1.7 × 10^41), which translates to
 `dispersion_blinded ≈ 5.9 × 10^-42` — essentially zero.
 
-The information formula depends on: w_j = p_j \sum_i
-\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}
+The information formula depends on: \\w_j = p_j \sum_i
+\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}\\
 
-When k \to 0: w_j \approx p_j \sum_i \mu\_{ij}
+When \\k \to 0\\: \\w_j \approx p_j \sum_i \mu\_{ij}\\
 
-This makes w_j very large, and since variance = 1/w_1 + 1/w_2, the
-variance approaches zero, causing information = 1/variance to overflow
-to infinity.
+This makes \\w_j\\ very large, and since variance = \\1/w_1 + 1/w_2\\,
+the variance approaches zero, causing information = 1/variance to
+overflow to infinity.
 
 ### Method of Moments Comparison
 
@@ -465,7 +465,7 @@ sessionInfo()
 #> 
 #> other attached packages:
 #> [1] MASS_7.3-65         ggplot2_4.0.2       data.table_1.18.2.1
-#> [4] gsDesignNB_0.3.0   
+#> [4] gsDesignNB_0.2.6   
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gt_1.3.0            sass_0.4.10         future_1.69.0      

@@ -15,16 +15,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/keaven/gsDesignNB/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/keaven/gsDesignNB/blob/v0.2.6/DESCRIPTION)
 
 Anderson K (2026). *gsDesignNB: Sample Size and Simulation for Negative
-Binomial Outcomes*. R package version 0.3.0,
+Binomial Outcomes*. R package version 0.2.6,
 <https://keaven.github.io/gsDesignNB/>.
 
     @Manual{,
       title = {gsDesignNB: Sample Size and Simulation for Negative Binomial Outcomes},
       author = {Keaven Anderson},
       year = {2026},
-      note = {R package version 0.3.0},
+      note = {R package version 0.2.6},
       url = {https://keaven.github.io/gsDesignNB/},
     }

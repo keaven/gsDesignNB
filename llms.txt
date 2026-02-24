@@ -33,7 +33,7 @@ Functions for calculating fixed sample sizes for negative binomial
 outcomes.
 
 - [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
-  : Sample size calculation for negative binomial outcomes
+  : Sample size calculation for negative binomial distribution
 - [`print(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.sample_size_nbinom_result.md)
   : Print method for sample_size_nbinom_result objects
 - [`summary(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.sample_size_nbinom_result.md)
@@ -151,7 +151,5 @@ for convenience.
   analysis](https://keaven.github.io/gsDesignNB/articles/completers-interim-example.md):
 - [Sample size re-estimation
   example](https://keaven.github.io/gsDesignNB/articles/ssr-example.md):
-- [SSR simulation
-  study](https://keaven.github.io/gsDesignNB/articles/ssr-simulation-study.md):
 - [Seasonal event
   simulation](https://keaven.github.io/gsDesignNB/articles/seasonal-simulation.md):
