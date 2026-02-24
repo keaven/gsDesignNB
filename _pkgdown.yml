@@ -4,7 +4,7 @@ template:
   bootstrap: 5
   bslib:
     preset: "bootstrap"
-  math-rendering: "mathjax"
+  math-rendering: "katex"
 
 reference:
   - title: "Sample size calculation"
@@ -91,4 +91,5 @@ articles:
       - blinded-info-diagnostics
       - completers-interim-example
       - ssr-example
+      - ssr-simulation-study
       - seasonal-simulation

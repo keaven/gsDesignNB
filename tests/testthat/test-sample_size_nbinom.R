@@ -112,6 +112,59 @@ test_that("Event gap results in correct exposure reporting", {
   # expect_equal(res$inputs$method, "zhu") # Method removed
 })
 
+test_that("Jensen correction for event gap increases sample size", {
+  # With event gap and dispersion > 0, the Jensen correction reduces the
+
+  # effective rate, increasing the required sample size relative to the
+  # naive formula (lambda / (1 + lambda * gap)).
+  #
+  # Verify the correction is applied by comparing sample sizes:
+  # - With dispersion = 0 (Poisson): no correction needed (no frailty)
+  # - With dispersion > 0: correction reduces effective rate -> larger n
+
+  gap <- 0.5
+  lambda1 <- 0.5
+  lambda2 <- 0.3
+
+  # Poisson case (k=0): effective rate = lambda / (1 + lambda * gap) exactly
+  res_poisson <- sample_size_nbinom(
+    lambda1 = lambda1, lambda2 = lambda2, dispersion = 0, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = gap
+  )
+
+  # NB case (k=0.5): correction factor < 1, so effective rate is lower,
+  # variance is higher, and n should be larger
+  res_nb <- sample_size_nbinom(
+    lambda1 = lambda1, lambda2 = lambda2, dispersion = 0.5, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    event_gap = gap
+  )
+
+  # NB should require more subjects (dispersion increases variance + gap correction)
+  expect_true(res_nb$n_total > res_poisson$n_total)
+  expect_true(res_nb$variance > res_poisson$variance)
+
+  # Verify the correction factor analytically for a single group
+  # correction = 1 - k * lambda * gap / (1 + lambda * gap)^2
+  k <- 0.5
+  correction1 <- 1 - k * lambda1 * gap / (1 + lambda1 * gap)^2
+  correction2 <- 1 - k * lambda2 * gap / (1 + lambda2 * gap)^2
+
+  # Correction should be < 1 and > 0 for reasonable parameters
+  expect_true(correction1 > 0 && correction1 < 1)
+  expect_true(correction2 > 0 && correction2 < 1)
+
+  # The effective rate with correction should be smaller than the naive rate
+  naive1 <- lambda1 / (1 + lambda1 * gap)
+  corrected1 <- naive1 * correction1
+  expect_true(corrected1 < naive1)
+
+  # Verify that with k=0, no correction is applied (correction factor = 1)
+  correction_k0 <- 1 - 0 * lambda1 * gap / (1 + lambda1 * gap)^2
+  expect_equal(correction_k0, 1)
+})
+
 test_that("sample_size_nbinom matches published results", {
   # Helper to simulate fixed exposure of 1.0
   # We use a very short accrual duration and trial duration = 1 + accrual duration

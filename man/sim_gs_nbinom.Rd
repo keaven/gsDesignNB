@@ -15,7 +15,8 @@ sim_gs_nbinom(
   n_target = NULL,
   design = NULL,
   data_cut = cut_data_by_date,
-  cuts = NULL
+  cuts = NULL,
+  seed = TRUE
 )
 }
 \arguments{
@@ -47,6 +48,21 @@ The function must accept \code{sim_data}, \code{cut_date}, and \code{event_gap} 
 should be a list of arguments for \code{\link[=get_cut_date]{get_cut_date()}} (e.g., \code{planned_calendar},
 \code{target_events}, \code{target_info}). If provided, \code{analysis_times} is ignored
 (or used as a fallback if \code{planned_calendar} is missing in a cut).}
+
+\item{seed}{Random seed for reproducible simulations. Controls the
+\code{future.seed} argument of \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}:
+\itemize{
+\item \code{TRUE} (default): Automatically generates parallel-safe L'Ecuyer-CMRG
+random number streams. Results are reproducible when preceded by
+\code{\link[=set.seed]{set.seed()}} regardless of the number of workers.
+\item An integer: Used as the seed for L'Ecuyer-CMRG streams directly
+(equivalent to calling \code{\link[=set.seed]{set.seed()}} with this value before the run).
+\item \code{FALSE} or \code{NULL}: No special RNG handling (not recommended; results
+may not be reproducible in parallel).
+}
+
+When \pkg{future.apply} is not installed, \code{seed} is used with
+\code{\link[=set.seed]{set.seed()}} for sequential execution. See \strong{Details} for parallel usage.}
 }
 \value{
 A data frame containing simulation results for each analysis of each trial.
@@ -81,8 +97,44 @@ Columns include:
 \description{
 Simulates multiple replicates of a group sequential clinical trial with negative
 binomial outcomes, performing interim analyses at specified calendar times.
+Supports parallel execution via the \pkg{future} framework for faster simulation
+with reproducible random number generation.
+}
+\details{
+\subsection{Parallel execution}{
+
+This function uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} to distribute simulation
+replicates across workers. By default, simulations run sequentially
+(equivalent to \code{\link[=lapply]{lapply()}}). To enable parallel execution, set a
+\pkg{future} plan before calling this function:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{library(future)
+plan(multisession, workers = 4)   # use 4 parallel workers
+results <- sim_gs_nbinom(...)
+plan(sequential)                  # restore default
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Reproducibility}{
+
+The default \code{seed = TRUE} ensures that results are fully reproducible
+regardless of the \pkg{future} plan (sequential or parallel) and regardless
+of the number of workers. This is achieved via the L'Ecuyer-CMRG algorithm
+which generates statistically independent random number streams for each
+simulation replicate. To obtain the same results across runs:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{set.seed(42)
+res1 <- sim_gs_nbinom(n_sims = 100, ..., seed = TRUE)
+
+set.seed(42)
+res2 <- sim_gs_nbinom(n_sims = 100, ..., seed = TRUE)
+
+identical(res1, res2)  # TRUE, even with different plan()
+}\if{html}{\out{</div>}}
+}
 }
 \examples{
+# Basic sequential usage with reproducible seed
 set.seed(123)
 enroll_rate <- data.frame(rate = 10, duration = 3)
 fail_rate <- data.frame(
@@ -112,7 +164,27 @@ sim_results <- sim_gs_nbinom(
   max_followup = 4,
   n_target = 30,
   design = design,
-  cuts = cuts
+  cuts = cuts,
+  seed = TRUE
 )
 head(sim_results)
+
+\dontrun{
+# Parallel execution (requires future and future.apply)
+library(future)
+plan(multisession, workers = 4)
+set.seed(42)
+sim_results <- sim_gs_nbinom(
+  n_sims = 1000,
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = 4,
+  n_target = 30,
+  design = design,
+  cuts = cuts,
+  seed = TRUE
+)
+plan(sequential)
+}
 }

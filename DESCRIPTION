@@ -1,5 +1,5 @@
 Package: gsDesignNB
-Version: 0.2.6
+Version: 0.3.0
 Title: Sample Size and Simulation for Negative Binomial Outcomes
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
@@ -14,17 +14,18 @@ Description: Provides tools for planning and simulating recurrent event trials
     fixed designs with variable accrual, dropout, maximum follow-up, and event
     gaps, including methods of Zhu and Lakkis (2014) <doi:10.1002/sim.5947> and
     Friede and Schmidli (2010) <doi:10.3414/ME09-02-0060>. Supports group
-    sequential designs by adding calendar-time analysis schedules compatible
-    with the 'gsDesign' package and by estimating blinded information at
-    interim looks. Includes simulation utilities for recurrent events
+    sequential designs by by building on the 'gsDesign' package. 
+    Includes simulation utilities for recurrent events
     (including seasonal rates), interim data truncation, and Wald-based
     inference for treatment rate ratios.
+    Blinded and unblinded information estimation and sample size re-estimation 
+    are supported.
 License: GPL (>= 3)
 URL: https://keaven.github.io/gsDesignNB/, https://github.com/keaven/gsDesignNB
 BugReports: https://github.com/keaven/gsDesignNB/issues
 Encoding: UTF-8
 Depends:
-    R (>= 3.5.0)
+    R (>= 4.1.0)
 Imports:
     data.table,
     gsDesign,
@@ -38,7 +39,13 @@ Suggests:
     ggplot2,
     dplyr,
     gt,
-    scales
+    DT,
+    htmltools,
+    scales,
+    foreach,
+    doFuture,
+    future,
+    future.apply
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

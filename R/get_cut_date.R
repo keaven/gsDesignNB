@@ -64,6 +64,9 @@ get_cut_date <- function(
     }
 
     # Define function to calculate info at time t
+    # Primary: blinded information estimate.
+    # Fallback 1: unblinded information from mutze_test().
+    # Fallback 2: constant 100 (user-requested safety fallback).
     calc_info_at_t <- function(t) {
       cut_dt <- cut_data_by_date(data, cut_date = t, event_gap = event_gap)
       # Check if sufficient data for estimation
@@ -77,9 +80,26 @@ get_cut_date <- function(
           ratio = ratio, lambda1_planning = lambda1, lambda2_planning = lambda2,
           event_gap = event_gap
         ),
-        error = function(e) list(blinded_info = 0)
+        error = function(e) NULL
       )
-      res$blinded_info
+      if (!is.null(res) &&
+          is.finite(res$blinded_info) &&
+          !is.na(res$blinded_info) &&
+          res$blinded_info > 0) {
+        return(res$blinded_info)
+      }
+
+      # Fallback to unblinded information if blinded estimate fails
+      mutze_res <- tryCatch(mutze_test(cut_dt), error = function(e) NULL)
+      if (!is.null(mutze_res) &&
+          is.finite(mutze_res$se) &&
+          !is.na(mutze_res$se) &&
+          mutze_res$se > 0) {
+        return(1 / mutze_res$se^2)
+      }
+
+      # Last-resort fallback requested by user
+      100
     }
 
     # Search for time t where info >= target_info

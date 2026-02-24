@@ -237,23 +237,34 @@ gsNBCalendar <- function(
 
 #' Compute statistical information at analysis time
 #'
-#' Computes the statistical information for the log rate ratio at a given
-#' analysis time, accounting for staggered enrollment and varying exposure times.
+#' Computes the statistical information \eqn{\mathcal{I}} for the log rate
+#' ratio \eqn{\theta = \log(\lambda_2/\lambda_1)} at a given calendar analysis
+#' time, accounting for staggered enrollment, dropout, maximum follow-up, and
+#' event gaps.
 #'
-#' @param analysis_time The calendar time of the analysis.
-#' @param accrual_rate The enrollment rate (subjects per time unit).
-#' @param accrual_duration The duration of the enrollment period.
-#' @param lambda1 Event rate for group 1 (control).
-#' @param lambda2 Event rate for group 2 (treatment).
-#' @param dispersion The negative binomial dispersion parameter.
-#' @param ratio Allocation ratio (n2/n1). Default is 1.
-#' @param dropout_rate Dropout rate (hazard rate). Default is 0.
-#' @param event_gap Gap duration after each event during which no new events are counted.
-#'   Default is 0.
-#' @param max_followup Maximum follow-up time per subject. Exposure time is
-#'   truncated at this value. Default is `Inf` (no truncation).
+#' @param analysis_time Calendar time of the analysis.
+#' @param accrual_rate Enrollment rate (subjects per time unit).
+#' @param accrual_duration Duration of the enrollment period.
+#' @param lambda1 Event rate \eqn{\lambda_1} for group 1 (control).
+#' @param lambda2 Event rate \eqn{\lambda_2} for group 2 (treatment).
+#' @param dispersion Dispersion parameter \eqn{k} such that
+#'   \eqn{\mathrm{Var}(Y) = \mu + k\mu^2}. Can be a vector of length 2.
+#' @param ratio Allocation ratio \eqn{r = n_2/n_1}. Default is 1.
+#' @param dropout_rate Dropout hazard rate. Default is 0. Can be a vector of
+#'   length 2 for group-specific rates (control, treatment).
+#' @param event_gap Gap duration after each event. Default is 0.
+#' @param max_followup Maximum follow-up time per subject. Default is `Inf`.
+#'   Can be a vector of length 2.
 #'
-#' @return The statistical information (inverse of variance) at the analysis time.
+#' @details
+#' This function delegates to [sample_size_nbinom()] with `power = NULL` and
+#' returns \eqn{\mathcal{I} = 1/\mathrm{Var}(\hat\theta)} from the resulting
+#' variance. This ensures full consistency with package design calculations,
+#' including piecewise accrual, dropout, max follow-up truncation, event-gap
+#' correction, and follow-up variability inflation (\eqn{Q_g}).
+#'
+#' @return The statistical information \eqn{\mathcal{I}} (inverse of variance)
+#'   at the analysis time.
 #'
 #' @export
 #'
@@ -271,103 +282,24 @@ compute_info_at_time <- function(
   lambda1, lambda2, dispersion, ratio = 1,
   dropout_rate = 0, event_gap = 0, max_followup = Inf
 ) {
-  # Number of subjects enrolled by analysis_time
-  enrollment_time <- min(analysis_time, accrual_duration)
-  n_total <- accrual_rate * enrollment_time
-  n1 <- n_total / (1 + ratio)
-  n2 <- n_total * ratio / (1 + ratio)
+  ss <- sample_size_nbinom(
+    lambda1 = lambda1,
+    lambda2 = lambda2,
+    rr0 = 1,
+    dispersion = dispersion,
+    power = NULL,
+    alpha = 0.025,
+    sided = 1,
+    ratio = ratio,
+    accrual_rate = accrual_rate,
+    accrual_duration = accrual_duration,
+    trial_duration = analysis_time,
+    dropout_rate = dropout_rate,
+    max_followup = max_followup,
+    event_gap = event_gap
+  )
 
-  # Average exposure calculation must account for dropout
-  # We integrate dropout probability over the enrollment period and follow-up
-
-  # Helper for expected exposure for a subject enrolled at time t
-  # Exposure is min(analysis_time - t, dropout_time, max_followup)
-  # If analysis_time - t > 0
-
-  # Simplified average exposure calculation with dropout
-  # 1. Without dropout:
-  #    If analysis_time <= accrual_duration: avg = analysis_time / 2
-  #    If analysis_time > accrual_duration: avg = analysis_time - accrual_duration/2
-
-  # 2. With dropout, we need to integrate:
-  #    E[min(T-t, E)] where E ~ Exp(dropout_rate)
-  #    This is (1 - exp(-lambda * (T-t))) / lambda
-
-  # We need the average of this over t in [0, enrollment_time]
-  # Let tau = T - t. As t goes 0 -> enrollment_time, tau goes T -> T-enrollment_time
-  # Range of follow-up times: [min_f, max_f]
-  max_f <- analysis_time
-  min_f <- analysis_time - enrollment_time
-
-  # Cap follow-up at max_followup
-  # We need to calculate average exposure over [min_f, max_f]
-  # but exposure is capped at max_followup
-
-  calc_avg_exposure <- function(min_t, max_t, rate, max_fu) {
-    if (min_t >= max_t) {
-      return(0)
-    }
-
-    # If entire range is above max_fu, exposure is constant (capped)
-    if (min_t >= max_fu) {
-      if (rate <= 0) {
-        return(max_fu)
-      }
-      return((1 - exp(-rate * max_fu)) / rate)
-    }
-
-    # If entire range is below max_fu, standard calculation
-    if (max_t <= max_fu) {
-      if (rate <= 0) {
-        return((min_t + max_t) / 2)
-      } else {
-        term <- (exp(-rate * min_t) - exp(-rate * max_t)) / (rate * (max_t - min_t))
-        return((1 - term) / rate)
-      }
-    }
-
-    # Split range: [min_t, max_fu] and [max_fu, max_t]
-    w1 <- (max_fu - min_t) / (max_t - min_t)
-    w2 <- (max_t - max_fu) / (max_t - min_t)
-
-    e1 <- calc_avg_exposure(min_t, max_fu, rate, max_fu)
-    e2 <- calc_avg_exposure(max_fu, max_t, rate, max_fu) # This will hit the first case
-
-    return(w1 * e1 + w2 * e2)
-  }
-
-  # Handle vector parameters
-  if (length(dropout_rate) == 1) dropout_rate <- rep(dropout_rate, 2)
-  if (length(max_followup) == 1) max_followup <- rep(max_followup, 2)
-  if (length(dispersion) == 1) dispersion <- rep(dispersion, 2)
-
-  avg_exposure1 <- calc_avg_exposure(min_f, max_f, dropout_rate[1], max_followup[1])
-  avg_exposure2 <- calc_avg_exposure(min_f, max_f, dropout_rate[2], max_followup[2])
-
-  # Adjust rates for event gap
-  if (!is.null(event_gap) && event_gap > 0) {
-    lambda1_eff <- lambda1 / (1 + lambda1 * event_gap)
-    lambda2_eff <- lambda2 / (1 + lambda2 * event_gap)
-  } else {
-    lambda1_eff <- lambda1
-    lambda2_eff <- lambda2
-  }
-
-  # Expected events per subject
-  mu1 <- lambda1_eff * avg_exposure1
-  mu2 <- lambda2_eff * avg_exposure2
-
-  # Variance of log rate ratio
-  # Var(log(lambda2/lambda1)) = (1/mu1 + k)/n1 + (1/mu2 + k)/n2
-  k1 <- dispersion[1]
-  k2 <- dispersion[2]
-  variance <- (1 / mu1 + k1) / n1 + (1 / mu2 + k2) / n2
-
-
-  # Information is inverse of variance
-  info <- 1 / variance
-
-  return(info)
+  1 / ss$variance
 }
 
 

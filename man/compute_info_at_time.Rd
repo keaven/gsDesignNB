@@ -18,34 +18,45 @@ compute_info_at_time(
 )
 }
 \arguments{
-\item{analysis_time}{The calendar time of the analysis.}
+\item{analysis_time}{Calendar time of the analysis.}
 
-\item{accrual_rate}{The enrollment rate (subjects per time unit).}
+\item{accrual_rate}{Enrollment rate (subjects per time unit).}
 
-\item{accrual_duration}{The duration of the enrollment period.}
+\item{accrual_duration}{Duration of the enrollment period.}
 
-\item{lambda1}{Event rate for group 1 (control).}
+\item{lambda1}{Event rate \eqn{\lambda_1} for group 1 (control).}
 
-\item{lambda2}{Event rate for group 2 (treatment).}
+\item{lambda2}{Event rate \eqn{\lambda_2} for group 2 (treatment).}
 
-\item{dispersion}{The negative binomial dispersion parameter.}
+\item{dispersion}{Dispersion parameter \eqn{k} such that
+\eqn{\mathrm{Var}(Y) = \mu + k\mu^2}. Can be a vector of length 2.}
 
-\item{ratio}{Allocation ratio (n2/n1). Default is 1.}
+\item{ratio}{Allocation ratio \eqn{r = n_2/n_1}. Default is 1.}
 
-\item{dropout_rate}{Dropout rate (hazard rate). Default is 0.}
+\item{dropout_rate}{Dropout hazard rate. Default is 0. Can be a vector of
+length 2 for group-specific rates (control, treatment).}
 
-\item{event_gap}{Gap duration after each event during which no new events are counted.
-Default is 0.}
+\item{event_gap}{Gap duration after each event. Default is 0.}
 
-\item{max_followup}{Maximum follow-up time per subject. Exposure time is
-truncated at this value. Default is \code{Inf} (no truncation).}
+\item{max_followup}{Maximum follow-up time per subject. Default is \code{Inf}.
+Can be a vector of length 2.}
 }
 \value{
-The statistical information (inverse of variance) at the analysis time.
+The statistical information \eqn{\mathcal{I}} (inverse of variance)
+at the analysis time.
 }
 \description{
-Computes the statistical information for the log rate ratio at a given
-analysis time, accounting for staggered enrollment and varying exposure times.
+Computes the statistical information \eqn{\mathcal{I}} for the log rate
+ratio \eqn{\theta = \log(\lambda_2/\lambda_1)} at a given calendar analysis
+time, accounting for staggered enrollment, dropout, maximum follow-up, and
+event gaps.
+}
+\details{
+This function delegates to \code{\link[=sample_size_nbinom]{sample_size_nbinom()}} with \code{power = NULL} and
+returns \eqn{\mathcal{I} = 1/\mathrm{Var}(\hat\theta)} from the resulting
+variance. This ensures full consistency with package design calculations,
+including piecewise accrual, dropout, max follow-up truncation, event-gap
+correction, and follow-up variability inflation (\eqn{Q_g}).
 }
 \examples{
 compute_info_at_time(
