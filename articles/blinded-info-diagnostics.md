@@ -215,15 +215,15 @@ cat("  1/theta (dispersion):", 1/fit_unblinded$theta, "\n")
 `theta` (≈ 0.0002), which translates to
 `dispersion_blinded = 1/theta ≈ 4454`.
 
-The blinded information formula is: \\w_j = p_j \sum_i
-\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}\\
+The blinded information formula is: w_j = p_j \sum_i
+\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}
 
-where \\k\\ is the dispersion and \\\mu\_{ij} = \lambda_j \cdot t_i\\.
+where k is the dispersion and \mu\_{ij} = \lambda_j \cdot t_i.
 
-When \\k\\ is very large (4454), the denominator becomes huge: \\1 +
-4454 \times 0.5 \approx 2228\\
+When k is very large (4454), the denominator becomes huge: 1 + 4454
+\times 0.5 \approx 2228
 
-This makes \\w_j\\ approximately 2000 times smaller than it should be,
+This makes w_j approximately 2000 times smaller than it should be,
 causing the information to collapse to near-zero.
 
 ### Method of Moments Comparison
@@ -373,14 +373,14 @@ if (!is.null(fit_unblinded_2)) {
 `theta` (≈ 1.7 × 10^41), which translates to
 `dispersion_blinded ≈ 5.9 × 10^-42` — essentially zero.
 
-The information formula depends on: \\w_j = p_j \sum_i
-\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}\\
+The information formula depends on: w_j = p_j \sum_i
+\frac{\mu\_{ij}}{1 + k \cdot \mu\_{ij}}
 
-When \\k \to 0\\: \\w_j \approx p_j \sum_i \mu\_{ij}\\
+When k \to 0: w_j \approx p_j \sum_i \mu\_{ij}
 
-This makes \\w_j\\ very large, and since variance = \\1/w_1 + 1/w_2\\,
-the variance approaches zero, causing information = 1/variance to
-overflow to infinity.
+This makes w_j very large, and since variance = 1/w_1 + 1/w_2, the
+variance approaches zero, causing information = 1/variance to overflow
+to infinity.
 
 ### Method of Moments Comparison
 
@@ -465,7 +465,7 @@ sessionInfo()
 #> 
 #> other attached packages:
 #> [1] MASS_7.3-65         ggplot2_4.0.2       data.table_1.18.2.1
-#> [4] gsDesignNB_0.2.6   
+#> [4] gsDesignNB_0.3.0   
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gt_1.3.0            sass_0.4.10         future_1.69.0      
@@ -478,17 +478,17 @@ sessionInfo()
 #> [22] survival_3.8-3      purrr_1.2.1         scales_1.4.0       
 #> [25] codetools_0.2-20    textshaping_1.0.4   jquerylib_0.1.4    
 #> [28] cli_3.6.5           rlang_1.1.7         parallelly_1.46.1  
-#> [31] future.apply_1.20.1 splines_4.5.2       withr_3.0.2        
-#> [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.8.0     
-#> [37] tools_4.5.2         parallel_4.5.2      doFuture_1.2.0     
-#> [40] dplyr_1.2.0         globals_0.19.0      vctrs_0.7.1        
-#> [43] R6_2.6.1            lifecycle_1.0.5     fs_1.6.6           
-#> [46] htmlwidgets_1.6.4   ragg_1.5.0          pkgconfig_2.0.3    
-#> [49] desc_1.4.3          pkgdown_2.2.0       pillar_1.11.1      
-#> [52] bslib_0.10.0        gtable_0.3.6        glue_1.8.0         
-#> [55] Rcpp_1.1.1          systemfonts_1.3.1   xfun_0.56          
-#> [58] tibble_3.3.1        tidyselect_1.2.1    knitr_1.51         
-#> [61] farver_2.1.2        xtable_1.8-4        htmltools_0.5.9    
-#> [64] labeling_0.4.3      rmarkdown_2.30      compiler_4.5.2     
-#> [67] S7_0.2.1
+#> [31] future.apply_1.20.2 splines_4.5.2       withr_3.0.2        
+#> [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.9.0     
+#> [37] otel_0.2.0          tools_4.5.2         parallel_4.5.2     
+#> [40] doFuture_1.2.1      dplyr_1.2.0         globals_0.19.0     
+#> [43] vctrs_0.7.1         R6_2.6.1            lifecycle_1.0.5    
+#> [46] fs_1.6.6            htmlwidgets_1.6.4   ragg_1.5.0         
+#> [49] pkgconfig_2.0.3     desc_1.4.3          pkgdown_2.2.0      
+#> [52] pillar_1.11.1       bslib_0.10.0        gtable_0.3.6       
+#> [55] glue_1.8.0          Rcpp_1.1.1          systemfonts_1.3.1  
+#> [58] xfun_0.56           tibble_3.3.1        tidyselect_1.2.1   
+#> [61] knitr_1.51          farver_2.1.2        xtable_1.8-8       
+#> [64] htmltools_0.5.9     labeling_0.4.3      rmarkdown_2.30     
+#> [67] compiler_4.5.2      S7_0.2.1
 ```

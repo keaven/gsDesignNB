@@ -18,5 +18,7 @@
   analysis](https://keaven.github.io/gsDesignNB/articles/completers-interim-example.md):
 - [Sample size re-estimation
   example](https://keaven.github.io/gsDesignNB/articles/ssr-example.md):
+- [SSR simulation
+  study](https://keaven.github.io/gsDesignNB/articles/ssr-simulation-study.md):
 - [Seasonal event
   simulation](https://keaven.github.io/gsDesignNB/articles/seasonal-simulation.md):

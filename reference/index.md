@@ -6,7 +6,7 @@ Functions for calculating fixed sample sizes for negative binomial
 outcomes.
 
 - [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
-  : Sample size calculation for negative binomial distribution
+  : Sample size calculation for negative binomial outcomes
 - [`print(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.sample_size_nbinom_result.md)
   : Print method for sample_size_nbinom_result objects
 - [`summary(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.sample_size_nbinom_result.md)

@@ -6,17 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Simulation of recurrent events • gsDesignNB</title>
-<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
-  window.MathJax = {
-    chtml: {
-      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
-    }
-  };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- katex math --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Simulation of recurrent events">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Simulation of recurrent events">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -26,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -816,8 +812,7 @@ accordingly. This function also respects the <code>event_gap</code>
 <p>The <code><a href="../reference/nb_sim.html">nb_sim()</a></code> function can also generate data where the
 counts follow a negative binomial distribution. This is achieved by
 providing a <code>dispersion</code> parameter in the
-<code>fail_rate</code> data frame. The dispersion parameter <span class="math inline">\(k\)</span> relates the variance to the mean as
-<span class="math inline">\(Var(Y) = \mu + k\mu^2\)</span>.</p>
+<code>fail_rate</code> data frame. The dispersion parameter <span class="math inline">k</span> relates the variance to the mean as <span class="math inline">Var(Y) = \mu + k\mu^2</span>.</p>
 <div class="section level3">
 <h3 id="simulation-with-dispersion">Simulation with dispersion<a class="anchor" aria-label="anchor" href="#simulation-with-dispersion"></a>
 </h3>
@@ -851,8 +846,8 @@ providing a <code>dispersion</code> parameter in the
 <p>We can verify that the simulated data reflects the input dispersion
 parameter by estimating it back from the data. We use the Method of
 Moments (MoM) estimator:</p>
-<p><span class="math display">\[ \hat{k} = \frac{Var(Y) -
-\bar{Y}}{\bar{Y}^2} \]</span></p>
+<p><span class="math display"> \hat{k} = \frac{Var(Y) -
+\bar{Y}}{\bar{Y}^2} </span></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Count events per subject</span></span>
 <span><span class="va">counts_nb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">sim_nb</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span>events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">event</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">id</span><span class="op">]</span></span>
@@ -942,7 +937,7 @@ theoretical negative binomial distribution.</p>
 <div id="ref-mutze2019group" class="csl-entry">
 Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
 <span>“Group Sequential Designs for Negative Binomial Outcomes.”</span>
-<em>Statistical Methods in Medical Research</em> 28 (8): 2326–47.
+<em>Statistical Methods in Medical Research</em> 28 (8): 2326–47. <a href="https://doi.org/10.1177/0962280218773115" class="external-link">https://doi.org/10.1177/0962280218773115</a>.
 </div>
 </div>
 </div>

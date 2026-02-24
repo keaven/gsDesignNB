@@ -20,28 +20,32 @@ We specifically test a scenario with:
 - Piecewise constant accrual rates.
 - Piecewise exponential dropout (constant in this example).
 - Negative binomial outcomes.
+- Event gaps (dead time after each event).
 - Fixed follow-up design.
+
+The simulation uses the corrected sample size (n = 436) computed by
+[`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md),
+which includes the second-order Taylor correction for Jensen’s
+inequality in the event gap effective rate (see
+[`vignette("sample-size-nbinom")`](https://keaven.github.io/gsDesignNB/articles/sample-size-nbinom.md)).
+Results for the first n = 422 subjects are also extracted from each
+simulation to compare with the uncorrected (naive) sample size.
 
 ## Simulation design
 
-The study sample size suggested by the Friede method is used to evaluate
-the accuracy of that method. The parameters for both the theoretical
-calculation and the simulation study are as follows:
-
 ### Parameters
 
-- **Rates**: \\\lambda_1 = 0.4\\ (Control), \\\lambda_2 = 0.3\\
-  (Experimental).
-- **Dispersion**: \\k = 0.5\\.
+- **Rates**: \lambda_1 = 0.4 (Control), \lambda_2 = 0.3 (Experimental).
+- **Dispersion**: k = 0.5.
 - **Power**: 90%.
 - **Alpha**: 0.025 (one-sided).
-- **Dropout**: 10% per year adjusted to monthly rate (\\\delta = 0.1 /
-  12\\).
+- **Dropout**: 10% per year adjusted to monthly rate (\delta = 0.1 /
+  12).
 - **Trial duration**: 24 months.
 - **Max follow-up**: 12 months.
-- **Event gap**: 30 days (approx 0.082 years).
-- **Accrual**: Piecewise linear ramp-up over 12 months (Rate \\R\\ for
-  0-6mo, \\2R\\ for 6-12mo).
+- **Event gap**: 20 days.
+- **Accrual**: Piecewise ramp-up over 12 months (Rate R for 0-6mo, 2R
+  for 6-12mo).
 
 ### Theoretical calculation
 
@@ -62,7 +66,6 @@ trial_duration <- 24
 event_gap <- 20 / 30.42 # 20 days
 
 # Accrual targeting 90% power
-# We provide relative rates (1:2) and the function scales them to achieve power
 accrual_rate_rel <- c(1, 2)
 accrual_duration <- c(6, 6)
 
@@ -78,15 +81,12 @@ design <- sample_size_nbinom(
   event_gap = event_gap
 )
 
-# Extract calculated absolute accrual rates
-accrual_rate <- design$accrual_rate
-
 print(design)
 #> Sample size for negative binomial outcome
 #> ==========================================
 #> 
-#> Sample size:     n1 = 211, n2 = 211, total = 422
-#> Expected events: 1366.9 (n1: 763.1, n2: 603.8)
+#> Sample size:     n1 = 218, n2 = 218, total = 436
+#> Expected events: 1304.3 (n1: 723.4, n2: 580.9)
 #> Power: 90%, Alpha: 0.025 (1-sided)
 #> Rates: control = 0.4000, treatment = 0.3000 (RR = 0.7500)
 #> Dispersion: 0.5000, Avg exposure (calendar): 11.42
@@ -99,11 +99,13 @@ print(design)
 
 ## Simulation results
 
-We simulated 3,600 trials using the parameters defined above from the
-Friede method. This number of simulations was chosen to achieve a
-standard error for the power estimate of approximately 0.005 when the
-true power is 90% (\\\sqrt{0.9 \times 0.1 / 3600} = 0.005\\). The
-simulation script is located in `data-raw/generate_simulation_data.R`.
+We simulated 3,600 trials at the corrected sample size (n = 436). For
+each trial, we also analyzed the first n = 422 subjects to provide a
+comparison with the naive (uncorrected) sample size. This number of
+simulations achieves a standard error for the power estimate of
+approximately 0.005 when the true power is 90% (\sqrt{0.9 \times 0.1 /
+3600} = 0.005). The simulation script is located in
+`data-raw/generate_simulation_data.R`.
 
 ``` r
 # Load pre-computed simulation results
@@ -116,21 +118,71 @@ if (results_file == "" && file.exists("../inst/extdata/simulation_results.rds"))
 if (results_file != "") {
   sim_data <- readRDS(results_file)
   results <- sim_data$results
+  results_naive <- sim_data$results_naive
   design_ref <- sim_data$design
+  n_full <- sim_data$n_full
+  n_naive <- sim_data$n_naive
 } else {
-  # Fallback if data is not available (e.g. not installed yet)
-  # This block allows the vignette to build without the data, but warns.
   warning("Simulation results not found. Skipping verification plots.")
   results <- NULL
+  results_naive <- NULL
   design_ref <- design
+  n_full <- design$n_total
+  n_naive <- 422L
 }
 ```
 
-### Summary of verification results
+### Power comparison
+
+The key question is whether the corrected sample size achieves the
+nominal 90% power.
+
+``` r
+power_full <- mean(results$p_value < alpha, na.rm = TRUE)
+power_naive <- mean(results_naive$p_value < alpha, na.rm = TRUE)
+
+ci_full <- binom.test(sum(results$p_value < alpha, na.rm = TRUE), nrow(results))$conf.int
+ci_naive <- binom.test(sum(results_naive$p_value < alpha, na.rm = TRUE), nrow(results_naive))$conf.int
+
+power_df <- data.frame(
+  Design = c(
+    paste0("Corrected (n = ", n_full, ")"),
+    paste0("Naive (n = ", n_naive, ")")
+  ),
+  Theoretical = c(design_ref$power, design_ref$power),
+  Empirical = c(power_full, power_naive),
+  CI_Lower = c(ci_full[1], ci_naive[1]),
+  CI_Upper = c(ci_full[2], ci_naive[2])
+)
+
+power_df |>
+  gt() |>
+  tab_header(
+    title = md("**Power Comparison: Corrected vs Naive Sample Size**"),
+    subtitle = paste0("Based on ", nrow(results), " simulated trials")
+  ) |>
+  fmt_number(columns = c(Theoretical, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
+  cols_label(
+    Design = "Design",
+    Theoretical = "Target",
+    Empirical = "Empirical",
+    CI_Lower = "95% CI Lower",
+    CI_Upper = "95% CI Upper"
+  )
+```
+
+| **Power Comparison: Corrected vs Naive Sample Size** |        |           |              |              |
+|------------------------------------------------------|--------|-----------|--------------|--------------|
+| Based on 3600 simulated trials                       |        |           |              |              |
+| Design                                               | Target | Empirical | 95% CI Lower | 95% CI Upper |
+| Corrected (n = 436)                                  | 0.9000 | 0.9122    | 0.9025       | 0.9213       |
+| Naive (n = 422)                                      | 0.9000 | 0.9039    | 0.8938       | 0.9133       |
+
+### Summary of verification results (corrected design)
 
 We compare the theoretical predictions from
 [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
-with the observed simulation results across multiple metrics.
+with the observed simulation results at the corrected sample size.
 
 **Key distinction: Total Exposure vs Exposure at Risk**
 
@@ -143,9 +195,6 @@ with the observed simulation results across multiple metrics.
   recovery time or treatment effect). This differs by treatment group
   because the group with more events loses more time to gaps.
 
-The theoretical sample size calculation uses exposure at risk
-internally, but reports both metrics for transparency.
-
 ``` r
 # ---- Compute all metrics ----
 
@@ -153,26 +202,12 @@ internally, but reports both metrics for transparency.
 n_sims <- sum(!is.na(results$estimate))
 
 # Total Exposure (calendar follow-up time)
-# Note: exposure is the same for both arms in the design (by symmetry)
 theo_exposure <- design_ref$exposure[1]
 
-# Check which column names are available in the results
-# (Support both old and new naming conventions)
-has_new_cols <- "exposure_total_control" %in% names(results)
-
-if (has_new_cols) {
-  obs_exposure_ctrl <- mean(results$exposure_total_control)
-  obs_exposure_exp <- mean(results$exposure_total_experimental)
-  obs_exposure_at_risk_ctrl <- mean(results$exposure_at_risk_control)
-  obs_exposure_at_risk_exp <- mean(results$exposure_at_risk_experimental)
-} else {
-  # Legacy: old simulation used 'exposure_control' which was actually at-risk time
-  obs_exposure_ctrl <- NA
-
-  obs_exposure_exp <- NA
-  obs_exposure_at_risk_ctrl <- mean(results$exposure_control)
-  obs_exposure_at_risk_exp <- mean(results$exposure_experimental)
-}
+obs_exposure_ctrl <- mean(results$exposure_total_control)
+obs_exposure_exp <- mean(results$exposure_total_experimental)
+obs_exposure_at_risk_ctrl <- mean(results$exposure_at_risk_control)
+obs_exposure_at_risk_exp <- mean(results$exposure_at_risk_experimental)
 
 # Exposure at risk (time at risk excluding event gaps)
 theo_exposure_at_risk_ctrl <- design_ref$exposure_at_risk_n1
@@ -191,20 +226,14 @@ mean_log_rr <- mean(results$estimate, na.rm = TRUE)
 
 # Variance
 theo_var <- design_ref$variance
-# Use median of SE^2 for robust estimate
 median_se_sq <- median(results$se^2, na.rm = TRUE)
-# Empirical variance of estimates
 emp_var <- var(results$estimate, na.rm = TRUE)
 
 # Power
 theo_power <- design_ref$power
 emp_power <- mean(results$p_value < design_ref$inputs$alpha, na.rm = TRUE)
 
-# Sample size reproduction
-z_alpha <- qnorm(1 - design_ref$inputs$alpha)
-z_beta <- qnorm(design_ref$inputs$power)
 n_sim_total <- design_ref$n_total
-n_reproduced <- n_sim_total * (emp_var * (z_alpha + z_beta)^2) / (mean_log_rr^2)
 
 # ---- Build summary table ----
 summary_df <- data.frame(
@@ -217,8 +246,7 @@ summary_df <- data.frame(
     "Events per Subject - Experimental",
     "Treatment Effect: log(RR)",
     "Variance of log(RR)",
-    "Power",
-    "Sample Size"
+    "Power"
   ),
   Theoretical = c(
     theo_exposure,
@@ -229,8 +257,7 @@ summary_df <- data.frame(
     theo_events_exp / (n_sim_total / 2),
     true_log_rr,
     theo_var,
-    theo_power,
-    n_sim_total
+    theo_power
   ),
   Simulated = c(
     obs_exposure_ctrl,
@@ -241,8 +268,7 @@ summary_df <- data.frame(
     obs_events_exp / (n_sim_total / 2),
     mean_log_rr,
     median_se_sq,
-    emp_power,
-    n_reproduced
+    emp_power
   ),
   stringsAsFactors = FALSE
 )
@@ -254,11 +280,7 @@ summary_df |>
   gt() |>
   tab_header(
     title = md("**Verification of sample_size_nbinom() Predictions**"),
-    subtitle = paste0("Based on ", n_sims, " simulated trials")
-  ) |>
-  tab_row_group(
-    label = md("**Sample Size**"),
-    rows = Metric == "Sample Size"
+    subtitle = paste0("Based on ", n_sims, " simulated trials (n = ", n_sim_total, ")")
   ) |>
   tab_row_group(
     label = md("**Power**"),
@@ -281,7 +303,7 @@ summary_df |>
     rows = grepl("Exposure", Metric)
   ) |>
   row_group_order(groups = c("**Exposure**", "**Events**", "**Treatment Effect**",
-                              "**Variance**", "**Power**", "**Sample Size**")) |>
+                              "**Variance**", "**Power**")) |>
   fmt_number(columns = c(Theoretical, Simulated, Difference), decimals = 4) |>
   fmt_number(columns = Rel_Diff_Pct, decimals = 2) |>
   cols_label(
@@ -296,24 +318,22 @@ summary_df |>
 
 | **Verification of sample_size_nbinom() Predictions** |             |           |            |               |
 |------------------------------------------------------|-------------|-----------|------------|---------------|
-| Based on 3600 simulated trials                       |             |           |            |               |
+| Based on 3600 simulated trials (n = 436)             |             |           |            |               |
 |                                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
 | **Exposure**                                         |             |           |            |               |
-| Total Exposure (months) - Control                    | 11.4195     | 11.4156   | −0.0039    | −0.03         |
-| Total Exposure (months) - Experimental               | 11.4195     | 11.4167   | −0.0029    | −0.03         |
-| Exposure at Risk (months) - Control                  | 9.0417      | 9.2581    | 0.2164     | 2.39          |
-| Exposure at Risk (months) - Experimental             | 9.5382      | 9.6935    | 0.1553     | 1.63          |
+| Total Exposure (months) - Control                    | 11.4195     | 11.4142   | −0.0053    | −0.05         |
+| Total Exposure (months) - Experimental               | 11.4195     | 11.4134   | −0.0061    | −0.05         |
+| Exposure at Risk (months) - Control                  | 9.0417      | 9.2563    | 0.2146     | 2.37          |
+| Exposure at Risk (months) - Experimental             | 9.5382      | 9.6883    | 0.1501     | 1.57          |
 | **Events**                                           |             |           |            |               |
-| Events per Subject - Control                         | 3.6167      | 3.3778    | −0.2389    | −6.61         |
-| Events per Subject - Experimental                    | 2.8615      | 2.6983    | −0.1631    | −5.70         |
+| Events per Subject - Control                         | 3.3185      | 3.3788    | 0.0603     | 1.82          |
+| Events per Subject - Experimental                    | 2.6646      | 2.7013    | 0.0367     | 1.38          |
 | **Treatment Effect**                                 |             |           |            |               |
-| Treatment Effect: log(RR)                            | −0.2877     | −0.2891   | −0.0014    | −0.48         |
+| Treatment Effect: log(RR)                            | −0.2877     | −0.2878   | −0.0001    | −0.03         |
 | **Variance**                                         |             |           |            |               |
-| Variance of log(RR)                                  | 0.0079      | 0.0078    | −0.0001    | −1.11         |
+| Variance of log(RR)                                  | 0.0078      | 0.0075    | −0.0003    | −3.96         |
 | **Power**                                            |             |           |            |               |
-| Power                                                | 0.9000      | 0.8992    | −0.0008    | −0.09         |
-| **Sample Size**                                      |             |           |            |               |
-| Sample Size                                          | 422.0000    | 437.2366  | 15.2366    | 3.61          |
+| Power                                                | 0.9000      | 0.9122    | 0.0122     | 1.36          |
 
 **Notes:**
 
@@ -329,22 +349,6 @@ summary_df |>
   each treatment group.
 - **Variance** uses the median of the estimated variances (SE²) from
   each simulation, which is robust to outliers from unstable model fits.
-- **Sample Size** is back-calculated using the standard asymptotic
-  formula with the observed treatment effect and variance.
-
-#### Power confidence interval
-
-A 95% confidence interval for the empirical power confirms that the
-theoretical power falls within the simulation error bounds.
-
-``` r
-power_ci <- binom.test(sum(results$p_value < design_ref$inputs$alpha, na.rm = TRUE), 
-   nrow(results))$conf.int
-cat("95% CI for empirical power: [", round(power_ci[1], 4), ", ", round(power_ci[2], 4), "]\n", sep = "")
-#> 95% CI for empirical power: [0.8889, 0.9088]
-cat("Theoretical power:", round(theo_power, 4), "\n")
-#> Theoretical power: 0.9
-```
 
 ### Distribution of the test statistic
 
@@ -353,24 +357,13 @@ compare it to the expected normal distribution centered at the
 theoretical mean Z-score.
 
 ``` r
-# Calculate Z-scores using estimated variance (Wald statistic)
-# Z = (hat(delta) - 0) / SE_est
 z_scores <- results$estimate / results$se
 
-# Theoretical mean Z-score under the alternative
-# E[Z] = log(RR) / sqrt(V_theo)
 theo_se <- sqrt(theo_var)
 theo_mean_z <- log(lambda2 / lambda1) / theo_se
-
-# Critical value for 1-sided alpha (since we are looking at lower tail for RR < 1)
-# However, the Z-scores here are negative (log(0.3/0.4) < 0).
-# Rejection region is Z < qnorm(alpha)
 crit_val <- qnorm(design_ref$inputs$alpha)
-
-# Proportion of simulations rejecting the null
 prop_reject <- mean(z_scores < crit_val, na.rm = TRUE)
 
-# Plot
 ggplot(data.frame(z = z_scores), aes(x = z)) +
   geom_density(aes(color = "Simulated Density"), linewidth = 1) +
   stat_function(
@@ -388,7 +381,7 @@ ggplot(data.frame(z = z_scores), aes(x = z)) +
     hjust = 0, vjust = 0
   ) +
   labs(
-    title = "Distribution of Wald Z-scores",
+    title = "Distribution of Wald Z-scores (corrected design)",
     subtitle = paste("Theoretical Mean Z =", round(theo_mean_z, 3)),
     x = "Z-score (Estimate / Estimated SE)",
     y = "Density",
@@ -400,22 +393,15 @@ ggplot(data.frame(z = z_scores), aes(x = z)) +
 
 ![](verification-simulation_files/figure-html/z_score_dist-1.png)
 
-Given the apparent location difference in the above plot for the
-simulation versus theoretical normal distribution, we can also examine
-the theoretical versus simulation mean and standard deviation of
-\\log(\theta)\\ .
+### Distribution statistics for log(RR)
 
 ``` r
-# Theoretical mean and SD of log(RR)
-# Let's also add median, skewness, and kurtosis
 theo_mean_log_rr <- log(lambda2 / lambda1)
 theo_sd_log_rr <- sqrt(theo_var)
 emp_mean_log_rr <- mean(results$estimate, na.rm = TRUE)
 emp_sd_log_rr <- sd(results$estimate, na.rm = TRUE)
 emp_median_log_rr <- median(results$estimate, na.rm = TRUE)
 
-# Skewness and Kurtosis (using trimmed data to reduce outlier influence)
-# Trim extreme 1% on each tail for robust estimates
 ests <- results$estimate[!is.na(results$estimate)]
 q_low <- quantile(ests, 0.01)
 q_high <- quantile(ests, 0.99)
@@ -439,7 +425,6 @@ comparison_log_rr <- data.frame(
     emp_kurt_log_rr - 3
   )
 )
-# Display table
 comparison_log_rr |>
   gt() |>
   tab_header(title = md("**Comparison of log(RR) Statistics**")) |>
@@ -449,18 +434,129 @@ comparison_log_rr |>
 | **Comparison of log(RR) Statistics** |             |           |            |
 |--------------------------------------|-------------|-----------|------------|
 | Metric                               | Theoretical | Simulated | Difference |
-| Mean                                 | −0.2877     | −0.2891   | −0.0014    |
-| SD                                   | 0.0887      | 0.0908    | 0.0021     |
-| Median                               | −0.2877     | −0.2912   | −0.0036    |
-| Skewness (trimmed)                   | 0.0000      | 0.0603    | 0.0603     |
-| Kurtosis (trimmed)                   | 3.0000      | 2.5078    | −0.4922    |
+| Mean                                 | −0.2877     | −0.2878   | −0.0001    |
+| SD                                   | 0.0886      | 0.0876    | −0.0010    |
+| Median                               | −0.2877     | −0.2874   | 0.0002     |
+| Skewness (trimmed)                   | 0.0000      | 0.0056    | 0.0056     |
+| Kurtosis (trimmed)                   | 3.0000      | 2.5476    | −0.4524    |
 
-## Conclusion
+## Scenario sweep: impact of the Jensen correction
 
-The simulation results confirm that
-[`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
-reasonably predicts average exposure, variance (information), and power
-for this complex design with piecewise accrual and dropout. However,
-given the slight underpowering that the simulation study suggests, it
-may be useful to consider a larger sample size than the Friede
-approximation suggests, with power verified by simulation.
+The Jensen correction for event gaps only applies when both the
+dispersion (k \> 0) and the event gap (g \> 0) are nonzero. When either
+is zero, the corrected and naive formulas produce identical sample
+sizes.
+
+To assess the correction’s impact across a range of realistic parameter
+combinations, we ran a simulation sweep with 10,000 replicates per
+scenario. For each scenario, trials were simulated at the corrected
+sample size (n\_\text{corr}), and results were also extracted for the
+first n\_\text{naive} subjects (the uncorrected sample size). Because
+both analyses use the same simulated data, the **paired** comparison is
+very precise.
+
+``` r
+sweep_file <- system.file("extdata", "scenario_sweep_results.rds", package = "gsDesignNB")
+if (sweep_file == "" && file.exists("../inst/extdata/scenario_sweep_results.rds")) {
+  sweep_file <- "../inst/extdata/scenario_sweep_results.rds"
+}
+has_sweep <- sweep_file != ""
+if (has_sweep) {
+  sweep <- readRDS(sweep_file)
+}
+```
+
+``` r
+sweep_display <- data.frame(
+  Scenario = sprintf("k = %.1f, gap = %d days", sweep$k, sweep$gap_days),
+  `n (corrected)` = sweep$n_corrected,
+  `n (naive)` = sweep$n_naive,
+  `Extra subjects` = sweep$n_diff,
+  `Power (corrected)` = sweep$power_corrected,
+  `Power (naive)` = sweep$power_naive,
+  `Difference` = sprintf("%.2f ± %.2f", 100 * sweep$power_diff, 100 * 1.96 * sweep$power_diff_se),
+  check.names = FALSE
+)
+
+sweep_display |>
+  gt() |>
+  tab_header(
+    title = md("**Impact of Jensen Correction Across Scenarios**"),
+    subtitle = "10,000 replicates per scenario; power difference is paired (95% CI)"
+  ) |>
+  fmt_number(columns = c(`Power (corrected)`, `Power (naive)`), decimals = 4) |>
+  cols_label(
+    Scenario = "Scenario",
+    `n (corrected)` = "n (corr.)",
+    `n (naive)` = "n (naive)",
+    `Extra subjects` = "Δn",
+    `Power (corrected)` = "Power (corr.)",
+    `Power (naive)` = "Power (naive)",
+    Difference = "Diff (pp) ± 95% CI"
+  )
+```
+
+``` r
+cat("**Key findings:**\n\n")
+cat("*   The corrected design achieves power at or above the 90% target in **all** scenarios.\n")
+cat("*   The naive design falls below 90% in **three of four** scenarios, with the shortfall increasing as $k$ and $g$ grow.\n")
+cat(sprintf("*   The largest paired power difference is %.1f percentage points ($k = %.1f$, gap = %d days), ",
+    100 * sweep$power_diff[which.max(sweep$power_diff)],
+    sweep$k[which.max(sweep$power_diff)],
+    sweep$gap_days[which.max(sweep$power_diff)]))
+cat(sprintf("where the corrected design adds %d subjects.\n",
+    sweep$n_diff[which.max(sweep$power_diff)]))
+cat(sprintf("*   All paired differences are statistically significant (discordant pair ratios range from %.1f:1 to %.1f:1 in favor of the corrected design).\n",
+    min(sweep$corr_only / sweep$naive_only),
+    max(sweep$corr_only / sweep$naive_only)))
+```
+
+## Discussion: why we apply the correction
+
+In the primary verification scenario above (k = 0.5, gap = 20 days), the
+corrected design slightly overshoots the 90% target while the naive
+design is very close to 90%. This pattern — where the naive formula
+appears well-calibrated — reflects a **partial cancellation of two
+biases**:
+
+1.  **Design-stage bias** (hurts power): The naive effective rate
+    \lambda/(1+\lambda g) overestimates the true population-level
+    effective rate, leading to an underestimated variance and thus a
+    sample size that is too small.
+
+2.  **Analysis-stage bias** (helps power): The model-based standard
+    error from
+    [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) tends
+    to slightly underestimate the true standard deviation of \hat\theta,
+    making the Wald test slightly anti-conservative (z-statistic too
+    extreme, more rejections).
+
+These biases act in opposite directions. In the k = 0.5, gap = 20 day
+scenario, they happen to nearly cancel, giving the naive design the
+appearance of correct calibration.
+
+We apply the Jensen correction despite this for several reasons:
+
+- **The cancellation is fragile.** It depends on the specific test
+  statistic (NB Wald via `glm.nb`). A different analysis method —
+  sandwich standard errors, bootstrap, permutation test, or a different
+  link function — would change the analysis-stage bias while the
+  design-stage bias remains, breaking the cancellation.
+
+- **The correction is conservative.** It produces power at or slightly
+  above 90% rather than at or slightly below. For a pivotal trial, a
+  slight overshoot of the power target is preferable to a slight
+  undershoot.
+
+- **The correction is principled.** It fixes the effective rate
+  approximation by accounting for the known distributional assumption
+  (Gamma frailty). The remaining small overshoot is a separate
+  finite-sample phenomenon.
+
+- **The scenario sweep demonstrates the benefit.** As the table above
+  shows, the naive formula increasingly underpowers as k and g grow,
+  while the corrected formula maintains nominal or conservative power
+  across all scenarios tested.
+
+- **The cost is modest.** The extra subjects required by the correction
+  range from 14 to 40 (3–6% of total), a small price for reliable power.

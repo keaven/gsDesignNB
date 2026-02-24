@@ -30,21 +30,21 @@ planned. We will show how to:
 
 **Planned parameters:**
 
-- Control rate (\\\lambda_1\\): 0.1 events/month
-- Experimental rate (\\\lambda_2\\): 0.075 events/month (Hazard Ratio =
+- Control rate (\lambda_1): 0.1 events/month
+- Experimental rate (\lambda_2): 0.075 events/month (Hazard Ratio =
   0.75)
-- Dispersion (\\k\\): 0.5
+- Dispersion (k): 0.5
 - Power: 90%
-- One-sided Type I error (\\\alpha\\): 0.025
+- One-sided Type I error (\alpha): 0.025
 - Enrollment: 20 patients/month for 12 months (Total N = 240)
 - Study duration: 24 months
 
 **Actual parameters (simulation truth):**
 
-- Control rate (\\\lambda_1\\): 0.08 events/month (Lower than planned)
-- Experimental rate (\\\lambda_2\\): 0.06 events/month (HR = 0.75
+- Control rate (\lambda_1): 0.08 events/month (Lower than planned)
+- Experimental rate (\lambda_2): 0.06 events/month (HR = 0.75
   maintained)
-- Dispersion (\\k\\): 0.65 (Higher than planned)
+- Dispersion (k): 0.65 (Higher than planned)
 
 ### Initial sample size calculation
 
@@ -125,16 +125,16 @@ gsBoundSummary(gs_plan,
 |--------------------------------------------------------------|---------------------|----------|----------|
 | N = 882, Expected events = 785.4                             |                     |          |          |
 | Analysis                                                     | Value               | Efficacy | Futility |
-| IA 1: 43%                                                    | Z                   | 2.5498   | 0.7234   |
-| Information: 64.85                                           | p (1-sided)         | 0.0054   | 0.2347   |
-| Month: 10                                                    | ~RR at bound        | 0.7286   | 0.9141   |
-|                                                              | P(Cross) if RR=1    | 0.0054   | 0.7653   |
-|                                                              | P(Cross) if RR=0.75 | 0.4077   | 0.0556   |
-| Final                                                        | Z                   | 2.0152   | 2.0152   |
-| Information: 149.77                                          | p (1-sided)         | 0.0219   | 0.0219   |
-| Month: 24                                                    | ~RR at bound        | 0.8481   | 0.8481   |
-|                                                              | P(Cross) if RR=1    | 0.0219   | 0.9781   |
-|                                                              | P(Cross) if RR=0.75 | 0.9027   | 0.0973   |
+| IA 1: 41%                                                    | Z                   | 2.5791   | 0.6354   |
+| Information: 61.25                                           | p (1-sided)         | 0.0050   | 0.2626   |
+| Month: 10                                                    | ~RR at bound        | 0.7192   | 0.9220   |
+|                                                              | P(Cross) if RR=1    | 0.0050   | 0.7374   |
+|                                                              | P(Cross) if RR=0.75 | 0.3714   | 0.0531   |
+| Final                                                        | Z                   | 2.0118   | 2.0118   |
+| Information: 149.77                                          | p (1-sided)         | 0.0221   | 0.0221   |
+| Month: 24                                                    | ~RR at bound        | 0.8484   | 0.8484   |
+|                                                              | P(Cross) if RR=1    | 0.0221   | 0.9779   |
+|                                                              | P(Cross) if RR=0.75 | 0.9038   | 0.0962   |
 
 ## Simulation
 
@@ -209,8 +209,7 @@ dispersion, often used for monitoring without unblinding.
 dispersion in each group. This is the true Fisher information for the
 log rate ratio.
 
-\\ \mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}\_{trt})} \right)
-\\
+\mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}\_{trt})} \right)
 
 ``` r
 # Blinded SSR
@@ -370,9 +369,9 @@ cat("Target Information:", ssr_res$target_info, "\n")
 ### Updating bounds
 
 If the final information differs from the target (e.g., it is lower), we
-need to adjust the critical values to ensure we spend exactly
-\\\alpha\\. We use the `gsDesign` package with `usTime` (user-specified
-information fraction) to update the bounds.
+need to adjust the critical values to ensure we spend exactly \alpha. We
+use the `gsDesign` package with `usTime` (user-specified information
+fraction) to update the bounds.
 
 ``` r
 # Information fraction at final analysis
