@@ -1,0 +1,6 @@
+── Installing package gsDesignNB into temporary library ────────────────────────
+Error: .onLoad failed in loadNamespace() for 'processx', details:
+  call: NULL
+  error: Operation not permitted
+Execution halted
+Finished rebuilding pkgdown
