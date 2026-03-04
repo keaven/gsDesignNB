@@ -48,6 +48,10 @@ For hypothesis testing, all interim and final analyses use the
 crossing decisions and the unblinded-information fallback used when blinded
 information estimation fails.
 
+*Note:* Much of the simulation code in this vignette was generated with the
+assistance of a large language model (LLM) and then reviewed and refined
+by the package authors.
+
 Interim analyses are triggered when the **blinded statistical information**
 reaches the planned fraction of the target, rather than at fixed calendar
 times. This ensures analyses occur at comparable information levels
@@ -59,7 +63,7 @@ regardless of the true nuisance parameters.
 lambda1_plan      <- 0.5
 rr_plan           <- 0.7
 lambda2_plan      <- lambda1_plan * rr_plan
-k_plan            <- 0.3
+k_plan            <- 0.5
 power_plan        <- 0.9
 alpha_plan        <- 0.025
 accrual_rate_plan <- 30
@@ -67,6 +71,7 @@ accrual_scenario_plan <- 18
 accrual_dur_plan  <- 12
 max_followup      <- 12
 trial_dur_plan    <- accrual_dur_plan + max_followup
+event_gap_val     <- 20 / 30.4375  # 20-day gap between events
 analysis_times_plan <- c(9, 14, 24)  # Calendar times under plan
 ```
 
@@ -79,7 +84,8 @@ design_plan <- sample_size_nbinom(
   accrual_rate = accrual_rate_plan,
   accrual_duration = accrual_dur_plan,
   trial_duration = trial_dur_plan,
-  max_followup = max_followup
+  max_followup = max_followup,
+  event_gap = event_gap_val
 )
 cat("Fixed-design sample size:", design_plan$n_total, "\n")
 ```
@@ -121,11 +127,13 @@ design_note <- paste0(
   ", max follow-up=", max_followup, " mo"
 )
 
-cat("Planned N (GS):", n_planned, "\n")
-cat("Information fractions:", round(planned_timing, 3), "\n")
-cat("GS inflation factor:", round(gs_inflation, 3), "\n")
-cat("Effective accrual rate for GS design:", round(accrual_rate_plan_eff, 2), "/month\n")
 ```
+
+The group sequential inflation factor is
+`r round(gs_inflation, 3)`, giving a planned sample size of
+`r n_planned` (up from the fixed-design
+`r round(design_plan$n_total)`) with an effective accrual rate of
+`r round(accrual_rate_plan_eff, 1)` patients per month.
 
 ```{r gs_bound_summary}
 gsBoundSummary(gs_plan,
@@ -150,17 +158,107 @@ gsBoundSummary(gs_plan,
   )
 ```
 
+### Group sequential sample size under each nuisance scenario
+
+The figure below shows how the required group sequential sample size and
+monthly enrollment rate vary with the control rate $\lambda_1$ and
+dispersion $k$.
+Since the sample size does not depend on the enrollment pace (accrual rate
+only scales enrollment duration), we show two lines -- one per $k$ value --
+with $\lambda_1$ on the horizontal axis.
+The planned design assumptions ($\lambda_1 = `r lambda1_plan`$,
+$k = `r k_plan`$) are marked with a dashed line.
+
+```{r gs_n_by_scenario, fig.width=9, fig.height=4.5}
+lambda1_seq <- seq(0.2, 1.0, by = 0.1)
+gs_n_grid <- expand.grid(
+  lambda1_true = lambda1_seq,
+  k_true = c(0.5, 1.0),
+  stringsAsFactors = FALSE
+)
+
+gs_n_grid$GS_N <- sapply(seq_len(nrow(gs_n_grid)), function(i) {
+  fixed_i <- tryCatch(
+    sample_size_nbinom(
+      lambda1 = gs_n_grid$lambda1_true[i],
+      lambda2 = gs_n_grid$lambda1_true[i] * rr_plan,
+      dispersion = gs_n_grid$k_true[i],
+      power = power_plan, alpha = alpha_plan,
+      accrual_rate = accrual_rate_plan,
+      accrual_duration = accrual_dur_plan,
+      trial_duration = trial_dur_plan,
+      max_followup = max_followup,
+      event_gap = event_gap_val
+    ),
+    error = function(e) NULL
+  )
+  if (is.null(fixed_i)) return(NA_real_)
+  tryCatch({
+    g <- gsNBCalendar(fixed_i, k = 3, test.type = 4, alpha = alpha_plan,
+      sfu = sfHSD, sfupar = -2,
+      sfl = sfCauchy, sflpar = c(0.4, 0.75, 0.56, 0.63),
+      analysis_times = analysis_times_plan) |>
+      gsDesignNB::toInteger()
+    g$n_total[g$k]
+  }, error = function(e) NA_real_)
+})
+
+gs_n_grid$Accrual_rate <- gs_n_grid$GS_N / accrual_dur_plan
+gs_n_grid$k_label <- paste0("k = ", gs_n_grid$k_true)
+gs_n_grid$N_label <- round(gs_n_grid$GS_N)
+gs_n_grid$Rate_label <- round(gs_n_grid$Accrual_rate)
+
+plot_n <- ggplot(gs_n_grid, aes(x = lambda1_true, y = GS_N,
+                                color = k_label, linetype = k_label)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_text(aes(label = N_label), vjust = -0.8, size = 3.2, show.legend = FALSE) +
+  geom_vline(xintercept = lambda1_plan, linetype = "dashed", alpha = 0.4) +
+  labs(x = expression(lambda[1]), y = "GS sample size (N)",
+       color = NULL, linetype = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+
+plot_rate <- ggplot(gs_n_grid, aes(x = lambda1_true, y = Accrual_rate,
+                                   color = k_label, linetype = k_label)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_text(aes(label = Rate_label), vjust = -0.8, size = 3.2, show.legend = FALSE) +
+  geom_vline(xintercept = lambda1_plan, linetype = "dashed", alpha = 0.4) +
+  labs(x = expression(lambda[1]), y = "Enrollment rate (pts/mo)",
+       color = NULL, linetype = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+
+gridExtra::grid.arrange(plot_n, plot_rate, ncol = 2,
+  top = grid::textGrob(
+    "GS Sample Size and Enrollment Rate by Control Rate and Dispersion",
+    gp = grid::gpar(fontsize = 14, fontface = "bold")
+  )
+)
+```
+
+Across the range of $\lambda_1$ and $k$ values considered, the required
+group sequential sample size ranges from
+`r min(gs_n_grid$GS_N, na.rm = TRUE)` to
+`r max(gs_n_grid$GS_N, na.rm = TRUE)`.
+Higher dispersion ($k = 0.6$) consistently requires more subjects than
+$k = 0.3$, while higher control rates reduce the required N because each
+subject contributes more information.
+This wide range highlights why sample size re-estimation can be valuable
+when nuisance parameters are uncertain.
+
 ### Expected information fraction at planned time of each interim
 
 This table shows the expected information fraction at each planned interim
-calendar time under each nuisance scenario. Under the design assumptions
-(bold green row), the information fractions match the GS design
+calendar time under each nuisance scenario. Under the approximate design assumptions
+(bold green row), the information fractions match the GS design reasonably well
 (`r paste(round(100 * planned_timing[1:2], 1), collapse = "%, ")`%).
 
 ```{r info_fractions}
 nuisance_grid <- expand.grid(
   lambda1_true = c(0.3, 0.5, 0.8),
-  k_true = c(0.3, 0.6),
+  k_true = c(0.5, 1.0),
   accrual_true = c(12, 18, 24),
   stringsAsFactors = FALSE
 )
@@ -178,32 +276,25 @@ for (a in 1:2) {
       lambda1 = nuisance_grid$lambda1_true[i],
       lambda2 = nuisance_grid$lambda1_true[i] * rr_plan,
       dispersion = nuisance_grid$k_true[i],
-      max_followup = max_followup
+      max_followup = max_followup,
+      event_gap = event_gap_val
     )
     round(100 * info_at_t / target_info, 1)
   })
 }
 
-nuisance_grid$is_planned <- with(nuisance_grid,
-  lambda1_true == 0.5 & k_true == 0.3 & accrual_true == accrual_scenario_plan)
-
 nuisance_grid |>
-  select(-is_planned) |>
   gt() |>
   tab_header(
     title = "Expected Information Fraction (%) at Planned Time of Each Interim",
     subtitle = design_note
   ) |>
   cols_label(
-    lambda1_true = "lambda1 (true)",
-    k_true = "k (true)",
+    lambda1_true = "lambda1",
+    k_true = "k",
     accrual_true = "Accrual (pts/mo)",
     IF_analysis_1 = paste0("IA 1 (mo ", analysis_times_plan[1], ")"),
     IF_analysis_2 = paste0("IA 2 (mo ", analysis_times_plan[2], ")")
-  ) |>
-  tab_style(
-    style = list(cell_fill(color = "#E8F5E9"), cell_text(weight = "bold")),
-    locations = cells_body(rows = nuisance_grid$is_planned)
   ) |>
   tab_footnote(
     footnote = paste(
@@ -221,9 +312,9 @@ nuisance_grid |>
 ```{r scenario_grid}
 scenarios <- expand.grid(
   lambda1_true = c(0.3, 0.5, 0.8),
-  k_true = c(0.3, 0.6),
+  k_true = c(0.5, 1.0),
   accrual_true = c(12, 18, 24),
-  rr_true = c(0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1),
+  rr_true = c(0.6, 0.7, 0.85, 1.0, 1.1),
   stringsAsFactors = FALSE
 )
 
@@ -288,14 +379,17 @@ Interim analyses are information-based and use dynamic spending:
    and spending.
 3. **SSR at IA2 only**: nuisance estimates for adaptation use an IA2
    adaptation cutoff time at
-   $\min(\text{IA2 time}, \text{predicted enrollment close} -
-   `r min_months_to_close_for_adapt` months), enforcing at least
-   `r min_months_to_close_for_adapt` months operational lead-time.
+   $\min(\text{IA2 time},\; \text{predicted enrollment close} -
+   `r min_months_to_close_for_adapt` \text{ months})$, enforcing at least
+   `r min_months_to_close_for_adapt` months of operational lead-time.
    The enrollment-fraction cap is set in the scenario setup.
 
 At each analysis, bounds are recalculated from observed information and
-spending time. If blinded NB information fails, timing falls back to
-`mutze_test()` information (tracked in output).
+spending time. The blinded NB information estimate from
+`calculate_blinded_info()` is used to determine interim timing.
+If this estimate is unavailable or non-positive, timing falls back to
+unblinded information from `mutze_test()` (tracked as fallback counts
+in the results table).
 
 ```{r simulation_engine}
 run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
@@ -309,6 +403,7 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
                           max_enrollment_frac_for_ia2,
                           min_months_to_close_for_adapt,
                           analysis_lag_months,
+                          event_gap = 0,
                           ignore_futility = FALSE) {
   lambda2_true <- lambda1_true * rr_true
   k_analyses <- 3
@@ -328,7 +423,7 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
   sim_data <- nb_sim(
     enroll_rate = enroll_rate_sim, fail_rate = fail_rate_sim,
     dropout_rate = dropout_rate_sim, max_followup = max_followup,
-    n = n_max
+    n = n_max, event_gap = event_gap
   )
 
   id_enroll <- unique(sim_data[, c("id", "enroll_time")])
@@ -344,7 +439,7 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
 
   # Helper: info and method at a given cut time
   info_method_at_t <- function(pool, t) {
-    cut_dt <- cut_data_by_date(pool, cut_date = t)
+    cut_dt <- cut_data_by_date(pool, cut_date = t, event_gap = event_gap)
     if (sum(cut_dt$events) < 2 || length(unique(cut_dt$id)) < 4) {
       return(list(info = 0, method = "insufficient"))
     }
@@ -353,7 +448,8 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
       calculate_blinded_info(
         cut_dt, ratio = 1,
         lambda1_planning = lambda1_plan,
-        lambda2_planning = lambda2_plan
+        lambda2_planning = lambda2_plan,
+        event_gap = event_gap
       ),
       error = function(e) NULL
     )
@@ -392,6 +488,7 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
       get_cut_date(
         data = planned_pool,
         target_info = target_info_a,
+        event_gap = event_gap,
         lambda1 = lambda1_plan, lambda2 = lambda2_plan,
         ratio = 1, min_date = min_t, max_date = max_calendar
       ),
@@ -492,7 +589,7 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
       cal_times[a] <- cut_time
 
       class(analysis_pool) <- class(sim_data)
-      cut_data <- cut_data_by_date(analysis_pool, cut_date = cut_time)
+      cut_data <- cut_data_by_date(analysis_pool, cut_date = cut_time, event_gap = event_gap)
 
       if (length(unique(cut_data$id)) < 10) next
 
@@ -571,7 +668,7 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
         if (!is.na(ia2_adapt_cut_time)) {
           adapt_pool <- sim_data[sim_data$id %in% analysis_ids, ]
           class(adapt_pool) <- class(sim_data)
-          adapt_cut_data <- cut_data_by_date(adapt_pool, cut_date = ia2_adapt_cut_time)
+          adapt_cut_data <- cut_data_by_date(adapt_pool, cut_date = ia2_adapt_cut_time, event_gap = event_gap)
         }
         if (length(unique(adapt_cut_data$id)) < 10) next
 
@@ -579,7 +676,8 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
           blind_res <- tryCatch(
             calculate_blinded_info(adapt_cut_data, ratio = 1,
               lambda1_planning = lambda1_plan,
-              lambda2_planning = lambda2_plan),
+              lambda2_planning = lambda2_plan,
+              event_gap = event_gap),
             error = function(e) NULL
           )
           if (!is.null(blind_res) && !is.na(blind_res$lambda1_adjusted)) {
@@ -592,7 +690,8 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
                 accrual_rate = accrual_rate_plan,
                 accrual_duration = accrual_dur_plan,
                 trial_duration = trial_dur_plan,
-                max_followup = max_followup
+                max_followup = max_followup,
+                event_gap = event_gap
               ),
               error = function(e) NULL
             )
@@ -623,7 +722,8 @@ run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
                 accrual_rate = accrual_rate_plan,
                 accrual_duration = accrual_dur_plan,
                 trial_duration = trial_dur_plan,
-                max_followup = max_followup
+                max_followup = max_followup,
+                event_gap = event_gap
               ),
               error = function(e) NULL
             )
@@ -713,6 +813,7 @@ if (use_precomputed) {
           max_enrollment_frac_for_ia2 = max_enrollment_frac_for_ia2,
           min_months_to_close_for_adapt = min_months_to_close_for_adapt,
           analysis_lag_months = analysis_lag_months,
+          event_gap = event_gap_val,
           ignore_futility = FALSE
         ),
         error = function(e) NULL
@@ -766,7 +867,10 @@ if (!is.null(sim_runtime_seconds) && is.finite(sim_runtime_seconds)) {
 }
 
 # Separate RR = 1.0 non-binding futility check (ignore futility stopping)
+# Run under design assumptions and with higher dispersion
 null_nonbinding_n <- if (use_production) 20000 else n_sims_initial
+null_k_scenarios <- c(k_plan, 1.0)
+
 if (use_precomputed && !is.null(precomputed_outputs$null_nonbinding_summary)) {
   null_nonbinding_summary <- as.data.table(precomputed_outputs$null_nonbinding_summary)
   null_nonbinding_runtime_seconds <- precomputed_outputs$null_nonbinding_runtime_seconds
@@ -775,63 +879,69 @@ if (use_precomputed && !is.null(precomputed_outputs$null_nonbinding_summary)) {
   null_nonbinding_mode <- "Fresh simulation"
   null_start <- Sys.time()
 
-  run_null_nonbinding <- function(sim_id) {
-    if (sim_id %% 1000 == 0) message(sprintf("Processing RR=1 null simulation %d / %d", sim_id, null_nonbinding_n))
-    tryCatch(
-      run_one_trial(
-        sim_id = sim_id,
-        lambda1_true = lambda1_plan, rr_true = 1.0, k_true = k_plan,
-        accrual_true = accrual_scenario_plan,
-        accrual_eff = accrual_scenario_plan,
-        n_planned = n_planned, n_max = n_max,
-        max_followup = max_followup,
-        gs_plan = gs_plan, target_info = target_info,
-        planned_timing = planned_timing, gs_inflation = gs_inflation,
-        lambda1_plan = lambda1_plan, lambda2_plan = lambda2_plan,
-        rr_plan = rr_plan, accrual_rate_plan = accrual_rate_plan,
-        accrual_dur_plan = accrual_dur_plan,
-        trial_dur_plan = trial_dur_plan,
-        power_plan = power_plan, alpha_plan = alpha_plan,
-        min_if_futility = min_if_futility,
-        max_enrollment_frac_for_ia2 = max_enrollment_frac_for_ia2,
-        min_months_to_close_for_adapt = min_months_to_close_for_adapt,
-        analysis_lag_months = analysis_lag_months,
-        ignore_futility = TRUE
-      ),
-      error = function(e) NULL
-    )
-  }
-
+  null_all <- list()
   old_plan_null <- future::plan()
   future::plan(future::multisession, workers = workers)
-  null_results <- future.apply::future_lapply(
-    seq_len(null_nonbinding_n),
-    run_null_nonbinding,
-    future.seed = TRUE
-  )
+
+  for (k_null in null_k_scenarios) {
+    run_null_nonbinding <- function(sim_id) {
+      tryCatch(
+        run_one_trial(
+          sim_id = sim_id,
+          lambda1_true = lambda1_plan, rr_true = 1.0, k_true = k_null,
+          accrual_true = accrual_scenario_plan,
+          accrual_eff = accrual_scenario_plan,
+          n_planned = n_planned, n_max = n_max,
+          max_followup = max_followup,
+          gs_plan = gs_plan, target_info = target_info,
+          planned_timing = planned_timing, gs_inflation = gs_inflation,
+          lambda1_plan = lambda1_plan, lambda2_plan = lambda2_plan,
+          rr_plan = rr_plan, accrual_rate_plan = accrual_rate_plan,
+          accrual_dur_plan = accrual_dur_plan,
+          trial_dur_plan = trial_dur_plan,
+          power_plan = power_plan, alpha_plan = alpha_plan,
+          min_if_futility = min_if_futility,
+          max_enrollment_frac_for_ia2 = max_enrollment_frac_for_ia2,
+          min_months_to_close_for_adapt = min_months_to_close_for_adapt,
+          analysis_lag_months = analysis_lag_months,
+          event_gap = event_gap_val,
+          ignore_futility = TRUE
+        ),
+        error = function(e) NULL
+      )
+    }
+
+    null_res <- future.apply::future_lapply(
+      seq_len(null_nonbinding_n),
+      run_null_nonbinding,
+      future.seed = TRUE
+    )
+    null_res <- Filter(Negate(is.null), null_res)
+    if (length(null_res) > 0) {
+      nr <- as.data.table(do.call(rbind, null_res))
+      nr$k_true <- k_null
+      null_all[[length(null_all) + 1]] <- nr
+    }
+  }
   future::plan(old_plan_null)
 
-  null_results <- Filter(Negate(is.null), null_results)
-  if (length(null_results) > 0) {
-    null_dt <- as.data.table(do.call(rbind, null_results))
+  if (length(null_all) > 0) {
+    null_dt <- rbindlist(null_all)
     null_nonbinding_summary <- null_dt[, .(
       n_sims = .N,
       type1_error = mean(reject, na.rm = TRUE),
       cross_ia1 = mean(reject_stage == "IA1", na.rm = TRUE),
       cross_ia2 = mean(reject_stage == "IA2", na.rm = TRUE),
       cross_final = mean(reject_stage == "Final", na.rm = TRUE),
-      futility_rate = mean(futility, na.rm = TRUE),
-      futility_ia1 = mean(futility_stage == "IA1", na.rm = TRUE),
-      futility_ia2 = mean(futility_stage == "IA2", na.rm = TRUE),
       mean_n = mean(n_adapted, na.rm = TRUE),
       adapted_rate = mean(adapted, na.rm = TRUE)
-    ), by = .(strategy)]
+    ), by = .(k_true, strategy)]
   } else {
     null_nonbinding_summary <- data.table(
-      strategy = character(0), n_sims = integer(0), type1_error = numeric(0),
+      k_true = numeric(0), strategy = character(0),
+      n_sims = integer(0), type1_error = numeric(0),
       cross_ia1 = numeric(0), cross_ia2 = numeric(0), cross_final = numeric(0),
-      futility_rate = numeric(0), futility_ia1 = numeric(0),
-      futility_ia2 = numeric(0), mean_n = numeric(0), adapted_rate = numeric(0)
+      mean_n = numeric(0), adapted_rate = numeric(0)
     )
   }
   null_nonbinding_runtime_seconds <- as.numeric(
@@ -839,14 +949,9 @@ if (use_precomputed && !is.null(precomputed_outputs$null_nonbinding_summary)) {
   )
 }
 
-null_required_cols <- c("futility_ia1", "futility_ia2")
-null_missing <- setdiff(null_required_cols, names(null_nonbinding_summary))
-if (length(null_missing) > 0) {
-  for (nm in null_missing) null_nonbinding_summary[[nm]] <- NA_real_
-}
-
 cat("RR=1 non-binding futility check mode:", null_nonbinding_mode, "\n")
-cat("RR=1 non-binding replications:", null_nonbinding_n, "\n")
+cat("RR=1 non-binding replications per k:", null_nonbinding_n, "\n")
+cat("k scenarios:", paste(null_k_scenarios, collapse = ", "), "\n")
 ```
 
 ## Results
@@ -876,10 +981,9 @@ summary_dt <- dt[, .(
   pct_ia2_adapt_allowed = round(100 * mean(ia2_adapt_allowed, na.rm = TRUE), 1),
   pct_ia2_adapt_applied = round(100 * mean(ia2_adapt_applied, na.rm = TRUE), 1),
   pct_reach_final = round(100 * mean(!is.na(if_final), na.rm = TRUE), 1),
-  pct_futility_deferred = round(100 * mean(if_ia1 < min_if_futility, na.rm = TRUE), 1),
-  pct_fallback_ia1 = round(100 * mean(ia1_fallback, na.rm = TRUE), 1),
-  pct_fallback_ia2 = round(100 * mean(ia2_fallback, na.rm = TRUE), 1),
-  pct_any_fallback = round(100 * mean(ia1_fallback | ia2_fallback, na.rm = TRUE), 1),
+  n_fallback_ia1 = sum(ia1_fallback, na.rm = TRUE),
+  n_fallback_ia2 = sum(ia2_fallback, na.rm = TRUE),
+  n_any_fallback = sum(ia1_fallback | ia2_fallback, na.rm = TRUE),
   pct_futility_ia1 = round(100 * mean(futility_stage == "IA1", na.rm = TRUE), 1),
   pct_futility_ia2 = round(100 * mean(futility_stage == "IA2", na.rm = TRUE), 1)
 ), by = .(lambda1_true, k_true, accrual_true, rr_true, strategy)]
@@ -919,93 +1023,6 @@ saveRDS(
 cat("Saved precomputed vignette outputs to:", save_precomputed_path, "\n")
 ```
 
-### Simulation results
-
-Use the column filters to focus on specific parameter combinations or rate
-ratios. RR $\geq$ 1 rows show Type I error; RR < 1 rows show power.
-Efficacy crossing percentages and futility stopping percentages are reported
-separately for IA1 and IA2.
-
-```{r combined_table}
-display_dt <- summary_dt[, .(
-  lambda1 = lambda1_true, k = k_true, Accrual = accrual_true,
-  RR = rr_true, Strategy = strategy,
-  Rejection = rejection_rate,
-  Futility = futility_rate,
-  `Futility IA1 (%)` = pct_futility_ia1,
-  `Futility IA2 (%)` = pct_futility_ia2,
-  `Cross IA1` = cross_ia1,
-  `Cross IA2` = cross_ia2,
-  `Cross Final` = cross_final,
-  `Mean N` = mean_n,
-  `SD N` = sd_n,
-  `Adapted (%)` = pct_adapted,
-  `IA2 enroll (%)` = mean_ia2_enroll_pct,
-  `IA2 months to close` = mean_ia2_months_to_close,
-  `IA2 adapt allowed (%)` = pct_ia2_adapt_allowed,
-  `IA2 adapt applied (%)` = pct_ia2_adapt_applied,
-  `IF at IA1 (%)` = mean_if_ia1,
-  `IF at IA2 (%)` = mean_if_ia2,
-  `IF at Final (%)` = mean_if_final,
-  `IA1 month` = mean_ia1_time,
-  `IA2 month` = mean_ia2_time,
-  `IA2 adapt cut month` = mean_ia2_adapt_cut,
-  `Final month` = mean_final_time,
-  `Reach final (%)` = pct_reach_final,
-  `Fut. defer (%)` = pct_futility_deferred,
-  `Fallback IA1 (%)` = pct_fallback_ia1,
-  `Fallback IA2 (%)` = pct_fallback_ia2,
-  `Any fallback (%)` = pct_any_fallback,
-  n_sims = n_sims
-)]
-
-DT::datatable(
-  as.data.frame(display_dt),
-  filter = "top",
-  options = list(pageLength = 20, autoWidth = TRUE, scrollX = TRUE),
-  caption = htmltools::tags$caption(
-    style = "font-size: 14px; font-weight: bold;",
-    "Simulation Results | ", design_note
-  )
-) |>
-  DT::formatPercentage(
-    c(
-      "Rejection", "Futility", "Cross IA1", "Cross IA2", "Cross Final",
-      "Adapted (%)", "IA2 enroll (%)", "IA2 adapt allowed (%)",
-      "IA2 adapt applied (%)", "IF at IA1 (%)", "IF at IA2 (%)",
-      "IF at Final (%)", "Reach final (%)", "Fut. defer (%)",
-      "Fallback IA1 (%)", "Fallback IA2 (%)", "Any fallback (%)",
-      "Futility IA1 (%)", "Futility IA2 (%)"
-    ),
-    digits = 1
-  ) |>
-  DT::formatStyle(
-    "Rejection",
-    backgroundColor = DT::styleInterval(0.03, c("white", "#FFCCCC")),
-    target = "cell"
-  )
-```
-
-```{r stage_rates_summary}
-stage_rates <- summary_dt[, .(
-  `Rejection (%)` = 100 * mean(rejection_rate),
-  `Futility IA1 (%)` = mean(pct_futility_ia1),
-  `Futility IA2 (%)` = mean(pct_futility_ia2),
-  `Cross IA1 (%)` = 100 * mean(cross_ia1),
-  `Cross IA2 (%)` = 100 * mean(cross_ia2),
-  `Cross Final (%)` = 100 * mean(cross_final)
-), by = .(RR = rr_true, Strategy = strategy)]
-
-stage_rates |>
-  as.data.frame() |>
-  dplyr::mutate(across(where(is.numeric), ~ round(.x, 1))) |>
-  gt() |>
-  tab_header(
-    title = "Efficacy/Futility Stage Rates by RR and Strategy",
-    subtitle = "IA1 and IA2 rates shown separately"
-  )
-```
-
 ```{r runtime_summary}
 runtime_df <- data.frame(
   Metric = c("Simulation mode", "Workers", "Scenarios", "Replicates", "Rows", "Wall time (minutes)"),
@@ -1029,27 +1046,39 @@ runtime_df |>
 ```
 
 ```{r null_nonbinding_summary}
-null_nonbinding_summary |>
-  as.data.frame() |>
-  dplyr::mutate(
-    type1_error = round(type1_error, 4),
-    cross_ia1 = round(cross_ia1, 4),
-    cross_ia2 = round(cross_ia2, 4),
-    cross_final = round(cross_final, 4),
-    futility_rate = round(futility_rate, 4),
-    futility_ia1 = round(futility_ia1, 4),
-    futility_ia2 = round(futility_ia2, 4),
-    mean_n = round(mean_n, 1),
-    adapted_rate = round(adapted_rate, 4)
-  ) |>
+# Backward compatibility: precomputed outputs may lack k_true
+null_df <- as.data.frame(null_nonbinding_summary)
+if (!"k_true" %in% names(null_df)) null_df$k_true <- NA_real_
+null_display <- null_df |>
+  dplyr::transmute(
+    k = k_true,
+    Strategy = strategy,
+    `Type I error` = round(type1_error, 4),
+    `IA1` = round(cross_ia1, 4),
+    `IA2` = round(cross_ia2, 4),
+    `Final` = round(cross_final, 4),
+    `Mean N` = round(mean_n, 1),
+    `SSR applied (%)` = round(100 * adapted_rate, 1)
+  )
+
+null_display |>
   gt() |>
   tab_header(
-    title = "RR = 1.0 Non-binding Futility Check (Ignored Futility Stopping)",
+    title = "Type I Error Under RR = 1.0 (Non-binding Futility)",
     subtitle = paste0(
-      "Replications: ", null_nonbinding_n,
-      " | Mode: ", null_nonbinding_mode,
-      " | Runtime (min): ", round(null_nonbinding_runtime_seconds / 60, 2)
+      "Replications per k: ", null_nonbinding_n,
+      " | ", null_nonbinding_mode,
+      " | Runtime: ", round(null_nonbinding_runtime_seconds / 60, 2), " min"
     )
+  ) |>
+  tab_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
+  tab_footnote(
+    paste("Futility stopping is ignored (non-binding) so all trials continue to",
+          "the final analysis unless stopped for efficacy.",
+          "'SSR applied' is the percentage of trials where the adapted N exceeded",
+          "the planned N (design uses k =", k_plan, ").",
+          "Under the null, SSR may still increase N because",
+          "nuisance parameter estimates can differ from planning values.")
   )
 ```
 
@@ -1083,180 +1112,90 @@ ggplot(power_avg, aes(x = rr_true, y = power,
   theme(legend.position = "bottom")
 ```
 
-```{r no_adapt_power_loss}
+```{r no_adapt_power_loss, fig.width=10, fig.height=5}
 power_rr_plan <- summary_dt[
   rr_true == rr_plan &
-    strategy %in% c("No adaptation", "Blinded SSR", "Unblinded SSR"),
-  .(lambda1_true, k_true, accrual_true, strategy, rejection_rate)
+    strategy %in% c("No adaptation", "Blinded SSR", "Unblinded SSR")
 ]
+power_rr_plan[, strategy := factor(strategy,
+  levels = c("No adaptation", "Blinded SSR", "Unblinded SSR"))]
+power_rr_plan[, k_label := paste0("k = ", k_true)]
+power_rr_plan[, accrual_label := paste0(accrual_true, " pts/mo")]
 
-power_rr_plan <- dcast(
-  power_rr_plan,
-  lambda1_true + k_true + accrual_true ~ strategy,
-  value.var = "rejection_rate"
-)
-power_rr_plan[, `Best SSR power` := pmax(`Blinded SSR`, `Unblinded SSR`)]
-power_rr_plan[, `Best SSR method` := ifelse(`Blinded SSR` >= `Unblinded SSR`,
-                                            "Blinded", "Unblinded")]
-power_rr_plan[, `Power gain from best SSR` := `Best SSR power` - `No adaptation`]
-power_rr_plan[, `No adaptation shortfall to 90%` := pmax(0, power_plan - `No adaptation`)]
-power_rr_plan[, `Best SSR shortfall to 90%` := pmax(0, power_plan - `Best SSR power`)]
-power_rr_plan <- power_rr_plan[order(-`No adaptation shortfall to 90%`)]
-
-power_rr_display <- power_rr_plan[, .(
-  lambda1_true, k_true, accrual_true,
-  `No adaptation power` = `No adaptation`,
-  `Blinded SSR power` = `Blinded SSR`,
-  `Unblinded SSR power` = `Unblinded SSR`,
-  `Best SSR power`,
-  `Best SSR method`,
-  `Power gain from best SSR`,
-  `No adaptation shortfall to 90%`,
-  `Best SSR shortfall to 90%`
-)]
-
-power_rr_display |>
-  as.data.frame() |>
-  dplyr::mutate(
-    across(where(is.numeric), ~ round(.x, 3))
-  ) |>
-  gt() |>
-  tab_header(
-    title = "Power Shortfall Without Adaptation at Planned RR (0.7)",
-    subtitle = "Includes strategy-specific power, best SSR gain, and residual shortfall"
-  )
-```
-
-```{r final_metrics}
-final_metrics_all <- dt[rr_true <= 1.0, .(
-  Scenario = "Average over nuisance scenarios",
-  `Power` = mean(reject, na.rm = TRUE),
-  `Mean final IF (%)` = 100 * mean(if_final, na.rm = TRUE),
-  `Mean final month` = mean(final_time, na.rm = TRUE),
-  `Futility stop (%)` = 100 * mean(futility, na.rm = TRUE),
-  `Adapted (%)` = 100 * mean(adapted, na.rm = TRUE)
-), by = .(rr_true, strategy)]
-
-final_metrics_design <- dt[
-  rr_true <= 1.0 &
-    lambda1_true == lambda1_plan &
-    k_true == k_plan &
-    accrual_true == accrual_scenario_plan,
-  .(
-    Scenario = "Design assumptions",
-    `Power` = mean(reject, na.rm = TRUE),
-    `Mean final IF (%)` = 100 * mean(if_final, na.rm = TRUE),
-    `Mean final month` = mean(final_time, na.rm = TRUE),
-    `Futility stop (%)` = 100 * mean(futility, na.rm = TRUE),
-    `Adapted (%)` = 100 * mean(adapted, na.rm = TRUE)
-  ),
-  by = .(rr_true, strategy)
-]
-
-final_metrics <- rbind(final_metrics_all, final_metrics_design)
-
-final_metrics |>
-  as.data.frame() |>
-  dplyr::arrange(rr_true, strategy, desc(Scenario)) |>
-  dplyr::mutate(
-    `Power` = round(`Power`, 3),
-    `Mean final IF (%)` = round(`Mean final IF (%)`, 1),
-    `Mean final month` = round(`Mean final month`, 1),
-    `Futility stop (%)` = round(`Futility stop (%)`, 1),
-    `Adapted (%)` = round(`Adapted (%)`, 1)
-  ) |>
-  gt() |>
-  tab_header(
-    title = "Final Analysis Diagnostics by RR and Strategy",
-    subtitle = design_note
-  ) |>
-  tab_style(
-    style = list(cell_fill(color = "#E8F5E9"), cell_text(weight = "bold")),
-    locations = cells_body(rows = Scenario == "Design assumptions")
-  )
-```
-
-```{r adapted_n_dispersion}
-adapt_disp <- summary_dt[
-  rr_true < 1 & strategy %in% c("Blinded SSR", "Unblinded SSR"),
-  .(
-    `Mean SD(adapted N)` = mean(sd_n, na.rm = TRUE),
-    `Median SD(adapted N)` = median(sd_n, na.rm = TRUE),
-    `Mean adapted (%)` = mean(pct_adapted, na.rm = TRUE),
-    `IA2 adaptation allowed (%)` = mean(pct_ia2_adapt_allowed, na.rm = TRUE),
-    `IA2 adaptation applied (%)` = mean(pct_ia2_adapt_applied, na.rm = TRUE)
-  ),
-  by = .(strategy)
-]
-
-adapt_disp |>
-  as.data.frame() |>
-  dplyr::mutate(across(where(is.numeric), ~ round(.x, 1))) |>
-  gt() |>
-  tab_header(
-    title = "Adapted Sample Size Dispersion (RR < 1)",
-    subtitle = "Delayed IA2-only adaptation with enrollment-window eligibility"
-  )
+ggplot(power_rr_plan,
+       aes(x = lambda1_true, y = rejection_rate,
+           color = strategy, shape = strategy)) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 2.5) +
+  geom_hline(yintercept = power_plan, linetype = "dashed", alpha = 0.4) +
+  facet_grid(k_label ~ accrual_label) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2),
+                     labels = scales::percent) +
+  labs(
+    title = sprintf("Power at Planned RR (%.1f) by Nuisance Scenario", rr_plan),
+    subtitle = paste("Dashed line = target power", scales::percent(power_plan),
+                     "|", design_note),
+    x = expression(lambda[1]~(true)), y = "Power",
+    color = "Strategy", shape = "Strategy"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
 ```
 
 ### Power by nuisance scenario {.tabset}
 
-```{r power_by_nuisance_tabs, results='asis', fig.width=13, fig.height=12}
-rr_values <- sort(unique(scenarios$rr_true[scenarios$rr_true <= 1]))
+```{r power_by_nuisance_tabs, results='asis', fig.width=13, fig.height=10, echo=FALSE}
+rr_values <- sort(unique(dt$rr_true[dt$rr_true <= 1]))
 
 for (rr_val in rr_values) {
   cat(sprintf("\n\n#### RR = %s\n\n", rr_val))
 
   stage_dt <- dt[rr_true == rr_val, .(
-    IA1 = mean(reject_stage == "IA1", na.rm = TRUE),
-    IA2 = mean(reject_stage == "IA2", na.rm = TRUE),
-    Final = mean(reject_stage == "Final", na.rm = TRUE)
+    `Cross IA1` = mean(reject_stage == "IA1", na.rm = TRUE),
+    `Cross IA2` = mean(reject_stage == "IA2", na.rm = TRUE),
+    `Cross Final` = mean(reject_stage == "Final", na.rm = TRUE),
+    `No cross Final` = mean(reject_stage == "No reject" & !futility, na.rm = TRUE),
+    `Futility IA2` = mean(futility_stage == "IA2", na.rm = TRUE),
+    `Futility IA1` = mean(futility_stage == "IA1", na.rm = TRUE)
   ), by = .(lambda1_true, k_true, accrual_true, strategy)]
 
   stage_long <- data.table::melt(
     stage_dt,
     id.vars = c("lambda1_true", "k_true", "accrual_true", "strategy"),
-    variable.name = "analysis_stage",
+    variable.name = "outcome",
     value.name = "prob"
   )
-  stage_long[, analysis_stage := factor(
-    analysis_stage,
-    levels = c("IA1", "IA2", "Final"),
-    ordered = TRUE
-  )]
-  stage_long[, strategy := factor(
-    strategy,
-    levels = c("No adaptation", "Blinded SSR", "Unblinded SSR")
-  )]
+  stage_long[, outcome := factor(outcome, levels = c(
+    "Cross IA1", "Cross IA2", "Cross Final",
+    "No cross Final", "Futility IA2", "Futility IA1"
+  ))]
+  stage_long[, strategy := factor(strategy,
+    levels = c("No adaptation", "Blinded SSR", "Unblinded SSR"))]
   stage_long[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
   stage_long[, k_label := paste0("k = ", k_true)]
   stage_long[, accrual_label := paste0("accrual = ", accrual_true, "/mo")]
 
-  p <- ggplot(stage_long, aes(x = strategy, y = prob, fill = analysis_stage)) +
-    geom_col(
-      width = 0.75, color = "white", linewidth = 0.2,
-      position = position_stack(reverse = TRUE)
-    ) +
+  if (nrow(stage_long) == 0) next
+
+  p <- ggplot(stage_long, aes(x = strategy, y = prob, fill = outcome)) +
+    geom_col(width = 0.75, color = "white", linewidth = 0.2,
+             position = position_stack(reverse = TRUE)) +
     facet_grid(k_label + accrual_label ~ lambda1_label) +
     scale_fill_manual(
-      values = c("IA1" = "#9ecae1", "IA2" = "#4292c6", "Final" = "#084594"),
-      breaks = c("IA1", "IA2", "Final"),
-      limits = c("IA1", "IA2", "Final")
+      values = c(
+        "Cross IA1" = "#9ecae1", "Cross IA2" = "#4292c6", "Cross Final" = "#084594",
+        "No cross Final" = "#fc9272", "Futility IA2" = "#de2d26", "Futility IA1" = "#a50f15"
+      )
     ) +
-    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2),
-                       labels = scales::percent_format()) +
+    scale_y_continuous(breaks = seq(0, 1, 0.2), labels = scales::percent_format()) +
     labs(
-      title = sprintf("Efficacy Crossing Probability by Analysis Stage (RR = %s)", rr_val),
+      title = sprintf("Trial Outcomes by Analysis Stage (RR = %s)", rr_val),
       subtitle = design_note,
-      x = "Strategy",
-      y = "Probability of crossing efficacy bound",
-      fill = "Crossing stage"
+      x = "Strategy", y = "Probability", fill = "Outcome"
     ) +
     theme_minimal(base_size = 12) +
-    theme(
-      legend.position = "bottom",
-      axis.text.x = element_text(angle = 20, hjust = 1)
-    )
+    theme(legend.position = "bottom",
+          axis.text.x = element_text(angle = 20, hjust = 1))
   print(p)
   cat("\n\n")
 }
@@ -1264,7 +1203,7 @@ for (rr_val in rr_values) {
 
 ### Adapted sample size distribution {.tabset}
 
-```{r adapted_n_tabs, results='asis', fig.width=13, fig.height=10}
+```{r adapted_n_tabs, results='asis', fig.width=13, fig.height=10, echo=FALSE}
 GeomHalfViolin <- ggplot2::ggproto(
   "GeomHalfViolin",
   ggplot2::GeomViolin,
@@ -1346,44 +1285,37 @@ for (rr_val in rr_values) {
 }
 ```
 
-### Final information at final analysis by strategy {.tabset}
 
-```{r final_info_violin_tabs, results='asis', fig.width=13, fig.height=10}
-rr_values_all <- sort(unique(scenarios$rr_true))
+### Expected sample size at study stop {.tabset}
 
-for (rr_val in rr_values_all) {
+```{r expected_n_tabs, results='asis', fig.width=10, fig.height=7, echo=FALSE}
+for (rr_val in rr_values) {
   cat(sprintf("\n\n#### RR = %s\n\n", rr_val))
 
-  info_dt <- dt[rr_true == rr_val & !is.na(if_final)]
-  if (nrow(info_dt) == 0) {
-    cat("No trials reached final analysis for this RR value.\n\n")
-    next
-  }
-  info_dt[, strategy := factor(
-    strategy,
-    levels = c("No adaptation", "Blinded SSR", "Unblinded SSR")
-  )]
-  info_dt[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
-  info_dt[, k_label := paste0("k = ", k_true)]
+  en_dt <- dt[rr_true == rr_val]
+  en_dt[, strategy := factor(strategy,
+    levels = c("No adaptation", "Blinded SSR", "Unblinded SSR"))]
+  en_dt[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
+  en_dt[, k_label := paste0("k = ", k_true)]
 
-  p <- ggplot(
-    info_dt,
-    aes(x = factor(accrual_true), y = 100 * if_final, fill = strategy)
-  ) +
-    geom_violin(position = position_dodge(width = 0.85), alpha = 0.7,
-                scale = "width", trim = FALSE) +
-    geom_hline(yintercept = 100, linetype = "dashed", color = "darkgreen",
-               alpha = 0.6) +
+  en_summary <- en_dt[, .(
+    mean_n = mean(n_adapted, na.rm = TRUE),
+    sd_n = sd(n_adapted, na.rm = TRUE)
+  ), by = .(lambda1_true, k_true, accrual_true, strategy,
+            lambda1_label, k_label)]
+
+  p <- ggplot(en_summary,
+    aes(x = factor(accrual_true), y = mean_n,
+        fill = strategy)) +
+    geom_col(position = position_dodge(width = 0.7), width = 0.6, alpha = 0.85) +
+    geom_hline(yintercept = n_planned, linetype = "dashed", alpha = 0.5) +
     facet_grid(k_label ~ lambda1_label) +
     labs(
-      title = sprintf("Final Information Fraction at RR = %s", rr_val),
-      subtitle = paste(
-        "Among trials reaching final analysis; dashed line = 100% target |",
-        design_note
-      ),
-      x = "Accrual Rate (pts/month)",
-      y = "Final information fraction (%)",
-      fill = "Strategy"
+      title = sprintf("Expected Sample Size at Study Stop (RR = %s)", rr_val),
+      subtitle = paste("Dashed = planned N;",
+        "interim stops count enrollment through cutoff + 2 months |",
+        design_note),
+      x = "Accrual rate (pts/mo)", y = "Mean sample size", fill = "Strategy"
     ) +
     theme_minimal(base_size = 12) +
     theme(legend.position = "bottom")
@@ -1392,34 +1324,10 @@ for (rr_val in rr_values_all) {
 }
 ```
 
-```{r rr08_diagnostics}
-rr_diag <- dt[rr_true %in% c(0.7, 0.8) & strategy != "No adaptation", .(
-  `Power` = mean(reject, na.rm = TRUE),
-  `Futility stop (%)` = 100 * mean(futility, na.rm = TRUE),
-  `Futility IA1 (%)` = 100 * mean(futility_stage == "IA1", na.rm = TRUE),
-  `Futility IA2 (%)` = 100 * mean(futility_stage == "IA2", na.rm = TRUE),
-  `Adapted (%)` = 100 * mean(adapted, na.rm = TRUE),
-  `Mean adapted N` = mean(n_adapted, na.rm = TRUE),
-  `Mean final IF (%)` = 100 * mean(if_final, na.rm = TRUE),
-  `Mean final month` = mean(final_time, na.rm = TRUE)
-), by = .(rr_true, strategy)]
-
-rr_diag |>
-  as.data.frame() |>
-  dplyr::mutate(
-    across(where(is.numeric), ~ round(.x, 2))
-  ) |>
-  gt() |>
-  tab_header(
-    title = "Diagnostics for RR = 0.7 vs RR = 0.8",
-    subtitle = "Assessing whether lower adaptation at RR = 0.8 is driven by futility stopping"
-  )
-```
-
 ### Calendar and information at each analysis
 
 The plots below use split (side-by-side) violin distributions for
-\eqn{k = 0.3} and \eqn{k = 0.6}, with vertical panels for IA1, IA2, and
+$k = 0.5$ and $k = 1.0$, with vertical panels for IA1, IA2, and
 Final analysis. Panels use free y-scales.
 
 ```{r analysis_time_violin, fig.width=12, fig.height=10}
@@ -1452,7 +1360,7 @@ ggplot(time_long,
     linetype = "dashed", color = "darkgreen", inherit.aes = FALSE
   ) +
   facet_grid(analysis ~ lambda1_label, scales = "free_y") +
-  scale_fill_manual(values = c("0.3" = "#6BAED6", "0.6" = "#2171B5")) +
+  scale_fill_manual(values = c("0.5" = "#6BAED6", "1" = "#2171B5")) +
   labs(
     title = "Calendar Time Distribution by Analysis (RR = 0.7, No adaptation)",
     subtitle = paste("Dashed green = planned analysis time |", design_note),
@@ -1493,7 +1401,7 @@ ggplot(if_long,
     linetype = "dashed", color = "darkgreen", inherit.aes = FALSE
   ) +
   facet_grid(analysis ~ lambda1_label, scales = "free_y") +
-  scale_fill_manual(values = c("0.3" = "#6BAED6", "0.6" = "#2171B5")) +
+  scale_fill_manual(values = c("0.5" = "#6BAED6", "1" = "#2171B5")) +
   labs(
     title = "Information Fraction Distribution by Analysis (RR = 0.7, No adaptation)",
     subtitle = paste("Dashed green = planned information fraction |", design_note),
@@ -1547,8 +1455,8 @@ to cap spending.
 IA1 includes efficacy/futility monitoring but does not permit SSR.
 SSR is attempted only at IA2. For operational feasibility, SSR uses an
 adaptation cutoff at
-$\min(\text{IA2 time}, \text{predicted enrollment close} -
-`r min_months_to_close_for_adapt` months), with enrollment fraction at or
+$\min(\text{IA2 time},\; \text{predicted enrollment close} -
+`r min_months_to_close_for_adapt` \text{ months})$, with enrollment fraction at or
 below `r 100 * max_enrollment_frac_for_ia2`%.
 
 When a trial stops early for futility, the reported final sample size includes
@@ -1561,10 +1469,26 @@ IA2 in the main simulation table.
 
 ### Blinded information fallback
 
-When blinded information cannot be estimated at a candidate cut time, the
-timing search falls back to unblinded information from `mutze_test()`.
-If both blinded and unblinded information fail, a user-requested constant
-fallback value of `100` is used. Fallback frequencies are reported in the
-simulation table.
+At each candidate cut time the simulation first attempts to estimate
+blinded statistical information via `calculate_blinded_info()`.
+If the blinded estimate is unavailable or non-positive (e.g., too few events
+for the NB model to converge), the simulation falls back to unblinded
+information from `mutze_test()` ($\mathcal{I} = 1/\text{SE}^2$).
+If both methods fail, a hard-coded constant of 100 is used as a last-resort
+placeholder so that the search does not stall.
+The simulation results table reports the number of trials that required
+this fallback at each interim analysis.
+
+### Computational considerations
+
+Production-scale runs (e.g., 3 600 replicates per scenario for power
+evaluation and 20 000 replicates under the null for Type I error)
+are computationally intensive.
+Parallel execution via the `future` / `future.apply` framework is
+essential.
+The simulation runtime table above reports the wall-clock time and
+number of workers used for the current build.
+For reference, a production run on a Mac Studio with an M4 chip using
+11 of 12 available cores completed in approximately 2--3 hours.
 
 ## References

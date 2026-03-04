@@ -18,6 +18,7 @@ A data frame with added columns:
 \describe{
 \item{cross_upper}{Logical, true if upper bound crossed (efficacy)}
 \item{cross_lower}{Logical, true if lower bound crossed (futility)}
+\item{cross_harm}{Logical, true if harm bound crossed (test.type 7 or 8)}
 }
 }
 \description{

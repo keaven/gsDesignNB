@@ -11,6 +11,7 @@
 #'   \describe{
 #'     \item{cross_upper}{Logical, true if upper bound crossed (efficacy)}
 #'     \item{cross_lower}{Logical, true if lower bound crossed (futility)}
+#'     \item{cross_harm}{Logical, true if harm bound crossed (test.type 7 or 8)}
 #'   }
 #'
 #' @export
@@ -48,7 +49,9 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
 
     cross_upper <- rep(FALSE, k_max)
     cross_lower <- rep(FALSE, k_max)
+    cross_harm <- rep(FALSE, k_max)
     stopped <- FALSE
+    has_harm <- design$test.type %in% c(7, 8)
 
     # Current timing vector (starts with design timing)
     current_timing <- design$timing
@@ -121,8 +124,7 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
       # It passes `usTime` AND `timing`.
       # Use tryCatch to handle edge cases where spending function can't
       # achieve target beta with the observed information fraction.
-      temp_gs <- tryCatch(
-        gsDesign::gsDesign(
+      gs_args <- list(
           k = design$k,
           test.type = design$test.type,
           alpha = design$alpha,
@@ -137,9 +139,19 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
           r = design$r,
           n.fix = max_info,
           timing = current_timing,
-          usTime = design$usTime, # If NULL, ignored
+          usTime = design$usTime,
           lsTime = design$lsTime
-        ),
+      )
+      if (design$test.type %in% c(7, 8) && !is.null(design$harm)) {
+          gs_args$sfharm <- design$harm$sf
+          gs_args$sfharmparam <- design$harm$param
+      }
+      if (!is.null(design$testUpper)) gs_args$testUpper <- design$testUpper
+      if (!is.null(design$testLower)) gs_args$testLower <- design$testLower
+      if (!is.null(design$testHarm)) gs_args$testHarm <- design$testHarm
+
+      temp_gs <- tryCatch(
+        do.call(gsDesign::gsDesign, gs_args),
         error = function(e) {
           # If the spending function fails, fall back to original design bounds
           # This can happen with extreme information fractions
@@ -153,13 +165,17 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
       if (z_val > upper_bound) {
         cross_upper[k] <- TRUE
         stopped <- TRUE
+      } else if (has_harm && !is.null(temp_gs$harm) && z_val < temp_gs$harm$bound[k]) {
+        cross_harm[k] <- TRUE
+        stopped <- TRUE
       } else if (z_val < lower_bound) {
         cross_lower[k] <- TRUE
         stopped <- TRUE
       }
     }
 
-    return(list(cross_upper = cross_upper, cross_lower = cross_lower))
+    return(list(cross_upper = cross_upper, cross_lower = cross_lower,
+                cross_harm = cross_harm))
   }
 
   # Apply to all sims
@@ -171,6 +187,7 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
   # Merge back
   dt[, cross_upper := results$cross_upper]
   dt[, cross_lower := results$cross_lower]
+  dt[, cross_harm := results$cross_harm]
 
   as.data.frame(dt)
 }

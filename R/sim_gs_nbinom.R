@@ -10,7 +10,8 @@
 #' @param fail_rate Failure rates (data frame with `treatment`, `rate`, `dispersion`).
 #' @param dropout_rate Dropout rates (data frame with `treatment`, `rate`, `duration`).
 #' @param max_followup Maximum follow-up time.
-#' @param event_gap Event gap duration.
+#' @param event_gap Event gap duration. If `NULL`, inherits
+#'   `design$inputs$event_gap` when available; otherwise defaults to `0`.
 #' @param analysis_times Vector of calendar times for interim and final analyses.
 #'   Optional if `cuts` is provided.
 #' @param n_target Total sample size to enroll (optional, if not defined by `enroll_rate`).
@@ -158,7 +159,7 @@
 #' }
 sim_gs_nbinom <- function(
   n_sims, enroll_rate, fail_rate, dropout_rate = NULL,
-  max_followup, event_gap = 0, analysis_times = NULL,
+  max_followup, event_gap = NULL, analysis_times = NULL,
   n_target = NULL, design = NULL,
   data_cut = cut_data_by_date, cuts = NULL,
   seed = TRUE
@@ -183,6 +184,14 @@ sim_gs_nbinom <- function(
   lambda1_plan <- inputs$lambda1
   lambda2_plan <- inputs$lambda2
   ratio_plan <- inputs$ratio
+
+  if (is.null(event_gap)) {
+    if (!is.null(inputs$event_gap) && !is.na(inputs$event_gap)) {
+      event_gap <- inputs$event_gap
+    } else {
+      event_gap <- 0
+    }
+  }
 
   # Function to run one simulation
   run_one_sim <- function(sim_id) {
