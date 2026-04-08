@@ -5,7 +5,11 @@
 #'
 #' @param sim_results Data frame of simulation results (from [sim_gs_nbinom()]).
 #' @param design The planning `gsNB` object.
-#' @param info_scale Character. "blinded" (default) or "unblinded" information to use for bounds.
+#' @param info_scale Character. Legacy selector for `"blinded"` (default) or
+#'   `"unblinded"` information. Ignored when `info_col` is supplied.
+#' @param info_col Optional explicit column name containing the information
+#'   metric to use for bounds, e.g. `"info_unblinded_ml"` or
+#'   `"info_blinded_mom"`.
 #'
 #' @return A data frame with added columns:
 #'   \describe{
@@ -26,7 +30,14 @@
 #'   unblinded_info = c(50, 100, 50, 100)
 #' )
 #' check_gs_bound(sim_df, design)
-check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unblinded")) {
+#' check_gs_bound(sim_df, design, info_col = "unblinded_info")
+check_gs_bound <- function(
+  sim_results,
+  design,
+  info_scale = c("blinded", "unblinded"),
+  info_col = NULL
+) {
+  cross_harm <- NULL
   info_scale <- match.arg(info_scale)
 
   if (!inherits(design, "gsNB") && !inherits(design, "gsDesign")) {
@@ -39,7 +50,9 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
   if (!"z_stat" %in% names(dt)) stop("sim_results must contain 'z_stat'")
 
   # Identify information column
-  info_col <- if (info_scale == "blinded") "blinded_info" else "unblinded_info"
+  if (is.null(info_col)) {
+    info_col <- if (info_scale == "blinded") "blinded_info" else "unblinded_info"
+  }
   if (!info_col %in% names(dt)) stop(paste("sim_results must contain", info_col))
 
   # Process each simulation separately

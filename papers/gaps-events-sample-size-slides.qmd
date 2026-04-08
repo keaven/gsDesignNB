@@ -1,0 +1,276 @@
+---
+title: "Sample Size for Group Sequential Survival Trials"
+subtitle: "Calendar gaps between interims, piecewise events, and patient-level event spacing"
+author: "Keaven M. Anderson, Hongtao Zhang, Andrea Maes"
+institute: "Merck & Co., Inc., Rahway, NJ, USA"
+date: today
+format:
+  revealjs:
+    self-contained: true
+    theme: simple
+    slide-number: c/t
+    progress: true
+    smaller: true
+    scrollable: true
+    math: true
+    footer: "Draft — calendar gaps, events, and GSD"
+---
+
+## Talk plan {.smaller}
+
+**~22 min** talk · **~8 min** discussion (30 min slot)
+
+| Block | Minutes | Focus |
+|------|---------|--------|
+| Motivation & “three gaps” | ~5 | Why naive SS misleads |
+| Expected events & timing | ~6 | Piecewise model + analysis timing |
+| GSD, spending, simulation, NB extensions | ~7 | SSR, recurrent counts, verification |
+| Software, AI, wrap-up | ~4 | gsDesign / gsDesignNB, conclusions |
+
+::: {.notes}
+**~0:30** — Set expectations: methods + implementation story, not a new asymptotic theorem.
+:::
+
+---
+
+## Standard toolkit vs trial reality
+
+- **Standard:** fixed SS or events under PH → **spending** on information fraction → **gsDesign**-style boundaries.
+- **Reality:** interims mix **calendar rules**, **minimum follow-up**, **event targets**, and **mandatory time between database locks** while events accrue.
+
+::: {.notes}
+**~1:00** — Jennison & Turnbull framework is the reference; the gap is between textbook information-time designs and SAP-driven operations.
+:::
+
+---
+
+## “Gaps between events” — three senses
+
+1. **Operational / calendar:** successive looks no earlier than \(T_{i-1}+\Delta_i\) (trial clock).
+2. **Model / spending structure:** piecewise hazards; **gapped spending** on information time (no efficacy test over an interior interval).
+3. **Patient-level:** only events separated by at least \(\delta\) **patient time** count toward the protocol total — closer events **discarded** in simulation.
+
+::: {.notes}
+**~1:30** — These interact but live on different scales; conflating them causes confusion in both writing and code.
+:::
+
+---
+
+## Why calendar gaps matter for sample size
+
+Interim times solve **feasibility inequalities**:
+
+- Calendar floor: \(T_i \ge C_i\)
+- **Gap after previous look:** \(T_i \ge T_{i-1}+\Delta_i\)
+- Exposure / enrollment constraints
+- **Event threshold:** smallest \(t\) with expected (or observed) events \(\ge d_i\), **subject to** the floors
+
+**Take the max** of applicable floors, then lift further if events require it — aligns with `gsSurvPower()` logic.
+
+::: {.notes}
+**~2:00** — If you schedule looks at fixed event fractions **without** \(\Delta_i\), the **information path** and spending time axis are wrong whenever enrollment continues during mandatory gaps.
+:::
+
+---
+
+## Piecewise exponential expected events (sketch)
+
+- **Lachin–Foulkes style:** piecewise enrollment \(\gamma_j\), failure \(\lambda(t)\), dropout \(\eta(t)\); PH on experimental arm.
+- Partition calendar \([0,T]\) at **all** hazard and enrollment change points.
+- Each sub-interval contributes closed-form terms \(\propto \frac{\lambda}{\lambda+\eta}(1-e^{-(\lambda+\eta)s})\) weighted by risk carried forward — **`eEvents1()`** / **`nSurv()`** in **gsDesign**.
+
+::: {.notes}
+**~1:45** — Contribution is integrating risk × intensity; implementation is period-by-period algebra, not a black box.
+:::
+
+---
+
+## Patient-level minimum gap \(\delta\) (counting rule)
+
+Potential event times per patient \(T_{j,1}<T_{j,2}<\cdots\).
+
+**Counted** sequence: first event counts; next **counted** event is the **first** potential event at or after **previous counted** \(+\,\delta\); events in between are **excluded** from the trial event total.
+
+- **Effect:** thins recurrent / dense outcomes → **slower** information vs naive expected-event formulas that count every failure.
+
+::: {.notes}
+**~1:30** — Tie to SAP language (adjudication, “new” progression). Analytical \(d\) under PH for **first** events does not encode this; calibrate by simulation or recurrent-event models.
+:::
+
+---
+
+## Trial-level \(\Delta\) vs patient-level \(\delta\)
+
+| | \(\Delta_i\) between interims | \(\delta\) between patient events |
+|--|------------------------------|-----------------------------------|
+| **Scale** | Trial / database-lock calendar | Per-patient timeline |
+| **Role** | **When** looks may occur | **Which** events increment \(d\) |
+
+Designs that ignore \(\delta\) can be **mis-powered** if the SAP applies thinning.
+
+::: {.notes}
+**~1:00** — Quick table for the methods discussion; prevents mixing up “gap” vocabulary.
+:::
+
+---
+
+## Group sequential: spending and gapped spending
+
+- **Information fraction** \(t\in[0,1]\) (often event fraction): \(f_\alpha(t)\) allocates Type I; analogs for \(\beta\) / futility.
+- **`sfGapped()`:** **no** formal efficacy spending over an interior \((\tau_1,\tau_2)\); spending **flat** in the hole, resumes after — **orthogonal** to calendar \(\Delta\) but interacts once timing comes from expected events under the real schedule.
+
+::: {.notes}
+**~1:30** — Regulatory story: “no interim efficacy between 20% and 60% information” as a **spending** construct, not the same as a 3-month DB lock gap.
+:::
+
+---
+
+## End-to-end survival GSD specification
+
+1. **Model:** piecewise enrollment, failure, dropout (Lachin–Foulkes–style pieces).
+2. **Timing** \(T_i\): take the **max** of calendar floors, **mandatory gaps** after prior looks, and the first time **expected** (or observed) events reach each look’s target.
+3. **Spending** \(f_\alpha, f_\beta\) on information fraction (optionally **gapped** — no efficacy spend over an interior interval).
+4. **Scale** enrollment or follow-up so power holds at the **final** analysis under that schedule.
+
+**Paths:** `gsSurv()` (event-driven timing) vs `gsSurvCalendar()` (calendar-first → implied information fractions).
+
+::: {.notes}
+**~1:15** — Assembly checklist; full algebra is standard piecewise exponential bookkeeping plus max-of-floors timing (`gsSurvPower()`).
+:::
+
+---
+
+## Simulation evidence — what to show
+
+**Layer 0 — Analytic vs MC:** under the **documented** model, mean simulated total events \(\approx\) `nSurv()$d` (MC SE band).
+
+**Layer 1 — OC:** power, interim time distributions, spending paths; **with vs without** \(\Delta\); **\(\delta=0\) vs \(\delta>0\)**.
+
+**Layer 2 — SSR:** `ssrCP()` — unconditional power, adapted \(n\), Type I under combination-test conventions.
+
+::: {.notes}
+**~2:00** — Emphasize automated package tests + large **standalone** simulations as **complements** — neither replaces the other.
+:::
+
+---
+
+## Illustrative factor grid (reporting template)
+
+| Factor | Example levels |
+|--------|----------------|
+| HR under alternative | 0.65, 0.75, 0.85 |
+| Gap \(\Delta\) between looks (mo) | 0, 3, 6 |
+| Patient gap \(\delta\) (days) | 0, 20 |
+| Enrollment | nominal vs 80% |
+| Gapped spending on \(t\) | none vs (0.2, 0.5) |
+| SSR | `ssrCP()` with capped increase |
+
+Summarize: **median/IQR** of look times, **empirical power**, **mean** adapted \(n\).
+
+::: {.notes}
+**~1:00** — Use as a discussion prompt: which factors matter for your SAP and operating characteristics?
+:::
+
+---
+
+## Software map (non-exhaustive)
+
+| Concept | **gsDesign** | **gsDesignNB** |
+|--------|--------------|----------------|
+| Piecewise expected events | `eEvents1()`, `nEventsIA()` | — |
+| Fixed survival SS | `nSurv()` | — |
+| GSD survival | `gsSurv()`, `gsSurvCalendar()` | — |
+| Power + floors / gaps | `gsSurvPower()` | — |
+| Gapped spending | `sfGapped()` | — |
+| SSR / conditional power | `ssrCP()`, … | — |
+| NB + event gaps, recurrent sim | — | `sample_size_nbinom()`, `nb_sim*()` |
+
+- **Seasonal rates:** `nb_sim_seasonal()` supports respiratory / infectious endpoints where recurrent-event intensity varies by calendar season.
+
+::: {.notes}
+**~1:30** — Open source: docs, vignettes, pkgdown — contrast with narrow commercial black boxes if audience is receptive.
+:::
+
+---
+
+## AI in development: delegation + verification
+
+- **Dohmke & Kalliamvakou (2025):** shift from line-by-line coding to **delegation** and **verification**.
+- **Here:** AI assists algebra bookkeeping, refactors, docs, tests — **correctness** from **testthat**, **simulation**, **R CMD check**, **vignette rebuilds**, not from model authority.
+
+::: {.notes}
+**~1:15** — Short; expand in discussion if asked about regulated software or review culture.
+:::
+
+---
+
+## Sample size re-estimation (recurrent / NB)
+
+- **When it helps:** if planning guesses for **overdispersion**, accrual, or follow-up are wrong, re-estimating total **N** or follow-up after an interim can recover **unconditional power** — only if the adaptation rule is **pre-specified** and **Type I / power** are checked by simulation.
+- **Information-based** timing: interims and SSR keyed to **Fisher information** (variance of the log rate-ratio under a working model), not only calendar dates — so the information fraction matches how evidence actually accumulates.
+- **Blinded** SSR: treatment assignment stays masked at adaptation; pooling arms for nuisance estimates is **conservative**, and in **gsDesignNB** Monte Carlo studies blinded rules often yield **larger** adapted sample sizes than **unblinded** arm-specific nuisance updates under the same boundary logic.
+- **Unblinded** nuisance updates (when DSMB charter and regulators accept them): typically **smaller** adapted **N** in those same studies — still require full **operating-characteristic** simulation, not analytic shortcuts alone.
+
+::: {.notes}
+**~1:00** — Blinded vs unblinded sample size is **context-dependent**; the package simulations are the evidence for the “often larger N” statement, not a general theorem.
+:::
+
+---
+
+## Mutze test, \(\theta\) fallback, MoM
+
+- **What it is:** Wald test for treatment effect on **recurrent event counts** with exposure offset — **negative binomial** log-linear model (Mutze et al. 2019-style inference), implemented as **`mutze_test()`** in **gsDesignNB** and used as the default unblinded interim model in **`sim_gs_nbinom()`**.
+- **Variance:** under `MASS::glm.nb`, \(\mathrm{Var}(\text{count}) \approx \mu + \mu^2/\theta\); **large** shape \(\theta\) → **near-Poisson**; **tiny** \(\theta\) → unstable overdispersion fit.
+- **`poisson_threshold`** \(T\) (default **1000**): after fitting NB, if \(\theta \notin [1/T, T]\), fall back to **Poisson** Wald — same test statistic family, **no** extra-Poisson term.
+- **Tuning \(T\):** **lower** \(T\) → Poisson fallback **sooner** (use when you want the interim analysis to ignore overdispersion once \(\theta\) is only moderately large); **raise** \(T\) → keep NB unless \(\theta\) is extreme; always **sensitivity-check** the choice.
+- **Method of moments:** **`sim_gs_nbinom()`** also computes **MoM**-based nuisance parameters and **blinded / unblinded information** alongside **ML** — compare the two paths in simulation before fixing SSR or monitoring rules; **`mutze_test()`** does not auto-switch to MoM.
+
+::: {.notes}
+**~1:15** — MoM is an **additional** diagnostic path in simulation output, not a drop-in replacement for the Wald test unless you change the analysis spec.
+:::
+
+---
+
+## Conclusions
+
+1. **Calendar gaps** between interims + **piecewise** hazards change **expected events** and **information growth** — use **expected-events + floor** timing fed to `gsDesign()`.
+2. **Gapped spending** (`sfGapped`) = intervals on **information time** without testing.
+3. **Patient-level \(\delta\)** is natural in **simulation**; don’t assume standard PH \(d\) counts every event.
+4. **Simulation** (fixed GSD + SSR) is the main **external** check on complex paths.
+5. **NB add-ons:** SSR **information-based**; blinded vs unblinded nuisance; **`mutze_test()`** + **`poisson_threshold`**; compare **ML vs MoM** info in **`sim_gs_nbinom()`** before defaults.
+6. **Limitations:** PH piecewise approximation; real ops have jitter; general closed-form **counted** events under \(\delta\) needs recurrent theory or MC calibration.
+
+::: {.notes}
+**~1:30** — Six bullets recap the deck; slow down on limitations if time allows.
+:::
+
+---
+
+## Discussion prompts
+
+- What **\(\Delta_i\)** and **\(\delta\)** does your protocol imply?
+- Where do you anchor **information** — events only, calendar, or hybrid?
+- How do you **document** simulation assumptions for agencies?
+
+**Thank you**
+
+::: {.notes}
+**~2:00** buffer** — Use for questions; slides end ~20 min if on pace.
+:::
+
+---
+
+## References (selected)
+
+- Jennison & Turnbull (2000). *Group Sequential Methods…*
+- Lachin & Foulkes (1986). *Biometrics*.
+- Lan & DeMets (1989). *Biometrika*.
+- Lehmacher & Wassmer (1999). *Biometrics* (SSR).
+- Mutze et al. (2019). Group sequential designs for negative binomial outcomes. *Statistical Methods in Medical Research*.
+- Zhu & Lakkis (2014). *Statistics in Medicine* (NB rates).
+- Dohmke & Kalliamvakou (2025). “Developers, Reinvented.” GitHub blog.
+- **gsDesign** · **gsDesignNB** — GitHub + pkgdown sites.
+
+::: {.notes}
+Optional backup slide if no questions — or skip to save time.
+:::

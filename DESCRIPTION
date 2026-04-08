@@ -3,8 +3,9 @@ Version: 0.3.0
 Title: Sample Size and Simulation for Negative Binomial Outcomes
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
+    person("Hongtao", "Zhang", role = "aut"),
+    person("Andrea", "Maes", role = "aut"),
     person("Nan", "Xiao", role = "ctb"),
-    person("Hongtao", "Zhang", role = "ctb"),
     person("Merck & Co., Inc., Rahway, NJ, USA and its affiliates", role = "cph",
            comment = c(ROR = "02891sr49"))
     )
@@ -43,6 +44,7 @@ Suggests:
     DT,
     htmltools,
     scales,
+    shiny,
     foreach,
     doFuture,
     future,

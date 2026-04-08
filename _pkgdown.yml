@@ -32,8 +32,10 @@ reference:
       - nb_sim
       - nb_sim_seasonal
       - sim_gs_nbinom
+      - sim_ssr_nbinom
       - check_gs_bound
       - summarize_gs_sim
+      - summarize_ssr_sim
 
   - title: "Analysis"
     desc: >
@@ -57,6 +59,12 @@ reference:
       Preview the pkgdown website locally over HTTP (avoids unstyled `file://` pages).
     contents:
       - preview_pkgdown_site
+
+  - title: "Interactive prototype"
+    desc: >
+      Launch the optional Shiny explorer for adaptive negative binomial SSR scenarios.
+    contents:
+      - run_ssr_shiny
 
   - title: "gsDesign re-exports"
     desc: >

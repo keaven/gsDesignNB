@@ -129,6 +129,35 @@ design_note <- paste0(
 
 ```
 
+```{r gs_design_type1_sens, echo=FALSE}
+# Second GS design at alpha = 0.02 for Type I (non-binding) comparison only.
+# Main power simulations continue to use alpha_plan (0.025) above.
+alpha_plan_type1_sens <- 0.02
+design_plan_type1_sens <- sample_size_nbinom(
+  lambda1 = lambda1_plan, lambda2 = lambda2_plan,
+  dispersion = k_plan, power = power_plan, alpha = alpha_plan_type1_sens,
+  accrual_rate = accrual_rate_plan,
+  accrual_duration = accrual_dur_plan,
+  trial_duration = trial_dur_plan,
+  max_followup = max_followup,
+  event_gap = event_gap_val
+)
+gs_plan_type1_sens <- design_plan_type1_sens |>
+  gsNBCalendar(
+    k = 3, test.type = 4, alpha = alpha_plan_type1_sens,
+    sfu = sfHSD, sfupar = -2,
+    sfl = sfCauchy, sflpar = c(0.4, 0.75, 0.56, 0.63),
+    analysis_times = analysis_times_plan
+  ) |>
+  gsDesignNB::toInteger()
+n_planned_type1_sens <- gs_plan_type1_sens$n_total[gs_plan_type1_sens$k]
+target_info_type1_sens <- gs_plan_type1_sens$n.I[gs_plan_type1_sens$k]
+planned_timing_type1_sens <- gs_plan_type1_sens$timing
+gs_inflation_type1_sens <- n_planned_type1_sens / design_plan_type1_sens$n_total
+```
+
+For **Type I sensitivity** we also calendar a group-sequential design at **one-sided $\alpha = 0.02$** (same spending and nuisance assumptions as above). Its planned maximum enrollment is **`r n_planned_type1_sens`** subjects (fixed NB stage **`r round(design_plan_type1_sens$n_total)`** before GS integer rounding; GS inflation factor **`r round(gs_inflation_type1_sens, 3)`**). That design is used **only** for the RR = 1 non-binding Type I tables later in this vignette; **all power** summaries still use the $\alpha = 0.025$ design.
+
 The group sequential inflation factor is
 `r round(gs_inflation, 3)`, giving a planned sample size of
 `r n_planned` (up from the fixed-design
@@ -242,8 +271,8 @@ Across the range of $\lambda_1$ and $k$ values considered, the required
 group sequential sample size ranges from
 `r min(gs_n_grid$GS_N, na.rm = TRUE)` to
 `r max(gs_n_grid$GS_N, na.rm = TRUE)`.
-Higher dispersion ($k = 0.6$) consistently requires more subjects than
-$k = 0.3$, while higher control rates reduce the required N because each
+Higher dispersion ($k = 1.0$) consistently requires more subjects than
+$k = 0.5$, while higher control rates reduce the required N because each
 subject contributes more information.
 This wide range highlights why sample size re-estimation can be valuable
 when nuisance parameters are uncertain.
@@ -319,13 +348,23 @@ scenarios <- expand.grid(
 )
 
 n_sims_initial <- 50
+n_sims_production_power <- 3600L
+n_sims_production_type1 <- 20000L
+n_sims_production_rr_gt1 <- 1000L
 use_production <- identical(Sys.getenv("GSDESIGNNB_PRODUCTION_SSR"), "true")
+# Production rep counts for Type I (non-binding) tables only, without re-running the full power grid:
+use_production_type1 <- use_production ||
+  identical(Sys.getenv("GSDESIGNNB_PRODUCTION_TYPE1"), "true")
 
-scenarios$n_sims <- ifelse(
-  use_production,
-  3600,
-  n_sims_initial
-)
+scenarios$n_sims <- if (use_production) {
+  as.integer(ifelse(
+    scenarios$rr_true == 1,
+    n_sims_production_type1,
+    ifelse(scenarios$rr_true > 1, n_sims_production_rr_gt1, n_sims_production_power)
+  ))
+} else {
+  rep(as.integer(n_sims_initial), length.out = nrow(scenarios))
+}
 scenarios$accrual_eff <- scenarios$accrual_true
 
 n_max <- 2 * n_planned
@@ -351,6 +390,9 @@ force_rerun <- identical(Sys.getenv("GSDESIGNNB_FORCE_SSR_SIM"), "true")
 use_precomputed <- (!use_production) && !force_rerun && nzchar(precomputed_file)
 save_precomputed <- identical(Sys.getenv("GSDESIGNNB_SAVE_SSR_OUTPUTS"), "true")
 save_precomputed_path <- precomputed_source_path
+# Re-run Type I (non-binding) sims even if RDS cache exists (see inst/extdata/ssr_type1_null_*.rds)
+force_type1_sim <- identical(Sys.getenv("GSDESIGNNB_FORCE_TYPE1_SIM"), "true")
+type1_cache_dir <- dirname(save_precomputed_path)
 
 cat("Scenarios:", nrow(scenarios), "| Replicates:", sum(scenarios$n_sims), "\n")
 cat("Accrual rates used in simulation:", paste(round(sort(unique(scenarios$accrual_true)), 1), collapse = ", "),
@@ -365,12 +407,27 @@ cat(
 )
 cat("Futility-stop sample size counts enrollment through +",
     analysis_lag_months, " months after stop.\n", sep = "")
-cat("Production plan: 3600 reps for each main-grid scenario;\n")
-cat("separate RR=1 non-binding futility check uses 20000 reps.\n")
+cat("Production plan:", n_sims_production_power,
+    "reps per scenario for RR < 1 (power);",
+    n_sims_production_type1, "reps per scenario for RR = 1.0 (Type I);",
+    n_sims_production_rr_gt1, "reps per scenario for RR > 1.\n")
+cat("separate RR = 1 non-binding futility check uses", n_sims_production_type1, "reps per k.\n")
 if (use_precomputed) cat("Using precomputed outputs:", precomputed_file, "\n")
+cat(
+  "Type I (RR=1, non-binding) per-alpha cache: inst/extdata/ssr_type1_null_alpha025.rds,",
+  "ssr_type1_null_alpha020.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.\n"
+)
+cat(
+  "Production Type I reps only (keep precomputed power grid):",
+  "GSDESIGNNB_PRODUCTION_TYPE1=true\n"
+)
 ```
 
 ## Simulation engine
+
+The reusable adaptive-trial logic now lives in `sim_ssr_nbinom()`. This
+vignette keeps the **scenario grid**, **caching**, and **visualization**
+layers, but delegates the actual SSR simulation engine to the package.
 
 Interim analyses are information-based and use dynamic spending:
 
@@ -392,383 +449,102 @@ unblinded information from `mutze_test()` (tracked as fallback counts
 in the results table).
 
 ```{r simulation_engine}
-run_one_trial <- function(sim_id, lambda1_true, rr_true, k_true,
-                          accrual_true, accrual_eff, n_planned, n_max,
-                          max_followup, gs_plan, target_info,
-                          planned_timing, gs_inflation,
-                          lambda1_plan, lambda2_plan, rr_plan,
-                          accrual_rate_plan, accrual_dur_plan,
-                          trial_dur_plan, power_plan, alpha_plan,
-                          min_if_futility,
-                          max_enrollment_frac_for_ia2,
-                          min_months_to_close_for_adapt,
-                          analysis_lag_months,
-                          event_gap = 0,
-                          ignore_futility = FALSE) {
-  lambda2_true <- lambda1_true * rr_true
-  k_analyses <- 3
+make_enroll_rate <- function(accrual_eff) {
+  data.frame(rate = accrual_eff, duration = n_max / accrual_eff)
+}
 
-  enroll_rate_sim <- data.frame(
-    rate = accrual_eff, duration = n_max / accrual_eff
-  )
-  fail_rate_sim <- data.frame(
+make_fail_rate <- function(lambda1_true, rr_true, k_true) {
+  data.frame(
     treatment = c("Control", "Experimental"),
-    rate = c(lambda1_true, lambda2_true),
+    rate = c(lambda1_true, lambda1_true * rr_true),
     dispersion = k_true
   )
-  dropout_rate_sim <- data.frame(
-    treatment = c("Control", "Experimental"),
-    rate = c(0, 0), duration = c(100, 100)
+}
+
+dropout_rate_sim <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0, 0),
+  duration = c(100, 100)
+)
+
+run_scenario <- function(sc_idx) {
+  sc <- scenarios[sc_idx, ]
+  message(sprintf(
+    "Starting scenario %d / %d: RR=%.2f, lambda1=%.2f, k=%.2f, accrual=%.1f",
+    sc_idx, nrow(scenarios), sc$rr_true, sc$lambda1_true, sc$k_true, sc$accrual_true
+  ))
+
+  sim_res <- sim_ssr_nbinom(
+    n_sims = sc$n_sims,
+    enroll_rate = make_enroll_rate(sc$accrual_eff),
+    fail_rate = make_fail_rate(sc$lambda1_true, sc$rr_true, sc$k_true),
+    dropout_rate = dropout_rate_sim,
+    max_followup = max_followup,
+    design = gs_plan,
+    n_max = n_max,
+    min_if_futility = min_if_futility,
+    max_enrollment_frac_for_adapt = max_enrollment_frac_for_ia2,
+    min_months_to_close_for_adapt = min_months_to_close_for_adapt,
+    analysis_lag_months = analysis_lag_months,
+    event_gap = event_gap_val,
+    ignore_futility = FALSE,
+    metadata = list(
+      lambda1_true = sc$lambda1_true,
+      k_true = sc$k_true,
+      accrual_true = sc$accrual_true,
+      accrual_eff = sc$accrual_eff,
+      rr_true = sc$rr_true
+    ),
+    seed = 1000 + sc_idx
   )
-  sim_data <- nb_sim(
-    enroll_rate = enroll_rate_sim, fail_rate = fail_rate_sim,
-    dropout_rate = dropout_rate_sim, max_followup = max_followup,
-    n = n_max, event_gap = event_gap
-  )
 
-  id_enroll <- unique(sim_data[, c("id", "enroll_time")])
-  id_enroll <- id_enroll[order(id_enroll$enroll_time, id_enroll$id), ]
-  all_ids <- id_enroll$id
-  max_calendar <- max(sim_data$calendar_time) + 1
+  sim_res$trial_results
+}
 
-  n_strategies <- c(
-    "No adaptation" = n_planned,
-    "Blinded SSR" = n_planned,
-    "Unblinded SSR" = n_planned
-  )
+run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n) {
+  null_all <- vector("list", length(null_k_scenarios))
 
-  # Helper: info and method at a given cut time
-  info_method_at_t <- function(pool, t) {
-    cut_dt <- cut_data_by_date(pool, cut_date = t, event_gap = event_gap)
-    if (sum(cut_dt$events) < 2 || length(unique(cut_dt$id)) < 4) {
-      return(list(info = 0, method = "insufficient"))
-    }
-
-    blind_res <- tryCatch(
-      calculate_blinded_info(
-        cut_dt, ratio = 1,
-        lambda1_planning = lambda1_plan,
-        lambda2_planning = lambda2_plan,
-        event_gap = event_gap
-      ),
-      error = function(e) NULL
+  for (i in seq_along(null_k_scenarios)) {
+    k_null <- null_k_scenarios[i]
+    sim_res <- sim_ssr_nbinom(
+      n_sims = null_n,
+      enroll_rate = make_enroll_rate(accrual_scenario_plan),
+      fail_rate = make_fail_rate(lambda1_plan, 1.0, k_null),
+      dropout_rate = dropout_rate_sim,
+      max_followup = max_followup,
+      design = gs_plan_x,
+      n_max = n_max,
+      min_if_futility = min_if_futility,
+      max_enrollment_frac_for_adapt = max_enrollment_frac_for_ia2,
+      min_months_to_close_for_adapt = min_months_to_close_for_adapt,
+      analysis_lag_months = analysis_lag_months,
+      event_gap = event_gap_val,
+      ignore_futility = TRUE,
+      metadata = list(k_true = k_null),
+      seed = 5000 + i
     )
-    if (!is.null(blind_res) &&
-        is.finite(blind_res$blinded_info) &&
-        !is.na(blind_res$blinded_info) &&
-        blind_res$blinded_info > 0) {
-      return(list(info = blind_res$blinded_info, method = "blinded"))
-    }
-
-    mutze_res <- tryCatch(mutze_test(cut_dt), error = function(e) NULL)
-    if (!is.null(mutze_res) &&
-        is.finite(mutze_res$se) &&
-        !is.na(mutze_res$se) &&
-        mutze_res$se > 0) {
-      return(list(info = 1 / mutze_res$se^2, method = "unblinded"))
-    }
-
-    # User-requested last-resort fallback
-    list(info = 100, method = "fallback100")
+    null_all[[i]] <- sim_res$trial_results
   }
 
-  # --- Find information-based interim times ---
-  # Restrict to planned N for interim timing search
-  planned_pool <- sim_data[sim_data$id %in% all_ids[seq_len(n_planned)], ]
-  class(planned_pool) <- class(sim_data)
-
-  ia_times <- numeric(k_analyses)
-  ia_info_method <- rep("blinded", k_analyses)
-
-  for (a in 1:(k_analyses - 1)) {
-    target_info_a <- planned_timing[a] * target_info
-    min_t <- if (a == 1) 1 else ia_times[a - 1] + 0.5
-
-    ia_times[a] <- tryCatch(
-      get_cut_date(
-        data = planned_pool,
-        target_info = target_info_a,
-        event_gap = event_gap,
-        lambda1 = lambda1_plan, lambda2 = lambda2_plan,
-        ratio = 1, min_date = min_t, max_date = max_calendar
-      ),
-      error = function(e) max_calendar
-    )
-
-    # Track whether blinded or fallback method was needed at this cut
-    ia_info_method[a] <- info_method_at_t(planned_pool, ia_times[a])$method
+  null_all <- Filter(Negate(is.null), null_all)
+  if (length(null_all) == 0) {
+    return(data.table(
+      k_true = numeric(0), strategy = character(0),
+      n_sims = integer(0), type1_error = numeric(0),
+      cross_ia1 = numeric(0), cross_ia2 = numeric(0), cross_final = numeric(0),
+      mean_n = numeric(0), adapted_rate = numeric(0)
+    ))
   }
 
-  # --- Run each strategy ---
-  strategy_results <- list()
-
-  for (strat in names(n_strategies)) {
-    stopped <- FALSE
-    reject <- FALSE
-    futility_stop <- FALSE
-    reject_stage <- "No reject"
-    futility_stage <- "No futility"
-    ia2_enroll_frac <- NA_real_
-    ia2_months_to_close_pred <- NA_real_
-    ia2_adapt_allowed <- FALSE
-    ia2_adapt_applied <- FALSE
-    ia2_adapt_cut_time <- NA_real_
-    n_futility_report <- NA_real_
-    z_values <- rep(NA_real_, k_analyses)
-    info_values <- rep(NA_real_, k_analyses)
-    if_values <- rep(NA_real_, k_analyses)
-    cal_times <- rep(NA_real_, k_analyses)
-
-    for (a in seq_len(k_analyses)) {
-      if (stopped) break
-
-      current_n <- n_strategies[[strat]]
-
-      if (a < k_analyses) {
-        # Interim analyses are based on planned N for all strategies.
-        # SSR changes the final sample size target after IA2.
-        cut_time <- ia_times[a]
-        interim_n <- min(n_planned, length(all_ids))
-        analysis_ids <- all_ids[seq_len(interim_n)]
-        enrolled_by_t <- id_enroll$id[
-          id_enroll$id %in% analysis_ids & id_enroll$enroll_time <= cut_time
-        ]
-        analysis_pool <- sim_data[sim_data$id %in% enrolled_by_t, ]
-
-        if (a == 2) {
-          # Adaptation cutoff may be earlier than IA2 efficacy/futility
-          # to ensure time to implement enrollment changes.
-          enrolled_n_ia2 <- length(enrolled_by_t)
-          accrual_hat_ia2 <- if (cut_time > 0) enrolled_n_ia2 / cut_time else NA_real_
-          predicted_enroll_close <- if (!is.na(accrual_hat_ia2) && accrual_hat_ia2 > 0) {
-            interim_n / accrual_hat_ia2
-          } else {
-            NA_real_
-          }
-
-          ia2_adapt_cut_time <- if (!is.na(predicted_enroll_close)) {
-            min(cut_time, predicted_enroll_close - min_months_to_close_for_adapt)
-          } else {
-            cut_time
-          }
-          ia2_adapt_cut_time <- max(ia2_adapt_cut_time, ia_times[1] + 0.5)
-
-          enrolled_n_adapt <- sum(
-            id_enroll$id %in% analysis_ids &
-              id_enroll$enroll_time <= ia2_adapt_cut_time
-          )
-          ia2_enroll_frac <- if (interim_n > 0) enrolled_n_adapt / interim_n else NA_real_
-          accrual_hat <- if (ia2_adapt_cut_time > 0) {
-            enrolled_n_adapt / ia2_adapt_cut_time
-          } else {
-            NA_real_
-          }
-          ia2_months_to_close_pred <- if (!is.na(accrual_hat) && accrual_hat > 0) {
-            max(0, (interim_n - enrolled_n_adapt) / accrual_hat)
-          } else {
-            NA_real_
-          }
-          ia2_adapt_allowed <- !is.na(ia2_enroll_frac) &&
-            is.finite(ia2_adapt_cut_time) &&
-            ia2_adapt_cut_time <= cut_time &&
-            ia2_enroll_frac <= max_enrollment_frac_for_ia2
-        }
-      } else {
-        # Final: all current_n subjects, wait for max follow-up
-        analysis_ids <- all_ids[seq_len(min(current_n, length(all_ids)))]
-        last_enroll <- max(id_enroll$enroll_time[id_enroll$id %in% analysis_ids])
-        analysis_pool <- sim_data[sim_data$id %in% analysis_ids, ]
-        # Ensure all selected subjects are followed through their observed
-        # event/dropout/follow-up process by cutting at the latest observed
-        # calendar time for selected participants.
-        cut_time <- max(
-          last_enroll + max_followup,
-          max(analysis_pool$calendar_time, na.rm = TRUE)
-        )
-      }
-      cal_times[a] <- cut_time
-
-      class(analysis_pool) <- class(sim_data)
-      cut_data <- cut_data_by_date(analysis_pool, cut_date = cut_time, event_gap = event_gap)
-
-      if (length(unique(cut_data$id)) < 10) next
-
-      test_res <- tryCatch(mutze_test(cut_data), error = function(e) NULL)
-      if (is.null(test_res)) next
-
-      z_val <- -test_res$z
-      info_val <- 1 / test_res$se^2
-      if_val <- info_val / target_info
-
-      z_values[a] <- z_val
-      info_values[a] <- info_val
-      if_values[a] <- if_val
-
-      # --- GS bounds ---
-      # Always use k=2+ so gsDesign can compute interim bounds
-      # Append a placeholder final analysis at timing=1 if needed
-      timing_vec <- c(if_values[1:a], if (a < k_analyses) 1)
-      spend_vec <- c(
-        pmin(planned_timing[1:a], if_values[1:a]),
-        if (a < k_analyses) 1
-      )
-      if (a == k_analyses) {
-        timing_vec[a] <- 1
-        spend_vec[a] <- 1
-      }
-
-      # Ensure monotonicity
-      for (j in 2:length(timing_vec)) {
-        if (!is.na(timing_vec[j]) && !is.na(timing_vec[j-1]) &&
-            timing_vec[j] <= timing_vec[j-1])
-          timing_vec[j] <- timing_vec[j-1] + 0.001
-        if (!is.na(spend_vec[j]) && !is.na(spend_vec[j-1]) &&
-            spend_vec[j] <= spend_vec[j-1])
-          spend_vec[j] <- spend_vec[j-1] + 0.001
-      }
-
-      if (any(is.na(timing_vec))) next
-
-      k_gs <- length(timing_vec)
-      gs_updated <- tryCatch(
-        gsDesign(
-          k = k_gs, test.type = gs_plan$test.type,
-          alpha = alpha_plan, beta = 1 - power_plan,
-          sfu = gs_plan$upper$sf, sfupar = gs_plan$upper$param,
-          sfl = gs_plan$lower$sf, sflpar = gs_plan$lower$param,
-          n.fix = target_info,
-          timing = timing_vec, usTime = spend_vec, lsTime = spend_vec
-        ),
-        error = function(e) NULL
-      )
-      if (is.null(gs_updated)) next
-
-      if (z_val > gs_updated$upper$bound[a]) {
-        reject <- TRUE
-        reject_stage <- if (a < k_analyses) paste0("IA", a) else "Final"
-        stopped <- TRUE
-      } else if (a < k_analyses && !ignore_futility &&
-                 if_val >= min_if_futility &&
-                 z_val < gs_updated$lower$bound[a]) {
-        futility_stop <- TRUE
-        futility_stage <- paste0("IA", a)
-        n_futility_report <- sum(
-          id_enroll$id %in% analysis_ids &
-            id_enroll$enroll_time <= (cut_time + analysis_lag_months)
-        )
-        n_futility_report <- max(n_futility_report, length(enrolled_by_t))
-        n_futility_report <- min(n_futility_report, length(analysis_ids))
-        n_strategies[[strat]] <- n_futility_report
-        stopped <- TRUE
-      }
-
-      # --- SSR at second interim only ---
-      if (a == 2 && !stopped && strat != "No adaptation" && ia2_adapt_allowed) {
-        adapt_cut_data <- cut_data
-        if (!is.na(ia2_adapt_cut_time)) {
-          adapt_pool <- sim_data[sim_data$id %in% analysis_ids, ]
-          class(adapt_pool) <- class(sim_data)
-          adapt_cut_data <- cut_data_by_date(adapt_pool, cut_date = ia2_adapt_cut_time, event_gap = event_gap)
-        }
-        if (length(unique(adapt_cut_data$id)) < 10) next
-
-        if (strat == "Blinded SSR") {
-          blind_res <- tryCatch(
-            calculate_blinded_info(adapt_cut_data, ratio = 1,
-              lambda1_planning = lambda1_plan,
-              lambda2_planning = lambda2_plan,
-              event_gap = event_gap),
-            error = function(e) NULL
-          )
-          if (!is.null(blind_res) && !is.na(blind_res$lambda1_adjusted)) {
-            ssr_design <- tryCatch(
-              sample_size_nbinom(
-                lambda1 = blind_res$lambda1_adjusted,
-                lambda2 = blind_res$lambda2_adjusted,
-                dispersion = blind_res$dispersion_blinded,
-                power = power_plan, alpha = alpha_plan,
-                accrual_rate = accrual_rate_plan,
-                accrual_duration = accrual_dur_plan,
-                trial_duration = trial_dur_plan,
-                max_followup = max_followup,
-                event_gap = event_gap
-              ),
-              error = function(e) NULL
-            )
-            if (!is.null(ssr_design)) {
-              n_new <- min(
-                max(ceiling(ssr_design$n_total * gs_inflation), n_planned),
-                n_max
-              )
-              ia2_adapt_applied <- (n_new > n_planned)
-              n_strategies[[strat]] <- n_new
-            }
-          }
-        } else {
-          unblind_fit <- tryCatch(
-            MASS::glm.nb(events ~ treatment + offset(log(tte)),
-                          data = adapt_cut_data),
-            error = function(e) NULL
-          )
-          if (!is.null(unblind_fit)) {
-            k_est <- 1 / unblind_fit$theta
-            lambda1_est <- exp(coef(unblind_fit)[1])
-            ssr_design <- tryCatch(
-              sample_size_nbinom(
-                lambda1 = lambda1_est,
-                lambda2 = lambda1_est * rr_plan,
-                dispersion = k_est,
-                power = power_plan, alpha = alpha_plan,
-                accrual_rate = accrual_rate_plan,
-                accrual_duration = accrual_dur_plan,
-                trial_duration = trial_dur_plan,
-                max_followup = max_followup,
-                event_gap = event_gap
-              ),
-              error = function(e) NULL
-            )
-            if (!is.null(ssr_design)) {
-              n_new <- min(
-                max(ceiling(ssr_design$n_total * gs_inflation), n_planned),
-                n_max
-              )
-              ia2_adapt_applied <- (n_new > n_planned)
-              n_strategies[[strat]] <- n_new
-            }
-          }
-        }
-      }
-    }
-
-    strategy_results[[strat]] <- data.frame(
-      sim = sim_id, strategy = strat,
-      reject = reject, futility = futility_stop,
-      reject_stage = reject_stage,
-      futility_stage = futility_stage,
-      n_adapted = n_strategies[[strat]],
-      adapted = n_strategies[[strat]] > n_planned,
-      z_ia1 = z_values[1], if_ia1 = if_values[1],
-      ia1_time = cal_times[1],
-      ia1_info_method = ia_info_method[1],
-      ia1_fallback = ia_info_method[1] != "blinded",
-      z_ia2 = z_values[2], if_ia2 = if_values[2],
-      ia2_time = cal_times[2],
-      ia2_info_method = ia_info_method[2],
-      ia2_fallback = ia_info_method[2] != "blinded",
-      ia2_enroll_frac = ia2_enroll_frac,
-      ia2_months_to_close_pred = ia2_months_to_close_pred,
-      ia2_adapt_cut_time = ia2_adapt_cut_time,
-      ia2_adapt_allowed = ia2_adapt_allowed,
-      ia2_adapt_applied = ia2_adapt_applied,
-      z_final = z_values[3],
-      info_final = info_values[3],
-      if_final = if_values[3],
-      final_time = cal_times[3],
-      stringsAsFactors = FALSE
-    )
-  }
-
-  do.call(rbind, strategy_results)
+  null_dt <- rbindlist(null_all)
+  sm <- summarize_ssr_sim(null_dt, by = c("k_true", "strategy"))$trial_summary
+  sm <- as.data.frame(sm)
+  sm$type1_error <- sm$rejection_rate
+  sm$adapted_rate <- sm$pct_adapted / 100
+  sm[, c(
+    "k_true", "strategy", "n_sims", "type1_error",
+    "cross_ia1", "cross_ia2", "cross_final", "mean_n", "adapted_rate"
+  )]
 }
 ```
 
@@ -787,58 +563,12 @@ if (use_precomputed) {
   }
   sim_mode <- "Loaded precomputed outputs"
 } else {
-  run_scenario <- function(sc_idx) {
-    sc <- scenarios[sc_idx, ]
-    message(sprintf("Starting scenario %d / %d: RR=%.2f, lambda1=%.2f, k=%.2f, accrual=%.1f", 
-                    sc_idx, nrow(scenarios), sc$rr_true, sc$lambda1_true, sc$k_true, sc$accrual_true))
-    set.seed(1000 + sc_idx)
-    results_list <- lapply(seq_len(sc$n_sims), function(sim_id) {
-      tryCatch(
-        run_one_trial(
-          sim_id = sim_id,
-          lambda1_true = sc$lambda1_true, rr_true = sc$rr_true,
-          k_true = sc$k_true,
-          accrual_true = sc$accrual_true,
-          accrual_eff = sc$accrual_eff,
-          n_planned = n_planned, n_max = n_max,
-          max_followup = max_followup,
-          gs_plan = gs_plan, target_info = target_info,
-          planned_timing = planned_timing, gs_inflation = gs_inflation,
-          lambda1_plan = lambda1_plan, lambda2_plan = lambda2_plan,
-          rr_plan = rr_plan, accrual_rate_plan = accrual_rate_plan,
-          accrual_dur_plan = accrual_dur_plan,
-          trial_dur_plan = trial_dur_plan,
-          power_plan = power_plan, alpha_plan = alpha_plan,
-          min_if_futility = min_if_futility,
-          max_enrollment_frac_for_ia2 = max_enrollment_frac_for_ia2,
-          min_months_to_close_for_adapt = min_months_to_close_for_adapt,
-          analysis_lag_months = analysis_lag_months,
-          event_gap = event_gap_val,
-          ignore_futility = FALSE
-        ),
-        error = function(e) NULL
-      )
-    })
-    res <- do.call(rbind, results_list)
-    if (is.null(res) || nrow(res) == 0) return(NULL)
-    res$lambda1_true <- sc$lambda1_true
-    res$k_true <- sc$k_true
-    res$accrual_true <- sc$accrual_true
-    res$accrual_eff <- sc$accrual_eff
-    res$rr_true <- sc$rr_true
-    res
-  }
-
   sim_start <- Sys.time()
   workers <- max(1L, future::availableCores() - 1L)
   old_plan <- future::plan()
   future::plan(future::multisession, workers = workers)
 
-  all_results <- future.apply::future_lapply(
-    seq_len(nrow(scenarios)),
-    run_scenario,
-    future.seed = TRUE
-  )
+  all_results <- lapply(seq_len(nrow(scenarios)), run_scenario)
 
   future::plan(old_plan)
   all_results <- Filter(Negate(is.null), all_results)
@@ -866,90 +596,116 @@ if (!is.null(sim_runtime_seconds) && is.finite(sim_runtime_seconds)) {
               sim_runtime_seconds / 60, sim_runtime_seconds))
 }
 
-# Separate RR = 1.0 non-binding futility check (ignore futility stopping)
-# Run under design assumptions and with higher dispersion
-null_nonbinding_n <- if (use_production) 20000 else n_sims_initial
+# RR = 1.0 non-binding futility check (Type I), for nominal alpha = 0.025 and 0.02 designs.
+# Power simulations elsewhere use alpha_plan (0.025) only.
+# Results cache: inst/extdata/ssr_type1_null_alpha025.rds and ssr_type1_null_alpha020.rds
+# Re-run after changing sim logic or rep count: Sys.setenv(GSDESIGNNB_FORCE_TYPE1_SIM = "true")
+null_nonbinding_n <- if (use_production_type1) n_sims_production_type1 else n_sims_initial
 null_k_scenarios <- c(k_plan, 1.0)
 
-if (use_precomputed && !is.null(precomputed_outputs$null_nonbinding_summary)) {
-  null_nonbinding_summary <- as.data.table(precomputed_outputs$null_nonbinding_summary)
-  null_nonbinding_runtime_seconds <- precomputed_outputs$null_nonbinding_runtime_seconds
-  null_nonbinding_mode <- "Loaded precomputed outputs"
-} else {
-  null_nonbinding_mode <- "Fresh simulation"
-  null_start <- Sys.time()
-
-  null_all <- list()
-  old_plan_null <- future::plan()
-  future::plan(future::multisession, workers = workers)
-
-  for (k_null in null_k_scenarios) {
-    run_null_nonbinding <- function(sim_id) {
-      tryCatch(
-        run_one_trial(
-          sim_id = sim_id,
-          lambda1_true = lambda1_plan, rr_true = 1.0, k_true = k_null,
-          accrual_true = accrual_scenario_plan,
-          accrual_eff = accrual_scenario_plan,
-          n_planned = n_planned, n_max = n_max,
-          max_followup = max_followup,
-          gs_plan = gs_plan, target_info = target_info,
-          planned_timing = planned_timing, gs_inflation = gs_inflation,
-          lambda1_plan = lambda1_plan, lambda2_plan = lambda2_plan,
-          rr_plan = rr_plan, accrual_rate_plan = accrual_rate_plan,
-          accrual_dur_plan = accrual_dur_plan,
-          trial_dur_plan = trial_dur_plan,
-          power_plan = power_plan, alpha_plan = alpha_plan,
-          min_if_futility = min_if_futility,
-          max_enrollment_frac_for_ia2 = max_enrollment_frac_for_ia2,
-          min_months_to_close_for_adapt = min_months_to_close_for_adapt,
-          analysis_lag_months = analysis_lag_months,
-          event_gap = event_gap_val,
-          ignore_futility = TRUE
-        ),
-        error = function(e) NULL
-      )
-    }
-
-    null_res <- future.apply::future_lapply(
-      seq_len(null_nonbinding_n),
-      run_null_nonbinding,
-      future.seed = TRUE
-    )
-    null_res <- Filter(Negate(is.null), null_res)
-    if (length(null_res) > 0) {
-      nr <- as.data.table(do.call(rbind, null_res))
-      nr$k_true <- k_null
-      null_all[[length(null_all) + 1]] <- nr
-    }
-  }
-  future::plan(old_plan_null)
-
-  if (length(null_all) > 0) {
-    null_dt <- rbindlist(null_all)
-    null_nonbinding_summary <- null_dt[, .(
-      n_sims = .N,
-      type1_error = mean(reject, na.rm = TRUE),
-      cross_ia1 = mean(reject_stage == "IA1", na.rm = TRUE),
-      cross_ia2 = mean(reject_stage == "IA2", na.rm = TRUE),
-      cross_final = mean(reject_stage == "Final", na.rm = TRUE),
-      mean_n = mean(n_adapted, na.rm = TRUE),
-      adapted_rate = mean(adapted, na.rm = TRUE)
-    ), by = .(k_true, strategy)]
-  } else {
-    null_nonbinding_summary <- data.table(
-      k_true = numeric(0), strategy = character(0),
-      n_sims = integer(0), type1_error = numeric(0),
-      cross_ia1 = numeric(0), cross_ia2 = numeric(0), cross_final = numeric(0),
-      mean_n = numeric(0), adapted_rate = numeric(0)
-    )
-  }
-  null_nonbinding_runtime_seconds <- as.numeric(
-    difftime(Sys.time(), null_start, units = "secs")
+type1_designs <- list(
+  list(
+    key = "alpha025",
+    label = "0.025",
+    gs_plan = gs_plan,
+    n_planned = n_planned,
+    target_info = target_info,
+    planned_timing = planned_timing,
+    gs_inflation = gs_inflation,
+    alpha_plan = alpha_plan
+  ),
+  list(
+    key = "alpha020",
+    label = "0.02",
+    gs_plan = gs_plan_type1_sens,
+    n_planned = n_planned_type1_sens,
+    target_info = target_info_type1_sens,
+    planned_timing = planned_timing_type1_sens,
+    gs_inflation = gs_inflation_type1_sens,
+    alpha_plan = alpha_plan_type1_sens
   )
+)
+
+null_nonbinding_by_alpha <- list()
+null_nonbinding_runtime_by_alpha <- list()
+null_nonbinding_mode_by_alpha <- list()
+
+bundle_type1_ok <- isTRUE(use_precomputed) &&
+  is.list(precomputed_outputs$null_nonbinding_by_alpha) &&
+  all(c("0.025", "0.02") %in% names(precomputed_outputs$null_nonbinding_by_alpha))
+
+if (bundle_type1_ok) {
+  null_nonbinding_by_alpha[["0.025"]] <-
+    as.data.table(precomputed_outputs$null_nonbinding_by_alpha[["0.025"]])
+  null_nonbinding_by_alpha[["0.02"]] <-
+    as.data.table(precomputed_outputs$null_nonbinding_by_alpha[["0.02"]])
+  br <- precomputed_outputs$null_nonbinding_runtime_by_alpha
+  if (!is.null(br)) {
+    null_nonbinding_runtime_by_alpha <- as.list(br)
+  } else {
+    null_nonbinding_runtime_by_alpha <- list(
+      "0.025" = precomputed_outputs$null_nonbinding_runtime_seconds,
+      "0.02" = NA_real_
+    )
+  }
+  null_nonbinding_mode_by_alpha <- list("0.025" = "Precomputed bundle", "0.02" = "Precomputed bundle")
+} else {
+  dir.create(type1_cache_dir, recursive = TRUE, showWarnings = FALSE)
+  for (td in type1_designs) {
+    cache_path <- file.path(type1_cache_dir, paste0("ssr_type1_null_", td$key, ".rds"))
+    loaded <- FALSE
+    if (!force_type1_sim && file.exists(cache_path)) {
+      cr <- tryCatch(readRDS(cache_path), error = function(e) NULL)
+      same_n <- is.list(cr) && isTRUE(
+        as.integer(cr$null_nonbinding_n) == as.integer(null_nonbinding_n)
+      )
+      if (same_n) {
+        null_nonbinding_by_alpha[[td$label]] <- as.data.table(cr$summary)
+        null_nonbinding_runtime_by_alpha[[td$label]] <- cr$runtime_seconds
+        null_nonbinding_mode_by_alpha[[td$label]] <- "Cached RDS"
+        loaded <- TRUE
+      }
+    }
+    if (!loaded && td$key == "alpha025" && isTRUE(use_precomputed) &&
+        !is.null(precomputed_outputs$null_nonbinding_summary)) {
+      null_nonbinding_by_alpha[[td$label]] <-
+        as.data.table(precomputed_outputs$null_nonbinding_summary)
+      null_nonbinding_runtime_by_alpha[[td$label]] <-
+        precomputed_outputs$null_nonbinding_runtime_seconds
+      null_nonbinding_mode_by_alpha[[td$label]] <- "Precomputed bundle (legacy)"
+      loaded <- TRUE
+    }
+    if (!loaded) {
+      cat("Running Type I (non-binding) sims: design alpha =", td$label, "\n")
+      t0 <- Sys.time()
+      sm <- run_null_type1_sims(td$gs_plan, td$alpha_plan, null_nonbinding_n)
+      rt <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+      null_nonbinding_by_alpha[[td$label]] <- sm
+      null_nonbinding_runtime_by_alpha[[td$label]] <- rt
+      null_nonbinding_mode_by_alpha[[td$label]] <- "Fresh simulation"
+      saveRDS(
+        list(
+          summary = as.data.frame(sm),
+          runtime_seconds = rt,
+          null_nonbinding_n = null_nonbinding_n,
+          alpha_design = td$alpha_plan,
+          generated_at = as.character(Sys.time())
+        ),
+        cache_path
+      )
+      cat("  Saved:", cache_path, "\n")
+    }
+  }
 }
 
-cat("RR=1 non-binding futility check mode:", null_nonbinding_mode, "\n")
+null_nonbinding_summary <- null_nonbinding_by_alpha[["0.025"]]
+null_nonbinding_runtime_seconds <- null_nonbinding_runtime_by_alpha[["0.025"]]
+null_nonbinding_mode <- paste0(
+  "0.025: ", null_nonbinding_mode_by_alpha[["0.025"]],
+  " | 0.02: ", null_nonbinding_mode_by_alpha[["0.02"]]
+)
+
+cat("RR=1 non-binding Type I modes:", null_nonbinding_mode, "\n")
 cat("RR=1 non-binding replications per k:", null_nonbinding_n, "\n")
 cat("k scenarios:", paste(null_k_scenarios, collapse = ", "), "\n")
 ```
@@ -958,45 +714,27 @@ cat("k scenarios:", paste(null_k_scenarios, collapse = ", "), "\n")
 
 ```{r summarize}
 dt <- as.data.table(all_results)
-
-summary_dt <- dt[, .(
-  n_sims = .N,
-  rejection_rate = mean(reject, na.rm = TRUE),
-  futility_rate = mean(futility, na.rm = TRUE),
-  cross_ia1 = mean(reject_stage == "IA1", na.rm = TRUE),
-  cross_ia2 = mean(reject_stage == "IA2", na.rm = TRUE),
-  cross_final = mean(reject_stage == "Final", na.rm = TRUE),
-  mean_n = round(mean(n_adapted, na.rm = TRUE)),
-  sd_n = round(sd(n_adapted, na.rm = TRUE), 1),
-  pct_adapted = round(100 * mean(adapted, na.rm = TRUE), 1),
-  mean_if_ia1 = round(100 * mean(if_ia1, na.rm = TRUE), 1),
-  mean_if_ia2 = round(100 * mean(if_ia2, na.rm = TRUE), 1),
-  mean_if_final = round(100 * mean(if_final, na.rm = TRUE), 1),
-  mean_ia1_time = round(mean(ia1_time, na.rm = TRUE), 1),
-  mean_ia2_time = round(mean(ia2_time, na.rm = TRUE), 1),
-  mean_ia2_adapt_cut = round(mean(ia2_adapt_cut_time, na.rm = TRUE), 1),
-  mean_final_time = round(mean(final_time, na.rm = TRUE), 1),
-  mean_ia2_enroll_pct = round(100 * mean(ia2_enroll_frac, na.rm = TRUE), 1),
-  mean_ia2_months_to_close = round(mean(ia2_months_to_close_pred, na.rm = TRUE), 1),
-  pct_ia2_adapt_allowed = round(100 * mean(ia2_adapt_allowed, na.rm = TRUE), 1),
-  pct_ia2_adapt_applied = round(100 * mean(ia2_adapt_applied, na.rm = TRUE), 1),
-  pct_reach_final = round(100 * mean(!is.na(if_final), na.rm = TRUE), 1),
-  n_fallback_ia1 = sum(ia1_fallback, na.rm = TRUE),
-  n_fallback_ia2 = sum(ia2_fallback, na.rm = TRUE),
-  n_any_fallback = sum(ia1_fallback | ia2_fallback, na.rm = TRUE),
-  pct_futility_ia1 = round(100 * mean(futility_stage == "IA1", na.rm = TRUE), 1),
-  pct_futility_ia2 = round(100 * mean(futility_stage == "IA2", na.rm = TRUE), 1)
-), by = .(lambda1_true, k_true, accrual_true, rr_true, strategy)]
+summary_dt <- summarize_ssr_sim(
+  dt,
+  by = c("lambda1_true", "k_true", "accrual_true", "rr_true", "strategy")
+)$trial_summary |>
+  as.data.table()
 ```
 
-```{r save_precomputed_outputs, eval=!use_precomputed && save_precomputed}
+```{r save_precomputed_outputs, eval=save_precomputed}
 plot_data <- dt[, .(
   lambda1_true, k_true, accrual_true, rr_true, strategy,
   reject, futility, reject_stage, futility_stage,
   n_adapted, adapted,
+  participants_with_events_stop, events_observed_stop,
   if_ia1, if_ia2, if_final,
   ia1_time, ia2_time, final_time,
   ia1_fallback, ia2_fallback,
+  participants_with_events_ia1, participants_with_events_ia2,
+  participants_with_events_final,
+  events_observed_ia1, events_observed_ia2, events_observed_final,
+  adapt_cut_time, adapt_enroll_frac, adapt_months_to_close_pred,
+  adapt_allowed, adapt_applied,
   ia2_adapt_cut_time,
   ia2_enroll_frac, ia2_months_to_close_pred,
   ia2_adapt_allowed, ia2_adapt_applied
@@ -1009,12 +747,18 @@ saveRDS(
     sim_runtime_seconds = sim_runtime_seconds,
     workers = workers,
     null_nonbinding_summary = as.data.frame(null_nonbinding_summary),
+    null_nonbinding_by_alpha = lapply(null_nonbinding_by_alpha, as.data.frame),
     null_nonbinding_n = null_nonbinding_n,
     null_nonbinding_runtime_seconds = null_nonbinding_runtime_seconds,
+    null_nonbinding_runtime_by_alpha = null_nonbinding_runtime_by_alpha,
     generated_at = as.character(Sys.time()),
     settings = list(
       n_sims_initial = n_sims_initial,
+      n_sims_production_power = n_sims_production_power,
+      n_sims_production_type1 = n_sims_production_type1,
+      n_sims_production_rr_gt1 = n_sims_production_rr_gt1,
       use_production = use_production,
+      use_production_type1 = use_production_type1,
       design_note = design_note
     )
   ),
@@ -1045,41 +789,51 @@ runtime_df |>
   )
 ```
 
-```{r null_nonbinding_summary}
-# Backward compatibility: precomputed outputs may lack k_true
-null_df <- as.data.frame(null_nonbinding_summary)
-if (!"k_true" %in% names(null_df)) null_df$k_true <- NA_real_
-null_display <- null_df |>
-  dplyr::transmute(
-    k = k_true,
-    Strategy = strategy,
-    `Type I error` = round(type1_error, 4),
-    `IA1` = round(cross_ia1, 4),
-    `IA2` = round(cross_ia2, 4),
-    `Final` = round(cross_final, 4),
-    `Mean N` = round(mean_n, 1),
-    `SSR applied (%)` = round(100 * adapted_rate, 1)
-  )
-
-null_display |>
-  gt() |>
-  tab_header(
-    title = "Type I Error Under RR = 1.0 (Non-binding Futility)",
-    subtitle = paste0(
-      "Replications per k: ", null_nonbinding_n,
-      " | ", null_nonbinding_mode,
-      " | Runtime: ", round(null_nonbinding_runtime_seconds / 60, 2), " min"
+```{r null_nonbinding_summary, results='asis'}
+# Two designs: nominal one-sided alpha = 0.025 (main power sims) vs 0.02 (Type I sensitivity).
+for (alab in c("0.025", "0.02")) {
+  cat("\n\n### Type I error table: nominal design alpha = ", alab, "\n\n", sep = "")
+  null_df <- as.data.frame(null_nonbinding_by_alpha[[alab]])
+  if (!"k_true" %in% names(null_df)) null_df$k_true <- NA_real_
+  rt_min <- null_nonbinding_runtime_by_alpha[[alab]]
+  rt_str <- if (is.finite(rt_min)) paste0(round(rt_min / 60, 2), " min") else "NA"
+  null_display <- null_df |>
+    dplyr::transmute(
+      k = k_true,
+      Strategy = strategy,
+      `Type I error` = round(type1_error, 4),
+      `IA1` = round(cross_ia1, 4),
+      `IA2` = round(cross_ia2, 4),
+      `Final` = round(cross_final, 4),
+      `Mean N` = round(mean_n, 1),
+      `SSR applied (%)` = round(100 * adapted_rate, 1)
     )
-  ) |>
-  tab_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
-  tab_footnote(
-    paste("Futility stopping is ignored (non-binding) so all trials continue to",
-          "the final analysis unless stopped for efficacy.",
-          "'SSR applied' is the percentage of trials where the adapted N exceeded",
-          "the planned N (design uses k =", k_plan, ").",
-          "Under the null, SSR may still increase N because",
-          "nuisance parameter estimates can differ from planning values.")
-  )
+
+  tab <- null_display |>
+    gt() |>
+    tab_header(
+      title = "Type I Error Under RR = 1.0 (Non-binding Futility)",
+      subtitle = paste0(
+        "Replications per k: ", null_nonbinding_n,
+        " | ", null_nonbinding_mode_by_alpha[[alab]],
+        " | Runtime: ", rt_str
+      )
+    ) |>
+    tab_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
+    tab_footnote(
+      paste(
+        "Futility stopping is ignored (non-binding) so all trials continue to",
+        "the final analysis unless stopped for efficacy.",
+        "'SSR applied' is the percentage of trials where the adapted N exceeded",
+        "the planned N (planning k =", k_plan, ").",
+        "Under the null, SSR may still increase N because",
+        "nuisance parameter estimates can differ from planning values.",
+        "Each table uses the group-sequential design built at the stated nominal alpha;",
+        "power results elsewhere use alpha = 0.025 only."
+      )
+    )
+  print(tab)
+}
 ```
 
 ### Power by rate ratio and SSR strategy
@@ -1417,10 +1171,19 @@ ggplot(if_long,
 
 ### Key findings
 
-1. **Type I error control.** Under the null (RR $\geq$ 1.0), all strategies
-   maintain the one-sided Type I error near or below 2.5%. For RR = 1.0,
-   futility stopping is disabled to document Type I error under the
-   non-binding futility rule.
+1. **Type I error.** Under the null (RR $\geq$ 1.0), nominal one-sided control
+   is 2.5%. In **production** runs we use 20 000 replicates for each main-grid
+   scenario with RR $= 1.0$; at that count, Monte Carlo error around 2.5% is
+   only on the order of $\pm 0.2$ percentage points (roughly 95%). In **most**
+   nuisance/strategy combinations the estimated Type I error **exceeds** that
+   band---i.e., it is inflated relative to what sampling fluctuation alone would
+   typically explain. (Default pkgdown/CRAN builds use far fewer replicates for
+   speed; rely on production output for quantitative Type I conclusions.) For
+   RR = 1.0, futility stopping is also evaluated with futility ignored
+   (non-binding supplement) in the dedicated tables above. A parallel table
+   uses a group-sequential design planned at **nominal $\alpha = 0.02$** to
+   illustrate how a more conservative boundary calibration affects simulated
+   Type I error (power simulations still use $\alpha = 0.025$).
 
 2. **Largest no-adaptation power deficit.** At planned RR = 0.7, the largest
    deficit from the 90% target under no adaptation is concentrated in
@@ -1481,9 +1244,11 @@ this fallback at each interim analysis.
 
 ### Computational considerations
 
-Production-scale runs (e.g., 3 600 replicates per scenario for power
-evaluation and 20 000 replicates under the null for Type I error)
-are computationally intensive.
+Production-scale runs use 3 600 replicates per scenario for RR $< 1$
+(power), 20 000 for each scenario with RR $= 1.0$ (Type I), and 1 000 for
+RR $> 1$ (interior null, lower priority for precision), plus 20 000 replicates
+per $k$ in the separate RR = 1 non-binding futility check; these are
+computationally intensive.
 Parallel execution via the `future` / `future.apply` framework is
 essential.
 The simulation runtime table above reports the wall-clock time and
