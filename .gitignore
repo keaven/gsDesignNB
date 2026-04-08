@@ -7,7 +7,9 @@ gsDesignNB_*.tar.gz
 gsDesignNB.Rcheck/
 nbsample.Rproj
 docs/
+pkgdown-site-portable.zip
 inst/doc
 .DS_Store
 ..Rcheck/
 inst/extdata/scenario_sweep_results.rds
+inst/extdata/ssr_type1_null_*.rds

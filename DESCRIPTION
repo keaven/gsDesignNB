@@ -33,6 +33,7 @@ Imports:
     stats,
     MASS
 Suggests:
+    httpuv,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,

@@ -26,6 +26,18 @@ Or install the development version from GitHub with:
 remotes::install_github("keaven/gsDesignNB")
 ```
 
+## Local pkgdown site
+
+After `pkgdown::build_site()`, prefer **not** using `pkgdown::preview_site()` alone:
+it opens a `file://` URL, and browsers often load little or no CSS/JS for local
+files. From the package root, run:
+
+```r
+gsDesignNB::preview_pkgdown_site()
+```
+
+That serves `docs/` at `http://127.0.0.1:8787` so the site matches GitHub Pages.
+
 ## Code style
 
 This package follows the [tidyverse style guide](https://style.tidyverse.org/).

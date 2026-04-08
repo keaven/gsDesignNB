@@ -52,6 +52,12 @@ reference:
       - get_analysis_date
       - get_cut_date
 
+  - title: "Documentation site"
+    desc: >
+      Preview the pkgdown website locally over HTTP (avoids unstyled `file://` pages).
+    contents:
+      - preview_pkgdown_site
+
   - title: "gsDesign re-exports"
     desc: >
       Spending functions and utilities re-exported from the gsDesign package for convenience.
