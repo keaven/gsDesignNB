@@ -1,5 +1,5 @@
 ---
-title: "Simulation of recurrent events"
+title: "Simulating recurrent events"
 output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
 vignette: >
