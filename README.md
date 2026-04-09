@@ -7,10 +7,22 @@
 [![R-CMD-check](https://github.com/keaven/gsDesignNB/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/keaven/gsDesignNB/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-gsDesignNB provides fixed design and group sequential design simulation for
-recurrent event scenarios to be analyzed as a Poisson process or negative binomial model.
-For group sequential design, the package can be easily used with the gsDesign package.
-Key is the computation of statistical information at the time of analysis.
+gsDesignNB provides design, simulation, and interim monitoring tools for
+recurrent-event trials analyzed with negative binomial rate models, with
+Poisson methods available as the limiting special case when dispersion is
+negligible.
+
+The package is NB-first: plan designs with `sample_size_nbinom()`, simulate
+recurrent-event data with `nb_sim()` or `nb_sim_seasonal()`, and evaluate
+group sequential monitoring or sample size re-estimation with
+`sim_gs_nbinom()` and `sim_ssr_nbinom()`. The `gsDesign` package supplies the
+underlying spending-function and boundary calculations used by those workflows.
+
+## Start Here
+
+- `sample-size-nbinom` for fixed-design planning
+- `simulation-example` and `seasonal-simulation` for recurrent-event data generation
+- `ssr-example` and `ssr-simulation-study` for negative binomial SSR workflows
 
 ## Installation
 

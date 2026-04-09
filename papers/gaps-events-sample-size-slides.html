@@ -442,8 +442,8 @@
   <meta name="generator" content="quarto-1.6.42">
 
   <meta name="author" content="Keaven M. Anderson, Hongtao Zhang, Andrea Maes">
-  <meta name="dcterms.date" content="2026-04-08">
-  <title>Sample Size for Group Sequential Survival Trials</title>
+  <meta name="dcterms.date" content="2026-04-09">
+  <title>Negative Binomial Group Sequential Designs</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -988,8 +988,8 @@ margin-right: 0; }
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Sample Size for Group Sequential Survival Trials</h1>
-  <p class="subtitle">Calendar gaps between interims, piecewise events, and patient-level event spacing</p>
+  <h1 class="title">Negative Binomial Group Sequential Designs</h1>
+  <p class="subtitle">Recurrent-event outcomes and information-based SSR in gsDesignNB</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -1002,11 +1002,11 @@ Keaven M. Anderson, Hongtao Zhang, Andrea Maes
     </div>
 </div>
 
-  <p class="date">2026-04-08</p>
+  <p class="date">2026-04-09</p>
 </section>
 <section id="talk-plan" class="slide level2 smaller">
 <h2>Talk plan</h2>
-<p><strong>~22 min</strong> talk · <strong>~8 min</strong> discussion (30 min slot)</p>
+<p><strong>~25 min</strong> talk · <strong>~5 min</strong> discussion (30 min slot)</p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 26%">
@@ -1024,27 +1024,27 @@ Keaven M. Anderson, Hongtao Zhang, Andrea Maes
 <tr class="odd">
 <td>Motivation &amp; “three gaps”</td>
 <td>~5</td>
-<td>Why naive SS misleads</td>
+<td>Why NB planning can misstate information</td>
 </tr>
 <tr class="even">
 <td>Expected events &amp; timing</td>
 <td>~6</td>
-<td>Piecewise model + analysis timing</td>
+<td>NB model + information timing</td>
 </tr>
 <tr class="odd">
-<td>GSD, spending, simulation, NB extensions</td>
+<td>GSD, simulation, SSR</td>
 <td>~7</td>
-<td>SSR, recurrent counts, verification</td>
+<td>gsDesign backend, NB workflows, verification</td>
 </tr>
 <tr class="even">
-<td>Software, AI, wrap-up</td>
+<td>Software &amp; wrap-up</td>
 <td>~4</td>
-<td>gsDesign / gsDesignNB, conclusions</td>
+<td>gsDesignNB-first map, conclusions</td>
 </tr>
 </tbody>
 </table>
 <aside class="notes">
-<p><strong>~0:30</strong> — Set expectations: methods + implementation story, not a new asymptotic theorem.</p>
+<p><strong>~0:30</strong> — Set expectations: NB recurrent-event methods + implementation story, not a new asymptotic theorem.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1060,8 +1060,8 @@ display:block!important;
 <section id="standard-toolkit-vs-trial-reality" class="slide level2">
 <h2>Standard toolkit vs trial reality</h2>
 <ul>
-<li><strong>Standard:</strong> fixed SS or events under PH → <strong>spending</strong> on information fraction → <strong>gsDesign</strong>-style boundaries.</li>
-<li><strong>Reality:</strong> interims mix <strong>calendar rules</strong>, <strong>minimum follow-up</strong>, <strong>event targets</strong>, and <strong>mandatory time between database locks</strong> while events accrue.</li>
+<li><strong>Standard:</strong> fixed negative binomial design → <strong>target information</strong> → <strong>gsDesign</strong>-backed boundaries.</li>
+<li><strong>Reality:</strong> interims potentially mix <strong>calendar rules</strong>, <strong>minimum follow-up</strong>, <strong>information targets</strong>, and <strong>mandatory time between database locks</strong> while events accrue.</li>
 </ul>
 <aside class="notes">
 <p><strong>~1:00</strong> — Jennison &amp; Turnbull framework is the reference; the gap is between textbook information-time designs and SAP-driven operations.</p>
@@ -1077,13 +1077,13 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="gaps-between-events-three-senses" class="slide level2 scrollable">
+<section id="gaps-between-events-three-senses" class="slide level2">
 <h2>“Gaps between events” — three senses</h2>
-<ol type="1">
-<li><strong>Operational / calendar:</strong> successive looks no earlier than (T_{i-1}+_i) (trial clock).</li>
-<li><strong>Model / spending structure:</strong> piecewise hazards; <strong>gapped spending</strong> on information time (no efficacy test over an interior interval).</li>
-<li><strong>Patient-level:</strong> only events separated by at least () <strong>patient time</strong> count toward the protocol total — closer events <strong>discarded</strong> in simulation.</li>
-</ol>
+<ul>
+<li><strong>Operational / calendar:</strong> successive looks no earlier than <span class="math inline">\(T_{i-1}+\Delta_i\)</span> (trial clock).</li>
+<li><strong>Timing / accrual structure:</strong> piecewise accrual or dropout support nonuniform information growth.</li>
+<li><strong>Patient-level:</strong> only events separated by at least <span class="math inline">\(\delta\)</span> <strong>patient time</strong> count toward the protocol total; closer events are <strong>discarded</strong> in simulation.</li>
+</ul>
 <aside class="notes">
 <p><strong>~1:30</strong> — These interact but live on different scales; conflating them causes confusion in both writing and code.</p>
 <style type="text/css">
@@ -1102,14 +1102,14 @@ display:block!important;
 <h2>Why calendar gaps matter for sample size</h2>
 <p>Interim times solve <strong>feasibility inequalities</strong>:</p>
 <ul>
-<li>Calendar floor: (T_i C_i)</li>
-<li><strong>Gap after previous look:</strong> (T_i T_{i-1}+_i)</li>
+<li>Calendar floor: <span class="math inline">\(T_i \ge C_i\)</span></li>
+<li><strong>Gap after previous look:</strong> <span class="math inline">\(T_i \ge T_{i-1}+\Delta_i\)</span></li>
 <li>Exposure / enrollment constraints</li>
-<li><strong>Event threshold:</strong> smallest (t) with expected (or observed) events (d_i), <strong>subject to</strong> the floors</li>
+<li><strong>Information threshold:</strong> smallest <span class="math inline">\(t\)</span> with expected (or observed) information <span class="math inline">\(\ge \mathcal{I}_i\)</span>, <strong>subject to</strong> the floors</li>
 </ul>
-<p><strong>Take the max</strong> of applicable floors, then lift further if events require it — aligns with <code>gsSurvPower()</code> logic.</p>
+<p><strong>Take the max</strong> of applicable floors, then lift further if information requires it — the same backend timing logic applies once the information path is specified.</p>
 <aside class="notes">
-<p><strong>~2:00</strong> — If you schedule looks at fixed event fractions <strong>without</strong> (_i), the <strong>information path</strong> and spending time axis are wrong whenever enrollment continues during mandatory gaps.</p>
+<p><strong>~2:00</strong> — If you schedule looks at fixed event fractions or other crude event proxies <strong>without</strong> <span class="math inline">\(\Delta_i\)</span>, the <strong>information path</strong> and spending time axis are wrong whenever enrollment continues during mandatory gaps.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1122,15 +1122,16 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="piecewise-exponential-expected-events-sketch" class="slide level2">
-<h2>Piecewise exponential expected events (sketch)</h2>
+<section id="nb-recurrent-event-model" class="slide level2">
+<h2>NB recurrent-event model</h2>
 <ul>
-<li><strong>Lachin–Foulkes style:</strong> piecewise enrollment (_j), failure ((t)), dropout ((t)); PH on experimental arm.</li>
-<li>Partition calendar ([0,T]) at <strong>all</strong> hazard and enrollment change points.</li>
-<li>Each sub-interval contributes closed-form terms ((1-e^{-(+)s})) weighted by risk carried forward — <strong><code>eEvents1()</code></strong> / <strong><code>nSurv()</code></strong> in <strong>gsDesign</strong>.</li>
+<li><strong>Default patient model:</strong> conditional on treatment arm, recurrent events follow a Poisson process with a <strong>constant within-subject rate</strong>.</li>
+<li><strong>Negative binomial variation:</strong> a <strong>gamma frailty</strong> random effect multiplies that rate across subjects, giving marginal NB counts.</li>
+<li><strong>Time-varying extension:</strong> <code>nb_sim_seasonal()</code> is the main built-in option for season-specific event rates.</li>
+<li><strong>Piecewise accrual / dropout</strong> and expected-event formulas are <strong>timing infrastructure</strong>; in NB monitoring, information depends on <strong>exposure, rates, and dispersion</strong>, not events alone.</li>
 </ul>
 <aside class="notes">
-<p><strong>~1:45</strong> — Contribution is integrating risk × intensity; implementation is period-by-period algebra, not a black box.</p>
+<p><strong>~1:45</strong> — Emphasize the default model first; the piecewise algebra is supporting timing infrastructure, not the primary patient-level event model.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1143,15 +1144,15 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="patient-level-minimum-gap-counting-rule" class="slide level2">
-<h2>Patient-level minimum gap () (counting rule)</h2>
-<p>Potential event times per patient (T_{j,1}&lt;T_{j,2}&lt;).</p>
-<p><strong>Counted</strong> sequence: first event counts; next <strong>counted</strong> event is the <strong>first</strong> potential event at or after <strong>previous counted</strong> (+,); events in between are <strong>excluded</strong> from the trial event total.</p>
+<section id="patient-level-minimum-gap-delta-counting-rule" class="slide level2">
+<h2>Patient-level minimum gap <span class="math inline">\(\delta\)</span> (counting rule)</h2>
+<p>Potential event times per patient <span class="math inline">\(T_{j,1}&lt;T_{j,2}&lt;\cdots\)</span>.</p>
+<p><strong>Counted</strong> sequence: first event counts; next <strong>counted</strong> event is the <strong>first</strong> potential event at or after <strong>previous counted</strong> <span class="math inline">\(+\,\delta\)</span>; events in between are <strong>excluded</strong> from the trial event total.</p>
 <ul>
 <li><strong>Effect:</strong> thins recurrent / dense outcomes → <strong>slower</strong> information vs naive expected-event formulas that count every failure.</li>
 </ul>
 <aside class="notes">
-<p><strong>~1:30</strong> — Tie to SAP language (adjudication, “new” progression). Analytical (d) under PH for <strong>first</strong> events does not encode this; calibrate by simulation or recurrent-event models.</p>
+<p><strong>~1:30</strong> — Tie to SAP language (adjudication, “new” progression). Analytical <span class="math inline">\(d\)</span> under PH for <strong>first</strong> events does not encode this; calibrate by simulation or recurrent-event models.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1164,8 +1165,8 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="trial-level-vs-patient-level" class="slide level2">
-<h2>Trial-level () vs patient-level ()</h2>
+<section id="trial-level-delta-vs-patient-level-delta" class="slide level2">
+<h2>Trial-level <span class="math inline">\(\Delta\)</span> vs patient-level <span class="math inline">\(\delta\)</span></h2>
 <table class="caption-top">
 <colgroup>
 <col style="width: 2%">
@@ -1175,8 +1176,8 @@ display:block!important;
 <thead>
 <tr class="header">
 <th></th>
-<th>(_i) between interims</th>
-<th>() between patient events</th>
+<th><span class="math inline">\(\Delta_i\)</span> between interims</th>
+<th><span class="math inline">\(\delta\)</span> between patient events</th>
 </tr>
 </thead>
 <tbody>
@@ -1188,11 +1189,11 @@ display:block!important;
 <tr class="even">
 <td><strong>Role</strong></td>
 <td><strong>When</strong> looks may occur</td>
-<td><strong>Which</strong> events increment (d)</td>
+<td><strong>Which</strong> events contribute to information</td>
 </tr>
 </tbody>
 </table>
-<p>Designs that ignore () can be <strong>mis-powered</strong> if the SAP applies thinning.</p>
+<p>Designs that ignore <span class="math inline">\(\delta\)</span> can misstate <strong>information</strong> and <strong>power</strong> if the SAP applies thinning.</p>
 <aside class="notes">
 <p><strong>~1:00</strong> — Quick table for the methods discussion; prevents mixing up “gap” vocabulary.</p>
 <style type="text/css">
@@ -1207,14 +1208,26 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="group-sequential-spending-and-gapped-spending" class="slide level2">
-<h2>Group sequential: spending and gapped spending</h2>
+<section id="sample-size-formula-and-information" class="slide level2">
+<h2>Sample size formula and information</h2>
 <ul>
-<li><strong>Information fraction</strong> (t) (often event fraction): (f_(t)) allocates Type I; analogs for () / futility.</li>
-<li><strong><code>sfGapped()</code>:</strong> <strong>no</strong> formal efficacy spending over an interior ((_1,_2)); spending <strong>flat</strong> in the hole, resumes after — <strong>orthogonal</strong> to calendar () but interacts once timing comes from expected events under the real schedule.</li>
+<li><strong>Implemented formula:</strong> <code>sample_size_nbinom()</code> uses the Wald log rate-ratio test from <strong>Zhu &amp; Lakkis (2014, Method 3)</strong>.</li>
+<li><strong>Same variance foundation:</strong> the same NB Wald variance underlies <strong>Friede &amp; Schmidli (2010)</strong> for blinded SSR and <strong>Mutze et al. (2019)</strong> for group sequential NB designs.</li>
+</ul>
+<p><span class="math display">\[
+n_{\text{total}} \propto
+\frac{(z_{\alpha/s}+z_\beta)^2}
+{(\theta-\theta_0)^2}
+\left[
+\left(\frac{1}{\mu_1}+k_1\right)+
+\left(\frac{1}{\mu_2}+k_2\right)
+\right]
+\]</span></p>
+<ul>
+<li><strong>Per-subject information:</strong> <span class="math inline">\(\mathcal{I}_i = \mu_i / (1 + k\mu_i)\)</span>, so information is proportional to expected events only when <span class="math inline">\(k=0\)</span>.</li>
 </ul>
 <aside class="notes">
-<p><strong>~1:30</strong> — Regulatory story: “no interim efficacy between 20% and 60% information” as a <strong>spending</strong> construct, not the same as a 3-month DB lock gap.</p>
+<p><strong>~1:30</strong> — Statistical audience slide: connect Zhu, Friede, and Mutze through the same variance / information formula rather than through software labels.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1227,17 +1240,17 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="end-to-end-survival-gsd-specification" class="slide level2 scrollable">
-<h2>End-to-end survival GSD specification</h2>
-<ol type="1">
-<li><strong>Model:</strong> piecewise enrollment, failure, dropout (Lachin–Foulkes–style pieces).</li>
-<li><strong>Timing</strong> (T_i): take the <strong>max</strong> of calendar floors, <strong>mandatory gaps</strong> after prior looks, and the first time <strong>expected</strong> (or observed) events reach each look’s target.</li>
-<li><strong>Spending</strong> (f_, f_) on information fraction (optionally <strong>gapped</strong> — no efficacy spend over an interior interval).</li>
-<li><strong>Scale</strong> enrollment or follow-up so power holds at the <strong>final</strong> analysis under that schedule.</li>
-</ol>
-<p><strong>Paths:</strong> <code>gsSurv()</code> (event-driven timing) vs <code>gsSurvCalendar()</code> (calendar-first → implied information fractions).</p>
+<section id="end-to-end-nb-gsd-workflow" class="slide level2">
+<h2>End-to-end NB GSD workflow</h2>
+<ul>
+<li><strong>Model:</strong> simple exponential within-subject recurrent-event process plus gamma frailty; seasonality is the main built-in time-varying extension.</li>
+<li><strong>Timing:</strong> take the <strong>max</strong> of calendar floors, <strong>mandatory gaps</strong> after prior looks, and the first time <strong>expected</strong> (or observed) information reaches each look’s target.</li>
+<li><strong>Information + spending:</strong> NB rate-ratio information via <code>compute_info_at_time()</code> / <code>calculate_blinded_info()</code>; information depends jointly on exposure, rates, and dispersion, then spending <span class="math inline">\(f_\alpha, f_\beta\)</span> via <strong>gsDesign</strong>.</li>
+<li><strong>Scale + verify:</strong> adjust enrollment or follow-up so power holds at the <strong>final</strong> analysis, then validate by <code>sim_gs_nbinom()</code> or <code>sim_ssr_nbinom()</code>.</li>
+</ul>
+<p><strong>Paths:</strong> <code>sample_size_nbinom()</code> + <code>gsNBCalendar()</code> for design, then <code>sim_gs_nbinom()</code> / <code>sim_ssr_nbinom()</code> for operating characteristics.</p>
 <aside class="notes">
-<p><strong>~1:15</strong> — Assembly checklist; full algebra is standard piecewise exponential bookkeeping plus max-of-floors timing (<code>gsSurvPower()</code>).</p>
+<p><strong>~1:15</strong> — Assembly checklist; full algebra is standard accrual/dropout bookkeeping plus max-of-floors timing.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1250,13 +1263,24 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="simulation-evidence-what-to-show" class="slide level2">
-<h2>Simulation evidence — what to show</h2>
-<p><strong>Layer 0 — Analytic vs MC:</strong> under the <strong>documented</strong> model, mean simulated total events () <code>nSurv()$d</code> (MC SE band).</p>
-<p><strong>Layer 1 — OC:</strong> power, interim time distributions, spending paths; <strong>with vs without</strong> (); <strong>() vs (&gt;0)</strong>.</p>
-<p><strong>Layer 2 — SSR:</strong> <code>ssrCP()</code> — unconditional power, adapted (n), Type I under combination-test conventions.</p>
+<section id="event-gap-correction-and-simulation-agreement" class="slide level2">
+<h2>Event-gap correction and simulation agreement</h2>
+<p>After each event, a protocol gap <span class="math inline">\(g\)</span> reduces the effective event rate and the at-risk exposure.</p>
+<ul>
+<li><strong>Naive renewal approximation:</strong> <span class="math inline">\(\lambda_{\text{eff}} = \lambda / (1 + \lambda g)\)</span>.</li>
+<li>With gamma frailty, that naive rate is too optimistic: it overstates expected events and slightly understates variance.</li>
+</ul>
+<p><span class="math display">\[
+\mathrm{E}\!\left[\frac{\Lambda}{1+\Lambda g}\right]
+\approx
+\frac{\lambda}{1+\lambda g}
+\left(1 - \frac{k\lambda g}{(1+\lambda g)^2}\right)
+\]</span></p>
+<ul>
+<li>This correction was needed to bring <strong>simulation-based power</strong> into agreement with the NB planning calculations.</li>
+</ul>
 <aside class="notes">
-<p><strong>~2:00</strong> — Emphasize automated package tests + large <strong>standalone</strong> simulations as <strong>complements</strong> — neither replaces the other.</p>
+<p><strong>~2:00</strong> — Key package contribution: the event-gap modification is not cosmetic; it matters for matching simulations to the intended power calculation.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1269,45 +1293,16 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="illustrative-factor-grid-reporting-template" class="slide level2">
-<h2>Illustrative factor grid (reporting template)</h2>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Factor</th>
-<th>Example levels</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>HR under alternative</td>
-<td>0.65, 0.75, 0.85</td>
-</tr>
-<tr class="even">
-<td>Gap () between looks (mo)</td>
-<td>0, 3, 6</td>
-</tr>
-<tr class="odd">
-<td>Patient gap () (days)</td>
-<td>0, 20</td>
-</tr>
-<tr class="even">
-<td>Enrollment</td>
-<td>nominal vs 80%</td>
-</tr>
-<tr class="odd">
-<td>Gapped spending on (t)</td>
-<td>none vs (0.2, 0.5)</td>
-</tr>
-<tr class="even">
-<td>SSR</td>
-<td><code>ssrCP()</code> with capped increase</td>
-</tr>
-</tbody>
-</table>
-<p>Summarize: <strong>median/IQR</strong> of look times, <strong>empirical power</strong>, <strong>mean</strong> adapted (n).</p>
+<section id="what-ssr-simulations-showed" class="slide level2">
+<h2>What SSR simulations showed</h2>
+<ul>
+<li><strong>Type I error:</strong> with SSR, nominal one-sided <span class="math inline">\(\alpha = 0.025\)</span> looked slightly inflated in the vignette simulations, consistent with the caution in <strong>Mutze et al. (2019)</strong>.</li>
+<li><strong>Practical fix:</strong> rebuilding the design at <strong><span class="math inline">\(\alpha = 0.02\)</span></strong> improved Type I calibration in the vignette sensitivity check.</li>
+<li><strong>Blinded SSR:</strong> tends to <strong>over-estimate</strong> the required total sample size because pooled nuisance estimates are conservative.</li>
+<li><strong>Unblinded SSR:</strong> often gives a more sample-efficient adaptation when operationally acceptable.</li>
+</ul>
 <aside class="notes">
-<p><strong>~1:00</strong> — Use as a discussion prompt: which factors matter for your SAP and operating characteristics?</p>
+<p><strong>~1:00</strong> — This is the operational takeaway slide: slight alpha inflation, smaller nominal alpha helped, and unblinded SSR usually needed less N than blinded SSR.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1320,61 +1315,56 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="software-map-non-exhaustive" class="slide level2">
-<h2>Software map (non-exhaustive)</h2>
+<section id="software-map" class="slide level2 smaller">
+<h2>Software map</h2>
 <table class="caption-top">
 <colgroup>
-<col style="width: 21%">
-<col style="width: 36%">
-<col style="width: 42%">
+<col style="width: 13%">
+<col style="width: 48%">
+<col style="width: 37%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Concept</th>
-<th><strong>gsDesign</strong></th>
-<th><strong>gsDesignNB</strong></th>
+<th>Task</th>
+<th>Primary entry point</th>
+<th>Backend / note</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Piecewise expected events</td>
-<td><code>eEvents1()</code>, <code>nEventsIA()</code></td>
-<td>—</td>
+<td>Fixed NB sample size</td>
+<td><code>sample_size_nbinom()</code></td>
+<td>information depends on exposure + dispersion</td>
 </tr>
 <tr class="even">
-<td>Fixed survival SS</td>
-<td><code>nSurv()</code></td>
-<td>—</td>
+<td>Recurrent-event simulation</td>
+<td><code>nb_sim()</code>, <code>nb_sim_seasonal()</code></td>
+<td>seasonal rates supported</td>
 </tr>
 <tr class="odd">
-<td>GSD survival</td>
-<td><code>gsSurv()</code>, <code>gsSurvCalendar()</code></td>
-<td>—</td>
+<td>Calendar-aware NB GSD</td>
+<td><code>gsNBCalendar()</code></td>
+<td>uses <code>gsDesign</code> spending / bounds</td>
 </tr>
 <tr class="even">
-<td>Power + floors / gaps</td>
-<td><code>gsSurvPower()</code></td>
-<td>—</td>
+<td>Interim monitoring</td>
+<td><code>mutze_test()</code>, <code>calculate_blinded_info()</code></td>
+<td>NB test + blinded information</td>
 </tr>
 <tr class="odd">
-<td>Gapped spending</td>
-<td><code>sfGapped()</code></td>
-<td>—</td>
+<td>GSD simulation</td>
+<td><code>sim_gs_nbinom()</code></td>
+<td>compares ML and MoM info paths</td>
 </tr>
 <tr class="even">
-<td>SSR / conditional power</td>
-<td><code>ssrCP()</code>, …</td>
-<td>—</td>
-</tr>
-<tr class="odd">
-<td>NB + event gaps, recurrent sim</td>
-<td>—</td>
-<td><code>sample_size_nbinom()</code>, <code>nb_sim*()</code></td>
+<td>SSR simulation</td>
+<td><code>sim_ssr_nbinom()</code>, <code>summarize_ssr_sim()</code></td>
+<td>blinded / unblinded updates</td>
 </tr>
 </tbody>
 </table>
 <ul>
-<li><strong>Seasonal rates:</strong> <code>nb_sim_seasonal()</code> supports respiratory / infectious endpoints where recurrent-event intensity varies by calendar season.</li>
+<li><strong>Backend note:</strong> <code>gsDesign</code> stays underneath as the spending-function and boundary engine; raw events are summaries, but target information drives monitoring.</li>
 </ul>
 <aside class="notes">
 <p><strong>~1:30</strong> — Open source: docs, vignettes, pkgdown — contrast with narrow commercial black boxes if audience is receptive.</p>
@@ -1390,14 +1380,12 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="ai-in-development-delegation-verification" class="slide level2">
-<h2>AI in development: delegation + verification</h2>
-<ul>
-<li><strong>Dohmke &amp; Kalliamvakou (2025):</strong> shift from line-by-line coding to <strong>delegation</strong> and <strong>verification</strong>.</li>
-<li><strong>Here:</strong> AI assists algebra bookkeeping, refactors, docs, tests — <strong>correctness</strong> from <strong>testthat</strong>, <strong>simulation</strong>, <strong>R CMD check</strong>, <strong>vignette rebuilds</strong>, not from model authority.</li>
-</ul>
-<aside class="notes">
-<p><strong>~1:15</strong> — Short; expand in discussion if asked about regulated software or review culture.</p>
+<section id="nb-count-distribution-intuition" class="slide level2">
+<h2>NB count distribution intuition</h2>
+<p>Same mean <span class="math inline">\(\mu=5\)</span>, larger <span class="math inline">\(k\)</span> gives more spread and heavier tails.</p>
+
+<img role="img" data-src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAKgCAYAAABdvbaWAAAEDmlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPpu5syskzoPUpqaSDv41lLRsUtGE2uj+ZbNt3CyTbLRBkMns3Z1pJjPj/KRpKT4UQRDBqOCT4P9bwSchaqvtiy2itFCiBIMo+ND6R6HSFwnruTOzu5O4a73L3PnmnO9+595z7t4LkLgsW5beJQIsGq4t5dPis8fmxMQ6dMF90A190C0rjpUqlSYBG+PCv9rt7yDG3tf2t/f/Z+uuUEcBiN2F2Kw4yiLiZQD+FcWyXYAEQfvICddi+AnEO2ycIOISw7UAVxieD/Cyz5mRMohfRSwoqoz+xNuIB+cj9loEB3Pw2448NaitKSLLRck2q5pOI9O9g/t/tkXda8Tbg0+PszB9FN8DuPaXKnKW4YcQn1Xk3HSIry5ps8UQ/2W5aQnxIwBdu7yFcgrxPsRjVXu8HOh0qao30cArp9SZZxDfg3h1wTzKxu5E/LUxX5wKdX5SnAzmDx4A4OIqLbB69yMesE1pKojLjVdoNsfyiPi45hZmAn3uLWdpOtfQOaVmikEs7ovj8hFWpz7EV6mel0L9Xy23FMYlPYZenAx0yDB1/PX6dledmQjikjkXCxqMJS9WtfFCyH9XtSekEF+2dH+P4tzITduTygGfv58a5VCTH5PtXD7EFZiNyUDBhHnsFTBgE0SQIA9pfFtgo6cKGuhooeilaKH41eDs38Ip+f4At1Rq/sjr6NEwQqb/I/DQqsLvaFUjvAx+eWirddAJZnAj1DFJL0mSg/gcIpPkMBkhoyCSJ8lTZIxk0TpKDjXHliJzZPO50dR5ASNSnzeLvIvod0HG/mdkmOC0z8VKnzcQ2M/Yz2vKldduXjp9bleLu0ZWn7vWc+l0JGcaai10yNrUnXLP/8Jf59ewX+c3Wgz+B34Df+vbVrc16zTMVgp9um9bxEfzPU5kPqUtVWxhs6OiWTVW+gIfywB9uXi7CGcGW/zk98k/kmvJ95IfJn/j3uQ+4c5zn3Kfcd+AyF3gLnJfcl9xH3OfR2rUee80a+6vo7EK5mmXUdyfQlrYLTwoZIU9wsPCZEtP6BWGhAlhL3p2N6sTjRdduwbHsG9kq32sgBepc+xurLPW4T9URpYGJ3ym4+8zA05u44QjST8ZIoVtu3qE7fWmdn5LPdqvgcZz8Ww8BWJ8X3w0PhQ/wnCDGd+LvlHs8dRy6bLLDuKMaZ20tZrqisPJ5ONiCq8yKhYM5cCgKOu66Lsc0aYOtZdo5QCwezI4wm9J/v0X23mlZXOfBjj8Jzv3WrY5D+CsA9D7aMs2gGfjve8ArD6mePZSeCfEYt8CONWDw8FXTxrPqx/r9Vt4biXeANh8vV7/+/16ffMD1N8AuKD/A/8leAvFY9bLAAAAOGVYSWZNTQAqAAAACAABh2kABAAAAAEAAAAaAAAAAAACoAIABAAAAAEAAAYAoAMABAAAAAEAAAKgAAAAAFO/3y8AAEAASURBVHgB7N0LmFVlvTDw/3CVmxfAC4haIkpq3iA1y/Mdk6OnRDMrr+CXd1OTT+uE58lT2RELT1mSRnikg2GloicrJU3LyDAT0xTLvAVdTEgEQVC5f72rM3PmxsyemT0za6/9W8+zmb3Xete73/f33w//mfXfa62azX9bwkKAAAECBAgQIECAAAECBAgQIECAAAECBAgUSqBHoWZjMgQIECBAgAABAgQIECBAgAABAgQIECBAgEAmoADgg0CAAAECBAgQIECAAAECBAgQIECAAAECBAoooABQwKCaEgECBAgQIECAAAECBAgQIECAAAECBAgQUADwGSBAgAABAgQIECBAgAABAgQIECBAgAABAgUUUAAoYFBNiQABAgQIECBAgAABAgQIECBAgAABAgQIKAD4DBAgQIAAAQIECBAgQIAAAQIECBAgQIAAgQIKKAAUMKimRIAAAQIECBAgQIAAAQIECBAgQIAAAQIEFAB8BggQIECAAAECBAgQIECAAAECBAgQIECAQAEFFAAKGFRTIkCAAAECBAgQIECAAAECBAgQIECAAAECCgA+AwQIECBAgAABAgQIECBAgAABAgQIECBAoIACCgAFDKopESBAgAABAgQIECBAgAABAgQIECBAgAABBQCfAQIECBAgQIAAAQIECBAgQIAAAQIECBAgUEABBYACBtWUCBAgQIAAAQIECBAgQIAAAQIECBAgQICAAoDPAAECBAgQIECAAAECBAgQIECAAAECBAgQKKCAAkABg2pKBAgQIECAAAECBAgQIECAAAECBAgQIECgFwICBAi0JrBmzZp46aWX6prtuuuu0adPn7rXeX+yePHi6N27d+y88855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IECAAAECBAgQIECAAAECBAgQIECAAIE8CCgA5CEKxkCAAAECBAgQIECAAAECBAgQIECAAAECBMosoABQZlDdESBAgAABAgQIECBAgAABAgQIECBAgACBPAgoAOQhCsZAgAABAgQIECBAgAABAgQIECBAgAABAgTKLKAAUGZQ3REgQIAAAQIECBAgQIAAAQIECBAgQIAAgTwIKADkIQrGQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEyiygAFBmUN0RIECAAAECBAgQIECAAAECBAgQIECAAIE8CCgA5CEKxkCAAAECBAgQIECAAAECBAgQIECAAAECBMosoABQZlDdESBAgAABAgQIECBAgAABAgQIECBAgACBPAgoAOQhCsZAgAABAgQIECBAgAABAgQIECBAgAABAgTKLKAAUGZQ3REgQIAAAQIECBAgQIAAAQIECBAgQIAAgTwIKADkIQrGQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEyiygAFBmUN0RIECAAAECBAgQIECAAAECBAgQIECAAIE8CCgA5CEKxkCAAAECBAgQIECAAAECBAgQIECAAAECBMosoABQZlDdESBAgAABAgQIECBAgAABAgQIECBAgACBPAgoAOQhCsZAgAABAgQIECBAgAABAgQIECBAgAABAgTKLKAAUGZQ3REgQIAAAQIECBAgQIAAAQIECBAgQIAAgTwIKADkIQrGQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEyiygAFBmUN0RIECAAAECBAgQIECAAAECBAgQIECAAIE8CCgA5CEKxkCAAAECBAgQIECAAAECBAgQIECAAAECBMosoABQZlDdESBAgAABAgQIECBAgAABAgQIECBAgACBPAgoAOQhCsZAgAABAgQIECBAgAABAgQIECBAgAABAgTKLKAAUGZQ3REgQIAAAQIECBAgQIAAAQIECBAgQIAAgTwIKADkIQrGQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEyiygAFBmUN0RIECAAAECBAgQIECAAAECBAgQIECAAIE8CCgA5CEKxkCAAAECBAgQIECAAAECBAgQIECAAAECBMosoABQZlDdESBAgAABAgQIECBAgAABAgQIECBAgACBPAgoAOQhCsZAgAABAgQIECBAgAABAgQIECBAgAABAgTKLKAAUGZQ3REgQIAAAQIECBAgQIAAAQIECBAgQIAAgTwIKADkIQrGQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEyiygAFBmUN0RIECAAAECBAgQIECAAAECBAgQIECAAIE8CCgA5CEKxkCAAAECBAgQIECAAAECBAgQIECAAAECBMosoABQZlDdESBAgAABAgQIECBAgAABAgQIECBAgACBPAgoAOQhCsZAgAABAgQIECBAgAABAgQIECBAgAABAgTKLKAAUGZQ3REgQIAAAQIECBAgQIAAAQIECBAgQIAAgTwIKADkIQrGQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEyizQq8z95ba71atXxx133BGPP/54vPjii7FmzZqoqamJrbfeOrbffvsYO3ZsjBs3LoYPH57bORgYAQIECBAg0DYB+b9tXloTIECAAIEiCMj/RYiiORAgQIBAuQQKXwBYv359TJ48OWbOnBmrVq1q0W3AgAFx5ZVXxsUXXxw9ejg5okUsGwkQIECAQI4F5P8cB8fQCBAgQIBAJwnI/50Eq1sCBAgQqGiBms1/Wyp6Bi0MftOmTXHqqafGrbfeGiNGjIiTTz45DjrooBg8eHD2SGcALF++PHssXLgwbrnllvj9738fhx12WDzwwAPRp0+fFnq3iQABAgQIEMijgPyfx6gYEwECBAgQ6FwB+b9zffVOgAABApUrUOgCwNy5c+OYY47JigCzZ88u6Vv9kyZNimnTpsX1118fF1xwQeVG1sgJECBAgECVCsj/VRp40yZAgACBqhaQ/6s6/CZPgAABAi0IFPo6N/Pnz4+ePXvG9OnTSzr4n5yuueaa2GabbeLBBx9sgc0mAgQIECBAIK8C8n9eI2NcBAgQIECg8wTk/86z1TMBAgQIVLZAoQsA6Wa/6Sa/gwYNKjlKqWCQbgr8xhtvlLyPhgQIECBAgEB+BOT//MTCSAgQIECAQFcJyP9dJe19CBAgQKDSBApdABg9enSsWLEi0qmApS7z5s2L559/PrtXQKn7aEeAAAECBAjkR0D+z08sjIQAAQIECHSVgPzfVdLehwABAgQqTaDQ9wBYtmxZjBw5MjZu3BgXXnhhTJw4Mfbdd99mY7Ro0aL4zne+E1OnTo10c+Bf/epX2b7NNraSAAECBAgQyK2A/J/b0BgYAQIECBDoNAH5v9NodUyAAAECFS5Q6AJAis0zzzwTZ511VqTrAaald+/eMWTIkBg6dGh2X4B0hsDy5ctjzZo12fYdd9wxZs2aFf/8z/+cvfYPAQIECBAgUHkC8n/lxcyICRAgQIBARwXk/44K2p8AAQIEiihQ+AJACtrmzZtjxowZMWfOnFiwYEG89tprdbHs27dvDBs2LHbdddfsDIF0lkBaZyFAgAABAgQqW0D+r+z4GT0BAgQIEGiPgPzfHjX7ECBAgECRBaqiANA4gOkGv6tWrYpevXplZwM03u41AQIECBAgUDwB+b94MTUjAgQIECDQmoD835qQ7QQIECBQdIGen/3bUvRJvvTSSzF79uz49re/HYsXL86+8T9ixIjo379/k6kvXLgwPvnJT2b3AUg3EbIQIECAAAEClSkg/1dm3IyaAAECBAh0RED+74iefQkQIECgiAK9ijip+nP60Y9+FKecckp2nf/a9f369YurrroqLr744uw+ALXr088XX3wxvvnNb8buu+8exx9/fP1NnhMgQIAAAQIVIiD/V0igDJMAAQIECJRRQP4vI6auCBAgQKAwAj0KM5NmJpJu8DthwoRIP9/3vvdlN/dN3+7v2bNnXHLJJdk1/zdu3NjMnlYRIECAAAEClSog/1dq5IybAAECBAi0X0D+b7+dPQkQIECg2AKFPgPg5ptvjpdffjk+//nPx2WXXVYXyfTN/1QQSJcESmcD3HjjjXXbPCFAgAABAgQqW0D+r+z4GT0BAgQIEGiPgPzfHjX7ECBAgEA1CBT6DICnn346u8TP6aef3iCWO++8c8ybNy/Gjh0bM2fOjCuuuKLBdi8IECBAgACByhWQ/ys3dkZOgAABAgTaKyD/t1fOfgQIECBQdIFCFwDefPPNGDx4cAwfPrxJHLfddtu466674q1vfWuk+yCnmwRbCBAgQIAAgcoXkP8rP4ZmQIAAAQIE2iog/7dVTHsCBAgQqBaBQl8CaI899ohly5bFE088Efvvv3+TmO64447xwx/+MN797nfH2WefHTvttFOTNh1dsWHDhli7dm2buunVq1f07du3TftoTIAAAQIECPxdQP73SSBAgAABAtUnIP9XX8zNmAABAgRKEyj0GQAnnHBCpIPpH/7wh2PGjBnZzYAbs+y1115x7733xlZbbRXHHXdcfOtb32rcpN2vn3322UhnGgwcOLBNjzSWm266qd3va0cCBAgQIFDNAvJ/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FAAKGFRTIkCAAAECBAgQIECAAAECBAgQIECAAAECCgA+AwQIECBAgAABAgQIECBAgAABAgQIECBAoIACCgAFDKopESBAgAABAgQIECBAgAABAgQIECBAgAABBQCfAQIECBAgQIAAAQIECBAgQIAAAQIECBAgUEABBYACBtWUCBAgQIAAAQIECBAgQIAAAQIECBAgQICAAoDPAAECBAgQIECAAAECBAgQIECAAAECBAgQKKCAAkABg2pKBAgQIECAAAECBAgQIECAAAECBAgQIEBAAcBngAABAgQIECBAgAABAgQIECBAgAABAgQIFFBAAaCAQTUlAgQIECBAgAABAgQIECBAgAABAgQIECCgAOAzQIAAAQIECBAgQIAAAQIECBAgQIAAAQIECiigAFDAoJoSAQIECBAgQIAAAQIECBAgQIAAAQIECBBQAPAZIECAAAECBAgQIECAAAECBAgQIECAAAECBRRQAChgUE2JAAECBAgQIECAAAECBAgQIECAAAECBAgoAPgMECBAgAABAgQIECBAgAABAgQIECBAgACBAgooABQwqKZEgAABAgQIECBAgAABAgQIECBAgAABAgQUAHwGCBAgQIAAAQIECBAgQIAAAQIECBAgQIBAAQUUAAoYVFMiQIAAAQIECBAgQIAAAQIECBAgQIAAAQIKAD4DBAgQIECAAAECBAgQIECAAAECBAgQIECggAIKAAUMqikRIECAAAECBAgQIECAAAECBAgQIECAAAEFAJ8BAgQIECBAgAABAgQIECBAgAABAgQIECBQQAEFgAIG1ZQIECBAgAABAgQIECBAgAABAgQIECBAgIACgM8AAQIECBAgQIAAAQIECBAgQIAAAQIECBAooIACQAGDakoECBAgQIAAAQIECBAgQIAAAQIECBAgQEABwGeAAAECBAgQIECAAAECBAgQIECAAAECBAgUUEABoIBBNSUCBAgQIECAAAECBAgQIECAAAECBAgQIKAA4DNAgAABAgQIECBAgAABAgQIECBAgAABAgQKKKAAUMCgmhIBAgQIECBAgAABAgQIECBAgAABAgQIEFAA8BkgkAOBzZs3d+kouvr9unRy3owAAQIECBAgQIAAAQIECBAgQIAAgUygFwcCBLpfoKamJjZt2hxr3lxf9sEM6t+nSZ/p/dZv2BhvrtvYZFtHVvToURMDturdkS7sS4AAAQIECBAgQIAAAQIECBAgQIBAmQQUAMoEqRsCHRX4419XxSmfv7uj3TTZ/xfXntpkXVpx/+N/jM/d/Itmt7V35V67DI5Zn/jn9u5uPwIECBAgQIAAAQIECBAgQIAAAQIEyijgEkBlxNQVAQIECBAgQIAAAQIECBAgQIAAAQIECBDIi4ACQF4iYRwECBAgQIAAAQIECBAgQIAAAQIECBAgQKCMAgoAZcTUFQECBAgQIECAAAECBAgQIECAAAECBAgQyIuAAkBeImEcBAgQIECAAAECBAgQIECAAAECBAgQIECgjAIKAGXE1BUBAgQIECBAgAABAgQIECBAgAABAgQIEMiLgAJAXiJhHAQIECBAgAABAgQIECBAgAABAgQIECBAoIwCCgBlxNQVAQIECBAgQIAAAQIECBAgQIAAAQIECBDIi4ACQF4iYRwECBAgQIAAAQIECBAgQIAAAQIECBAgQKCMAgoAZcTUFQECBAgQIECAAAECBAgQIECAAAECBAgQyIuAAkBeImEcBAgQIECAAAECBAgQIECAAAECBAgQIECgjAIKAGXE1BUBAgQIECBAgAABAgQIECBAgAABAgQIEMiLgAJAXiJhHAQIECBAgAABAgQIECBAgAABAgQIECBAoIwCCgBlxNQVAQIECBAgQIAAAQIECBAgQIAAAQIECBDIi4ACQF4iYRwECBAgQIAAAQIECBAgQIAAAQIECBAgQKCMAgoAZcTUFQECBAgQIECAAAECBAgQIECAAAECBAgQyIuAAkBeImEcBAgQIECAAAECBAgQIECAAAECBAgQIECgjAIKAGXE1BUBAgQIECBAgAABAgQIECBAgAABAgQIEMiLgAJAXiJhHAQIECBAgAABAgQIECBAgAABAgQIECBAoIwCCgBlxNQVAQIECBAgQIAAAQIECBAgQIAAAQIECBDIi0CvvAzEOAgQIECAAAECBAgQIECAAAECBEoTeGXVG/HCSytLa1xiqwF9e8U+bxlaYmvNCBAgQKASBBQAKiFKxkiAAAECBAgQIECAAAECBAgQqCfw6LNL47OzH6q3puNPR+28bXzzk+/reEd6IECAAIHcCLgEUG5CYSAECBAgQIAAAQIECBAgQIAAAQIECBAgQKB8AgoA5bPUEwECBAgQIECAAAECBAgQIECAAAECBAgQyI2AAkBuQmEgBAgQIECAAAECBAgQIECAAAECBAgQIECgfAIKAOWz1BMBAgQIECBAgAABAgQIECBAgAABAgQIEMiNgAJAbkJhIAQIECBAgAABAgQIECBAgAABAgQIECBAoHwCCgDls9QTAQIECBAgQIAAAQIECBAgQIAAAQIECBDIjYACQG5CYSAECBAgQIAAAQIECBAgQIAAAQIECBAgQKB8AgoA5bPUEwECBAgQIECAAAECBAgQIECAAAECBAgQyI2AAkBuQmEgBAgQIECAAAECBAgQIECAAAECBAgQIECgfAIKAOWz1BMBAgQIECBAgAABAgQIECBAgAABAgQIEMiNgAJAbkJhIAQIECBAgAABAgQIECBAgAABAgQIECBAoHwCCgDls9QTAQIECBAgQIAAAQIECBAgQIAAAQIECBDIjYACQG5CYSAECBAgQIAAAQIECBAgQIAAAQIECBAgQKB8AgoA5bPUEwECBAgQIECAAAECBAgQIECAAAECBAgQyI2AAkBuQmEgBAgQIECAAAECBAgQIECAAAECBAgQIECgfAIKAOWz1BMBAgQIECBAgAABAgQIECBAgAABAgQIEMiNgAJAbkJhIAQIECBAgAABAgQIECBAgAABAgQIECBAoHwCCgDls9QTAQIECBAgQIAAAQIECBAgQIAAAQIECBDIjUChCwCvvPJK/PrXv44VK1Y0AX/11VfjsssuiyOOOCJGjRoVRx99dHzhC1+I119/vUlbKwgQIECAAIHKEZD/KydWRkqAAAECBMolIP+XS1I/BAgQIFA0gUIXAG677bY48MAD4+67724Qt1QU2HvvvWPq1Knx05/+NJ5//vn40Y9+FP/6r/8ae+65Zzz33HMN2ntBgAABAgQIVI6A/F85sTJSAgQIECBQLgH5v1yS+iFAgACBogkUugDQXLDWrl0bEyZMiJdeeik++MEPxoMPPhh//vOf4+GHH46PfexjsWTJkjj++OPjtddea2536wgQIECAAIEKFJD/KzBohkyAAAECBDooIP93ENDuBAgQIFAIgV6FmEUbJpG+8f+b3/wmO/h/++231+258847xyGHHJKdGfDRj340brnlljjnnHPqtntCgAABAgQIVK6A/F+5sTNyAgQIECDQXgH5v71y9iNAgACBIglU3RkATz75ZBa/Cy+8sNk4nn/++TFkyJB49NFHm91uJQECBAgQIFB5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AQIECDQUUABo6OEVAQIECBAgQIAAAQIECBAgQIBAI4Hf/vGVuPuXv2+0tmMve9bUKAB0jNDeBAgQaFXAJYBaJdKAAAECBAgQIECAAAECBAgQIECAAAECBAhUnoACQOXFzIgJECBAgAABAgQIECBAgAABAgQIECBAgECrAgoArRJpQIAAAQIECBAgQIAAAQIECBAgQIAAAQIEKk9AAaDyYmbEBAgQIECAAAECBAgQIECAAAECBAgQIECgVQEFgFaJNCBAgAABAgQIECBAgAABAgQIECBAgAABApUnoABQeTEzYgIECBAgQIAAAQIECBAgQIAAAQIECBAg0KqAAkCrRBoQIECAAAECBAgQIECAAAECBAgQIECAAIHKE1AAqLyYGTEBAgQIECBAgAABAgQIECBAgAABAgQIEGhVQAGgVSINCBAgQIAAAQIECBAgQIAAAQIECBAgQIBA5QkoAFRezIyYAAECBAgQIECAAAECBAgQIECAAAECBAi0KqAA0CqRBgQIECBAgAABAgQIECBAgAABAgQIECBAoPIEFAAqL2ZGTIAAAQIECBAgQIAAAQIECBAgQIAAAQIEWhVQAGiVSAMCBAgQIECAAAECBAgQIECAAAECBAgQIFB5AgoAlRczIyZAgAABAgQIECBAgAABAgQIECBAgAABAq0KKAC0SqQBAQIECBAgQIAAAQIECBAgQIAAAQIECBCoPAEFgMqLmRETIECAAAECBAgQIECAAAECBAgQIECAAIFWBUoqADzxxBOtdqQBAQIECBAgUCwB+b9Y8TQbAgQIECBQioD8X4qSNgQIECBAoHIESioAvPvd74599903vvjFL8aSJUsqZ3ZGSoAAAQIECLRbQP5vN50dCRAgQIBAxQrI/xUbOgMnQIAAAQLNCpRUAPjQhz4Uv//97+Nf/uVfYsSIEXHMMcfEnDlzYu3atc12aiUBAgQIECBQ+QLyf+XH0AwIECBAgEBbBeT/toppT4AAAQIE8i1QUgHgv/7rv2Lp0qXxjW98Iw4//PD44Q9/GCeeeGIMGzYsLrjggnjkkUfyPUujI0CAAAECBNosIP+3mcwOBAgQIECg4gXk/4oPoQkQIECAAIEGAiUVANIegwYNijPOOCMeeOCBWLx4cVx55ZWx0047xfTp0+OQQw6JvffeO66++up46aWXGryBFwQIECBAgEDlCsj/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/gkQIECAQP4E5P/8xcSICBAgQIBAuQV6lLtD/REgQIAAAQIECBAgQIAAAQIECBAgQIAAAQLdL6AA0P0xMAICBAgQIECAAAECBAgQIECAAAECBAgQIFB2AQWAspPqkAABAgQIECDw/9u7F3iryjJx/A/IJeSmXCKQ1MRbk+aIppYz/XWyj5ZmNU6DodjkLdNCzZIsKyuxdCZLp3IsKZQmQcJpajS7ojmYeaNES41ETRRvoAiiIuz/ftf8zolzv619zllrf9fnsz17r8u73vf7rr0fWc9a6yVAgAABAgQIECBAgAABAgT6XkACoO/7QA0IECBAgAABAgQIECBAgAABAgQIECBAgEDuAhIAuZMqkAABAgQIECBAgAABAgQIECBAgAABAgQI9L2ABEDf94EaECBAgAABAgQIECBAgAABAgQIECBAgACB3AUkAHInVSABAgQIECBAgAABAgQIECBAgAABAgQIEOh7AQmAvu8DNSBAgAABAgQIECBAgAABAgQIECBAgAABArkLSADkTqpAAgQIECBAgAABAgQIECBAgAABAgQIECDQ9wISAH3fB2pAgAABAgQIECBAgAABAgQIECBAgAABAgRyF5AAyJ1UgQQIECBAgAABAgQIECBAgAABAgQIECBAoO8FJAD6vg/UgAABAgQIECBAgAABAgQIECBAgAABAgQI5C4wKPcSFUighgI3/v4v8eRzL+S6h312nhBTJm2Ta5kKI0CAAAECBAgQIECAAAECBAgQIECAQF8LSAD0dQ/Yf5cE5t94X/z+wae6tE1HK3/ifW+SAOgIyXICBAgQIECAAAECBAgQIECAAAECBAon4BFAhesyFSZAgAABAgQIECBAgAABAgQIECBAgAABAh0LSAB0bGQNAgQIECBAgAABAgQIECBAgAABAgQIECBQOAEJgMJ1mQoTIECAAAECBAgQIECAAAECBAgQIECAAIGOBSQAOjayBgECBAgQIECAAAECBAgQIECAAAECBAgQKJyAQYAL12UqTIAAAQIECBBoKvDksy/E/Y+ubjqzh59GvGpI7L3zq3tYis0JECBAgAABAgQIECBAoC8FJAD6Ut++CRAgQIAAAQI5CCxd/mScN++WHEr6axG7bLdNXHX2O/86wzsCBAgQIECAAAECBAgQKJyARwAVrstUmAABAgQIECBAgAABAgQIECBAoIgClUqliNVWZwIECizgDoACd56qEyBAgAABAgQIECBAgAABAgQIFEdgwIABsf7FjfHb+x7PvdL/8Lfb516mAgkQKL6ABEDx+1ALCBAgQIAAAQIECBAgQIAAAQIECiLwVHX8pk9/939zr+1vLpmee5kKJECg+AIeAVT8PtQCAgQIECBAgAABAgQIECBAgAABAgQIECDQQkACoAWJGQQIECBAgAABAgQIECBAgAABAgQIECBAoPgCEgDF70MtIECAAAECBAgQIECAAAECBAgQIECAAAECLQQkAFqQmEGAAAECBAgQIECAAAECBAgQIECAAAECBIovIAFQ/D7UAgIECBAgQIAAAQIECBAgQIAAAQIECBAg0EJAAqAFiRkECBAgQIAAAQIECBAgQIAAAQIECBAgQKD4AhIAxe9DLSBAgAABAgQIECBAgAABAgQIECBAgAABAi0EJABakJhBgAABAgQIECBAgAABAgQIECBAgAABAgSKLyABUPw+1AICBAgQIECAAAECBAgQIECAAAECBAgQINBCYFCLOWYQIECAAAECBAgQIEAgB4FFNz8QN939aA4l/bWIt7xhUhx90O5/neEdAQIECBAgQIAAAQJtCkgAtEljAQECBAgQIECAAAECPRF45Knn4/YHVvWkiBbbTho3osU8MwgQIECAAAECBAgQaF3AI4BadzGXAAECBAgQIECAAAECBAgQIECAAAECBAgUWkACoNDdp/IECBAgQIAAAQIECBAgQIAAAQIECBAgQKB1AQmA1l3MJUCAAAECBAgQIECAAAECBAgQIECAAAEChRaQACh096k8AQIECBAgQIAAAQIECBAgQIAAAQIECBBoXUACoHUXcwkQIECAAAECBAgQIECAAAECBAgQIECAQKEFJAAK3X0qT4AAAQIECBAgQIAAAQIECBAgQIAAAQIEWheQAGjdxVwCBAgQIECAAAECBAgQIECAAAECBAgQIFBoAQmAQnefyhMgQIAAAQIECBAgQIAAAQIECBAgQIAAgdYFJABadzGXAAECBAgQIECAAAECBAgQIECAAAECBAgUWkACoNDdp/IECBAgQIAAAQIECBAgQIAAAQIECBAgQKB1AQmA1l3MJUCAAAECBAgQIECAAAECBAgQIECAAAEChRaQACh096k8AQIECBAgQIAAAQIECBAgQIAAAQIECBBoXUACoHUXcwkQIECAAAECBAgQIECAAAECBAgQIECAQKEFJAAK3X0qT4AAAQIECBAgQIAAAQIECBAgQIAAAQIEWheQAGjdxVwCBAgQIECAAAECBAgQIECAAAECBAgQIFBoAQmAQnefyhMgQIAAAQIECBAgQIAAAQIECBAgQIAAgdYFJABadzGXAAECBAgQIECAAAECBAgQIECAAAECBAgUWkACoNDdp/IECBAgQIAAAQIECBAgQIAAAQIECBAgQKB1AQmA1l3MJUCAAAECBAgQIECAAAECBAgQIECAAAEChRYYVOjaqzwBAgQIECBAgAABAgQIECBAgAABAm0KLF3+ZCz89f1tLu/Ogu3GjYjTjty7O5vahgCBXhaQAOhlcLsjQIAAAQIECBAgQIAAAQIECBAg0FsCq9asj8W//0uuu9vttWNyLU9hBAjUTsAjgGpnq2QCBAgQIECAAAECBAgQIECAAAECBAgQINBnAhIAfUZvxwQIECBAgAABAgQIECBAgAABAgQIECBAoHYCHgFUO1slEyBQRwJf+N5v4pVNm3Nt8YeP2Csmjh2Ra5kKI0CAAAECBAgQIECAAAECBAgQqB8BCYD66WstJUCghgK/uOvh2JhzAuCYt70+JtawzoomQIAAAQIECBAgQIAAAQIECBAot4BHAJW7f7WOAAECBAgQIECAAAECBAgQIECAAAECBOpUQAKgTjteswkQIECAAAECBAgQIECAAAECBAgQIECg3AISAOXuX60jQIAAAQIECBAgQIAAAQIECBAgQIAAgToVkACo047XbAIECBAgQIAAAQIECBAgQIAAAQIECBAot4AEQLn7V+sIECBAgAABAgQIECBAgAABAgQIECBAoE4FJADqtOM1mwABAgQIECBAgAABAgQIECBAgAABAgTKLTCo3M3TOgIECBAgQIAAAQIE6kXgS1f/Nv702Jpcm/uBt78h/r83vjbXMhVGgAABAgQIECBAoLcEJAB6S9p+CBAgQIAAAQIECBCoqcBDTzwXf3xkda77eHbdS7mWpzACBAgQIECAAAECvSngEUC9qW1fBAgQIECAAAECBAgQIECAAAECBAgQIECglwQkAHoJ2m4IECBAgAABAgQIECBAgAABAgQIECBAgEBvCkgA9Ka2fREgQIAAAQIECBAgQIAAAQIECBAgQIAAgV4SkADoJWi7IUCAAAECBAgQIECAAAECBAgQIECAAAECvSkgAdCb2vZFgAABAgQIECBAgAABAgQIECBAgAABAgR6SUACoJeg7YYAAQIECBAgQIAAAQIECBAgQIAAAQIECPSmQKkTAM8880z87ne/izVr1rQwffbZZ+OTn/xkHHzwwbHLLrvEoYceGl/+8pfjhRdeaLGuGQQIECBAgEBxBMT/4vSVmhIgQIAAgbwExP+8JJVDgAABAmUTKHUC4Jprrom99947rrvuuib9lpICf/M3fxMXXnhh3HjjjbF8+fL42c9+Fuecc07suuuu8ac//anJ+j4QIECAAAECxREQ/4vTV2pKgAABAgTyEhD/85JUDgECBAiUTaDUCYDWOuull16KY489Nh5//PE46qij4uabb45HH300br311vjoRz8aq1ative85z3x/PPPt7a5eQQIECBAgEABBcT/AnaaKhMgQIAAgR4KiP89BLQ5AQIECJRCYFApWtGFRqQr/u+9997s5P8PfvCDxi2322672H///bM7Az784Q/H/Pnz46STTmpc7g0BAgQIECBQXAHxv7h9p+YECBAgQKC7AuJ/d+VsR4AAAQJlEqi7OwDuvvvurP9OO+20VvvxlFNOibFjx8Ydd9zR6nIzCRAgQIAAgeIJiP/F6zM1JkCAAAECPRUQ/3sqaHsCBAgQKINA3SUARowYkfXbmDFj2uy/kSNHZo8FanMFCwgQIECAAIFCCYj/heoulSVAgAABArkIiP+5MCqEAAECBAouUBePAHruuecau+mggw6KAQMGxP/+7//GXnvt1Ti/4c2SJUvioYceiiOPPLJhlr8ECBAgQIBAAQXE/wJ2mioTIECAAIEeCoj/PQS0OYEcBB5a9Vw89sy6HEr6axETth0eUyZt89cZ3hEg0GmBukgAfOQjH4nPfe5zMXXq1Nh3331jl112ic9//vNxyCGHxG677ZZhbdq0KRYsWBBf+MIXss9pIGATAQIECBAgUFwB8b+4fafmBAgQIECguwLif3flbEcgP4H/umV5XHPT/fkVWC3p3W/ZOT45bb9cy1QYgXoRKHUC4G1ve1t24v93v/tdpNfPf/7z7NXQuVdddVXMnj07+3jWWWfFJZdckr0/7rjj4uCDD25YzV8CBAgQIECgQALif4E6S1UJECBAgEBOAuJ/TpCKIUCAAIHSCZQ6AbDrrrvGeeed19hpa9asyRIBDQmB/fb7a+YwPfd/p512ijQI8Mc//vHGbbwhQIAAAQIEiiUg/herv9SWAAECBAjkISD+56GoDAIECBAoo0CpEwDNO2zbbbfNruxv7er+c889N774xS8238RnAgQIECBAoOAC4n/BO1D1CRAgQIBANwTE/26g2YQAAQIESikwsJSt6kajhg4d2o2tbEKAAAECBAgUWUD8L3LvqTsBAgQIEOiegPjfPTdbESBAgEAxBermDoB169bFokWLYunSpbFy5cpYv359DBgwIEaNGhXjx4/PBgdOgwJPmjSpmD2p1gQIECBAgEALAfG/BYkZBAgQIECg9ALif+m7WAMJECBAoAsCpU8AbNy4MWbNmhVz5syJtWvXtkszfPjwOP/882PmzJkxcKCbI9rFspAAAQIECPRjAfG/H3eOqhEgQIAAgRoJiP81glUsAQIECBRaoNQJgM2bN8eMGTNiwYIFMXny5Dj55JNj6tSpMWbMmOyV7gBYvXp19lq2bFnMnz8/zjzzzFi4cGEsXrw4hgwZUujOVXkCBAgQIFCPAuJ/Pfa6NhMgQIBAvQuI//V+BGg/AQIECLQlUOoEwA033JCd/J8+fXrMmzev3av6jz766Jg9e3acfvrpcemll8YVV1wRp556altu5hMgQIAAAQL9VED876cdo1oECBAgQKCGAuJ/DXEVTYAAAQKFFij1c26WLFkSW221VVx22WXtnvzfsgcvvvjiGD16dNx8881bzvaeAAECBAgQKIiA+F+QjlJNAgQIECCQo4D4nyOmoggQIECgVAKlTgCkwX7TIL8jR47sdKelhEEaFHjDhg2d3saKBAgQIECAQP8REP/7T1+oCQECBAgQ6C0B8b+3pO2HAAECBIomUOpHAO2+++5x5ZVXxvXXXx+HH354p/rmpptuiuXLl2djB3Rqg3ZWSgMQfeUrX4lnnnmmnbWaLrr99tuzGS+99FLTBT4RIECAAAECnRIQ/zvFZCUCBAgQIFAqAfG/VN2pMQQIECCQo0CpEwAnnnhifOlLX4pp06bFaaedlp3U32OPPVrlW7FiRVx99dVx4YUXZo8AOuaYY1pdryszb7311jjnnHO6sknjuvfcc0/je28IECBAgACBzguI/523siYBAv1ToFKpxIABA/pn5dSKQD8VEP/7aceoFgECBAj0uUCpEwDjxo2L2267LU444YS4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ChMgQIAAAQIECBAgQIAAAQIECBAgQIAAgY4FJAA6NrIGAQIECBAgQIAAAQIECBAgQIAAAQIECBAonIAEQOG6TIUJECBAgAABAgQIECBAgAABAgQIECBAgEDHAhIAHRtZgwABAgQIECBAgAABAgQIECBAgAABAgQIFE5AAqBwXabCBAgQIECAAAECBAgQIECAAAECBAgQIECgYwEJgI6NrEGAAAECBAgQIECAAAECBAgQIECAAAECBAonIAFQuC5TYQIECBAgQIAAAQIECBAgQIAAAQIECBAg0LHAoI5XsQYBAgQIECBAgAABAgQIECBAgAABAgQIlFngut8+GLOvvjXXJr5++7Ex52OH5lqmwromIAHQNS9rEyBAgAABAgQIECBAgAABAgQIECBAoJQClUq+zarkXWC+1auL0jwCqC66WSMJECBAgAABAgQIECBAgAABAgQIECBAoN4EJADqrce1lwABAgQIECBAgAABAgQIECBAgAABAgTqQkACoC66WSMJECBAgAABAgQIECBAgAABAgQIECBAoN4EJADqrce1lwABAgQIECBAgAABAgQIECBAgAABAgTqQsAgwHXRzRpJgAABAgQIECBAgACB/itw091/ibsffCrXCu75uvFx0F6vzbVMhREgQIAAAQIEiiYgAVC0HlNfAgQIECBAgAABAgQIlEzgjgeeiB/c/ECurXrvy5skAHIVVRgBAgQIECBQRAGPACpir6kzAQIECBAgQIAAAQIECBAgQIAAAQIECBDoQEACoAMgiwkQIECAAAECBAgQIECAAAECBAgQIECAQBEFPAKoiL2mzgQIECBAgAABAgQIECBAgAABAgQIECiwwLIVT8WKVWtzbcGOrxkVb6yOA2T6q4AEwF8tvCNAgAABAgQIECBAgAABAgQIECBAgACBXhD42Z0P5z8G0IG7SAA06zuPAGoG4iMBAgQIECBAgAABAgQIECBAgAABAgQIECiDgARAGXpRGwgQIECAAAECBAgQIECAAAECBAgQIECAQDMBCYBmID4SIECAAAECBAgQIECAAAECBAgQIECAAIEyCEgAlKEXtYEAAQIECBAgQIAAAQIECBAgQIAAAQIECDQTkABoBuIjAQIECBAgQIAAAQIECBAgQIAAAQIECBAog4AEQBl6URsIECBAgAABAgQIECBAgAABAgQIECBAgEAzAQmAZiA+EiBAgAABAgQIECBAgAABAgQIECBAgACBMggMKkMjtIEAAQIECBAgQIAAAQIECHRWYO7P7omVT6/r7OqdWu+I/XeKvaa8ulPrWokAAQIECBDofYFrbro/Hl+9PtcdHzJ1+3jDDuNyLTPvwiQA8hZVHgECBEomsPr5F+PRp5/PtVVbDxkUO2+3ba5lKowAAQIECBAg0FmB/71nZdz78DOdXb1T671xp/ESAJ2SshIBAgQIEOgbgZ/d+VDu8X+niaMlAPqmO+2VAAECBPIS+M0fHovzv39rXsVl5bx++zHxnbMOy7VMhREgQIAAAQIECBAgQIAAAQIECDQVMAZAUw+fCBAgQIAAAQIECBAgQIAAAQIECBAgQIBAKQQkAErRjRpBgAABAgQIECBAgAABAgQIECBAgAABAgSaCkgANPXwiQABAgQIECBAgAABAgQIECBAgAABAgQIlEJAAqAU3agRBAgQIECAAAECBAgQIECAAAECBAgQIECgqYAEQFMPnwgQIECAAAECBAgQIECAAAECBAgQIECAQCkEJABK0Y0aQYAAAQIECBAgQIAAAQIECBAgQIAAAQIEmgpIADT18IkAAQIECBAgQIAAAQIECBAgQIAAAQIECJRCQAKgFN2oEQQIECBAgAABAgQIECBAgAABAgQIECBAoKmABEBTD58IECBAgAABAgQIECBAgAABAgQIECBAgEApBCQAStGNGkGAAAECBAgQIECAAAECBAgQIECAAAECBJoKSAA09fCJAAECBAgQIECAAAECBAgQIECAAAECBAiUQkACoBTdqBEECBAgQIAAAQIECBAgQIAAAQIECBAgQKCpgARAUw+fCBAgQIAAAQIECBAgQIAAAQIECBAgQIBAKQQkAErRjRpBgAABAgQIECBAgAABAgQIECBAgAABAgSaCkgANPXwiQABAgQIECBAgAABAgQIECBAgAABAgQIlEJAAqAU3agRBAgQIECAAAECBAgQIECAAAECBAgQIECgqYAEQFMPnwgQIECAAAECBAgQIECAAAECBAgQIECAQCkEJABK0Y0aQYAAAQIECBAgQIAAAQIECBAgQIAAAQIEmgpIADT18IkAAQIECBAgQIAAAQIECBAgQIAAAQIECJRCQAKgFN2oEQQIECBAgAABAgQIECBAgAABAgQIECBAoKmABEBTD58IECBA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GCBAgAABAgQIECBAgAABAgQIECBAgAABAiUUkAAoYadqEgECBAgQIECAAAECBAgQIECAAAECBAgQkABwDBAgQIAAAQIECBAgQIAAAQIECBAgQIAAgRIKSACUsFM1iQABAgQIECBAgAABAgQIECBAgAABAgQISAA4BggQIECAAAECBAgQIECAAAECBAgQIECAQAkFJABK2KmaRIAAAQIECBAgQIAAAQIECBAgQIAAAQIEJAAcAwQIECBAgAABAgQIECBAgAABAgQIECBAoIQCEgAl7FRNIkCAAAECBAgQIECAAAECBAgQIECAAAECEgCOAQIECBAgQIAAAQIECBAgQIAAAQIECBAgUEKBQSVskyZ1IPDwww/HtddeG0899VS8853vjL/7u7/rYIueL37llVfi7LPPjrPOOiu22267nhfYTgl33HFH/PCHP8zWePe73x1vetOb2lm7Z4uef/75bF+/+93v4oADDoijjjoqBg6sfV7t0UcfjS996Utx0UUXxfDhw3vWiDa2fuaZZ2LevHktlh5//PExatSoFvPzmPHrX/86fvrTn8bo0aNj2rRpscMOO+RRbIsybrjhhvjDH/7QYn6aMX369HjNa17T6rKezNy4cWP85Cc/iV/+8pex6667RnIcNmxYT4psd9vFixdn+xs3bly8613vite//vXtrt+dhe19r/vid6Y7bWhvm/vuuy+uuuqquOCCC1qs1pu/My12bgaBbgr0xfeyvd+Jbjajzc1683sp/rfZDd1aIP53i63VjcT/Vlm6NFP87xKXlQsgIP7n10nif36WqSTxPz9P8b/nlqWP/xVTXQnceeedlUGDBlX+4R/+ofLRj360Uj0BWfnOd75TU4PNmzdXTjnllEr161hZtmxZTfd1yCGHVCZMmFCZOXNm5dBDD60MHjy4csUVV9Rkn48//nhl5MiRlYMPPrjysY99rDJp0qTK+973vkpqby2nVH7qv+RZTeLUbFf//d//nflNnTq1suWrmnyoyT6//OUvV6qJhcqpp55aee9735sdp9VkQE329ZnPfKZJm1L7qif9KwMGDKj88Y9/zH2fjzzySHZcpv18/OMfr+y4446Vv/3bv61s2LAh932lAmfPnp0dH+n7cOyxx1aGDh1a+dGPfpTrvtr7XvfF70yujasWlr5b1URNZffdd29RdG/+zrTYuRkEuinQ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VY3rf+hDH4ojjzwy+5zGJkjbff3rX29c3tabF154IT784Q/HlClTsnK32267SK9vf/vbLTZJd0Xssssuse2220ZDvd/xjnc0aVva6Pjjj8/2nx5J1Hw65ZRTsmW33npr46KPfOQj2byU2Z8xY0Zss802WVtTGw4//PB44oknsnUffvjhbL3f/OY32ecdd9wxJk2a1FiONwQIECBAoLcExH/xv7eONfshQIAAgf4jIP6L//3naFSTvhaQAOjrHrB/Ar0ocPTRR8e6deuanIxv2P2KFSvil7/8Zey1116RTlanKZ20P/jgg7OT/eeee26WODjhhBOyE/x77rlnk5Pp6Ur8VPZPfvKTeNe73hWDBw+Oz372s9ngt+lxPx/4wAey7VK573znO+Of//mf09vYe++94+yzz46OxilIdx6kQY//4z/+I17/+tfHZZddFp/4xCeyMk4++eS4/PLLs/fpP5dcckmkZ+8999xz8ZnPfCZLEKRxBlJiItV72bJljeumK/dTvVMmv/nUsGzz5s2Ni1566aVs/ZQESc/2T21N7UxJhuuvvz7e8573ZOumAX9Tu9IzGtOUEgdnnHFG9t5/CBAgQIBAbwqI/+J/bx5v9kWAAAEC/UNA/Bf/+8eRqBb9QqB60s5EgEABBRYuXJiefVN5zWteU6leed7uq3rSurGF++yzT2XAgAGVRx55pHFeevOFL3whK2/OnDnZ/DVr1lTGjRtXGThwYOX+++9vsm7Dvo866qjG+dVH8mTbpzp97Wtfa5yf3nzlK1/JllVPwjfO//nPf57NO+200xrntffm05/+dLb+zJkzm6x25513Zu1JDtUkQVbXYcOGVap3H1RSnbacqgmNrIwDDzywUj2pny1KdUp1vu2227ZcNXtfTVpky5YsWdK47MQTT8zmVZMklWTUMKX31bsdsmVbeqV9pfKfeuqphlX9JUCAAAEC3RZoiMHiv/jf7YPIhgQIECBQOAHx//+6zL//C3foqnA/ETAIcPXMnIlAkQXSo2iuu+66dpuw5RXsH/zgB6MaNOP73/9+9riehg2/973vxfDhwxuvzL/66qsjPcM/PdYmPc5ny+kf//Efs8f6pCvg0zrVREHj4vRInI9+9KONn9ObQw89NM4666x4/PHHm8zvyodf/OIXMXTo0Pjc5z7XZLOpU6dmV/gPGjQo0tX5qU4bNmyIakIjezzQliunR/b8+7//e1RP6Me9994be+yxx5aLu/Q+tTG1tWFK7/fff//4y1/+krWzuVnDev4SIECAAIE8BMR/8T+P40gZBAgQIFAsAfFf/C/WEau2/UVAAqC/9IR6EOimQHqW/ty5c9vd+lWvelXj8unTp2cn4//zP/+zMQHw29/+NhsoNz2mJz3jP03Vq9izvyl5cM4552Tvt/xPOuGdnnefBsDdMgGQHh9UvWtgy1Vj4sSJ2ec0kFB3pvR4nrvvvjt22GGHGDNmTIsi0mOJGqY//vGP2dsDDjigYVaTv29+85vj9ttvj/vuu69HCYA0DkHzqaftbF6ezwQIECBAoC0B8T9C/G/r6DCfAAECBMoqIP6L/2U9trWrtgISALX1VTqBmgsMGTIkG+i2sztKg+Km59QvWLAgO6meBvidN29etnm6O6BhahgIOD3TP73amtJ66aR6w7TlVfEN85onBBrmd/Zv9XFF2VX9aTDhjqaGejecjG++fkMZzQcxbr5eR59r0c6O9mk5AQIECBBoEBD/GyT+76/439TDJwIECBAop4D437Rfxf+mHj4RaEug6WW6ba1lPgECpRJoONGf7gLYuHFjzJ8/P3baaad461vf2tjO6rOFs/dpYNvqI8vafKXBdWs9vfrVr852UX2Ofoe7mjRpUrZOujWytalhfkqEpKk6HkL2d8vHJGUzqv/pzP4a1vWXAAECBAj0dwHxPxovmhD/+/vRqn4ECBAgkJeA+C/+53UsKae4AhIAxe07NSfQbYG3v/3tMXny5Ox5+b/85S/jmWeeiX/5l39pPBmeCm54hv0tt9zS6n6uuOKKqA4YHNXBb1tdnufMNDZBSkg8/PDD8fzzz7coOo1JsP3228ddd90Vu+yyS7b8jjvuaLFempEe/5Om3XbbLfu79dZbZ39bezzR8uXLs2X+Q4AAAQIEyiAg/ov/ZTiOtYEAAQIEuiYg/ov/XTtirF1GAQmAMvaqNhHoQCA9kic97//Pf/5znHfeedmJ/+OOO67JVu973/sinRy/5JJLouG2uoYV/ud//idOOumk+Na3vhWjR49umN2lv2lA3zQ999xzndouDeCbBvf9yle+0mT9Bx54IH74wx9miYE999wzjj322Bg8eHBcdNFF2QDFW678X//1X3HrrbfGzjvvHPvtt1+2qOGOgYULF265aqTPaXyDnk5dbWdP92d7AgQIECDQloD4L/63dWyYT4AAAQLlFRD/xf/yHt1a1lkBYwB0Vsp6BPqpwK9+9atoa8DbhioPGzYsFi9e3PAx+5tuA5w9e3akAYDf9ra3ZQPsbrnCa1/72vj85z8fn/jEJ2Lq1KnxsY99LLu6/te//nV8//vfz06yp7sAuvt8/4YT74sWLcoSEGlcgnQlf1vTueeeG1dffXVWp5SQOPTQQ2Pp0qXxve99L3s8UUpUpBP/6cr+s88+O2vb3nvvHWeccUaktqQ7Gb7+9a9H2m8a06Dh1v9jjjkmvvjFL8bll1+eJRGS5W233ZYlANL26a6CnkwN7Zw2bVrstdde8e1vf7vbZj2ph20JECBAoFwC4r/4X64jWmsIECBAoDMC4r/435njxDoEWghUn+1tIkCggALVK9Qr1S90p14jRoxotYXVZ/5n21dPore6PM289tprKzvssEOT/VTHC6ik/W85Pfroo9k6Bx100Jazs/fVxwRly970pjc1WVY9UV+pJieyZdU7EJosa+3Dk08+WTnqqKMqgwYNaqxP9dFAlauuuqrF6ldeeWUlLWswqt6pUDniiCMq9913X4t1q3c0VKon6hvXrY45UPnOd75TqSYVsnlLlixp3ObEE0/M5t14442N8xrenH766dmy6667rmFWpXqHQqX6OKXGsh988MHGZd4QIECAAIGuCoj///f/PuJ/V48c6xMgQIBAkQXEf/G/yMevuve9wIBUhRZZATMIECDQTCCNE1A9eR0TJ06M7bbbrvEK+mardfnjK6+8Ek888URMmDAhqif2O7X9Sy+9FNUT+TFy5MjYcccd272i/vHHH88G833DG94QW221VbvlpzsLXn755cbxD9pduYsLk1/a/zbbbNPFLa1OgAABAgT6TkD875m9+N8zP1sTIECAQN8IiP89cxf/e+Zn6/wFJADyN1UiAQIECBAgQIAAAQIECBAgQIAAAQIECBDocwGDAPd5F6gAAQIECBAgQIAAAQIECBAgQIAAAQIECBDIX0ACIH9TJRIgQIAAAQIECBAgQIAAAQIECBAgQIAAgT4XkADo8y5QAQIECBAgQIAAAQIECBAgQIAAAQIECBAgkL/A/w/Qfa/rI9T5NAAAAABJRU5ErkJggg==" width="768" class="r-stretch"><aside class="notes">
+<p><strong>~1:00</strong> — Quick intuition slide from the sample-size vignette: same mean, more dispersion means fatter tail and less information per expected event.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1414,7 +1402,7 @@ display:block!important;
 <h2>Sample size re-estimation (recurrent / NB)</h2>
 <ul>
 <li><strong>When it helps:</strong> if planning guesses for <strong>overdispersion</strong>, accrual, or follow-up are wrong, re-estimating total <strong>N</strong> or follow-up after an interim can recover <strong>unconditional power</strong> — only if the adaptation rule is <strong>pre-specified</strong> and <strong>Type I / power</strong> are checked by simulation.</li>
-<li><strong>Information-based</strong> timing: interims and SSR keyed to <strong>Fisher information</strong> (variance of the log rate-ratio under a working model), not only calendar dates — so the information fraction matches how evidence actually accumulates.</li>
+<li><strong>Information-based</strong> timing: interims and SSR keyed to <strong>Fisher information</strong> (variance of the log rate-ratio under a working model), not only calendar dates — target information depends on exposure, observed rates, and dispersion, not raw event counts alone.</li>
 <li><strong>Blinded</strong> SSR: treatment assignment stays masked at adaptation; pooling arms for nuisance estimates is <strong>conservative</strong>, and in <strong>gsDesignNB</strong> Monte Carlo studies blinded rules often yield <strong>larger</strong> adapted sample sizes than <strong>unblinded</strong> arm-specific nuisance updates under the same boundary logic.</li>
 <li><strong>Unblinded</strong> nuisance updates (when DSMB charter and regulators accept them): typically <strong>smaller</strong> adapted <strong>N</strong> in those same studies — still require full <strong>operating-characteristic</strong> simulation, not analytic shortcuts alone.</li>
 </ul>
@@ -1432,13 +1420,13 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="mutze-test-fallback-mom" class="slide level2">
-<h2>Mutze test, () fallback, MoM</h2>
+<section id="mutze-test-theta-fallback-mom" class="slide level2">
+<h2>Mutze test, <span class="math inline">\(\theta\)</span> fallback, MoM</h2>
 <ul>
 <li><strong>What it is:</strong> Wald test for treatment effect on <strong>recurrent event counts</strong> with exposure offset — <strong>negative binomial</strong> log-linear model (Mutze et al. 2019-style inference), implemented as <strong><code>mutze_test()</code></strong> in <strong>gsDesignNB</strong> and used as the default unblinded interim model in <strong><code>sim_gs_nbinom()</code></strong>.</li>
-<li><strong>Variance:</strong> under <code>MASS::glm.nb</code>, (() + ^2/); <strong>large</strong> shape () → <strong>near-Poisson</strong>; <strong>tiny</strong> () → unstable overdispersion fit.</li>
-<li><strong><code>poisson_threshold</code></strong> (T) (default <strong>1000</strong>): after fitting NB, if (), fall back to <strong>Poisson</strong> Wald — same test statistic family, <strong>no</strong> extra-Poisson term.</li>
-<li><strong>Tuning (T):</strong> <strong>lower</strong> (T) → Poisson fallback <strong>sooner</strong> (use when you want the interim analysis to ignore overdispersion once () is only moderately large); <strong>raise</strong> (T) → keep NB unless () is extreme; always <strong>sensitivity-check</strong> the choice.</li>
+<li><strong>Variance:</strong> under <code>MASS::glm.nb</code>, <span class="math inline">\(\mathrm{Var}(\text{count}) \approx \mu + \mu^2/\theta\)</span>; <strong>large</strong> shape <span class="math inline">\(\theta\)</span> means <strong>near-Poisson</strong>, while <strong>tiny</strong> <span class="math inline">\(\theta\)</span> means unstable overdispersion fit.</li>
+<li><strong><code>poisson_threshold</code></strong> <span class="math inline">\(T\)</span> (default <strong>1000</strong>): after fitting NB, if <span class="math inline">\(\theta \notin [1/T, T]\)</span>, fall back to <strong>Poisson</strong> Wald with no extra-Poisson term.</li>
+<li><strong>Tuning <span class="math inline">\(T\)</span>:</strong> <strong>lower</strong> <span class="math inline">\(T\)</span> makes the Poisson fallback happen <strong>sooner</strong>; <strong>raise</strong> <span class="math inline">\(T\)</span> to keep NB unless <span class="math inline">\(\theta\)</span> is more extreme; always <strong>sensitivity-check</strong> the choice.</li>
 <li><strong>Method of moments:</strong> <strong><code>sim_gs_nbinom()</code></strong> also computes <strong>MoM</strong>-based nuisance parameters and <strong>blinded / unblinded information</strong> alongside <strong>ML</strong> — compare the two paths in simulation before fixing SSR or monitoring rules; <strong><code>mutze_test()</code></strong> does not auto-switch to MoM.</li>
 </ul>
 <aside class="notes">
@@ -1455,18 +1443,18 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="conclusions" class="slide level2 scrollable">
+<section id="conclusions" class="slide level2">
 <h2>Conclusions</h2>
-<ol type="1">
-<li><strong>Calendar gaps</strong> between interims + <strong>piecewise</strong> hazards change <strong>expected events</strong> and <strong>information growth</strong> — use <strong>expected-events + floor</strong> timing fed to <code>gsDesign()</code>.</li>
-<li><strong>Gapped spending</strong> (<code>sfGapped</code>) = intervals on <strong>information time</strong> without testing.</li>
-<li><strong>Patient-level ()</strong> is natural in <strong>simulation</strong>; don’t assume standard PH (d) counts every event.</li>
-<li><strong>Simulation</strong> (fixed GSD + SSR) is the main <strong>external</strong> check on complex paths.</li>
-<li><strong>NB add-ons:</strong> SSR <strong>information-based</strong>; blinded vs unblinded nuisance; <strong><code>mutze_test()</code></strong> + <strong><code>poisson_threshold</code></strong>; compare <strong>ML vs MoM</strong> info in <strong><code>sim_gs_nbinom()</code></strong> before defaults.</li>
-<li><strong>Limitations:</strong> PH piecewise approximation; real ops have jitter; general closed-form <strong>counted</strong> events under () needs recurrent theory or MC calibration.</li>
-</ol>
+<ul>
+<li><strong>NB-first story:</strong> <code>gsDesignNB</code> is the user-facing layer for recurrent-event design and monitoring; <code>gsDesign</code> is the backend spending engine.</li>
+<li><strong>Default model + target:</strong> simple exponential within-subject rates plus gamma frailty give the NB model, and information depends on exposure, rates, and dispersion rather than raw events alone.</li>
+<li><strong>Sample size details matter:</strong> event-gap correction was needed so simulation-based power agreed with the analytical NB planning formula.</li>
+<li><strong>SSR findings:</strong> blinded SSR tended to ask for more sample size; unblinded SSR was more sample-efficient when acceptable.</li>
+<li><strong>Interim defaults matter:</strong> stress-test <strong><code>mutze_test()</code></strong>, <strong><code>poisson_threshold</code></strong>, and <strong>ML vs MoM</strong> information paths before locking monitoring rules.</li>
+<li><strong>Type I calibration:</strong> in the vignette sensitivity runs, building the design at a slightly smaller nominal alpha helped.</li>
+</ul>
 <aside class="notes">
-<p><strong>~1:30</strong> — Six bullets recap the deck; slow down on limitations if time allows.</p>
+<p><strong>~1:30</strong> — Six bullets recap the deck; emphasize the NB statistical story and the practical SSR takeaways.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1479,16 +1467,15 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="discussion-prompts" class="slide level2">
-<h2>Discussion prompts</h2>
+<section id="practical-takeaways" class="slide level2">
+<h2>Practical takeaways</h2>
 <ul>
-<li>What **(_i)** and <strong>()</strong> does your protocol imply?</li>
-<li>Where do you anchor <strong>information</strong> — events only, calendar, or hybrid?</li>
-<li>How do you <strong>document</strong> simulation assumptions for agencies?</li>
+<li>Anchor monitoring to <strong>NB information</strong>, not raw event counts alone.</li>
+<li>If a protocol gap changes counted events, include the <strong>event-gap correction</strong> in planning and verify against simulation.</li>
+<li>For SSR, compare <strong>blinded</strong> and <strong>unblinded</strong> rules and check whether a slightly smaller nominal alpha improves calibration.</li>
 </ul>
-<p><strong>Thank you</strong></p>
 <aside class="notes">
-<p><strong>~2:00</strong> buffer** — Use for questions; slides end ~20 min if on pace.</p>
+<p><strong>~1:00</strong> — Final applied slide before references.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1504,17 +1491,15 @@ display:block!important;
 <section id="references-selected" class="slide level2">
 <h2>References (selected)</h2>
 <ul>
-<li>Jennison &amp; Turnbull (2000). <em>Group Sequential Methods…</em></li>
-<li>Lachin &amp; Foulkes (1986). <em>Biometrics</em>.</li>
-<li>Lan &amp; DeMets (1989). <em>Biometrika</em>.</li>
-<li>Lehmacher &amp; Wassmer (1999). <em>Biometrics</em> (SSR).</li>
+<li>Zhu &amp; Lakkis (2014). Sample size calculation for comparing two negative binomial rates. <em>Statistics in Medicine</em>.</li>
+<li>Friede &amp; Schmidli (2010). Blinded sample size re-estimation with negative binomial counts. <em>Methods of Information in Medicine</em>.</li>
+<li>Schneider, Schmidli &amp; Friede (2013). Blinded SSR for recurrent event data with time trends. <em>Statistics in Medicine</em>.</li>
 <li>Mutze et al. (2019). Group sequential designs for negative binomial outcomes. <em>Statistical Methods in Medical Research</em>.</li>
-<li>Zhu &amp; Lakkis (2014). <em>Statistics in Medicine</em> (NB rates).</li>
-<li>Dohmke &amp; Kalliamvakou (2025). “Developers, Reinvented.” GitHub blog.</li>
-<li><strong>gsDesign</strong> · <strong>gsDesignNB</strong> — GitHub + pkgdown sites.</li>
+<li>Jennison &amp; Turnbull (2000). <em>Group Sequential Methods with Applications to Clinical Trials</em>.</li>
+<li><code>gsDesignNB</code> sample-size and SSR vignettes for worked formulas and simulation results.</li>
 </ul>
 <aside class="notes">
-<p>Optional backup slide if no questions — or skip to save time.</p>
+<p>Backup slide if no questions.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1532,7 +1517,7 @@ display:block!important;
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-<p>Draft — calendar gaps, events, and GSD</p>
+<p>Draft — negative binomial recurrent-event GSD in gsDesignNB</p>
 </div>
 </div></div>
 
@@ -2691,6 +2676,44 @@ window.QuartoSupport = function () {
         ]
       });
     </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
       const toggleBodyColorMode = (bsSheetEl) => {

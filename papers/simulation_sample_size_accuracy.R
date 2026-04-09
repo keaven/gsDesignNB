@@ -1,6 +1,9 @@
-# Simulation evaluation: accuracy of Lachin–Foulkes / nSurv() expected events
+# Supporting survival-validation script: accuracy of Lachin–Foulkes / nSurv() expected events
 #
 # Part of the gsDesignNB manuscript materials (see papers/README-simulation.md).
+# Hosted in this repository as supporting validation of shared timing
+# infrastructure; the main package-facing workflow remains negative binomial
+# recurrent-event design and simulation in gsDesignNB.
 #
 # Usage (from gsDesignNB repository root, with gsDesign installed):
 #   Rscript papers/simulation_sample_size_accuracy.R

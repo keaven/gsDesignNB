@@ -25,7 +25,10 @@ library(gt)
 
 ## Introduction
 
-This vignette demonstrates a group sequential trial with a single interim analysis where unblinded sample size re-estimation (SSR) is performed. 
+This vignette demonstrates sample size re-estimation for a negative binomial
+recurrent-event trial with a single group sequential interim analysis. The
+primary estimand is a treatment **rate ratio**; `gsDesign` enters as the
+boundary-calculation backend once the information path is known.
 
 We simulate a scenario where the **control event rate is lower than assumed** and the **dispersion is higher than assumed**. Both factors lead to slower information accumulation (or higher variance) than planned. We will show how to:
 
@@ -38,7 +41,7 @@ We simulate a scenario where the **control event rate is lower than assumed** an
 **Planned parameters:**
 
 *   Control rate ($\lambda_1$): 0.1 events/month
-*   Experimental rate ($\lambda_2$): 0.075 events/month (Hazard Ratio = 0.75)
+*   Experimental rate ($\lambda_2$): 0.075 events/month (Rate Ratio = 0.75)
 *   Dispersion ($k$): 0.5
 *   Power: 90%
 *   One-sided Type I error ($\alpha$): 0.025
@@ -48,7 +51,7 @@ We simulate a scenario where the **control event rate is lower than assumed** an
 **Actual parameters (simulation truth):**
 
 *   Control rate ($\lambda_1$): 0.08 events/month (Lower than planned)
-*   Experimental rate ($\lambda_2$): 0.06 events/month (HR = 0.75 maintained)
+*   Experimental rate ($\lambda_2$): 0.06 events/month (RR = 0.75 maintained)
 *   Dispersion ($k$): 0.65 (Higher than planned)
 
 ### Initial sample size calculation
@@ -156,8 +159,10 @@ prototype launched with `run_ssr_shiny()`.
 
 ## Simulation
 
-We simulate the trial with the same rate ratio, but lower actual rates and a higher dispersion.
-We will limit the maximum sample size to 40% more than the planned size (i.e., max N = ) to avoid unbounded increases.
+We simulate the trial with the same rate ratio, but lower actual rates and a
+higher dispersion.
+We will limit the maximum sample size to 40% more than the planned size
+(`max N = 336`) to avoid unbounded increases.
 
 ```{r simulation}
 set.seed(1234)
@@ -317,7 +322,10 @@ cat("Target Information:", ssr_res$target_info, "\n")
 
 ### Updating bounds
 
-If the final information differs from the target (e.g., it is lower), we need to adjust the critical values to ensure we spend exactly $\alpha$. We use the `gsDesign` package with `usTime` (user-specified information fraction) to update the bounds.
+If the final information differs from the target (e.g., it is lower), we need
+to adjust the critical values to ensure we spend exactly $\alpha$. We use
+`gsDesign` as the spending-function backend with `usTime` (user-specified
+information fraction) to update the bounds.
 
 ```{r update_bounds}
 # Information fraction at final analysis
