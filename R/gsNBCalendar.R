@@ -157,8 +157,11 @@ gsNBCalendar <- function(
   # This is used as n.fix so that gs$n.I represents actual statistical information
   info_fixed <- 1 / x$variance
 
-  # Call gsDesign with the provided parameters
-  gs <- gsDesign::gsDesign(
+  # Build the argument list for gsDesign::gsDesign(), conditionally including
+  # parameters that were added in gsDesign 3.9.0.9004+ (sfharm, sfharmparam,
+  # testUpper, testLower, testHarm). This ensures compatibility with the CRAN
+  # release of gsDesign that does not yet include these parameters.
+  gs_args <- list(
     k = k,
     test.type = test.type,
     alpha = alpha,
@@ -172,16 +175,26 @@ gsNBCalendar <- function(
     sfupar = sfupar,
     sfl = sfl,
     sflpar = sflpar,
-    sfharm = sfharm,
-    sfharmparam = sfharmparam,
-    testUpper = testUpper,
-    testLower = testLower,
-    testHarm = testHarm,
     tol = tol,
     r = r,
     usTime = usTime,
     lsTime = lsTime
   )
+
+  gs_formals <- names(formals(gsDesign::gsDesign))
+  if ("sfharm" %in% gs_formals) {
+    gs_args$sfharm <- sfharm
+    gs_args$sfharmparam <- sfharmparam
+  }
+  if ("testUpper" %in% gs_formals) {
+    gs_args$testUpper <- testUpper
+    gs_args$testLower <- testLower
+  }
+  if ("testHarm" %in% gs_formals) {
+    gs_args$testHarm <- testHarm
+  }
+
+  gs <- do.call(gsDesign::gsDesign, gs_args)
 
   # Calculate sample sizes per analysis based on information fraction
   # gs$n.I contains the statistical information at each analysis
