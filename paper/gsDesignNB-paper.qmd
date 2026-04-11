@@ -14,18 +14,24 @@ bibliography: references.bib
 csl: https://www.zotero.org/styles/american-statistical-association
 abstract: |
   We present the R package **gsDesignNB** for planning, monitoring, and adapting clinical trials
-  with recurrent event endpoints analyzed using negative binomial models. The package implements
-  sample size calculations that extend the methods of @zhu2014sample and @friede2010blinded to
-  handle piecewise accrual, exponential dropout, maximum follow-up truncation, and event gaps.
-  We derive and implement a second-order Taylor correction for Jensen's inequality bias in the
-  event gap effective rate, reducing the approximation error from 8% to 1% in representative
-  scenarios. The package supports group sequential designs via integration with the **gsDesign**
-  package, and provides both blinded and unblinded sample size re-estimation at interim analyses.
-  A simulation study across 13 scenarios demonstrates that sample size re-estimation effectively
-  recovers power when nuisance parameters are misspecified, provided the treatment effect is as
-  planned, while maintaining Type I error control. The package was developed with substantial
-  assistance from AI coding tools, and we discuss the implications of this workflow for
-  statistical software development.
+  with recurrent event endpoints analyzed using negative binomial models. In the working model,
+  conditional on treatment arm and a subject-level gamma frailty, recurrent events follow a
+  Poisson process with constant within-subject rate, yielding marginal negative binomial counts.
+  The package implements sample size calculations that extend the methods of @zhu2014sample and
+  @friede2010blinded to handle piecewise accrual, exponential dropout, maximum follow-up
+  truncation, and event gaps. Because statistical information for the log rate ratio depends
+  jointly on exposure, event rates, and dispersion, it is not directly proportional to raw event
+  counts. We derive and implement a second-order Taylor correction for Jensen's inequality bias in
+  the event gap effective rate; this correction was needed for simulation-based power to agree
+  with the planning formula when event gaps were non-negligible, reducing representative
+  approximation error from 8% to 1%. The package supports group sequential designs via integration
+  with the **gsDesign** package, and provides both blinded and unblinded sample size
+  re-estimation at interim analyses. A simulation study across 13 scenarios demonstrates that
+  sample size re-estimation effectively recovers power when nuisance parameters are misspecified,
+  provided the treatment effect is as planned. In the vignette design used here, null simulations
+  suggested slight Type I inflation at nominal one-sided \(\alpha = 0.025\); rebuilding at a
+  smaller nominal alpha improved calibration, and blinded updates generally requested larger
+  adapted sample sizes than unblinded updates.
 ---
 
 # Introduction
@@ -40,7 +46,9 @@ Sample size calculation for NB outcomes requires specifying not only the event r
 effect but also the dispersion parameter, average exposure time, and potentially event gap
 durations. In practice, several of these parameters may be uncertain at the design stage. Group
 sequential designs allow for interim monitoring, and sample size re-estimation (SSR) can adapt the
-trial size when nuisance parameters deviate from assumptions.
+trial size when nuisance parameters deviate from assumptions. For NB recurrent-event designs, the
+design target is the statistical information for the log rate ratio, which depends jointly on
+exposure, event rates, and dispersion; raw event counts are only an incomplete proxy.
 
 The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
 
@@ -52,8 +60,9 @@ The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
 4. Simulation utilities for validating designs and evaluating operating characteristics.
 
 This paper describes the methodology, highlights a novel correction for Jensen's inequality bias
-in the event gap formula, and presents a simulation study of SSR across multiple scenarios. We also
-discuss the role of AI-assisted development in creating the package.
+in the event gap formula, and presents a simulation study of SSR across multiple scenarios. A
+brief final section discusses AI-assisted development as implementation support rather than as the
+primary methodological contribution.
 
 # Sample size methodology
 
@@ -69,9 +78,17 @@ $\text{Poisson}(\Lambda_i t_i)$.
 ## Wald test and sample size formula
 
 The treatment effect is the log rate ratio $\theta = \log(\lambda_2/\lambda_1)$, estimated via
-maximum likelihood under a negative binomial GLM with log link and exposure offset. The Fisher
-information per subject is $\mathcal{I}_i = \mu_i/(1 + k\mu_i)$, which leads to the sample size
-formula:
+maximum likelihood under a negative binomial GLM with log link and exposure offset. The design
+target is statistical information, $\mathcal{I} = 1/\mathrm{Var}(\hat\theta)$, not the raw event
+count alone. The Fisher information per subject is $\mathcal{I}_i = \mu_i/(1 + k\mu_i)$. If
+$W_g = \sum_{i \in g} \mu_i/(1 + k_g \mu_i)$, then
+
+$$
+\mathcal{I} = \frac{1}{1/W_1 + 1/W_2}.
+$$
+
+When exposures are summarized by arm-specific averages and the randomization ratio is
+$r = n_2/n_1$, this leads to the fixed-design sample size formula
 
 $$
 n_1 = \frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2}
@@ -81,12 +98,16 @@ n_1 = \frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2}
 \right]
 $$
 
-where $\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, $r = n_2/n_1$, and
-$k_g$ may be inflated by a variance correction factor
-$Q_g = E[t_g^2]/(E[t_g])^2$ to account for variable follow-up [@zhu2014sample].
+where $\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, and $k_g$ may be
+inflated by a variance correction factor $Q_g = E[t_g^2]/(E[t_g])^2$ to account for variable
+follow-up [@zhu2014sample]. Accordingly, two analyses with similar event totals can carry
+different information if follow-up or dispersion differs.
 
 This formula is equivalent across the three primary references: Method 3 of @zhu2014sample (fixed
 sample size), @friede2010blinded (blinded SSR), and @mutze2019group (group sequential designs).
+The practical difference from more familiar first-event formulas is that when the protocol imposes
+an event gap, the expected count $\mu_g$ must reflect the gap-corrected effective rate rather than
+a naive event-count proxy.
 
 ## Jensen's inequality correction for event gaps
 
@@ -122,7 +143,9 @@ $\text{Var}(\Lambda) = k\lambda^2$. @tbl-jensen-correction shows the correction 
 
 A simulation study with 10,000 replicates per scenario confirmed that the corrected formula
 reduces the effective rate estimation error from approximately 8% to 1% and produces slightly
-conservative power (@tbl-power-comparison).
+conservative power (@tbl-power-comparison). During package development, this correction was needed
+for simulation-based power to agree with the analytical planning formula when event gaps were
+non-negligible.
 
 | $k$ | Gap (days) | $n$ (corrected) | $n$ (naive) | Power (corr.) | Power (naive) |
 |:---:|:----------:|:---------------:|:-----------:|:--------------:|:-------------:|
@@ -145,9 +168,12 @@ boundary summaries, and integer rounding from the **gsDesign** package.
 ## Blinded and unblinded SSR
 
 At interim analyses, nuisance parameters ($k$ and $\lambda_1$) can be re-estimated to update the
-required sample size. Blinded SSR [@friede2010blinded] fits a single NB model to pooled data and
-splits the estimated rate using the planned treatment effect ratio. Unblinded SSR uses
-treatment-specific estimates. Both methods accept a `target_info` parameter from the group
+required sample size. Blinded SSR [@friede2010blinded; @schneider2013blinded] fits a single NB
+model to pooled data and splits the estimated rate using the planned treatment effect ratio.
+Unblinded SSR uses treatment-specific estimates. In our simulations, blinded updates generally
+requested larger adapted sample sizes than unblinded updates, reflecting the conservatism of the
+pooled working model; when operationally acceptable, the unblinded route may therefore be
+preferable for sample efficiency. Both methods accept a `target_info` parameter from the group
 sequential design to account for inflation due to interim alpha spending.
 
 The `calculate_blinded_info()` function includes a Poisson fallback threshold (matching
@@ -178,17 +204,19 @@ using a group sequential design with Hwang--Shih--DeCani spending functions.
 
 The key findings from the simulation study are:
 
-- **Type I error control:** Under the null (RR = 1.0, misspecified nuisance parameters), all three
-  strategies maintained Type I error near or below the nominal 2.5% level (20,000 simulations,
-  SE $\approx$ 0.1%).
+- **Type I calibration:** Under the null (RR = 1.0, misspecified nuisance parameters), the main
+  vignette configuration showed slight inflation at nominal one-sided 2.5%; a sensitivity rerun at
+  one-sided 2.0% improved calibration.
 - **Power recovery at RR = 0.7:** When the planned rate ratio was correct, both SSR methods
   recovered power from as low as 60% (no adaptation, worst case) to approximately 85--90%, by
   increasing the sample size up to 2$\times$ planned.
 - **Diminishing returns at smaller effects:** For RR = 0.8 and RR = 0.9, the planned sample size
   (designed for RR = 0.7) was inherently insufficient. SSR compensated for nuisance parameter
   misspecification but could not overcome the smaller treatment effect.
-- **Blinded vs unblinded:** Both methods performed similarly across scenarios, supporting the use
-  of blinded SSR to preserve trial integrity.
+- **Blinded vs unblinded:** Both methods recovered power, but blinded SSR generally requested
+  larger adapted sample sizes than unblinded SSR because pooled nuisance updates were more
+  conservative. When operationally acceptable, unblinded SSR may therefore be preferable for
+  efficiency.
 
 # Role of AI in package development
 
@@ -227,9 +255,16 @@ correction is principled (derived from the known Gamma frailty distribution) and
 (slightly overpowering rather than underpowering).
 
 The simulation study confirms that SSR is an effective tool for maintaining power when nuisance
-parameters are uncertain, provided the treatment effect assumption is correct. This is consistent
-with the theoretical result that blinded SSR preserves Type I error while adapting to observed
-nuisance parameters [@friede2010blinded].
+parameters are uncertain, provided the treatment effect assumption is correct. At the same time,
+the vignette configuration used here showed slight Type I inflation at nominal one-sided 2.5%,
+with improved calibration after rebuilding at a smaller nominal alpha. This is best viewed as a
+design-specific operating-characteristic finding, consistent with the caution in @mutze2019group,
+rather than as a universal correction rule.
+
+For practice, the main operational message is that blinded SSR is conservative: it preserves
+masking but tends to request larger adapted sample sizes than unblinded updates. When charter and
+regulatory conditions allow unblinded nuisance updates, that route may be preferable for sample
+efficiency, provided the full operating characteristics are checked by simulation.
 
 # Software availability
 

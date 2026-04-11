@@ -5,12 +5,17 @@
 #'
 #' @param sim_results Data frame of simulation results (from [sim_gs_nbinom()]).
 #' @param design The planning `gsNB` object.
-#' @param info_scale Character. "blinded" (default) or "unblinded" information to use for bounds.
+#' @param info_scale Character. Legacy selector for `"blinded"` (default) or
+#'   `"unblinded"` information. Ignored when `info_col` is supplied.
+#' @param info_col Optional explicit column name containing the information
+#'   metric to use for bounds, e.g. `"info_unblinded_ml"` or
+#'   `"info_blinded_mom"`.
 #'
 #' @return A data frame with added columns:
 #'   \describe{
 #'     \item{cross_upper}{Logical, true if upper bound crossed (efficacy)}
 #'     \item{cross_lower}{Logical, true if lower bound crossed (futility)}
+#'     \item{cross_harm}{Logical, true if harm bound crossed (test.type 7 or 8)}
 #'   }
 #'
 #' @export
@@ -25,7 +30,14 @@
 #'   unblinded_info = c(50, 100, 50, 100)
 #' )
 #' check_gs_bound(sim_df, design)
-check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unblinded")) {
+#' check_gs_bound(sim_df, design, info_col = "unblinded_info")
+check_gs_bound <- function(
+  sim_results,
+  design,
+  info_scale = c("blinded", "unblinded"),
+  info_col = NULL
+) {
+  cross_harm <- NULL
   info_scale <- match.arg(info_scale)
 
   if (!inherits(design, "gsNB") && !inherits(design, "gsDesign")) {
@@ -38,7 +50,9 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
   if (!"z_stat" %in% names(dt)) stop("sim_results must contain 'z_stat'")
 
   # Identify information column
-  info_col <- if (info_scale == "blinded") "blinded_info" else "unblinded_info"
+  if (is.null(info_col)) {
+    info_col <- if (info_scale == "blinded") "blinded_info" else "unblinded_info"
+  }
   if (!info_col %in% names(dt)) stop(paste("sim_results must contain", info_col))
 
   # Process each simulation separately
@@ -48,7 +62,9 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
 
     cross_upper <- rep(FALSE, k_max)
     cross_lower <- rep(FALSE, k_max)
+    cross_harm <- rep(FALSE, k_max)
     stopped <- FALSE
+    has_harm <- design$test.type %in% c(7, 8)
 
     # Current timing vector (starts with design timing)
     current_timing <- design$timing
@@ -121,8 +137,7 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
       # It passes `usTime` AND `timing`.
       # Use tryCatch to handle edge cases where spending function can't
       # achieve target beta with the observed information fraction.
-      temp_gs <- tryCatch(
-        gsDesign::gsDesign(
+      gs_args <- list(
           k = design$k,
           test.type = design$test.type,
           alpha = design$alpha,
@@ -137,9 +152,19 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
           r = design$r,
           n.fix = max_info,
           timing = current_timing,
-          usTime = design$usTime, # If NULL, ignored
+          usTime = design$usTime,
           lsTime = design$lsTime
-        ),
+      )
+      if (design$test.type %in% c(7, 8) && !is.null(design$harm)) {
+          gs_args$sfharm <- design$harm$sf
+          gs_args$sfharmparam <- design$harm$param
+      }
+      if (!is.null(design$testUpper)) gs_args$testUpper <- design$testUpper
+      if (!is.null(design$testLower)) gs_args$testLower <- design$testLower
+      if (!is.null(design$testHarm)) gs_args$testHarm <- design$testHarm
+
+      temp_gs <- tryCatch(
+        do.call(gsDesign::gsDesign, gs_args),
         error = function(e) {
           # If the spending function fails, fall back to original design bounds
           # This can happen with extreme information fractions
@@ -153,13 +178,17 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
       if (z_val > upper_bound) {
         cross_upper[k] <- TRUE
         stopped <- TRUE
+      } else if (has_harm && !is.null(temp_gs$harm) && z_val < temp_gs$harm$bound[k]) {
+        cross_harm[k] <- TRUE
+        stopped <- TRUE
       } else if (z_val < lower_bound) {
         cross_lower[k] <- TRUE
         stopped <- TRUE
       }
     }
 
-    return(list(cross_upper = cross_upper, cross_lower = cross_lower))
+    return(list(cross_upper = cross_upper, cross_lower = cross_lower,
+                cross_harm = cross_harm))
   }
 
   # Apply to all sims
@@ -171,6 +200,7 @@ check_gs_bound <- function(sim_results, design, info_scale = c("blinded", "unbli
   # Merge back
   dt[, cross_upper := results$cross_upper]
   dt[, cross_lower := results$cross_lower]
+  dt[, cross_harm := results$cross_harm]
 
   as.data.frame(dt)
 }

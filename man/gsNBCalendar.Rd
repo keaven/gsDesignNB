@@ -16,6 +16,11 @@ gsNBCalendar(
   sfupar = -4,
   sfl = gsDesign::sfHSD,
   sflpar = -2,
+  sfharm = gsDesign::sfHSD,
+  sfharmparam = -2,
+  testUpper = TRUE,
+  testLower = TRUE,
+  testHarm = TRUE,
   tol = 1e-06,
   r = 18,
   usTime = NULL,
@@ -37,6 +42,8 @@ gsNBCalendar(
 \item{4}{Two-sided, asymmetric, non-binding futility bound, beta-spending}
 \item{5}{Two-sided, asymmetric, binding futility bound, lower spending}
 \item{6}{Two-sided, asymmetric, non-binding futility bound, lower spending}
+\item{7}{Two-sided, asymmetric, binding futility and binding harm bounds}
+\item{8}{Two-sided, asymmetric, non-binding futility and non-binding harm bounds}
 }
 Default is 4.}
 
@@ -44,8 +51,9 @@ Default is 4.}
 
 \item{beta}{Type II error (1 - power). Default is 0.1.}
 
-\item{astar}{Allocated Type I error for lower bound for test.type = 5 or 6.
-Default is 0.}
+\item{astar}{For test.type 5 or 6, allocated Type I error for the lower
+bound. For test.type 7 or 8, total probability of crossing the harm bound
+under the null. Default is 0 (set to \code{1 - alpha} internally when needed).}
 
 \item{delta}{Standardized effect size. Default is 0 (computed from design).}
 
@@ -56,6 +64,26 @@ Default is 0.}
 \item{sfl}{Spending function for lower bound. Default is \code{gsDesign::sfHSD}.}
 
 \item{sflpar}{Parameter for lower spending function. Default is -2.}
+
+\item{sfharm}{Spending function for the harm bound (test.type 7 or 8).
+Default is \code{gsDesign::sfHSD}.}
+
+\item{sfharmparam}{Parameter for the harm spending function. Default is -2.}
+
+\item{testUpper}{Logical scalar or vector of length \code{k} specifying which
+analyses include an upper (efficacy) bound. \code{TRUE} (default) means all
+analyses. Where \code{FALSE}, the upper bound is set to \code{+20} (effectively
+\code{Inf}) and displayed as \code{NA}. Must be \code{TRUE} at the final analysis.}
+
+\item{testLower}{Logical scalar or vector of length \code{k} specifying which
+analyses include a lower (futility) bound. \code{TRUE} (default) means all
+analyses. Where \code{FALSE}, the lower bound is set to \code{-20} (effectively
+\code{-Inf}) and displayed as \code{NA}. Ignored for test.type 1.}
+
+\item{testHarm}{Logical scalar or vector of length \code{k} specifying which
+analyses include a harm bound (test.type 7 or 8 only). \code{TRUE} (default)
+means all analyses. Where \code{FALSE}, the harm bound is set to \code{-20} and
+displayed as \code{NA}.}
 
 \item{tol}{Tolerance for convergence. Default is 1e-06.}
 
@@ -90,6 +118,10 @@ Output value contains all elements from
 \item{exposure_at_risk2}{A vector with expected at-risk exposure per analysis for group 2}
 \item{variance}{A vector with variance of log rate ratio per analysis}
 \item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
+\item{testUpper}{Logical vector indicating which analyses have an efficacy bound}
+\item{testLower}{Logical vector indicating which analyses have a futility bound}
+\item{testHarm}{Logical vector indicating which analyses have a harm bound
+(test.type 7 or 8 only)}
 }
 Note that \code{n.I} in the returned object represents the statistical information
 at each analysis.
@@ -110,6 +142,15 @@ gs_design <- gsNBCalendar(nb_ss,
   k = 3, test.type = 4,
   analysis_times = c(10, 18, 24)
 )
+
+# Selective bound testing: futility only at IA1, efficacy deferred to IA2+
+gs_selective <- gsNBCalendar(nb_ss,
+  k = 3, test.type = 4,
+  analysis_times = c(10, 18, 24),
+  testUpper = c(FALSE, TRUE, TRUE),
+  testLower = c(TRUE, TRUE, FALSE)
+)
+gs_selective
 }
 \references{
 Jennison, C. and Turnbull, B.W. (2000),

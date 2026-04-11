@@ -368,7 +368,7 @@ dropout <- data.frame(
   duration = rep(100, 2)
 )
 
-n_sims <- 500
+n_sims <- 100
 sim_exposures <- numeric(n_sims)
 
 for (i in seq_len(n_sims)) {
@@ -599,7 +599,7 @@ sample_size_nbinom(
 
 ### Example with event gap
 
-Calculate sample size assuming a 30-day gap after each event (approx 0.082 years).
+Calculate sample size assuming a 20-day gap after each event (approx 0.055 years).
 Note how the at-risk exposure differs between groups because the group with the higher event rate ($\lambda_1 = 2.0$) spends more time in gap periods than the group with the lower rate ($\lambda_2 = 1.0$).
 
 ```{r}
@@ -611,7 +611,7 @@ sample_size_nbinom(
   accrual_rate = 10,
   accrual_duration = 12,
   trial_duration = 12,
-  event_gap = 30 / 365.25
+  event_gap = 20 / 365.25
 )
 ```
 

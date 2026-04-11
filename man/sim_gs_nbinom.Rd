@@ -10,7 +10,7 @@ sim_gs_nbinom(
   fail_rate,
   dropout_rate = NULL,
   max_followup,
-  event_gap = 0,
+  event_gap = NULL,
   analysis_times = NULL,
   n_target = NULL,
   design = NULL,
@@ -30,7 +30,8 @@ sim_gs_nbinom(
 
 \item{max_followup}{Maximum follow-up time.}
 
-\item{event_gap}{Event gap duration.}
+\item{event_gap}{Event gap duration. If \code{NULL}, inherits
+\code{design$inputs$event_gap} when available; otherwise defaults to \code{0}.}
 
 \item{analysis_times}{Vector of calendar times for interim and final analyses.
 Optional if \code{cuts} is provided.}

@@ -4,20 +4,31 @@
 \alias{check_gs_bound}
 \title{Check group sequential bounds}
 \usage{
-check_gs_bound(sim_results, design, info_scale = c("blinded", "unblinded"))
+check_gs_bound(
+  sim_results,
+  design,
+  info_scale = c("blinded", "unblinded"),
+  info_col = NULL
+)
 }
 \arguments{
 \item{sim_results}{Data frame of simulation results (from \code{\link[=sim_gs_nbinom]{sim_gs_nbinom()}}).}
 
 \item{design}{The planning \code{gsNB} object.}
 
-\item{info_scale}{Character. "blinded" (default) or "unblinded" information to use for bounds.}
+\item{info_scale}{Character. Legacy selector for \code{"blinded"} (default) or
+\code{"unblinded"} information. Ignored when \code{info_col} is supplied.}
+
+\item{info_col}{Optional explicit column name containing the information
+metric to use for bounds, e.g. \code{"info_unblinded_ml"} or
+\code{"info_blinded_mom"}.}
 }
 \value{
 A data frame with added columns:
 \describe{
 \item{cross_upper}{Logical, true if upper bound crossed (efficacy)}
 \item{cross_lower}{Logical, true if lower bound crossed (futility)}
+\item{cross_harm}{Logical, true if harm bound crossed (test.type 7 or 8)}
 }
 }
 \description{
@@ -34,4 +45,5 @@ sim_df <- data.frame(
   unblinded_info = c(50, 100, 50, 100)
 )
 check_gs_bound(sim_df, design)
+check_gs_bound(sim_df, design, info_col = "unblinded_info")
 }

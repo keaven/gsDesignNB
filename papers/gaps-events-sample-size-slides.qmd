@@ -1,0 +1,312 @@
+---
+title: "Negative Binomial Group Sequential Designs"
+subtitle: "Recurrent-event outcomes and information-based SSR in gsDesignNB"
+author: "Keaven M. Anderson, Hongtao Zhang, Andrea Maes"
+institute: "Merck & Co., Inc., Rahway, NJ, USA"
+date: today
+format:
+  revealjs:
+    self-contained: true
+    theme: simple
+    slide-number: c/t
+    progress: true
+    smaller: true
+    scrollable: true
+    math: true
+    footer: "Draft — negative binomial recurrent-event GSD in gsDesignNB"
+---
+
+## Talk plan {.smaller}
+
+**~25 min** talk · **~5 min** discussion (30 min slot)
+
+| Block | Minutes | Focus |
+|------|---------|--------|
+| Motivation & “three gaps” | ~5 | Why NB planning can misstate information |
+| Expected events & timing | ~6 | NB model + information timing |
+| GSD, simulation, SSR | ~7 | gsDesign backend, NB workflows, verification |
+| Software & wrap-up | ~4 | gsDesignNB-first map, conclusions |
+
+:::: {.notes}
+**~0:30** — Set expectations: NB recurrent-event methods + implementation story, not a new asymptotic theorem.
+::::
+
+---
+
+## Standard toolkit vs trial reality
+
+- **Standard:** fixed negative binomial design → **target information** → **gsDesign**-backed boundaries.
+- **Reality:** interims potentially mix **calendar rules**, **minimum follow-up**, **information targets**, and **mandatory time between database locks** while events accrue.
+
+:::: {.notes}
+**~1:00** — Jennison & Turnbull framework is the reference; the gap is between textbook information-time designs and SAP-driven operations.
+::::
+
+---
+
+## “Gaps between events” — three senses
+
+- **Operational / calendar:** successive looks no earlier than $T_{i-1}+\Delta_i$ (trial clock).
+- **Timing / accrual structure:** piecewise accrual or dropout support nonuniform information growth.
+- **Patient-level:** only events separated by at least $\delta$ **patient time** count toward the protocol total; closer events are **discarded** in simulation.
+
+:::: {.notes}
+**~1:30** — These interact but live on different scales; conflating them causes confusion in both writing and code.
+::::
+
+---
+
+## Why calendar gaps matter for sample size
+
+Interim times solve **feasibility inequalities**:
+
+- Calendar floor: $T_i \ge C_i$
+- **Gap after previous look:** $T_i \ge T_{i-1}+\Delta_i$
+- Exposure / enrollment constraints
+- **Information threshold:** smallest $t$ with expected (or observed) information $\ge \mathcal{I}_i$, **subject to** the floors
+
+**Take the max** of applicable floors, then lift further if information requires it — the same backend timing logic applies once the information path is specified.
+
+:::: {.notes}
+**~2:00** — If you schedule looks at fixed event fractions or other crude event proxies **without** $\Delta_i$, the **information path** and spending time axis are wrong whenever enrollment continues during mandatory gaps.
+::::
+
+---
+
+## NB recurrent-event model
+
+- **Default patient model:** conditional on treatment arm, recurrent events follow a Poisson process with a **constant within-subject rate**.
+- **Negative binomial variation:** a **gamma frailty** random effect multiplies that rate across subjects, giving marginal NB counts.
+- **Time-varying extension:** `nb_sim_seasonal()` is the main built-in option for season-specific event rates.
+- **Piecewise accrual / dropout** and expected-event formulas are **timing infrastructure**; in NB monitoring, information depends on **exposure, rates, and dispersion**, not events alone.
+
+:::: {.notes}
+**~1:45** — Emphasize the default model first; the piecewise algebra is supporting timing infrastructure, not the primary patient-level event model.
+::::
+
+---
+
+## Patient-level minimum gap $\delta$ (counting rule)
+
+Potential event times per patient $T_{j,1}<T_{j,2}<\cdots$.
+
+**Counted** sequence: first event counts; next **counted** event is the **first** potential event at or after **previous counted** $+\,\delta$; events in between are **excluded** from the trial event total.
+
+- **Effect:** thins recurrent / dense outcomes → **slower** information vs naive expected-event formulas that count every failure.
+
+:::: {.notes}
+**~1:30** — Tie to SAP language (adjudication, “new” progression). Analytical $d$ under PH for **first** events does not encode this; calibrate by simulation or recurrent-event models.
+::::
+
+---
+
+## Trial-level $\Delta$ vs patient-level $\delta$
+
+| | $\Delta_i$ between interims | $\delta$ between patient events |
+|--|------------------------------|-----------------------------------|
+| **Scale** | Trial / database-lock calendar | Per-patient timeline |
+| **Role** | **When** looks may occur | **Which** events contribute to information |
+
+Designs that ignore $\delta$ can misstate **information** and **power** if the SAP applies thinning.
+
+:::: {.notes}
+**~1:00** — Quick table for the methods discussion; prevents mixing up “gap” vocabulary.
+::::
+
+---
+
+## Sample size formula and information
+
+- **Implemented formula:** `sample_size_nbinom()` uses the Wald log rate-ratio test from **Zhu & Lakkis (2014, Method 3)**.
+- **Same variance foundation:** the same NB Wald variance underlies **Friede & Schmidli (2010)** for blinded SSR and **Mutze et al. (2019)** for group sequential NB designs.
+
+$$
+n_{\text{total}} \propto
+\frac{(z_{\alpha/s}+z_\beta)^2}
+{(\theta-\theta_0)^2}
+\left[
+\left(\frac{1}{\mu_1}+k_1\right)+
+\left(\frac{1}{\mu_2}+k_2\right)
+\right]
+$$
+
+- **Per-subject information:** $\mathcal{I}_i = \mu_i / (1 + k\mu_i)$, so information is proportional to expected events only when $k=0$.
+
+:::: {.notes}
+**~1:30** — Statistical audience slide: connect Zhu, Friede, and Mutze through the same variance / information formula rather than through software labels.
+::::
+
+---
+
+## End-to-end NB GSD workflow
+
+- **Model:** simple exponential within-subject recurrent-event process plus gamma frailty; seasonality is the main built-in time-varying extension.
+- **Timing:** take the **max** of calendar floors, **mandatory gaps** after prior looks, and the first time **expected** (or observed) information reaches each look’s target.
+- **Information + spending:** NB rate-ratio information via `compute_info_at_time()` / `calculate_blinded_info()`; information depends jointly on exposure, rates, and dispersion, then spending $f_\alpha, f_\beta$ via **gsDesign**.
+- **Scale + verify:** adjust enrollment or follow-up so power holds at the **final** analysis, then validate by `sim_gs_nbinom()` or `sim_ssr_nbinom()`.
+
+**Paths:** `sample_size_nbinom()` + `gsNBCalendar()` for design, then `sim_gs_nbinom()` / `sim_ssr_nbinom()` for operating characteristics.
+
+:::: {.notes}
+**~1:15** — Assembly checklist; full algebra is standard accrual/dropout bookkeeping plus max-of-floors timing.
+::::
+
+---
+
+## Event-gap correction and simulation agreement
+
+After each event, a protocol gap $g$ reduces the effective event rate and the at-risk exposure.
+
+- **Naive renewal approximation:** $\lambda_{\text{eff}} = \lambda / (1 + \lambda g)$.
+- With gamma frailty, that naive rate is too optimistic: it overstates expected events and slightly understates variance.
+
+$$
+\mathrm{E}\!\left[\frac{\Lambda}{1+\Lambda g}\right]
+\approx
+\frac{\lambda}{1+\lambda g}
+\left(1 - \frac{k\lambda g}{(1+\lambda g)^2}\right)
+$$
+
+- This correction was needed to bring **simulation-based power** into agreement with the NB planning calculations.
+
+:::: {.notes}
+**~2:00** — Key package contribution: the event-gap modification is not cosmetic; it matters for matching simulations to the intended power calculation.
+::::
+
+---
+
+## What SSR simulations showed
+
+- **Type I error:** with SSR, nominal one-sided $\alpha = 0.025$ looked slightly inflated in the vignette simulations, consistent with the caution in **Mutze et al. (2019)**.
+- **Practical fix:** rebuilding the design at **$\alpha = 0.02$** improved Type I calibration in the vignette sensitivity check.
+- **Blinded SSR:** tends to **over-estimate** the required total sample size because pooled nuisance estimates are conservative.
+- **Unblinded SSR:** often gives a more sample-efficient adaptation when operationally acceptable.
+
+:::: {.notes}
+**~1:00** — This is the operational takeaway slide: slight alpha inflation, smaller nominal alpha helped, and unblinded SSR usually needed less N than blinded SSR.
+::::
+
+---
+
+## Software map {.smaller}
+
+| Task | Primary entry point | Backend / note |
+|------|---------------------|----------------|
+| Fixed NB sample size | `sample_size_nbinom()` | information depends on exposure + dispersion |
+| Recurrent-event simulation | `nb_sim()`, `nb_sim_seasonal()` | seasonal rates supported |
+| Calendar-aware NB GSD | `gsNBCalendar()` | uses `gsDesign` spending / bounds |
+| Interim monitoring | `mutze_test()`, `calculate_blinded_info()` | NB test + blinded information |
+| GSD simulation | `sim_gs_nbinom()` | compares ML and MoM info paths |
+| SSR simulation | `sim_ssr_nbinom()`, `summarize_ssr_sim()` | blinded / unblinded updates |
+
+- **Backend note:** `gsDesign` stays underneath as the spending-function and boundary engine; raw events are summaries, but target information drives monitoring.
+
+:::: {.notes}
+**~1:30** — Open source: docs, vignettes, pkgdown — contrast with narrow commercial black boxes if audience is receptive.
+::::
+
+---
+
+## NB count distribution intuition
+
+Same mean $\mu=5$, larger $k$ gives more spread and heavier tails.
+
+```{r nb-distribution-intuition, echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=3.5}
+old_par <- par(no.readonly = TRUE)
+on.exit(par(old_par), add = TRUE)
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+k_values <- c(0, 0.5, 1)
+x <- 0:12
+for (k in k_values) {
+  mu <- 5
+  probs <- if (k == 0) {
+    dpois(x, lambda = mu)
+  } else {
+    dnbinom(x, size = 1 / k, mu = mu)
+  }
+  barplot(
+    probs,
+    names.arg = x,
+    main = paste("k =", k),
+    xlab = "Event count",
+    ylab = "Probability",
+    ylim = c(0, 0.22),
+    col = "steelblue",
+    border = "white",
+    cex.names = 0.7
+  )
+}
+```
+
+:::: {.notes}
+**~1:00** — Quick intuition slide from the sample-size vignette: same mean, more dispersion means fatter tail and less information per expected event.
+::::
+
+---
+
+## Sample size re-estimation (recurrent / NB)
+
+- **When it helps:** if planning guesses for **overdispersion**, accrual, or follow-up are wrong, re-estimating total **N** or follow-up after an interim can recover **unconditional power** — only if the adaptation rule is **pre-specified** and **Type I / power** are checked by simulation.
+- **Information-based** timing: interims and SSR keyed to **Fisher information** (variance of the log rate-ratio under a working model), not only calendar dates — target information depends on exposure, observed rates, and dispersion, not raw event counts alone.
+- **Blinded** SSR: treatment assignment stays masked at adaptation; pooling arms for nuisance estimates is **conservative**, and in **gsDesignNB** Monte Carlo studies blinded rules often yield **larger** adapted sample sizes than **unblinded** arm-specific nuisance updates under the same boundary logic.
+- **Unblinded** nuisance updates (when DSMB charter and regulators accept them): typically **smaller** adapted **N** in those same studies — still require full **operating-characteristic** simulation, not analytic shortcuts alone.
+
+:::: {.notes}
+**~1:00** — Blinded vs unblinded sample size is **context-dependent**; the package simulations are the evidence for the “often larger N” statement, not a general theorem.
+::::
+
+---
+
+## Mutze test, $\theta$ fallback, MoM
+
+- **What it is:** Wald test for treatment effect on **recurrent event counts** with exposure offset — **negative binomial** log-linear model (Mutze et al. 2019-style inference), implemented as **`mutze_test()`** in **gsDesignNB** and used as the default unblinded interim model in **`sim_gs_nbinom()`**.
+- **Variance:** under `MASS::glm.nb`, $\mathrm{Var}(\text{count}) \approx \mu + \mu^2/\theta$; **large** shape $\theta$ means **near-Poisson**, while **tiny** $\theta$ means unstable overdispersion fit.
+- **`poisson_threshold`** $T$ (default **1000**): after fitting NB, if $\theta \notin [1/T, T]$, fall back to **Poisson** Wald with no extra-Poisson term.
+- **Tuning $T$:** **lower** $T$ makes the Poisson fallback happen **sooner**; **raise** $T$ to keep NB unless $\theta$ is more extreme; always **sensitivity-check** the choice.
+- **Method of moments:** **`sim_gs_nbinom()`** also computes **MoM**-based nuisance parameters and **blinded / unblinded information** alongside **ML** — compare the two paths in simulation before fixing SSR or monitoring rules; **`mutze_test()`** does not auto-switch to MoM.
+
+:::: {.notes}
+**~1:15** — MoM is an **additional** diagnostic path in simulation output, not a drop-in replacement for the Wald test unless you change the analysis spec.
+::::
+
+---
+
+## Conclusions
+
+- **NB-first story:** `gsDesignNB` is the user-facing layer for recurrent-event design and monitoring; `gsDesign` is the backend spending engine.
+- **Default model + target:** simple exponential within-subject rates plus gamma frailty give the NB model, and information depends on exposure, rates, and dispersion rather than raw events alone.
+- **Sample size details matter:** event-gap correction was needed so simulation-based power agreed with the analytical NB planning formula.
+- **SSR findings:** blinded SSR tended to ask for more sample size; unblinded SSR was more sample-efficient when acceptable.
+- **Interim defaults matter:** stress-test **`mutze_test()`**, **`poisson_threshold`**, and **ML vs MoM** information paths before locking monitoring rules.
+- **Type I calibration:** in the vignette sensitivity runs, building the design at a slightly smaller nominal alpha helped.
+
+:::: {.notes}
+**~1:30** — Six bullets recap the deck; emphasize the NB statistical story and the practical SSR takeaways.
+::::
+
+---
+
+## Practical takeaways
+
+- Anchor monitoring to **NB information**, not raw event counts alone.
+- If a protocol gap changes counted events, include the **event-gap correction** in planning and verify against simulation.
+- For SSR, compare **blinded** and **unblinded** rules and check whether a slightly smaller nominal alpha improves calibration.
+
+:::: {.notes}
+**~1:00** — Final applied slide before references.
+::::
+
+---
+
+## References (selected)
+
+- Zhu & Lakkis (2014). Sample size calculation for comparing two negative binomial rates. *Statistics in Medicine*.
+- Friede & Schmidli (2010). Blinded sample size re-estimation with negative binomial counts. *Methods of Information in Medicine*.
+- Schneider, Schmidli & Friede (2013). Blinded SSR for recurrent event data with time trends. *Statistics in Medicine*.
+- Mutze et al. (2019). Group sequential designs for negative binomial outcomes. *Statistical Methods in Medical Research*.
+- Jennison & Turnbull (2000). *Group Sequential Methods with Applications to Clinical Trials*.
+- `gsDesignNB` sample-size and SSR vignettes for worked formulas and simulation results.
+
+:::: {.notes}
+Backup slide if no questions.
+::::

@@ -21,12 +21,14 @@ library(gsDesign)
 library(data.table)
 library(MASS)
 library(gt)
-library(gt)
 ```
 
 ## Introduction
 
-This vignette demonstrates a group sequential trial with a single interim analysis where unblinded sample size re-estimation (SSR) is performed. 
+This vignette demonstrates sample size re-estimation for a negative binomial
+recurrent-event trial with a single group sequential interim analysis. The
+primary estimand is a treatment **rate ratio**; `gsDesign` enters as the
+boundary-calculation backend once the information path is known.
 
 We simulate a scenario where the **control event rate is lower than assumed** and the **dispersion is higher than assumed**. Both factors lead to slower information accumulation (or higher variance) than planned. We will show how to:
 
@@ -39,7 +41,7 @@ We simulate a scenario where the **control event rate is lower than assumed** an
 **Planned parameters:**
 
 *   Control rate ($\lambda_1$): 0.1 events/month
-*   Experimental rate ($\lambda_2$): 0.075 events/month (Hazard Ratio = 0.75)
+*   Experimental rate ($\lambda_2$): 0.075 events/month (Rate Ratio = 0.75)
 *   Dispersion ($k$): 0.5
 *   Power: 90%
 *   One-sided Type I error ($\alpha$): 0.025
@@ -49,7 +51,7 @@ We simulate a scenario where the **control event rate is lower than assumed** an
 **Actual parameters (simulation truth):**
 
 *   Control rate ($\lambda_1$): 0.08 events/month (Lower than planned)
-*   Experimental rate ($\lambda_2$): 0.06 events/month (HR = 0.75 maintained)
+*   Experimental rate ($\lambda_2$): 0.06 events/month (RR = 0.75 maintained)
 *   Dispersion ($k$): 0.65 (Higher than planned)
 
 ### Initial sample size calculation
@@ -113,10 +115,54 @@ gsBoundSummary(gs_plan,
     )
   )
 ```
+
+## End-to-end helper workflow
+
+For routine use, `sim_ssr_nbinom()` wraps the recurring steps in an adaptive
+SSR simulation: information-based interim timing, dynamic bounds, optional
+blinded/unblinded re-estimation, and compact summaries.
+
+```{r helper_workflow}
+sim_helper <- sim_ssr_nbinom(
+  n_sims = 100,
+  enroll_rate = data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2),
+  fail_rate = data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0.08, 0.06),
+    dispersion = 0.65
+  ),
+  dropout_rate = data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0, 0),
+    duration = c(100, 100)
+  ),
+  max_followup = trial_dur_plan,
+  design = gs_plan,
+  n_max = ceiling(1.4 * gs_plan$n_total[gs_plan$k]),
+  metadata = list(scenario = "Lower control rate, higher dispersion"),
+  seed = 1234
+)
+
+helper_summary <- summarize_ssr_sim(sim_helper, by = c("scenario", "strategy"))
+helper_summary$trial_summary |>
+  gt() |>
+  tab_header(
+    title = "High-level SSR Simulation Summary",
+    subtitle = "Expected participants with events and expected events observed are included directly"
+  )
+```
+
+The remainder of this vignette walks through the same ideas step by step on a
+single simulated trial so the mechanics remain transparent. For interactive
+what-if exploration of the same workflow, the package also ships a small Shiny
+prototype launched with `run_ssr_shiny()`.
+
 ## Simulation
 
-We simulate the trial with the same rate ratio, but lower actual rates and a higher dispersion.
-We will limit the maximum sample size to 40% more than the planned size (i.e., max N = ) to avoid unbounded increases.
+We simulate the trial with the same rate ratio, but lower actual rates and a
+higher dispersion.
+We will limit the maximum sample size to 40% more than the planned size
+(`max N = 336`) to avoid unbounded increases.
 
 ```{r simulation}
 set.seed(1234)
@@ -276,7 +322,10 @@ cat("Target Information:", ssr_res$target_info, "\n")
 
 ### Updating bounds
 
-If the final information differs from the target (e.g., it is lower), we need to adjust the critical values to ensure we spend exactly $\alpha$. We use the `gsDesign` package with `usTime` (user-specified information fraction) to update the bounds.
+If the final information differs from the target (e.g., it is lower), we need
+to adjust the critical values to ensure we spend exactly $\alpha$. We use
+`gsDesign` as the spending-function backend with `usTime` (user-specified
+information fraction) to update the bounds.
 
 ```{r update_bounds}
 # Information fraction at final analysis

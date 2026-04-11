@@ -14,17 +14,35 @@
 #'     \item{4}{Two-sided, asymmetric, non-binding futility bound, beta-spending}
 #'     \item{5}{Two-sided, asymmetric, binding futility bound, lower spending}
 #'     \item{6}{Two-sided, asymmetric, non-binding futility bound, lower spending}
+#'     \item{7}{Two-sided, asymmetric, binding futility and binding harm bounds}
+#'     \item{8}{Two-sided, asymmetric, non-binding futility and non-binding harm bounds}
 #'   }
 #'   Default is 4.
 #' @param alpha Type I error (one-sided). Default is 0.025.
 #' @param beta Type II error (1 - power). Default is 0.1.
-#' @param astar Allocated Type I error for lower bound for test.type = 5 or 6.
-#'   Default is 0.
+#' @param astar For test.type 5 or 6, allocated Type I error for the lower
+#'   bound. For test.type 7 or 8, total probability of crossing the harm bound
+#'   under the null. Default is 0 (set to `1 - alpha` internally when needed).
 #' @param delta Standardized effect size. Default is 0 (computed from design).
 #' @param sfu Spending function for upper bound. Default is `gsDesign::sfHSD`.
 #' @param sfupar Parameter for upper spending function. Default is -4.
 #' @param sfl Spending function for lower bound. Default is `gsDesign::sfHSD`.
 #' @param sflpar Parameter for lower spending function. Default is -2.
+#' @param sfharm Spending function for the harm bound (test.type 7 or 8).
+#'   Default is `gsDesign::sfHSD`.
+#' @param sfharmparam Parameter for the harm spending function. Default is -2.
+#' @param testUpper Logical scalar or vector of length `k` specifying which
+#'   analyses include an upper (efficacy) bound. `TRUE` (default) means all
+#'   analyses. Where `FALSE`, the upper bound is set to `+20` (effectively
+#'   `Inf`) and displayed as `NA`. Must be `TRUE` at the final analysis.
+#' @param testLower Logical scalar or vector of length `k` specifying which
+#'   analyses include a lower (futility) bound. `TRUE` (default) means all
+#'   analyses. Where `FALSE`, the lower bound is set to `-20` (effectively
+#'   `-Inf`) and displayed as `NA`. Ignored for test.type 1.
+#' @param testHarm Logical scalar or vector of length `k` specifying which
+#'   analyses include a harm bound (test.type 7 or 8 only). `TRUE` (default)
+#'   means all analyses. Where `FALSE`, the harm bound is set to `-20` and
+#'   displayed as `NA`.
 #' @param tol Tolerance for convergence. Default is 1e-06.
 #' @param r Integer controlling grid size for numerical integration.
 #'   Default is 18.
@@ -53,6 +71,10 @@
 #'     \item{exposure_at_risk2}{A vector with expected at-risk exposure per analysis for group 2}
 #'     \item{variance}{A vector with variance of log rate ratio per analysis}
 #'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
+#'     \item{testUpper}{Logical vector indicating which analyses have an efficacy bound}
+#'     \item{testLower}{Logical vector indicating which analyses have a futility bound}
+#'     \item{testHarm}{Logical vector indicating which analyses have a harm bound
+#'       (test.type 7 or 8 only)}
 #'   }
 #'   Note that `n.I` in the returned object represents the statistical information
 #'   at each analysis.
@@ -78,6 +100,15 @@
 #'   k = 3, test.type = 4,
 #'   analysis_times = c(10, 18, 24)
 #' )
+#'
+#' # Selective bound testing: futility only at IA1, efficacy deferred to IA2+
+#' gs_selective <- gsNBCalendar(nb_ss,
+#'   k = 3, test.type = 4,
+#'   analysis_times = c(10, 18, 24),
+#'   testUpper = c(FALSE, TRUE, TRUE),
+#'   testLower = c(TRUE, TRUE, FALSE)
+#' )
+#' gs_selective
 gsNBCalendar <- function(
   x,
   k = 3,
@@ -90,6 +121,11 @@ gsNBCalendar <- function(
   sfupar = -4,
   sfl = gsDesign::sfHSD,
   sflpar = -2,
+  sfharm = gsDesign::sfHSD,
+  sfharmparam = -2,
+  testUpper = TRUE,
+  testLower = TRUE,
+  testHarm = TRUE,
   tol = 1e-06,
   r = 18,
   usTime = NULL,
@@ -121,8 +157,11 @@ gsNBCalendar <- function(
   # This is used as n.fix so that gs$n.I represents actual statistical information
   info_fixed <- 1 / x$variance
 
-  # Call gsDesign with the provided parameters
-  gs <- gsDesign::gsDesign(
+  # Build the argument list for gsDesign::gsDesign(), conditionally including
+  # parameters that were added in gsDesign 3.9.0.9004+ (sfharm, sfharmparam,
+  # testUpper, testLower, testHarm). This ensures compatibility with the CRAN
+  # release of gsDesign that does not yet include these parameters.
+  gs_args <- list(
     k = k,
     test.type = test.type,
     alpha = alpha,
@@ -141,6 +180,21 @@ gsNBCalendar <- function(
     usTime = usTime,
     lsTime = lsTime
   )
+
+  gs_formals <- names(formals(gsDesign::gsDesign))
+  if ("sfharm" %in% gs_formals) {
+    gs_args$sfharm <- sfharm
+    gs_args$sfharmparam <- sfharmparam
+  }
+  if ("testUpper" %in% gs_formals) {
+    gs_args$testUpper <- testUpper
+    gs_args$testLower <- testLower
+  }
+  if ("testHarm" %in% gs_formals) {
+    gs_args$testHarm <- testHarm
+  }
+
+  gs <- do.call(gsDesign::gsDesign, gs_args)
 
   # Calculate sample sizes per analysis based on information fraction
   # gs$n.I contains the statistical information at each analysis
@@ -344,6 +398,8 @@ summary.gsNB <- function(object, ...) {
     "4" = "Asymmetric two-sided with non-binding futility bound",
     "5" = "Asymmetric two-sided with binding futility bound (lower spending)",
     "6" = "Asymmetric two-sided with non-binding futility bound (lower spending)",
+    "7" = "Asymmetric two-sided with binding futility and harm bounds",
+    "8" = "Asymmetric two-sided with non-binding futility and harm bounds",
     "Unknown test type"
   )
 
@@ -400,6 +456,18 @@ summary.gsNB <- function(object, ...) {
     "Lower spending: Custom"
   }
 
+  harm_spend <- ""
+  if (object$test.type %in% c(7, 8) && !is.null(object$harm)) {
+    harm_spend <- if (!is.null(object$harm$name)) {
+      paste0(
+        "\nHarm spending: ", object$harm$name,
+        if (!is.null(object$harm$parname)) paste0(" (", object$harm$parname, " = ", object$harm$param, ")") else ""
+      )
+    } else {
+      "\nHarm spending: Custom"
+    }
+  }
+
   summary_text <- sprintf(
     paste0(
       "%s group sequential design for negative binomial outcomes, ",
@@ -412,7 +480,7 @@ summary.gsNB <- function(object, ...) {
       "Accrual duration %.1f, trial duration %.1f%s%s%s, ",
       "%s. ",
       "Randomization ratio %.0f:1.\n",
-      "%s\n%s"
+      "%s\n%s%s"
     ),
     test_type_desc,
     object$k,
@@ -431,7 +499,8 @@ summary.gsNB <- function(object, ...) {
     exposure_text,
     inputs$ratio,
     upper_spend,
-    lower_spend
+    lower_spend,
+    harm_spend
   )
 
   class(summary_text) <- "gsNBsummary"
@@ -617,7 +686,7 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
   # We use the original parameters but new n.I
 
   # Note: gsDesign() function recalculates bounds based on n.I
-  gs_updated <- gsDesign::gsDesign(
+  gs_args <- list(
     k = k,
     test.type = x$test.type,
     alpha = x$alpha,
@@ -637,6 +706,15 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     usTime = x$usTime,
     lsTime = x$lsTime
   )
+  if (x$test.type %in% c(7, 8) && !is.null(x$harm)) {
+    gs_args$sfharm <- x$harm$sf
+    gs_args$sfharmparam <- x$harm$param
+  }
+  if (!is.null(x$testUpper)) gs_args$testUpper <- x$testUpper
+  if (!is.null(x$testLower)) gs_args$testLower <- x$testLower
+  if (!is.null(x$testHarm)) gs_args$testHarm <- x$testHarm
+
+  gs_updated <- do.call(gsDesign::gsDesign, gs_args)
 
   # Copy updated gsDesign slots to result
   result$upper <- gs_updated$upper
@@ -644,6 +722,12 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
   result$theta <- gs_updated$theta
   result$falseposnb <- gs_updated$falseposnb
   result$en <- gs_updated$en
+  if (x$test.type %in% c(7, 8)) {
+    result$harm <- gs_updated$harm
+    result$testHarm <- gs_updated$testHarm
+  }
+  result$testUpper <- gs_updated$testUpper
+  result$testLower <- gs_updated$testLower
 
   return(result)
 }
