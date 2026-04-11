@@ -23,7 +23,7 @@
 #' }
 #'
 #' @export
-preview_pkgdown_site <- function(port = 8787L) {
+preview_pkgdown_site <- function(port = 8787L) { # nocov start
   docs <- file.path(getwd(), "docs")
   if (!dir.exists(docs)) {
     stop(
@@ -43,4 +43,4 @@ preview_pkgdown_site <- function(port = 8787L) {
     background = FALSE
   )
   invisible(NULL)
-}
+} # nocov end

@@ -74,3 +74,13 @@ test_that("estimate_nb_mom handles edge cases", {
   expect_warning(res3 <- estimate_nb_mom(df3), "No data")
   expect_true(is.na(res3$lambda))
 })
+
+test_that("estimate_nb_mom errors on bad input", {
+  expect_error(estimate_nb_mom("not a data frame"), "must be a data frame")
+  expect_error(estimate_nb_mom(data.frame(x = 1)), "events.*tte")
+})
+
+test_that("estimate_nb_mom errors on missing group column", {
+  df <- data.frame(events = c(1, 2), tte = c(1, 1))
+  expect_error(estimate_nb_mom(df, group = "nonexistent"), "not found")
+})
