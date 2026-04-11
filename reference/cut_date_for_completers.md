@@ -39,5 +39,5 @@ dropout_rate <- data.frame(
 )
 sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
 cut_date_for_completers(sim, target_completers = 5)
-#> [1] 2.065678
+#> [1] 2.134751
 ```

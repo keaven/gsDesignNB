@@ -4,9 +4,11 @@
 
 - **Keaven Anderson**. Author, maintainer.
 
-- **Nan Xiao**. Contributor.
+- **Hongtao Zhang**. Author.
 
-- **Hongtao Zhang**. Contributor.
+- **Andrea Maes**. Author.
+
+- **Nan Xiao**. Contributor.
 
 - **Merck & Co., Inc., Rahway, NJ, USA and its affiliates**. Copyright
   holder.
@@ -15,16 +17,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/keaven/gsDesignNB/blob/v0.2.6/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/keaven/gsDesignNB/blob/main/DESCRIPTION)
 
-Anderson K (2026). *gsDesignNB: Sample Size and Simulation for Negative
-Binomial Outcomes*. R package version 0.2.6,
+Anderson K, Zhang H, Maes A (2026). *gsDesignNB: Sample Size and
+Simulation for Negative Binomial Outcomes*. R package version 0.3.0,
 <https://keaven.github.io/gsDesignNB/>.
 
     @Manual{,
       title = {gsDesignNB: Sample Size and Simulation for Negative Binomial Outcomes},
-      author = {Keaven Anderson},
+      author = {Keaven Anderson and Hongtao Zhang and Andrea Maes},
       year = {2026},
-      note = {R package version 0.2.6},
+      note = {R package version 0.3.0},
       url = {https://keaven.github.io/gsDesignNB/},
     }

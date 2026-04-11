@@ -1,4 +1,4 @@
-# Simulation of recurrent events
+# Simulating recurrent events
 
 ``` r
 library(gsDesignNB)
@@ -157,7 +157,7 @@ We can visualize the events and censoring times for each subject. To
 avoid any side-effects from `data.table`, we convert the dataset back to
 a plain data frame. We also display an event gap after each event where
 no new events can be recorded. For illustration purposes in this plot,
-we show a **30-day gap** so it is visible on the timeline.
+we show a **20-day gap** so it is visible on the timeline.
 
 ``` r
 sim_plot <- as.data.frame(sim_data)
@@ -165,8 +165,8 @@ names(sim_plot) <- make.names(names(sim_plot), unique = TRUE)
 events_df <- sim_plot[sim_plot$event == 1, ]
 censor_df <- sim_plot[sim_plot$event == 0, ]
 
-# Define a 30-day gap for visualization (default is usually 5 days)
-gap_duration <- 30 / 365.25
+# Define a 20-day gap for visualization
+gap_duration <- 20 / 365.25
 
 # Create segments for the gap after each event
 events_df$gap_start <- events_df$tte
@@ -186,12 +186,12 @@ ggplot(sim_plot, aes(x = tte, y = factor(id), color = treatment)) +
     title = "Patient Timelines",
     x = "Time from Randomization (Years)",
     y = "Patient ID",
-    caption = "Dots = Events, Gray Bars = 30-day Gap, X = Censoring/Dropout"
+    caption = "Dots = Events, Gray Bars = 20-day Gap, X = Censoring/Dropout"
   ) +
   theme_minimal()
 ```
 
-![Patient timelines with events (dots), 30-day gaps (gray segments), and
+![Patient timelines with events (dots), 20-day gaps (gray segments), and
 censoring
 (X)](simulation-example_files/figure-html/unnamed-chunk-7-1.png)
 
@@ -200,9 +200,10 @@ censoring
 We can truncate the simulated data at an interim analysis date using
 [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md).
 The function returns a single record per participant with the truncated
-follow-up time (`tte`) and number of observed events. By default, a
-5-day gap (`event_gap = 5 / 365.25`) is applied after each event, during
-which no new events are counted and time at risk is excluded.
+follow-up time (`tte`) and number of observed events. By default, no gap
+(`event_gap = 0`) is applied after each event. If a positive `event_gap`
+is used, no new events are counted during that gap, and this time is
+excluded from time at risk.
 
 ``` r
 cut_summary <- cut_data_by_date(sim_data, cut_date = 1.5)
@@ -274,8 +275,8 @@ The
 [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
 function can also generate data where the counts follow a negative
 binomial distribution. This is achieved by providing a `dispersion`
-parameter in the `fail_rate` data frame. The dispersion parameter \\k\\
-relates the variance to the mean as \\Var(Y) = \mu + k\mu^2\\.
+parameter in the `fail_rate` data frame. The dispersion parameter k
+relates the variance to the mean as Var(Y) = \mu + k\mu^2.
 
 ### Simulation with dispersion
 
@@ -295,12 +296,12 @@ enroll_rate_nb <- data.frame(
 )
 
 set.seed(1)
-# Simulate 50000 subjects to get a stable estimate
+# Simulate 10000 subjects for a quick local review build
 sim_nb <- nb_sim(
   enroll_rate = enroll_rate_nb,
   fail_rate = fail_rate_nb,
   max_followup = 1,
-  n = 50000,
+  n = 10000,
   block = "Control" # Assign all to Control for simplicity
 )
 ```
@@ -311,7 +312,7 @@ We can verify that the simulated data reflects the input dispersion
 parameter by estimating it back from the data. We use the Method of
 Moments (MoM) estimator:
 
-\\ \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2} \\
+\hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2}
 
 ``` r
 # Count events per subject
@@ -339,15 +340,15 @@ k_glm <- tryCatch(
 )
 
 print(paste("True Mean:", mu_true, "| Observed Mean:", signif(m, 4)))
-#> [1] "True Mean: 10 | Observed Mean: 10.01"
+#> [1] "True Mean: 10 | Observed Mean: 9.968"
 print(paste("True Variance:", v_true, "| Observed Variance:", signif(v, 4)))
-#> [1] "True Variance: 210 | Observed Variance: 208.9"
+#> [1] "True Variance: 210 | Observed Variance: 212.9"
 print(paste("True Dispersion:", k_true))
 #> [1] "True Dispersion: 2"
 print(paste("Estimated Dispersion (MoM):", signif(k_mom, 4)))
-#> [1] "Estimated Dispersion (MoM): 1.984"
+#> [1] "Estimated Dispersion (MoM): 2.042"
 print(paste("Estimated Dispersion (GLM):", signif(k_glm, 4)))
-#> [1] "Estimated Dispersion (GLM): 1.986"
+#> [1] "Estimated Dispersion (GLM): 2.018"
 ```
 
 ### Visualizing the distribution
@@ -402,3 +403,4 @@ ggplot(plot_data, aes(x = events, y = prop, fill = type)) +
 Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
 “Group Sequential Designs for Negative Binomial Outcomes.” *Statistical
 Methods in Medical Research* 28 (8): 2326–47.
+<https://doi.org/10.1177/0962280218773115>.

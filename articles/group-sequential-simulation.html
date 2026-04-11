@@ -6,17 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Group sequential design and simulation • gsDesignNB</title>
-<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
-  window.MathJax = {
-    chtml: {
-      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
-    }
-  };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- katex math (vendored under pkgdown/assets/katex/; copied to site root; KaTeX 0.16.11) --><link rel="stylesheet" href="../katex/katex.min.css">
+<script defer src="../katex/katex.min.js"></script><script defer src="../katex/auto-render.min.js" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Group sequential design and simulation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<script src="../extra.js"></script><meta property="og:title" content="Group sequential design and simulation">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -26,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +56,7 @@
       <h1>Group sequential design and simulation</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.6/vignettes/group-sequential-simulation.Rmd" class="external-link"><code>vignettes/group-sequential-simulation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/group-sequential-simulation.Rmd" class="external-link"><code>vignettes/group-sequential-simulation.Rmd</code></a></small>
       <div class="d-none name"><code>group-sequential-simulation.Rmd</code></div>
     </div>
 
@@ -146,8 +142,8 @@ the Zhu and Lakkis method:</p>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Sample size:     n1 = 182, n2 = 182, total = 364</span></span>
-<span><span class="co">#&gt; Expected events: 414.1 (n1: 245.9, n2: 168.2)</span></span>
+<span><span class="co">#&gt; Sample size:     n1 = 185, n2 = 185, total = 370</span></span>
+<span><span class="co">#&gt; Expected events: 408.0 (n1: 241.2, n2: 166.8)</span></span>
 <span><span class="co">#&gt; Power: 90%, Alpha: 0.025 (1-sided)</span></span>
 <span><span class="co">#&gt; Rates: control = 0.1250, treatment = 0.0833 (RR = 0.6667)</span></span>
 <span><span class="co">#&gt; Dispersion: 0.5000, Avg exposure (calendar): 11.70</span></span>
@@ -166,8 +162,8 @@ as for the fixed design. The relative enrollment rates will be increased
 to increase the sample size as with standard group sequential design
 theory. We specify <code>usTime = c(0.1, 0.18, 1)</code> which along
 with the <code><a href="https://keaven.github.io/gsDesign/reference/sfLinear.html" class="external-link">sfLinear()</a></code> spending function will spend 10%, 18%
-and 100% of the cumulative <span class="math inline">\(\alpha\)</span>
-at the 3 planned analyses regardless of the observed statistical
+and 100% of the cumulative <span class="math inline">\alpha</span> at
+the 3 planned analyses regardless of the observed statistical
 information at each analysis. The interim spending is intended to
 achieve a nominal p-value of approximately 0.0025 (one-sided) at each
 interim analysis.</p>
@@ -192,7 +188,7 @@ interim analysis.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">gs_nb</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Asymmetric two-sided with non-binding futility bound group sequential design</span></span>
-<span><span class="co">#&gt; for negative binomial outcomes, 3 analyses, total sample size 370.0, 90 percent</span></span>
+<span><span class="co">#&gt; for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent</span></span>
 <span><span class="co">#&gt; power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate</span></span>
 <span><span class="co">#&gt; 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial</span></span>
 <span><span class="co">#&gt; duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,</span></span>
@@ -200,7 +196,7 @@ interim analysis.</p>
 <span><span class="co">#&gt; Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5)</span></span>
 <span><span class="co">#&gt; Lower spending: Hwang-Shih-DeCani (gamma = -8)</span></span>
 <span><span class="co">#&gt; Asymmetric two-sided with non-binding futility bound group sequential design</span></span>
-<span><span class="co">#&gt; for negative binomial outcomes, 3 analyses, total sample size 370.0, 90 percent</span></span>
+<span><span class="co">#&gt; for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent</span></span>
 <span><span class="co">#&gt; power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate</span></span>
 <span><span class="co">#&gt; 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial</span></span>
 <span><span class="co">#&gt; duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,</span></span>
@@ -681,7 +677,7 @@ interim analysis.</p>
 <td colspan="4" class="gt_heading gt_title gt_font_normal" style>Group Sequential Design Bounds for Negative Binomial Outcome</td>
     </tr>
 <tr class="gt_heading">
-<td colspan="4" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>N = 370, Expected events = 414.1</td>
+<td colspan="4" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>N = 376, Expected events = 408</td>
     </tr>
 <tr class="gt_col_headings">
 <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Analysis">Analysis</th>
@@ -692,94 +688,94 @@ interim analysis.</p>
 </thead>
 <tbody class="gt_table_body">
 <tr>
-<td headers="Analysis" class="gt_row gt_left">IA 1: 44%</td>
+<td headers="Analysis" class="gt_row gt_left">IA 1: 42%</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
 <td headers="Efficacy" class="gt_row gt_right">2.8070</td>
-<td headers="Futility" class="gt_row gt_right">-0.8788</td>
+<td headers="Futility" class="gt_row gt_right">-1.0128</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">Information: 28.96</td>
+<td headers="Analysis" class="gt_row gt_left">Information: 27.03</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
 <td headers="Efficacy" class="gt_row gt_right">0.0025</td>
-<td headers="Futility" class="gt_row gt_right">0.8102</td>
+<td headers="Futility" class="gt_row gt_right">0.8444</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 10</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.5931</td>
-<td headers="Futility" class="gt_row gt_right">1.1777</td>
+<td headers="Efficacy" class="gt_row gt_right">0.5828</td>
+<td headers="Futility" class="gt_row gt_right">1.2151</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
 <td headers="Efficacy" class="gt_row gt_right">0.0025</td>
-<td headers="Futility" class="gt_row gt_right">0.1898</td>
+<td headers="Futility" class="gt_row gt_right">0.1556</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.67</td>
-<td headers="Efficacy" class="gt_row gt_right">0.2649</td>
-<td headers="Futility" class="gt_row gt_right">0.0011</td>
+<td headers="Efficacy" class="gt_row gt_right">0.2422</td>
+<td headers="Futility" class="gt_row gt_right">0.0009</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">IA 2: 92%</td>
+<td headers="Analysis" class="gt_row gt_left">IA 2: 91%</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
-<td headers="Efficacy" class="gt_row gt_right">2.8107</td>
-<td headers="Futility" class="gt_row gt_right">1.5082</td>
+<td headers="Efficacy" class="gt_row gt_right">2.8158</td>
+<td headers="Futility" class="gt_row gt_right">1.4448</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">Information: 60.12</td>
+<td headers="Analysis" class="gt_row gt_left">Information: 58.96</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0025</td>
-<td headers="Futility" class="gt_row gt_right">0.0658</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0024</td>
+<td headers="Futility" class="gt_row gt_right">0.0743</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 18</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.6956</td>
-<td headers="Futility" class="gt_row gt_right">0.8230</td>
+<td headers="Efficacy" class="gt_row gt_right">0.6930</td>
+<td headers="Futility" class="gt_row gt_right">0.8285</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
 <td headers="Efficacy" class="gt_row gt_right">0.0045</td>
-<td headers="Futility" class="gt_row gt_right">0.9339</td>
+<td headers="Futility" class="gt_row gt_right">0.9254</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.67</td>
-<td headers="Efficacy" class="gt_row gt_right">0.6461</td>
-<td headers="Futility" class="gt_row gt_right">0.0515</td>
+<td headers="Efficacy" class="gt_row gt_right">0.6340</td>
+<td headers="Futility" class="gt_row gt_right">0.0477</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Final</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
-<td headers="Efficacy" class="gt_row gt_right">1.9800</td>
-<td headers="Futility" class="gt_row gt_right">1.9800</td>
+<td headers="Efficacy" class="gt_row gt_right">1.9815</td>
+<td headers="Futility" class="gt_row gt_right">1.9796</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">Information: 65.55</td>
+<td headers="Analysis" class="gt_row gt_left">Information: 64.98</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0239</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0238</td>
 <td headers="Futility" class="gt_row gt_right">0.0239</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 24</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.7828</td>
-<td headers="Futility" class="gt_row gt_right">0.7828</td>
+<td headers="Efficacy" class="gt_row gt_right">0.7820</td>
+<td headers="Futility" class="gt_row gt_right">0.7822</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0244</td>
-<td headers="Futility" class="gt_row gt_right">0.9756</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0245</td>
+<td headers="Futility" class="gt_row gt_right">0.9754</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.67</td>
-<td headers="Efficacy" class="gt_row gt_right">0.9013</td>
-<td headers="Futility" class="gt_row gt_right">0.0987</td>
+<td headers="Efficacy" class="gt_row gt_right">0.8997</td>
+<td headers="Futility" class="gt_row gt_right">0.1000</td>
 </tr>
 </tbody>
 </table>
@@ -792,8 +788,8 @@ interim analysis.</p>
 <p>We simulated 3,600 trials to evaluate the operating characteristics
 of the group sequential design. This number of simulations was chosen to
 achieve a standard error for the power estimate of approximately 0.005
-when the true power is 90% (<span class="math inline">\(\sqrt{0.9 \times
-0.1 / 3600} = 0.005\)</span>). The simulation script is located in
+when the true power is 90% (<span class="math inline">\sqrt{0.9 \times
+0.1 / 3600} = 0.005</span>). The simulation script is located in
 <code>data-raw/generate_gs_simulation_data.R</code>.</p>
 <div class="section level3">
 <h3 id="load-simulation-results">Load simulation results<a class="anchor" aria-label="anchor" href="#load-simulation-results"></a>
@@ -1457,16 +1453,16 @@ Rel. Diff (%)
 N Enrolled
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-154.49
+156.44
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 303.49
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-149.00
+147.05
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-96.4
+94.0
 </td>
 </tr>
 <tr>
@@ -1474,16 +1470,16 @@ N Enrolled
 N Control
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-77.24
+78.22
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 151.75
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-74.50
+73.53
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-96.5
+94.0
 </td>
 </tr>
 <tr>
@@ -1491,16 +1487,16 @@ N Control
 N Experimental
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-77.24
+78.22
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 151.74
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-74.49
+73.52
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-96.4
+94.0
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -1513,16 +1509,16 @@ N Experimental
 Total Exposure - Control
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-380.78
+385.59
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 643.96
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-263.18
+258.37
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-69.1
+67.0
 </td>
 </tr>
 <tr>
@@ -1530,16 +1526,16 @@ Total Exposure - Control
 Total Exposure - Experimental
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-380.78
+385.59
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 644.23
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-263.45
+258.64
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-69.2
+67.1
 </td>
 </tr>
 <tr>
@@ -1547,16 +1543,16 @@ Total Exposure - Experimental
 Exposure at Risk - Control
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-351.88
+356.32
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 599.78
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-247.90
+243.46
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-70.5
+68.3
 </td>
 </tr>
 <tr>
@@ -1564,16 +1560,16 @@ Exposure at Risk - Control
 Exposure at Risk - Experimental
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-361.01
+365.57
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 613.87
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-252.86
+248.30
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-70.0
+67.9
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -1586,16 +1582,16 @@ Exposure at Risk - Experimental
 Events - Control
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-87.76
+86.07
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 72.67
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−15.09
+−13.41
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−17.2
+−15.6
 </td>
 </tr>
 <tr>
@@ -1603,16 +1599,16 @@ Events - Control
 Events - Experimental
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-60.02
+59.51
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 49.93
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−10.09
+−9.58
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−16.8
+−16.1
 </td>
 </tr>
 <tr>
@@ -1620,16 +1616,16 @@ Events - Experimental
 Events - Total
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-147.78
+145.58
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 122.60
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−25.18
+−22.98
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−17.0
+−15.8
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -1648,10 +1644,10 @@ Variance of log(RR)
 0.04
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-0.01
+0.00
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-13.8
+13.1
 </td>
 </tr>
 <tr>
@@ -1659,16 +1655,16 @@ Variance of log(RR)
 Information (Blinded)
 </td>
 <td headers="**Information**  Theoretical" class="gt_row gt_right">
-28.96
+27.03
 </td>
 <td headers="**Information**  Simulated" class="gt_row gt_right">
 23.20
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-−5.76
+−3.83
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-−19.9
+−14.2
 </td>
 </tr>
 <tr>
@@ -1676,16 +1672,16 @@ Information (Blinded)
 Information (Unblinded)
 </td>
 <td headers="**Information**  Theoretical" class="gt_row gt_right">
-28.96
+27.03
 </td>
 <td headers="**Information**  Simulated" class="gt_row gt_right">
 24.03
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-−4.92
+−3.00
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-−17.0
+−11.1
 </td>
 </tr>
 </tbody>
@@ -2186,16 +2182,16 @@ Rel. Diff (%)
 N Enrolled
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-336.00
+341.22
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 364.00
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-28.00
+22.78
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-8.3
+6.7
 </td>
 </tr>
 <tr>
@@ -2203,16 +2199,16 @@ N Enrolled
 N Control
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-168.00
+170.61
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 182.00
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-14.00
+11.39
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-8.3
+6.7
 </td>
 </tr>
 <tr>
@@ -2220,16 +2216,16 @@ N Control
 N Experimental
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-168.00
+170.61
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 182.00
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-14.00
+11.39
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-8.3
+6.7
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -2242,16 +2238,16 @@ N Experimental
 Total Exposure - Control
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-1,723.69
+1,750.49
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,465.02
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−258.67
+−285.47
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−15.0
+−16.3
 </td>
 </tr>
 <tr>
@@ -2259,16 +2255,16 @@ Total Exposure - Control
 Total Exposure - Experimental
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-1,723.69
+1,750.49
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,465.87
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−257.82
+−284.62
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−15.0
+−16.3
 </td>
 </tr>
 <tr>
@@ -2276,16 +2272,16 @@ Total Exposure - Experimental
 Exposure at Risk - Control
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-1,592.86
+1,617.62
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,361.34
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−231.52
+−256.28
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−14.5
+−15.8
 </td>
 </tr>
 <tr>
@@ -2293,16 +2289,16 @@ Exposure at Risk - Control
 Exposure at Risk - Experimental
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-1,634.21
+1,659.61
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,394.47
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−239.74
+−265.14
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−14.7
+−16.0
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -2315,16 +2311,16 @@ Exposure at Risk - Experimental
 Events - Control
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-219.18
+214.98
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 164.40
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−54.79
+−50.59
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−25.0
+−23.5
 </td>
 </tr>
 <tr>
@@ -2332,16 +2328,16 @@ Events - Control
 Events - Experimental
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-149.92
+148.64
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 113.27
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−36.65
+−35.37
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−24.4
+−23.8
 </td>
 </tr>
 <tr>
@@ -2349,16 +2345,16 @@ Events - Experimental
 Events - Total
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-369.10
+363.62
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 277.67
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−91.43
+−85.95
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−24.8
+−23.6
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -2380,7 +2376,7 @@ Variance of log(RR)
 0.00
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-23.8
+23.4
 </td>
 </tr>
 <tr>
@@ -2388,16 +2384,16 @@ Variance of log(RR)
 Information (Blinded)
 </td>
 <td headers="**Information**  Theoretical" class="gt_row gt_right">
-60.12
+58.96
 </td>
 <td headers="**Information**  Simulated" class="gt_row gt_right">
 46.51
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-−13.61
+−12.45
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-−22.6
+−21.1
 </td>
 </tr>
 <tr>
@@ -2405,16 +2401,16 @@ Information (Blinded)
 Information (Unblinded)
 </td>
 <td headers="**Information**  Theoretical" class="gt_row gt_right">
-60.12
+58.96
 </td>
 <td headers="**Information**  Simulated" class="gt_row gt_right">
 48.07
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-−12.04
+−10.89
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-−20.0
+−18.5
 </td>
 </tr>
 </tbody>
@@ -2916,16 +2912,16 @@ Rel. Diff (%)
 N Enrolled
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-370.00
+376.00
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 364.00
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-−6.00
+−12.00
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-−1.6
+−3.2
 </td>
 </tr>
 <tr>
@@ -2933,16 +2929,16 @@ N Enrolled
 N Control
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-185.00
+188.00
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 182.00
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-−3.00
+−6.00
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-−1.6
+−3.2
 </td>
 </tr>
 <tr>
@@ -2950,16 +2946,16 @@ N Control
 N Experimental
 </td>
 <td headers="**Sample Size**  Theoretical" class="gt_row gt_right">
-185.00
+188.00
 </td>
 <td headers="**Sample Size**  Simulated" class="gt_row gt_right">
 182.00
 </td>
 <td headers="**Sample Size**  Difference" class="gt_row gt_right">
-−3.00
+−6.00
 </td>
 <td headers="**Sample Size**  Rel_Diff_Pct" class="gt_row gt_right">
-−1.6
+−3.2
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -2972,16 +2968,16 @@ N Experimental
 Total Exposure - Control
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-2,164.03
+2,199.12
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,630.29
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−533.73
+−568.83
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−24.7
+−25.9
 </td>
 </tr>
 <tr>
@@ -2989,16 +2985,16 @@ Total Exposure - Control
 Total Exposure - Experimental
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-2,164.03
+2,199.12
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,630.53
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−533.49
+−568.59
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−24.7
+−25.9
 </td>
 </tr>
 <tr>
@@ -3006,16 +3002,16 @@ Total Exposure - Experimental
 Exposure at Risk - Control
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-1,999.77
+2,032.20
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,514.50
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−485.27
+−517.70
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−24.3
+−25.5
 </td>
 </tr>
 <tr>
@@ -3023,16 +3019,16 @@ Exposure at Risk - Control
 Exposure at Risk - Experimental
 </td>
 <td headers="**Exposure**  Theoretical" class="gt_row gt_right">
-2,051.68
+2,084.95
 </td>
 <td headers="**Exposure**  Simulated" class="gt_row gt_right">
 1,550.79
 </td>
 <td headers="**Exposure**  Difference" class="gt_row gt_right">
-−500.89
+−534.16
 </td>
 <td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">
-−24.4
+−25.6
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -3045,16 +3041,16 @@ Exposure at Risk - Experimental
 Events - Control
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-249.89
+245.10
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 182.82
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−67.07
+−62.28
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−26.8
+−25.4
 </td>
 </tr>
 <tr>
@@ -3062,16 +3058,16 @@ Events - Control
 Events - Experimental
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-170.92
+169.46
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 125.94
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−44.97
+−43.51
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−26.3
+−25.7
 </td>
 </tr>
 <tr>
@@ -3079,16 +3075,16 @@ Events - Experimental
 Events - Total
 </td>
 <td headers="**Events**  Theoretical" class="gt_row gt_right">
-420.80
+414.56
 </td>
 <td headers="**Events**  Simulated" class="gt_row gt_right">
 308.76
 </td>
 <td headers="**Events**  Difference" class="gt_row gt_right">
-−112.04
+−105.79
 </td>
 <td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">
-−26.6
+−25.5
 </td>
 </tr>
 <tr class="gt_group_heading_row">
@@ -3110,7 +3106,7 @@ Variance of log(RR)
 0.00
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-26.7
+26.4
 </td>
 </tr>
 <tr>
@@ -3118,16 +3114,16 @@ Variance of log(RR)
 Information (Blinded)
 </td>
 <td headers="**Information**  Theoretical" class="gt_row gt_right">
-65.55
+64.98
 </td>
 <td headers="**Information**  Simulated" class="gt_row gt_right">
 49.95
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-−15.60
+−15.03
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-−23.8
+−23.1
 </td>
 </tr>
 <tr>
@@ -3135,16 +3131,16 @@ Information (Blinded)
 Information (Unblinded)
 </td>
 <td headers="**Information**  Theoretical" class="gt_row gt_right">
-65.55
+64.98
 </td>
 <td headers="**Information**  Simulated" class="gt_row gt_right">
 51.75
 </td>
 <td headers="**Information**  Difference" class="gt_row gt_right">
-−13.81
+−13.23
 </td>
 <td headers="**Information**  Rel_Diff_Pct" class="gt_row gt_right">
-−21.1
+−20.4
 </td>
 </tr>
 </tbody>
@@ -3669,21 +3665,21 @@ Information (Unblinded)
 <td headers="Analysis_Time" class="gt_row gt_right">10</td>
 <td headers="Sim_Power" class="gt_row gt_right">21.1%</td>
 <td headers="Sim_Cum_Power" class="gt_row gt_right">21.1%</td>
-<td headers="Design_Cum_Power" class="gt_row gt_right">26.5%</td>
+<td headers="Design_Cum_Power" class="gt_row gt_right">24.2%</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_right">2</td>
 <td headers="Analysis_Time" class="gt_row gt_right">18</td>
 <td headers="Sim_Power" class="gt_row gt_right">32.2%</td>
 <td headers="Sim_Cum_Power" class="gt_row gt_right">53.3%</td>
-<td headers="Design_Cum_Power" class="gt_row gt_right">64.6%</td>
+<td headers="Design_Cum_Power" class="gt_row gt_right">63.4%</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_right">3</td>
 <td headers="Analysis_Time" class="gt_row gt_right">24</td>
 <td headers="Sim_Power" class="gt_row gt_right">29.2%</td>
 <td headers="Sim_Cum_Power" class="gt_row gt_right">82.4%</td>
-<td headers="Design_Cum_Power" class="gt_row gt_right">90.1%</td>
+<td headers="Design_Cum_Power" class="gt_row gt_right">90.0%</td>
 </tr>
 </tbody>
 </table>
@@ -3768,7 +3764,7 @@ target of 90%, validating the sample size calculation methodology.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Keaven Anderson.</p>
+  <p>Developed by Keaven Anderson, Hongtao Zhang, Andrea Maes.</p>
 </div>
 
 <div class="pkgdown-footer-right">

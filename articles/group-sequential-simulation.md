@@ -68,8 +68,8 @@ nb_ss
 #> Sample size for negative binomial outcome
 #> ==========================================
 #> 
-#> Sample size:     n1 = 182, n2 = 182, total = 364
-#> Expected events: 414.1 (n1: 245.9, n2: 168.2)
+#> Sample size:     n1 = 185, n2 = 185, total = 370
+#> Expected events: 408.0 (n1: 241.2, n2: 166.8)
 #> Power: 90%, Alpha: 0.025 (1-sided)
 #> Rates: control = 0.1250, treatment = 0.0833 (RR = 0.6667)
 #> Dispersion: 0.5000, Avg exposure (calendar): 11.70
@@ -88,11 +88,11 @@ for the fixed design. The relative enrollment rates will be increased to
 increase the sample size as with standard group sequential design
 theory. We specify `usTime = c(0.1, 0.18, 1)` which along with the
 [`sfLinear()`](https://keaven.github.io/gsDesign/reference/sfLinear.html)
-spending function will spend 10%, 18% and 100% of the cumulative
-\\\alpha\\ at the 3 planned analyses regardless of the observed
-statistical information at each analysis. The interim spending is
-intended to achieve a nominal p-value of approximately 0.0025
-(one-sided) at each interim analysis.
+spending function will spend 10%, 18% and 100% of the cumulative \alpha
+at the 3 planned analyses regardless of the observed statistical
+information at each analysis. The interim spending is intended to
+achieve a nominal p-value of approximately 0.0025 (one-sided) at each
+interim analysis.
 
 ``` r
 # Analysis times (in months)
@@ -118,7 +118,7 @@ Textual group sequential design summary:
 ``` r
 summary(gs_nb)
 #> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 3 analyses, total sample size 370.0, 90 percent
+#> for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent
 #> power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate
 #> 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial
 #> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,
@@ -126,7 +126,7 @@ summary(gs_nb)
 #> Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5)
 #> Lower spending: Hwang-Shih-DeCani (gamma = -8)
 #> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 3 analyses, total sample size 370.0, 90 percent
+#> for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent
 #> power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate
 #> 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial
 #> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,
@@ -159,31 +159,31 @@ gs_nb |>
 
 | Group Sequential Design Bounds for Negative Binomial Outcome |                     |          |          |
 |--------------------------------------------------------------|---------------------|----------|----------|
-| N = 370, Expected events = 414.1                             |                     |          |          |
+| N = 376, Expected events = 408                               |                     |          |          |
 | Analysis                                                     | Value               | Efficacy | Futility |
-| IA 1: 44%                                                    | Z                   | 2.8070   | -0.8788  |
-| Information: 28.96                                           | p (1-sided)         | 0.0025   | 0.8102   |
-| Month: 10                                                    | ~RR at bound        | 0.5931   | 1.1777   |
-|                                                              | P(Cross) if RR=1    | 0.0025   | 0.1898   |
-|                                                              | P(Cross) if RR=0.67 | 0.2649   | 0.0011   |
-| IA 2: 92%                                                    | Z                   | 2.8107   | 1.5082   |
-| Information: 60.12                                           | p (1-sided)         | 0.0025   | 0.0658   |
-| Month: 18                                                    | ~RR at bound        | 0.6956   | 0.8230   |
-|                                                              | P(Cross) if RR=1    | 0.0045   | 0.9339   |
-|                                                              | P(Cross) if RR=0.67 | 0.6461   | 0.0515   |
-| Final                                                        | Z                   | 1.9800   | 1.9800   |
-| Information: 65.55                                           | p (1-sided)         | 0.0239   | 0.0239   |
-| Month: 24                                                    | ~RR at bound        | 0.7828   | 0.7828   |
-|                                                              | P(Cross) if RR=1    | 0.0244   | 0.9756   |
-|                                                              | P(Cross) if RR=0.67 | 0.9013   | 0.0987   |
+| IA 1: 42%                                                    | Z                   | 2.8070   | -1.0128  |
+| Information: 27.03                                           | p (1-sided)         | 0.0025   | 0.8444   |
+| Month: 10                                                    | ~RR at bound        | 0.5828   | 1.2151   |
+|                                                              | P(Cross) if RR=1    | 0.0025   | 0.1556   |
+|                                                              | P(Cross) if RR=0.67 | 0.2422   | 0.0009   |
+| IA 2: 91%                                                    | Z                   | 2.8158   | 1.4448   |
+| Information: 58.96                                           | p (1-sided)         | 0.0024   | 0.0743   |
+| Month: 18                                                    | ~RR at bound        | 0.6930   | 0.8285   |
+|                                                              | P(Cross) if RR=1    | 0.0045   | 0.9254   |
+|                                                              | P(Cross) if RR=0.67 | 0.6340   | 0.0477   |
+| Final                                                        | Z                   | 1.9815   | 1.9796   |
+| Information: 64.98                                           | p (1-sided)         | 0.0238   | 0.0239   |
+| Month: 24                                                    | ~RR at bound        | 0.7820   | 0.7822   |
+|                                                              | P(Cross) if RR=1    | 0.0245   | 0.9754   |
+|                                                              | P(Cross) if RR=0.67 | 0.8997   | 0.1000   |
 
 ## Simulation study
 
 We simulated 3,600 trials to evaluate the operating characteristics of
 the group sequential design. This number of simulations was chosen to
 achieve a standard error for the power estimate of approximately 0.005
-when the true power is 90% (\\\sqrt{0.9 \times 0.1 / 3600} = 0.005\\).
-The simulation script is located in
+when the true power is 90% (\sqrt{0.9 \times 0.1 / 3600} = 0.005). The
+simulation script is located in
 `data-raw/generate_gs_simulation_data.R`.
 
 ### Load simulation results
@@ -358,22 +358,22 @@ for (k in 1:3) {
 | Calendar time = 10 months            |             |           |            |               |
 |                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
 | **Sample Size**                      |             |           |            |               |
-| N Enrolled                           | 154.49      | 303.49    | 149.00     | 96.4          |
-| N Control                            | 77.24       | 151.75    | 74.50      | 96.5          |
-| N Experimental                       | 77.24       | 151.74    | 74.49      | 96.4          |
+| N Enrolled                           | 156.44      | 303.49    | 147.05     | 94.0          |
+| N Control                            | 78.22       | 151.75    | 73.53      | 94.0          |
+| N Experimental                       | 78.22       | 151.74    | 73.52      | 94.0          |
 | **Exposure**                         |             |           |            |               |
-| Total Exposure - Control             | 380.78      | 643.96    | 263.18     | 69.1          |
-| Total Exposure - Experimental        | 380.78      | 644.23    | 263.45     | 69.2          |
-| Exposure at Risk - Control           | 351.88      | 599.78    | 247.90     | 70.5          |
-| Exposure at Risk - Experimental      | 361.01      | 613.87    | 252.86     | 70.0          |
+| Total Exposure - Control             | 385.59      | 643.96    | 258.37     | 67.0          |
+| Total Exposure - Experimental        | 385.59      | 644.23    | 258.64     | 67.1          |
+| Exposure at Risk - Control           | 356.32      | 599.78    | 243.46     | 68.3          |
+| Exposure at Risk - Experimental      | 365.57      | 613.87    | 248.30     | 67.9          |
 | **Events**                           |             |           |            |               |
-| Events - Control                     | 87.76       | 72.67     | −15.09     | −17.2         |
-| Events - Experimental                | 60.02       | 49.93     | −10.09     | −16.8         |
-| Events - Total                       | 147.78      | 122.60    | −25.18     | −17.0         |
+| Events - Control                     | 86.07       | 72.67     | −13.41     | −15.6         |
+| Events - Experimental                | 59.51       | 49.93     | −9.58      | −16.1         |
+| Events - Total                       | 145.58      | 122.60    | −22.98     | −15.8         |
 | **Information**                      |             |           |            |               |
-| Variance of log(RR)                  | 0.04        | 0.04      | 0.01       | 13.8          |
-| Information (Blinded)                | 28.96       | 23.20     | −5.76      | −19.9         |
-| Information (Unblinded)              | 28.96       | 24.03     | −4.92      | −17.0         |
+| Variance of log(RR)                  | 0.04        | 0.04      | 0.00       | 13.1          |
+| Information (Blinded)                | 27.03       | 23.20     | −3.83      | −14.2         |
+| Information (Unblinded)              | 27.03       | 24.03     | −3.00      | −11.1         |
 
 **Boundary Crossing:** - Efficacy (upper): 21.1% (n=759) - Futility
 (lower): 0.0% (n=1) - Cumulative Efficacy: 21.1%
@@ -385,22 +385,22 @@ for (k in 1:3) {
 | Calendar time = 18 months            |             |           |            |               |
 |                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
 | **Sample Size**                      |             |           |            |               |
-| N Enrolled                           | 336.00      | 364.00    | 28.00      | 8.3           |
-| N Control                            | 168.00      | 182.00    | 14.00      | 8.3           |
-| N Experimental                       | 168.00      | 182.00    | 14.00      | 8.3           |
+| N Enrolled                           | 341.22      | 364.00    | 22.78      | 6.7           |
+| N Control                            | 170.61      | 182.00    | 11.39      | 6.7           |
+| N Experimental                       | 170.61      | 182.00    | 11.39      | 6.7           |
 | **Exposure**                         |             |           |            |               |
-| Total Exposure - Control             | 1,723.69    | 1,465.02  | −258.67    | −15.0         |
-| Total Exposure - Experimental        | 1,723.69    | 1,465.87  | −257.82    | −15.0         |
-| Exposure at Risk - Control           | 1,592.86    | 1,361.34  | −231.52    | −14.5         |
-| Exposure at Risk - Experimental      | 1,634.21    | 1,394.47  | −239.74    | −14.7         |
+| Total Exposure - Control             | 1,750.49    | 1,465.02  | −285.47    | −16.3         |
+| Total Exposure - Experimental        | 1,750.49    | 1,465.87  | −284.62    | −16.3         |
+| Exposure at Risk - Control           | 1,617.62    | 1,361.34  | −256.28    | −15.8         |
+| Exposure at Risk - Experimental      | 1,659.61    | 1,394.47  | −265.14    | −16.0         |
 | **Events**                           |             |           |            |               |
-| Events - Control                     | 219.18      | 164.40    | −54.79     | −25.0         |
-| Events - Experimental                | 149.92      | 113.27    | −36.65     | −24.4         |
-| Events - Total                       | 369.10      | 277.67    | −91.43     | −24.8         |
+| Events - Control                     | 214.98      | 164.40    | −50.59     | −23.5         |
+| Events - Experimental                | 148.64      | 113.27    | −35.37     | −23.8         |
+| Events - Total                       | 363.62      | 277.67    | −85.95     | −23.6         |
 | **Information**                      |             |           |            |               |
-| Variance of log(RR)                  | 0.02        | 0.02      | 0.00       | 23.8          |
-| Information (Blinded)                | 60.12       | 46.51     | −13.61     | −22.6         |
-| Information (Unblinded)              | 60.12       | 48.07     | −12.04     | −20.0         |
+| Variance of log(RR)                  | 0.02        | 0.02      | 0.00       | 23.4          |
+| Information (Blinded)                | 58.96       | 46.51     | −12.45     | −21.1         |
+| Information (Unblinded)              | 58.96       | 48.07     | −10.89     | −18.5         |
 
 **Boundary Crossing:** - Efficacy (upper): 32.2% (n=1159) - Futility
 (lower): 1.5% (n=55) - Cumulative Efficacy: 53.3%
@@ -412,22 +412,22 @@ for (k in 1:3) {
 | Calendar time = 24 months            |             |           |            |               |
 |                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
 | **Sample Size**                      |             |           |            |               |
-| N Enrolled                           | 370.00      | 364.00    | −6.00      | −1.6          |
-| N Control                            | 185.00      | 182.00    | −3.00      | −1.6          |
-| N Experimental                       | 185.00      | 182.00    | −3.00      | −1.6          |
+| N Enrolled                           | 376.00      | 364.00    | −12.00     | −3.2          |
+| N Control                            | 188.00      | 182.00    | −6.00      | −3.2          |
+| N Experimental                       | 188.00      | 182.00    | −6.00      | −3.2          |
 | **Exposure**                         |             |           |            |               |
-| Total Exposure - Control             | 2,164.03    | 1,630.29  | −533.73    | −24.7         |
-| Total Exposure - Experimental        | 2,164.03    | 1,630.53  | −533.49    | −24.7         |
-| Exposure at Risk - Control           | 1,999.77    | 1,514.50  | −485.27    | −24.3         |
-| Exposure at Risk - Experimental      | 2,051.68    | 1,550.79  | −500.89    | −24.4         |
+| Total Exposure - Control             | 2,199.12    | 1,630.29  | −568.83    | −25.9         |
+| Total Exposure - Experimental        | 2,199.12    | 1,630.53  | −568.59    | −25.9         |
+| Exposure at Risk - Control           | 2,032.20    | 1,514.50  | −517.70    | −25.5         |
+| Exposure at Risk - Experimental      | 2,084.95    | 1,550.79  | −534.16    | −25.6         |
 | **Events**                           |             |           |            |               |
-| Events - Control                     | 249.89      | 182.82    | −67.07     | −26.8         |
-| Events - Experimental                | 170.92      | 125.94    | −44.97     | −26.3         |
-| Events - Total                       | 420.80      | 308.76    | −112.04    | −26.6         |
+| Events - Control                     | 245.10      | 182.82    | −62.28     | −25.4         |
+| Events - Experimental                | 169.46      | 125.94    | −43.51     | −25.7         |
+| Events - Total                       | 414.56      | 308.76    | −105.79    | −25.5         |
 | **Information**                      |             |           |            |               |
-| Variance of log(RR)                  | 0.02        | 0.02      | 0.00       | 26.7          |
-| Information (Blinded)                | 65.55       | 49.95     | −15.60     | −23.8         |
-| Information (Unblinded)              | 65.55       | 51.75     | −13.81     | −21.1         |
+| Variance of log(RR)                  | 0.02        | 0.02      | 0.00       | 26.4          |
+| Information (Blinded)                | 64.98       | 49.95     | −15.03     | −23.1         |
+| Information (Unblinded)              | 64.98       | 51.75     | −13.23     | −20.4         |
 
 **Boundary Crossing:** - Efficacy (upper): 29.2% (n=1050) - Futility
 (lower): 16.0% (n=576) - Cumulative Efficacy: 82.4%
@@ -481,9 +481,9 @@ crossing_summary |>
 |----------------------------------------|-------|-------------------------|------------------------|---------------------------|
 | Based on 3600 simulated trials         |       |                         |                        |                           |
 | Analysis                               | Month | Incremental Power (Sim) | Cumulative Power (Sim) | Cumulative Power (Design) |
-| 1                                      | 10    | 21.1%                   | 21.1%                  | 26.5%                     |
-| 2                                      | 18    | 32.2%                   | 53.3%                  | 64.6%                     |
-| 3                                      | 24    | 29.2%                   | 82.4%                  | 90.1%                     |
+| 1                                      | 10    | 21.1%                   | 21.1%                  | 24.2%                     |
+| 2                                      | 18    | 32.2%                   | 53.3%                  | 63.4%                     |
+| 3                                      | 24    | 29.2%                   | 82.4%                  | 90.0%                     |
 
 ### Visualization of Z-statistics
 

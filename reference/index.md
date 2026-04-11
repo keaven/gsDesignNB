@@ -2,11 +2,10 @@
 
 ## Sample size calculation
 
-Functions for calculating fixed sample sizes for negative binomial
-outcomes.
+Plan fixed negative binomial designs for recurrent-event outcomes.
 
 - [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
-  : Sample size calculation for negative binomial distribution
+  : Sample size calculation for negative binomial outcomes
 - [`print(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.sample_size_nbinom_result.md)
   : Print method for sample_size_nbinom_result objects
 - [`summary(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.sample_size_nbinom_result.md)
@@ -14,22 +13,10 @@ outcomes.
 - [`print(`*`<sample_size_nbinom_summary>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.sample_size_nbinom_summary.md)
   : Print method for sample_size_nbinom_summary objects
 
-## Group sequential design
-
-Functions for extending fixed designs to group sequential designs.
-
-- [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
-  : Group sequential design for negative binomial outcomes
-- [`toInteger()`](https://keaven.github.io/gsDesignNB/reference/toInteger.md)
-  : Convert group sequential design to integer sample sizes
-- [`summary(`*`<gsNB>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.gsNB.md)
-  : Summary for gsNB objects
-- [`print(`*`<gsNBsummary>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.gsNBsummary.md)
-  : Print method for gsNBsummary objects
-
 ## Simulation
 
-Tools for simulating trial data.
+Simulate recurrent-event data, seasonal intensity patterns, and NB
+monitoring scenarios.
 
 - [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
   : Simulate recurrent events with fixed follow-up
@@ -38,15 +25,20 @@ Tools for simulating trial data.
 - [`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
   : Simulate group sequential clinical trial for negative binomial
   outcomes
+- [`sim_ssr_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_ssr_nbinom.md)
+  : Simulate adaptive group sequential trials with sample size
+  re-estimation
 - [`check_gs_bound()`](https://keaven.github.io/gsDesignNB/reference/check_gs_bound.md)
   : Check group sequential bounds
 - [`summarize_gs_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_gs_sim.md)
   : Summarize group sequential simulation results
+- [`summarize_ssr_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_ssr_sim.md)
+  : Summarize adaptive SSR simulation results
 
 ## Analysis
 
-Functions for analyzing trial data, including blinded sample size
-re-estimation and interim analysis.
+Analyze interim negative binomial data and estimate information for
+monitoring or SSR.
 
 - [`blinded_ssr()`](https://keaven.github.io/gsDesignNB/reference/blinded_ssr.md)
   : Blinded sample size re-estimation for recurrent events
@@ -72,6 +64,36 @@ re-estimation and interim analysis.
   : Find calendar date for target event count
 - [`get_cut_date()`](https://keaven.github.io/gsDesignNB/reference/get_cut_date.md)
   : Determine analysis date based on criteria
+
+## Group sequential design
+
+Extend negative binomial designs to group sequential monitoring via
+gsDesign boundaries.
+
+- [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
+  : Group sequential design for negative binomial outcomes
+- [`toInteger()`](https://keaven.github.io/gsDesignNB/reference/toInteger.md)
+  : Convert group sequential design to integer sample sizes
+- [`summary(`*`<gsNB>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.gsNB.md)
+  : Summary for gsNB objects
+- [`print(`*`<gsNBsummary>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.gsNBsummary.md)
+  : Print method for gsNBsummary objects
+
+## Documentation site
+
+Preview the pkgdown website locally over HTTP (avoids unstyled `file://`
+pages).
+
+- [`preview_pkgdown_site()`](https://keaven.github.io/gsDesignNB/reference/preview_pkgdown_site.md)
+  : Preview built pkgdown site in the browser
+
+## Interactive prototype
+
+Launch the optional Shiny explorer for adaptive negative binomial SSR
+scenarios.
+
+- [`run_ssr_shiny()`](https://keaven.github.io/gsDesignNB/reference/run_ssr_shiny.md)
+  : Launch the SSR Shiny prototype
 
 ## gsDesign re-exports
 

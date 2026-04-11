@@ -2,7 +2,8 @@
 
 Simulates multiple replicates of a group sequential clinical trial with
 negative binomial outcomes, performing interim analyses at specified
-calendar times.
+calendar times. Supports parallel execution via the future framework for
+faster simulation with reproducible random number generation.
 
 ## Usage
 
@@ -13,12 +14,13 @@ sim_gs_nbinom(
   fail_rate,
   dropout_rate = NULL,
   max_followup,
-  event_gap = 0,
+  event_gap = NULL,
   analysis_times = NULL,
   n_target = NULL,
   design = NULL,
   data_cut = cut_data_by_date,
-  cuts = NULL
+  cuts = NULL,
+  seed = TRUE
 )
 ```
 
@@ -46,7 +48,8 @@ sim_gs_nbinom(
 
 - event_gap:
 
-  Event gap duration.
+  Event gap duration. If `NULL`, inherits `design$inputs$event_gap` when
+  available; otherwise defaults to `0`.
 
 - analysis_times:
 
@@ -79,6 +82,29 @@ sim_gs_nbinom(
   (e.g., `planned_calendar`, `target_events`, `target_info`). If
   provided, `analysis_times` is ignored (or used as a fallback if
   `planned_calendar` is missing in a cut).
+
+- seed:
+
+  Random seed for reproducible simulations. Controls the `future.seed`
+  argument of
+  [`future.apply::future_lapply()`](https://future.apply.futureverse.org/reference/future_lapply.html):
+
+  - `TRUE` (default): Automatically generates parallel-safe
+    L'Ecuyer-CMRG random number streams. Results are reproducible when
+    preceded by [`set.seed()`](https://rdrr.io/r/base/Random.html)
+    regardless of the number of workers.
+
+  - An integer: Used as the seed for L'Ecuyer-CMRG streams directly
+    (equivalent to calling
+    [`set.seed()`](https://rdrr.io/r/base/Random.html) with this value
+    before the run).
+
+  - `FALSE` or `NULL`: No special RNG handling (not recommended; results
+    may not be reproducible in parallel).
+
+  When future.apply is not installed, `seed` is used with
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) for sequential
+  execution. See **Details** for parallel usage.
 
 ## Value
 
@@ -182,9 +208,42 @@ trial. Columns include:
 
   Estimated blinded statistical information (Method of Moments)
 
+## Details
+
+### Parallel execution
+
+This function uses
+[`future.apply::future_lapply()`](https://future.apply.futureverse.org/reference/future_lapply.html)
+to distribute simulation replicates across workers. By default,
+simulations run sequentially (equivalent to
+[`lapply()`](https://rdrr.io/r/base/lapply.html)). To enable parallel
+execution, set a future plan before calling this function:
+
+    library(future)
+    plan(multisession, workers = 4)   # use 4 parallel workers
+    results <- sim_gs_nbinom(...)
+    plan(sequential)                  # restore default
+
+### Reproducibility
+
+The default `seed = TRUE` ensures that results are fully reproducible
+regardless of the future plan (sequential or parallel) and regardless of
+the number of workers. This is achieved via the L'Ecuyer-CMRG algorithm
+which generates statistically independent random number streams for each
+simulation replicate. To obtain the same results across runs:
+
+    set.seed(42)
+    res1 <- sim_gs_nbinom(n_sims = 100, ..., seed = TRUE)
+
+    set.seed(42)
+    res2 <- sim_gs_nbinom(n_sims = 100, ..., seed = TRUE)
+
+    identical(res1, res2)  # TRUE, even with different plan()
+
 ## Examples
 
 ``` r
+# Basic sequential usage with reproducible seed
 set.seed(123)
 enroll_rate <- data.frame(rate = 10, duration = 3)
 fail_rate <- data.frame(
@@ -214,32 +273,52 @@ sim_results <- sim_gs_nbinom(
   max_followup = 4,
   n_target = 30,
   design = design,
-  cuts = cuts
+  cuts = cuts,
+  seed = TRUE
 )
 head(sim_results)
 #>   sim analysis analysis_time n_enrolled n_ctrl n_exp events_total events_ctrl
-#> 1   1        1             2         23     11    12           10           8
-#> 2   1        2             4         30     15    15           34          25
-#> 3   2        1             2         15      8     7            4           3
-#> 4   2        2             4         30     15    15           24          18
+#> 1   1        1             2         22     12    10           10           4
+#> 2   1        2             4         30     15    15           32          17
+#> 3   2        1             2         17      9     8            2           1
+#> 4   2        2             4         30     15    15           20          11
 #>   events_exp exposure_at_risk_ctrl exposure_at_risk_exp exposure_total_ctrl
-#> 1          2              13.14534            12.328930            13.14534
-#> 2          9              37.48061            38.937872            37.48061
-#> 3          1               7.44672             5.387439             7.44672
-#> 4          6              31.08699            26.047756            31.08699
-#>   exposure_total_exp     z_stat   estimate        se             method_used
-#> 1          12.328930 -1.6724385 -1.3221756 0.7905675 Poisson Wald (fallback)
-#> 2          38.937872 -2.7264734 -1.0597950 0.3887054 Poisson Wald (fallback)
-#> 3           5.387439 -0.6710972 -0.7749088 1.1546894 Poisson Wald (fallback)
-#> 4          26.047756 -1.7504986 -0.8915788 0.5093285  Negative binomial Wald
+#> 1          6              7.903375             9.141767            7.903375
+#> 2         15             30.785474            35.601758           30.785474
+#> 3          1              7.567636             7.918122            7.567636
+#> 4          9             31.001526            33.869952           31.001526
+#>   exposure_total_exp      z_stat    estimate        se             method_used
+#> 1           9.141767  0.40264747  0.25990122 0.6454808 Poisson Wald (fallback)
+#> 2          35.601758 -0.68724537 -0.29289609 0.4261885  Negative binomial Wald
+#> 3           7.918122 -0.03201309 -0.04527334 1.4142134 Poisson Wald (fallback)
+#> 4          33.869952 -0.62972725 -0.29464890 0.4678992  Negative binomial Wald
 #>   dispersion blinded_info unblinded_info info_unblinded_ml info_blinded_ml
-#> 1        Inf     2.391287      1.6000076         1.6000076        2.391287
-#> 2        Inf     8.157183      6.6184888         6.6184888        8.157183
-#> 3        Inf     0.959958      0.7500145         0.7500145        0.959958
-#> 4   4.406507     3.842925      3.8548194         3.8548194        3.842925
+#> 1        Inf    2.3997486      2.4001220         2.4001220       2.3997486
+#> 2   2.689392    5.2833148      5.5054966         5.5054966       5.2833148
+#> 3        Inf    0.4799814      0.5000001         0.5000001       0.4799814
+#> 4   7.281096    4.3857137      4.5676764         4.5676764       4.3857137
 #>   info_unblinded_mom info_blinded_mom
-#> 1           1.600000         2.394325
-#> 2           6.617647         8.160000
-#> 3           0.750000         0.960000
-#> 4           4.006873         4.097126
+#> 1           2.400000         2.400000
+#> 2           5.801325         5.606178
+#> 3           0.500000         0.480000
+#> 4           4.692655         4.513762
+
+if (FALSE) { # \dontrun{
+# Parallel execution (requires future and future.apply)
+library(future)
+plan(multisession, workers = 4)
+set.seed(42)
+sim_results <- sim_gs_nbinom(
+  n_sims = 1000,
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = 4,
+  n_target = 30,
+  design = design,
+  cuts = cuts,
+  seed = TRUE
+)
+plan(sequential)
+} # }
 ```

@@ -73,18 +73,18 @@ sim <- nb_sim_seasonal(
   n = 20
 )
 head(sim)
-#>   id    treatment enroll_time season     start        end event  cal_start
-#> 1  1 Experimental  0.04883769 Winter 0.0000000 0.11543336     0 2020-01-18
-#> 2  1 Experimental  0.04883769 Spring 0.1154334 0.36731563     0 2020-03-01
-#> 3  1 Experimental  0.04883769 Summer 0.3673156 0.61919790     0 2020-06-01
-#> 4  1 Experimental  0.04883769   Fall 0.6191979 0.86834232     0 2020-09-01
-#> 5  1 Experimental  0.04883769 Winter 0.8683423 1.00000000     0 2020-12-01
-#> 6  2      Control  0.06638886 Winter 0.0000000 0.09788219     0 2020-01-25
+#>   id    treatment enroll_time season     start       end event  cal_start
+#> 1  1 Experimental  0.02099229 Winter 0.0000000 0.1432788     0 2020-01-08
+#> 2  1 Experimental  0.02099229 Spring 0.1432788 0.3951610     0 2020-03-01
+#> 3  1 Experimental  0.02099229 Summer 0.3951610 0.6470433     0 2020-06-01
+#> 4  1 Experimental  0.02099229   Fall 0.6470433 0.8961877     0 2020-09-01
+#> 5  1 Experimental  0.02099229 Winter 0.8961877 1.0000000     0 2020-12-01
+#> 6  2      Control  0.02675467 Winter 0.0000000 0.1375164     0 2020-01-10
 #>      cal_end
 #> 1 2020-03-01
 #> 2 2020-06-01
 #> 3 2020-09-01
 #> 4 2020-12-01
-#> 5 2021-01-18
+#> 5 2021-01-07
 #> 6 2020-03-01
 ```

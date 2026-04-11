@@ -102,16 +102,16 @@ mutze_test(cut)
 #> ==================
 #> 
 #> Method:     Poisson Wald (fallback) 
-#> Estimate:   -0.0933
-#> SE:         0.4859
-#> Z:          -0.1921
-#> p-value:    0.4238
-#> Rate Ratio: 0.9109
-#> CI (95%):  [0.3515, 2.3608]
+#> Estimate:   -0.1709
+#> SE:         0.5175
+#> Z:          -0.3302
+#> p-value:    0.3706
+#> Rate Ratio: 0.8429
+#> CI (95%):  [0.3057, 2.3245]
 #> Dispersion: Inf
 #> 
 #> Group Summary:
 #>     treatment subjects events exposure
-#>  Experimental       20      8 21.02991
-#>       Control       20      9 21.55013
+#>  Experimental       20      7 21.78820
+#>       Control       20      8 20.98945
 ```

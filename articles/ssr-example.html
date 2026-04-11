@@ -6,17 +6,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Sample size re-estimation example • gsDesignNB</title>
-<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
-  window.MathJax = {
-    chtml: {
-      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
-    }
-  };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- katex math (vendored under pkgdown/assets/katex/; copied to site root; KaTeX 0.16.11) --><link rel="stylesheet" href="../katex/katex.min.css">
+<script defer src="../katex/katex.min.js"></script><script defer src="../katex/auto-render.min.js" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Sample size re-estimation example">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<script src="../extra.js"></script><meta property="og:title" content="Sample size re-estimation example">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -26,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +56,7 @@
       <h1>Sample size re-estimation example</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.6/vignettes/ssr-example.Rmd" class="external-link"><code>vignettes/ssr-example.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/ssr-example.Rmd" class="external-link"><code>vignettes/ssr-example.Rmd</code></a></small>
       <div class="d-none name"><code>ssr-example.Rmd</code></div>
     </div>
 
@@ -71,14 +67,15 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://keaven.github.io/gsDesign/" class="external-link">gsDesign</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.stats.ox.ac.uk/pub/MASS4/" class="external-link">MASS</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gt.rstudio.com" class="external-link">gt</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gt.rstudio.com" class="external-link">gt</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>This vignette demonstrates a group sequential trial with a single
-interim analysis where unblinded sample size re-estimation (SSR) is
-performed.</p>
+<p>This vignette demonstrates sample size re-estimation for a negative
+binomial recurrent-event trial with a single group sequential interim
+analysis. The primary estimand is a treatment <strong>rate
+ratio</strong>; <code>gsDesign</code> enters as the boundary-calculation
+backend once the information path is known.</p>
 <p>We simulate a scenario where the <strong>control event rate is lower
 than assumed</strong> and the <strong>dispersion is higher than
 assumed</strong>. Both factors lead to slower information accumulation
@@ -96,24 +93,25 @@ from the plan.</li>
 </h2>
 <p><strong>Planned parameters:</strong></p>
 <ul>
-<li>Control rate (<span class="math inline">\(\lambda_1\)</span>): 0.1
+<li>Control rate (<span class="math inline">\lambda_1</span>): 0.1
 events/month</li>
-<li>Experimental rate (<span class="math inline">\(\lambda_2\)</span>):
-0.075 events/month (Hazard Ratio = 0.75)</li>
-<li>Dispersion (<span class="math inline">\(k\)</span>): 0.5</li>
+<li>Experimental rate (<span class="math inline">\lambda_2</span>):
+0.075 events/month (Rate Ratio = 0.75)</li>
+<li>Dispersion (<span class="math inline">k</span>): 0.5</li>
 <li>Power: 90%</li>
-<li>One-sided Type I error (<span class="math inline">\(\alpha\)</span>): 0.025</li>
+<li>One-sided Type I error (<span class="math inline">\alpha</span>):
+0.025</li>
 <li>Enrollment: 20 patients/month for 12 months (Total N = 240)</li>
 <li>Study duration: 24 months</li>
 </ul>
 <p><strong>Actual parameters (simulation truth):</strong></p>
 <ul>
-<li>Control rate (<span class="math inline">\(\lambda_1\)</span>): 0.08
+<li>Control rate (<span class="math inline">\lambda_1</span>): 0.08
 events/month (Lower than planned)</li>
-<li>Experimental rate (<span class="math inline">\(\lambda_2\)</span>):
-0.06 events/month (HR = 0.75 maintained)</li>
-<li>Dispersion (<span class="math inline">\(k\)</span>): 0.65 (Higher
-than planned)</li>
+<li>Experimental rate (<span class="math inline">\lambda_2</span>): 0.06
+events/month (RR = 0.75 maintained)</li>
+<li>Dispersion (<span class="math inline">k</span>): 0.65 (Higher than
+planned)</li>
 </ul>
 <div class="section level3">
 <h3 id="initial-sample-size-calculation">Initial sample size calculation<a class="anchor" aria-label="anchor" href="#initial-sample-size-calculation"></a>
@@ -651,64 +649,64 @@ than planned)</li>
 </thead>
 <tbody class="gt_table_body">
 <tr>
-<td headers="Analysis" class="gt_row gt_left">IA 1: 43%</td>
+<td headers="Analysis" class="gt_row gt_left">IA 1: 41%</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
-<td headers="Efficacy" class="gt_row gt_right">2.5498</td>
-<td headers="Futility" class="gt_row gt_right">0.7234</td>
+<td headers="Efficacy" class="gt_row gt_right">2.5791</td>
+<td headers="Futility" class="gt_row gt_right">0.6354</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">Information: 64.85</td>
+<td headers="Analysis" class="gt_row gt_left">Information: 61.25</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0054</td>
-<td headers="Futility" class="gt_row gt_right">0.2347</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0050</td>
+<td headers="Futility" class="gt_row gt_right">0.2626</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 10</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.7286</td>
-<td headers="Futility" class="gt_row gt_right">0.9141</td>
+<td headers="Efficacy" class="gt_row gt_right">0.7192</td>
+<td headers="Futility" class="gt_row gt_right">0.9220</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0054</td>
-<td headers="Futility" class="gt_row gt_right">0.7653</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0050</td>
+<td headers="Futility" class="gt_row gt_right">0.7374</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.75</td>
-<td headers="Efficacy" class="gt_row gt_right">0.4077</td>
-<td headers="Futility" class="gt_row gt_right">0.0556</td>
+<td headers="Efficacy" class="gt_row gt_right">0.3714</td>
+<td headers="Futility" class="gt_row gt_right">0.0531</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Final</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
-<td headers="Efficacy" class="gt_row gt_right">2.0152</td>
-<td headers="Futility" class="gt_row gt_right">2.0152</td>
+<td headers="Efficacy" class="gt_row gt_right">2.0118</td>
+<td headers="Futility" class="gt_row gt_right">2.0118</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Information: 149.77</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0219</td>
-<td headers="Futility" class="gt_row gt_right">0.0219</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0221</td>
+<td headers="Futility" class="gt_row gt_right">0.0221</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 24</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.8481</td>
-<td headers="Futility" class="gt_row gt_right">0.8481</td>
+<td headers="Efficacy" class="gt_row gt_right">0.8484</td>
+<td headers="Futility" class="gt_row gt_right">0.8484</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0219</td>
-<td headers="Futility" class="gt_row gt_right">0.9781</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0221</td>
+<td headers="Futility" class="gt_row gt_right">0.9779</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.75</td>
-<td headers="Efficacy" class="gt_row gt_right">0.9027</td>
-<td headers="Futility" class="gt_row gt_right">0.0973</td>
+<td headers="Efficacy" class="gt_row gt_right">0.9038</td>
+<td headers="Futility" class="gt_row gt_right">0.0962</td>
 </tr>
 </tbody>
 </table>
@@ -716,13 +714,648 @@ than planned)</li>
 </div>
 </div>
 <div class="section level2">
+<h2 id="end-to-end-helper-workflow">End-to-end helper workflow<a class="anchor" aria-label="anchor" href="#end-to-end-helper-workflow"></a>
+</h2>
+<p>For routine use, <code><a href="../reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code> wraps the recurring
+steps in an adaptive SSR simulation: information-based interim timing,
+dynamic bounds, optional blinded/unblinded re-estimation, and compact
+summaries.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sim_helper</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_ssr_nbinom.html">sim_ssr_nbinom</a></span><span class="op">(</span></span>
+<span>  n_sims <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  enroll_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="va">accrual_rate_plan</span>, duration <span class="op">=</span> <span class="va">accrual_dur_plan</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  fail_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Experimental"</span><span class="op">)</span>,</span>
+<span>    rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.08</span>, <span class="fl">0.06</span><span class="op">)</span>,</span>
+<span>    dispersion <span class="op">=</span> <span class="fl">0.65</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  dropout_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Experimental"</span><span class="op">)</span>,</span>
+<span>    rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>    duration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  max_followup <span class="op">=</span> <span class="va">trial_dur_plan</span>,</span>
+<span>  design <span class="op">=</span> <span class="va">gs_plan</span>,</span>
+<span>  n_max <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fl">1.4</span> <span class="op">*</span> <span class="va">gs_plan</span><span class="op">$</span><span class="va">n_total</span><span class="op">[</span><span class="va">gs_plan</span><span class="op">$</span><span class="va">k</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>scenario <span class="op">=</span> <span class="st">"Lower control rate, higher dispersion"</span><span class="op">)</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">1234</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">helper_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_ssr_sim.html">summarize_ssr_sim</a></span><span class="op">(</span><span class="va">sim_helper</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scenario"</span>, <span class="st">"strategy"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">helper_summary</span><span class="op">$</span><span class="va">trial_summary</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"High-level SSR Simulation Summary"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Expected participants with events and expected events observed are included directly"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div id="xombwkkeul" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#xombwkkeul table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#xombwkkeul thead, #xombwkkeul tbody, #xombwkkeul tfoot, #xombwkkeul tr, #xombwkkeul td, #xombwkkeul th {
+  border-style: none;
+}
+
+#xombwkkeul p {
+  margin: 0;
+  padding: 0;
+}
+
+#xombwkkeul .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#xombwkkeul .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#xombwkkeul .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#xombwkkeul .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#xombwkkeul .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#xombwkkeul .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#xombwkkeul .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#xombwkkeul .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#xombwkkeul .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#xombwkkeul .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#xombwkkeul .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#xombwkkeul .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#xombwkkeul .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#xombwkkeul .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#xombwkkeul .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xombwkkeul .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#xombwkkeul .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#xombwkkeul .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#xombwkkeul .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xombwkkeul .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#xombwkkeul .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xombwkkeul .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#xombwkkeul .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xombwkkeul .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#xombwkkeul .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#xombwkkeul .gt_left {
+  text-align: left;
+}
+
+#xombwkkeul .gt_center {
+  text-align: center;
+}
+
+#xombwkkeul .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#xombwkkeul .gt_font_normal {
+  font-weight: normal;
+}
+
+#xombwkkeul .gt_font_bold {
+  font-weight: bold;
+}
+
+#xombwkkeul .gt_font_italic {
+  font-style: italic;
+}
+
+#xombwkkeul .gt_super {
+  font-size: 65%;
+}
+
+#xombwkkeul .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#xombwkkeul .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#xombwkkeul .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#xombwkkeul .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#xombwkkeul .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#xombwkkeul .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#xombwkkeul .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#xombwkkeul .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#xombwkkeul div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="31" class="gt_heading gt_title gt_font_normal" style>High-level SSR Simulation Summary</td>
+    </tr>
+<tr class="gt_heading">
+<td colspan="31" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Expected participants with events and expected events observed are included directly</td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="scenario">scenario</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="strategy">strategy</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_sims">n_sims</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="rejection_rate">rejection_rate</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="futility_rate">futility_rate</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_n">mean_n</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="sd_n">sd_n</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_adapted">pct_adapted</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="expected_participants_with_events">expected_participants_with_events</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="expected_events_observed">expected_events_observed</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_reach_ia1">pct_reach_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_if_ia1">mean_if_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_ia1_time">mean_ia1_time</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_participants_with_events_ia1">mean_participants_with_events_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_events_observed_ia1">mean_events_observed_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_fallback_ia1">n_fallback_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="cross_ia1">cross_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_futility_ia1">pct_futility_ia1</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_reach_final">pct_reach_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_if_final">mean_if_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_final_time">mean_final_time</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_participants_with_events_final">mean_participants_with_events_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_events_observed_final">mean_events_observed_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_fallback_final">n_fallback_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="cross_final">cross_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_futility_final">pct_futility_final</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_adapt_cut_time">mean_adapt_cut_time</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_adapt_enroll_pct">mean_adapt_enroll_pct</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_adapt_months_to_close">mean_adapt_months_to_close</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_adapt_allowed">pct_adapt_allowed</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pct_adapt_applied">pct_adapt_applied</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr>
+<td headers="scenario" class="gt_row gt_left">Lower control rate, higher dispersion</td>
+<td headers="strategy" class="gt_row gt_left">Blinded SSR</td>
+<td headers="n_sims" class="gt_row gt_right">100</td>
+<td headers="rejection_rate" class="gt_row gt_right">0.94</td>
+<td headers="futility_rate" class="gt_row gt_right">0.06</td>
+<td headers="mean_n" class="gt_row gt_right">878.59</td>
+<td headers="sd_n" class="gt_row gt_right">107.70959</td>
+<td headers="pct_adapted" class="gt_row gt_right">24</td>
+<td headers="expected_participants_with_events" class="gt_row gt_right">390.41</td>
+<td headers="expected_events_observed" class="gt_row gt_right">902.90</td>
+<td headers="pct_reach_ia1" class="gt_row gt_right">100</td>
+<td headers="mean_if_ia1" class="gt_row gt_right">0.4164735</td>
+<td headers="mean_ia1_time" class="gt_row gt_right">24.78918</td>
+<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">223.47</td>
+<td headers="mean_events_observed_ia1" class="gt_row gt_right">433.74</td>
+<td headers="n_fallback_ia1" class="gt_row gt_right">0</td>
+<td headers="cross_ia1" class="gt_row gt_right">0.53</td>
+<td headers="pct_futility_ia1" class="gt_row gt_right">0.06</td>
+<td headers="pct_reach_final" class="gt_row gt_right">41</td>
+<td headers="mean_if_final" class="gt_row gt_right">1.240871</td>
+<td headers="mean_final_time" class="gt_row gt_right">70.48547</td>
+<td headers="mean_participants_with_events_final" class="gt_row gt_right">629.2439</td>
+<td headers="mean_events_observed_final" class="gt_row gt_right">1570.659</td>
+<td headers="n_fallback_final" class="gt_row gt_right">0</td>
+<td headers="cross_final" class="gt_row gt_right">0.41</td>
+<td headers="pct_futility_final" class="gt_row gt_right">0</td>
+<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.78918</td>
+<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.51814</td>
+<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.09809</td>
+<td headers="pct_adapt_allowed" class="gt_row gt_right">100</td>
+<td headers="pct_adapt_applied" class="gt_row gt_right">24</td>
+</tr>
+<tr>
+<td headers="scenario" class="gt_row gt_left">Lower control rate, higher dispersion</td>
+<td headers="strategy" class="gt_row gt_left">No adaptation</td>
+<td headers="n_sims" class="gt_row gt_right">100</td>
+<td headers="rejection_rate" class="gt_row gt_right">0.94</td>
+<td headers="futility_rate" class="gt_row gt_right">0.06</td>
+<td headers="mean_n" class="gt_row gt_right">859.24</td>
+<td headers="sd_n" class="gt_row gt_right">90.72448</td>
+<td headers="pct_adapted" class="gt_row gt_right">0</td>
+<td headers="expected_participants_with_events" class="gt_row gt_right">377.31</td>
+<td headers="expected_events_observed" class="gt_row gt_right">868.62</td>
+<td headers="pct_reach_ia1" class="gt_row gt_right">100</td>
+<td headers="mean_if_ia1" class="gt_row gt_right">0.4164735</td>
+<td headers="mean_ia1_time" class="gt_row gt_right">24.78918</td>
+<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">223.47</td>
+<td headers="mean_events_observed_ia1" class="gt_row gt_right">433.74</td>
+<td headers="n_fallback_ia1" class="gt_row gt_right">0</td>
+<td headers="cross_ia1" class="gt_row gt_right">0.53</td>
+<td headers="pct_futility_ia1" class="gt_row gt_right">0.06</td>
+<td headers="pct_reach_final" class="gt_row gt_right">41</td>
+<td headers="mean_if_final" class="gt_row gt_right">1.178834</td>
+<td headers="mean_final_time" class="gt_row gt_right">68.11869</td>
+<td headers="mean_participants_with_events_final" class="gt_row gt_right">597.2927</td>
+<td headers="mean_events_observed_final" class="gt_row gt_right">1487.049</td>
+<td headers="n_fallback_final" class="gt_row gt_right">0</td>
+<td headers="cross_final" class="gt_row gt_right">0.41</td>
+<td headers="pct_futility_final" class="gt_row gt_right">0</td>
+<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.78918</td>
+<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.51814</td>
+<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.09809</td>
+<td headers="pct_adapt_allowed" class="gt_row gt_right">100</td>
+<td headers="pct_adapt_applied" class="gt_row gt_right">0</td>
+</tr>
+<tr>
+<td headers="scenario" class="gt_row gt_left">Lower control rate, higher dispersion</td>
+<td headers="strategy" class="gt_row gt_left">Unblinded SSR</td>
+<td headers="n_sims" class="gt_row gt_right">100</td>
+<td headers="rejection_rate" class="gt_row gt_right">0.94</td>
+<td headers="futility_rate" class="gt_row gt_right">0.06</td>
+<td headers="mean_n" class="gt_row gt_right">876.81</td>
+<td headers="sd_n" class="gt_row gt_right">105.94564</td>
+<td headers="pct_adapted" class="gt_row gt_right">23</td>
+<td headers="expected_participants_with_events" class="gt_row gt_right">389.21</td>
+<td headers="expected_events_observed" class="gt_row gt_right">899.54</td>
+<td headers="pct_reach_ia1" class="gt_row gt_right">100</td>
+<td headers="mean_if_ia1" class="gt_row gt_right">0.4164735</td>
+<td headers="mean_ia1_time" class="gt_row gt_right">24.78918</td>
+<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">223.47</td>
+<td headers="mean_events_observed_ia1" class="gt_row gt_right">433.74</td>
+<td headers="n_fallback_ia1" class="gt_row gt_right">0</td>
+<td headers="cross_ia1" class="gt_row gt_right">0.53</td>
+<td headers="pct_futility_ia1" class="gt_row gt_right">0.06</td>
+<td headers="pct_reach_final" class="gt_row gt_right">41</td>
+<td headers="mean_if_final" class="gt_row gt_right">1.235190</td>
+<td headers="mean_final_time" class="gt_row gt_right">70.26246</td>
+<td headers="mean_participants_with_events_final" class="gt_row gt_right">626.3171</td>
+<td headers="mean_events_observed_final" class="gt_row gt_right">1562.463</td>
+<td headers="n_fallback_final" class="gt_row gt_right">0</td>
+<td headers="cross_final" class="gt_row gt_right">0.41</td>
+<td headers="pct_futility_final" class="gt_row gt_right">0</td>
+<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.78918</td>
+<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.51814</td>
+<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.09809</td>
+<td headers="pct_adapt_allowed" class="gt_row gt_right">100</td>
+<td headers="pct_adapt_applied" class="gt_row gt_right">23</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The remainder of this vignette walks through the same ideas step by
+step on a single simulated trial so the mechanics remain transparent.
+For interactive what-if exploration of the same workflow, the package
+also ships a small Shiny prototype launched with
+<code><a href="../reference/run_ssr_shiny.html">run_ssr_shiny()</a></code>.</p>
+</div>
+<div class="section level2">
 <h2 id="simulation">Simulation<a class="anchor" aria-label="anchor" href="#simulation"></a>
 </h2>
 <p>We simulate the trial with the same rate ratio, but lower actual
 rates and a higher dispersion. We will limit the maximum sample size to
-40% more than the planned size (i.e., max N = ) to avoid unbounded
-increases.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+40% more than the planned size (<code>max N = 336</code>) to avoid
+unbounded increases.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Actual parameters</span></span>
@@ -761,7 +1394,7 @@ increases.</p>
 </h2>
 <p>We perform an interim analysis at <strong>Month 10</strong>, which is
 2 months prior to the end of planned enrollment (Month 12).</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">interim_time</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
 <span><span class="va">interim_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cut_data_by_date.html">cut_data_by_date</a></span><span class="op">(</span><span class="va">sim_data_planned</span>, cut_date <span class="op">=</span> <span class="va">interim_time</span><span class="op">)</span></span>
 <span></span>
@@ -783,9 +1416,9 @@ rate and dispersion, often used for monitoring without unblinding.</p>
 <p><strong>Unblinded Information:</strong> Calculated using the observed
 rates and dispersion in each group. This is the true Fisher information
 for the log rate ratio.</p>
-<p><span class="math display">\[ \mathcal{I} = \left(
-\frac{1}{\text{Var}(\hat{\beta}_{trt})} \right) \]</span></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p><span class="math display"> \mathcal{I} = \left(
+\frac{1}{\text{Var}(\hat{\beta}_{trt})} \right) </span></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Blinded SSR</span></span>
 <span><span class="va">blinded_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/blinded_ssr.html">blinded_ssr</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">interim_data</span>,</span>
@@ -852,7 +1485,7 @@ to increase the sample size or follow-up.</p>
 <p>The <code>unblinded_ssr</code> function estimates the required total
 sample size to be 888. We ensure the sample size is at least as large as
 the planned sample size.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_planned</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">design_plan</span><span class="op">$</span><span class="va">n_total</span><span class="op">)</span></span>
 <span><span class="va">n_estimated</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">ssr_res</span><span class="op">$</span><span class="va">n_total_unblinded</span><span class="op">)</span></span>
 <span></span>
@@ -888,7 +1521,7 @@ the planned sample size.</p>
 </h2>
 <p>We proceed to the final analysis at Month 56.4. We include the
 additional patients if the sample size was increased.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Update the dataset to include the additional patients</span></span>
 <span><span class="va">sim_data_final</span> <span class="op">&lt;-</span> <span class="va">sim_data</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">n_final</span>, <span class="op">]</span></span>
 <span></span>
@@ -939,10 +1572,10 @@ additional patients if the sample size was increased.</p>
 <h3 id="updating-bounds">Updating bounds<a class="anchor" aria-label="anchor" href="#updating-bounds"></a>
 </h3>
 <p>If the final information differs from the target (e.g., it is lower),
-we need to adjust the critical values to ensure we spend exactly <span class="math inline">\(\alpha\)</span>. We use the <code>gsDesign</code>
-package with <code>usTime</code> (user-specified information fraction)
-to update the bounds.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+we need to adjust the critical values to ensure we spend exactly <span class="math inline">\alpha</span>. We use <code>gsDesign</code> as the
+spending-function backend with <code>usTime</code> (user-specified
+information fraction) to update the bounds.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Information fraction at final analysis</span></span>
 <span><span class="co"># If final_info &lt; target_info, fraction &lt; 1. </span></span>
 <span><span class="co"># However, for the final analysis, we typically want to spend all remaining alpha.</span></span>
@@ -1500,7 +2133,7 @@ to update the bounds.</p>
 </tbody>
 </table>
 </div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Test statistic</span></span>
 <span><span class="va">z_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_final</span><span class="op">)</span><span class="op">[</span><span class="st">"treatmentExperimental"</span><span class="op">]</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">var_beta</span><span class="op">)</span></span>
@@ -1533,7 +2166,7 @@ to update the bounds.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Keaven Anderson.</p>
+  <p>Developed by Keaven Anderson, Hongtao Zhang, Andrea Maes.</p>
 </div>
 
 <div class="pkgdown-footer-right">
