@@ -84,3 +84,13 @@ test_that("cut_date_for_completers works with nb_sim_seasonal output", {
   expect_true(is.numeric(d10))
   expect_true(is.finite(d10))
 })
+
+test_that("cut_date_for_completers errors on missing columns", {
+  # Missing follow-up column
+  bad1 <- data.frame(id = 1, treatment = "A", enroll_time = 0)
+  expect_error(cut_date_for_completers(bad1, 1), "follow-up time column")
+
+  # Missing id column
+  bad2 <- data.frame(tte = 1, treatment = "A", enroll_time = 0)
+  expect_error(cut_date_for_completers(bad2, 1), "id")
+})

@@ -92,3 +92,126 @@ test_that("gsNBCalendar works with custom spending functions", {
 
   expect_s3_class(gs_design, "gsNB")
 })
+
+test_that("summary.gsNB returns gsNBsummary object", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 18, 24))
+
+  s <- summary(gs_design)
+  expect_s3_class(s, "gsNBsummary")
+  expect_true(is.character(s))
+
+  s_collapsed <- paste(s, collapse = " ")
+  expect_true(nchar(s_collapsed) > 0)
+
+  # Should mention key terms
+  expect_true(grepl("negative binomial", s_collapsed, ignore.case = TRUE))
+  expect_true(grepl("0.5", s_collapsed))
+  expect_true(grepl("0.3", s_collapsed))
+})
+
+test_that("print.gsNBsummary prints without error", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  gs_design <- gsNBCalendar(nb_ss, k = 2, analysis_times = c(12, 24))
+  s <- summary(gs_design)
+
+  expect_output(print(s))
+})
+
+test_that("toInteger.gsNB rounds final sample size", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  gs_design <- gsNBCalendar(nb_ss, k = 2, analysis_times = c(12, 24))
+
+  gs_int <- toInteger(gs_design)
+
+  expect_s3_class(gs_int, "gsNB")
+
+  # Final sample size should be integer (within rounding)
+  k <- gs_int$k
+  expect_equal(gs_int$n_total[k], round(gs_int$n_total[k]))
+
+  # n1 + n2 should equal n_total
+  expect_equal(gs_int$n1[k] + gs_int$n2[k], gs_int$n_total[k])
+})
+
+test_that("toInteger.gsNB respects ratio", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    ratio = 2,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  gs_design <- gsNBCalendar(nb_ss, k = 2, analysis_times = c(12, 24))
+
+  gs_int <- toInteger(gs_design)
+
+  # Final total should be divisible by (ratio + 1) = 3
+  expect_equal(gs_int$n_total[2] %% 3, 0)
+})
+
+test_that("toInteger.gsDesign dispatches correctly", {
+  gs <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 2)
+  gs_int <- toInteger(gs)
+  expect_s3_class(gs_int, "gsDesign")
+})
+
+test_that("compute_info_at_time returns positive value", {
+  info <- compute_info_at_time(
+    analysis_time = 12,
+    accrual_rate = 10,
+    accrual_duration = 10,
+    lambda1 = 0.5,
+    lambda2 = 0.3,
+    dispersion = 0.1
+  )
+
+  expect_true(is.numeric(info))
+  expect_true(info > 0)
+})
+
+test_that("compute_info_at_time increases with analysis time", {
+  base_args <- list(
+    accrual_rate = 10,
+    accrual_duration = 10,
+    lambda1 = 0.5,
+    lambda2 = 0.3,
+    dispersion = 0.1
+  )
+
+  info_early <- do.call(compute_info_at_time, c(list(analysis_time = 6), base_args))
+  info_late <- do.call(compute_info_at_time, c(list(analysis_time = 12), base_args))
+
+  expect_true(info_late > info_early)
+})
+
+test_that("gsNBCalendar errors without analysis_times", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+
+  expect_error(
+    gsNBCalendar(nb_ss, k = 3),
+    "analysis_times must be provided"
+  )
+})
+
+test_that("gsNBCalendar errors when analysis_times length != k", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+
+  expect_error(
+    gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 24)),
+    "analysis_times must have length k"
+  )
+})

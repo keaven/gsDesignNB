@@ -18,7 +18,7 @@
 #' }
 #'
 #' @export
-run_ssr_shiny <- function(
+run_ssr_shiny <- function( # nocov start
   display.mode = c("normal", "showcase"),
   launch.browser = interactive()
 ) {
@@ -52,4 +52,4 @@ run_ssr_shiny <- function(
     display.mode = display.mode,
     launch.browser = launch.browser
   )
-}
+} # nocov end
