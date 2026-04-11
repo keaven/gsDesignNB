@@ -14,10 +14,11 @@ Description: Provides tools for planning and simulating recurrent event trials
     Poisson) rate models. Implements sample size and power calculations for
     fixed designs with variable accrual, dropout, maximum follow-up, and event
     gaps, including methods of Zhu and Lakkis (2014) <doi:10.1002/sim.5947> and
-    Friede and Schmidli (2010) <doi:10.3414/ME09-02-0060>. Supports group
+    Friede and Schmidli (2010) <doi:10.3414/ME09-02-0060> as well as
+    an extension to account for gaps between events. Supports group
     sequential monitoring by building on the 'gsDesign' package.
     Includes recurrent-event simulation utilities (including seasonal rates),
-    interim data truncation, Wald-based inference for treatment rate ratios,
+    interim data truncation, Wald-based inference for rate ratios,
     and blinded or unblinded information estimation and sample size
     re-estimation.
 License: GPL (>= 3)
