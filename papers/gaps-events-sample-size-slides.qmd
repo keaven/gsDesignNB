@@ -175,6 +175,26 @@ $$
 
 ---
 
+## Broad parameter sweep: Jensen correction impact {.smaller}
+
+64 scenarios: $\lambda_1 \in \{0.3, 0.5, 1.0, 2.0\}$, $k \in \{0.1, 0.3, 0.5, 1.0\}$, gap $\in \{10, 20, 30, 45\}$ days; 3,500 replicates each.
+
+| $\lambda_1$ | $k$ | Gap (d) | $n$ (corr.) | $n$ (naive) | $\Delta n$ | Power (corr.) | Power (naive) | $\Delta$ (pp) |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 0.5 | 1.0 | 30 | 466 | 442 | 24 | 0.914 | 0.893 | 2.1 |
+| 0.5 | 1.0 | 45 | 490 | 456 | 34 | 0.910 | 0.890 | 2.1 |
+| 0.3 | 1.0 | 45 | 542 | 502 | 40 | 0.919 | 0.903 | 1.6 |
+| 0.5 | 0.5 | 45 | 300 | 284 | 16 | 0.908 | 0.891 | 1.7 |
+| 2.0 | 0.1 | 45 | 96 | 96 | 0 | 0.918 | 0.918 | 0.0 |
+
+**Key pattern:** $k \geq 0.5$ + gap $\geq 30$ days $\rightarrow$ 1--2 pp underpowering from naive formula; $k = 0.1$ or gap $\leq 10$ days $\rightarrow$ negligible impact. Extra subjects: 0--40 (0--8% of total $n$).
+
+:::: {.notes}
+**~1:30** — The sweep confirms that the Jensen correction matters most when patient heterogeneity (dispersion) is substantial and the protocol gap is long. The correction factor $k\lambda\gamma/(1+\lambda\gamma)^2$ saturates in $\lambda$ but grows linearly in $k$, so dispersion drives underpowering more than event rate.
+::::
+
+---
+
 ## What SSR simulations showed
 
 - **Type I error:** with SSR, nominal one-sided $\alpha = 0.025$ looked slightly inflated in the vignette simulations, consistent with the caution in **Mutze et al. (2019)**.
@@ -275,7 +295,7 @@ for (k in k_values) {
 
 - **NB-first story:** `gsDesignNB` is the user-facing layer for recurrent-event design and monitoring; `gsDesign` is the backend spending engine.
 - **Default model + target:** simple exponential within-subject rates plus gamma frailty give the NB model, and information depends on exposure, rates, and dispersion rather than raw events alone.
-- **Sample size details matter:** event-gap correction was needed so simulation-based power agreed with the analytical NB planning formula.
+- **Sample size details matter:** event-gap correction was needed so simulation-based power agreed with the analytical NB planning formula; a 64-scenario sweep confirms 1--2 pp of underpowering from the naive formula when $k \geq 0.5$ and gaps exceed 20 days.
 - **SSR findings:** blinded SSR tended to ask for more sample size; unblinded SSR was more sample-efficient when acceptable.
 - **Interim defaults matter:** stress-test **`mutze_test()`**, **`poisson_threshold`**, and **ML vs MoM** information paths before locking monitoring rules.
 - **Type I calibration:** in the vignette sensitivity runs, building the design at a slightly smaller nominal alpha helped.
@@ -289,7 +309,7 @@ for (k in k_values) {
 ## Practical takeaways
 
 - Anchor monitoring to **NB information**, not raw event counts alone.
-- If a protocol gap changes counted events, include the **event-gap correction** in planning and verify against simulation.
+- If a protocol gap changes counted events, include the **event-gap correction** in planning and verify against simulation; the correction adds 0--40 subjects (0--8%) but prevents 1--2 pp of power loss when $k \geq 0.5$.
 - For SSR, compare **blinded** and **unblinded** rules and check whether a slightly smaller nominal alpha improves calibration.
 
 :::: {.notes}
