@@ -315,8 +315,9 @@ The key findings from the simulation study are:
 
 # Role of AI in package development
 
-The **gsDesignNB** package was developed with substantial assistance from AI coding tools (Claude,
-via the Cursor IDE). The AI contributed to:
+The **gsDesignNB** package was developed with substantial assistance from AI coding tools. The
+primary development environment was VS Code with GitHub Copilot and Cursor; models used over the
+course of development include Gemini 3.1, Claude Opus 4.6, and GPT-5.4x. The AI contributed to:
 
 - **Code generation:** Implementation of simulation engines, data cutting functions, and the group
   sequential design interface.
@@ -328,14 +329,15 @@ via the Cursor IDE). The AI contributed to:
 - **Debugging:** Several subtle bugs (e.g., `toInteger()` overwriting enrollment with
   information-scaled values, positional argument mismatches in SSR calls, **gsDesign** collapsing
   futility bounds when `n.I` is provided directly) were identified through systematic diagnosis.
-- **Simulation studies:** The multi-scenario SSR simulation was designed, coded, and iteratively
-  refined through conversation, with the statistician guiding the experimental design and the AI
-  implementing it.
+- **Simulation studies:** The multi-scenario SSR simulation and the 64-scenario Jensen correction
+  sweep were designed, coded, and iteratively refined through conversation, with the statistician
+  guiding the experimental design and the AI implementing it.
 
 This workflow demonstrates that AI tools can accelerate statistical software development while
 requiring expert oversight for methodological correctness. The statistician's role shifts toward
 design decisions, mathematical validation, and interpretation, while the AI handles implementation,
-debugging, and large-scale computation.
+debugging, and large-scale computation. AI was key to the productivity needed to complete this
+scope of research.
 
 # Discussion
 

@@ -23,12 +23,13 @@ format:
 | Block | Minutes | Focus |
 |------|---------|--------|
 | Motivation & “three gaps” | ~5 | Why NB planning can misstate information |
-| Expected events & timing | ~6 | NB model + information timing |
-| GSD, simulation, SSR | ~7 | gsDesign backend, NB workflows, verification |
-| Software & wrap-up | ~4 | gsDesignNB-first map, conclusions |
+| Expected events & timing | ~5 | NB model + information timing |
+| GSD, simulation, SSR | ~7 | gsDesign backend, NB workflows, Jensen sweep |
+| AI in development | ~4 | Tooling, contributions, lessons learned |
+| Conclusions & wrap-up | ~4 | Takeaways, software map |
 
 :::: {.notes}
-**~0:30** — Set expectations: NB recurrent-event methods + implementation story, not a new asymptotic theorem.
+**~0:30** — Set expectations: NB recurrent-event methods + implementation story + AI workflow, not a new asymptotic theorem.
 ::::
 
 ---
@@ -46,9 +47,10 @@ format:
 
 ## “Gaps between events” — three senses
 
-- **Operational / calendar:** successive looks no earlier than $T_{i-1}+\Delta_i$ (trial clock).
+- **Operational / calendar:** successive looks no earlier than $\tau_{i-1}+\Delta_i$ (trial clock).
 - **Timing / accrual structure:** piecewise accrual or dropout support nonuniform information growth.
-- **Patient-level:** only events separated by at least $\delta$ **patient time** count toward the protocol total; closer events are **discarded** in simulation.
+- **Patient-level:** only events separated by at least $\delta$ **patient time** count toward the protocol total; 
+closer events for the same patient are **discarded** in simulation.
 
 :::: {.notes}
 **~1:30** — These interact but live on different scales; conflating them causes confusion in both writing and code.
@@ -60,28 +62,96 @@ format:
 
 Interim times solve **feasibility inequalities**:
 
-- Calendar floor: $T_i \ge C_i$
-- **Gap after previous look:** $T_i \ge T_{i-1}+\Delta_i$
+- Calendar floor: $\tau_i \ge C_i$
+- **Gap after previous look:** $\tau_i \ge \tau_{i-1}+\Delta_i$
 - Exposure / enrollment constraints
-- **Information threshold:** smallest $t$ with expected (or observed) information $\ge \mathcal{I}_i$, **subject to** the floors
+- **Information threshold:** smallest trial time $t$ with expected (or observed) information $\ge \mathscr{I}_i$, **subject to** the floors
 
 **Take the max** of applicable floors, then lift further if information requires it — the same backend timing logic applies once the information path is specified.
 
+**Maximum per patient follow-up (e.g., 1 year) can cap trial duration.
+
 :::: {.notes}
-**~2:00** — If you schedule looks at fixed event fractions or other crude event proxies **without** $\Delta_i$, the **information path** and spending time axis are wrong whenever enrollment continues during mandatory gaps.
+**~2:00** — $\tau_i$ = calendar time of look $i$. If you schedule looks at fixed event fractions or other crude event proxies **without** $\Delta_i$, the **information path** and spending time axis are wrong whenever enrollment continues during mandatory gaps.
 ::::
 
 ---
 
 ## NB recurrent-event model
 
-- **Default patient model:** conditional on treatment arm, recurrent events follow a Poisson process with a **constant within-subject rate**.
-- **Negative binomial variation:** a **gamma frailty** random effect multiplies that rate across subjects, giving marginal NB counts.
-- **Time-varying extension:** `nb_sim_seasonal()` is the main built-in option for season-specific event rates.
-- **Piecewise accrual / dropout** and expected-event formulas are **timing infrastructure**; in NB monitoring, information depends on **exposure, rates, and dispersion**, not events alone.
+- **Default patient model:** conditional on treatment arm $g$, recurrent events follow a Poisson process with rate $\lambda_g$ (events per unit time).
+- **Gamma frailty:** each subject has a latent rate $\Lambda_i \sim \text{Gamma}(1/k,\; k\lambda_g)$, generating events from $\text{Poisson}(\Lambda_i \, t_i)$. Marginalizing gives NB counts with mean $\mu_i = \lambda_g t_i$ and variance $\mu_i + k\mu_i^2$.
+- **Dispersion** $k$: controls patient heterogeneity — $k=0$ is Poisson; larger $k$ means heavier tails and **less information per expected event**.
+- **Time-varying extension:** `nb_sim_seasonal()` for season-specific rates.
+- **Piecewise accrual / dropout** and expected-event formulas are **timing infrastructure**; information depends on **exposure, rates, and dispersion**, not events alone.
+- **Per patient maximum follow-up**; e.g., 1 year.
 
 :::: {.notes}
 **~1:45** — Emphasize the default model first; the piecewise algebra is supporting timing infrastructure, not the primary patient-level event model.
+::::
+
+---
+
+## NB distribution: parameters {.smaller}
+
+For subject $i$ in treatment group $g$ with exposure $t_i$:
+
+- **Event count** $Y_i \sim \text{NB}(\mu_i, k)$
+- **Mean:** $\mu_i = \lambda_g \, t_i$ where $\lambda_g$ = event rate (events/month) in arm $g$
+- **Variance:** $\text{Var}(Y_i) = \mu_i + k\,\mu_i^2$
+- **Dispersion** $k$: measures patient heterogeneity (gamma frailty variance)
+  - $k = 0$: Poisson (no overdispersion)
+  - $k$ large: heavy-tailed, more variable outcomes
+
+| Symbol | Meaning |
+|--------|---------|
+| $\lambda_g$ | Event rate in arm $g$ (events per unit time) |
+| $t_i$ | Exposure time for subject $i$ |
+| $\mu_i = \lambda_g t_i$ | Expected event count for subject $i$ |
+| $k$ | Dispersion (overdispersion parameter) |
+| $\theta = \log(\lambda_2/\lambda_1)$ | Treatment effect (log rate ratio) |
+
+:::: {.notes}
+**~1:00** — Define the parameters before showing the formula. Key point: $k$ controls how much information each expected event carries — higher $k$ means less information per event.
+::::
+
+---
+
+## NB count distribution intuition
+
+Same mean $\mu=5$, larger $k$ gives more spread and heavier tails.
+
+```{r nb-distribution-intuition, echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=3.5}
+old_par <- par(no.readonly = TRUE)
+on.exit(par(old_par), add = TRUE)
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+k_values <- c(0, 0.5, 1)
+x <- 0:12
+for (k in k_values) {
+  mu <- 5
+  probs <- if (k == 0) {
+    dpois(x, lambda = mu)
+  } else {
+    dnbinom(x, size = 1 / k, mu = mu)
+  }
+  barplot(
+    probs,
+    names.arg = x,
+    main = paste("k =", k),
+    xlab = "Event count",
+    ylab = "Probability",
+    ylim = c(0, 0.22),
+    col = "steelblue",
+    border = "white",
+    cex.names = 0.7
+  )
+}
+```
+
+- Per-subject information: $\mathscr{I}_i = \mu_i/(1+k\mu_i)$ — higher $k$ means **less information per expected event**.
+
+:::: {.notes}
+**~1:00** — Same mean, more dispersion means fatter tail and less information per expected event. The formula makes this concrete: at $k=0$ information equals $\mu_i$; at $k>0$ it's always less.
 ::::
 
 ---
@@ -102,7 +172,7 @@ Potential event times per patient $T_{j,1}<T_{j,2}<\cdots$.
 
 ## Trial-level $\Delta$ vs patient-level $\delta$
 
-| | $\Delta_i$ between interims | $\delta$ between patient events |
+| | $\Delta_i$ between interims ($\tau$-scale) | $\delta$ between patient events ($T$-scale) |
 |--|------------------------------|-----------------------------------|
 | **Scale** | Trial / database-lock calendar | Per-patient timeline |
 | **Role** | **When** looks may occur | **Which** events contribute to information |
@@ -130,7 +200,7 @@ n_{\text{total}} \propto
 \right]
 $$
 
-- **Per-subject information:** $\mathcal{I}_i = \mu_i / (1 + k\mu_i)$, so information is proportional to expected events only when $k=0$.
+- **Per-subject information:** $\mathscr{I}_i = \mu_i / (1 + k\mu_i)$, so information is proportional to expected events only when $k=0$.
 
 :::: {.notes}
 **~1:30** — Statistical audience slide: connect Zhu, Friede, and Mutze through the same variance / information formula rather than through software labels.
@@ -161,7 +231,7 @@ After each event, a protocol gap $g$ reduces the effective event rate and the at
 - With gamma frailty, that naive rate is too optimistic: it overstates expected events and slightly understates variance.
 
 $$
-\mathrm{E}\!\left[\frac{\Lambda}{1+\Lambda g}\right]
+\mathrm{E}\!\left[\frac{\Lambda_i}{1+\Lambda_i g}\right]
 \approx
 \frac{\lambda}{1+\lambda g}
 \left(1 - \frac{k\lambda g}{(1+\lambda g)^2}\right)
@@ -227,43 +297,6 @@ $$
 
 ---
 
-## NB count distribution intuition
-
-Same mean $\mu=5$, larger $k$ gives more spread and heavier tails.
-
-```{r nb-distribution-intuition, echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=3.5}
-old_par <- par(no.readonly = TRUE)
-on.exit(par(old_par), add = TRUE)
-par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
-k_values <- c(0, 0.5, 1)
-x <- 0:12
-for (k in k_values) {
-  mu <- 5
-  probs <- if (k == 0) {
-    dpois(x, lambda = mu)
-  } else {
-    dnbinom(x, size = 1 / k, mu = mu)
-  }
-  barplot(
-    probs,
-    names.arg = x,
-    main = paste("k =", k),
-    xlab = "Event count",
-    ylab = "Probability",
-    ylim = c(0, 0.22),
-    col = "steelblue",
-    border = "white",
-    cex.names = 0.7
-  )
-}
-```
-
-:::: {.notes}
-**~1:00** — Quick intuition slide from the sample-size vignette: same mean, more dispersion means fatter tail and less information per expected event.
-::::
-
----
-
 ## Sample size re-estimation (recurrent / NB)
 
 - **When it helps:** if planning guesses for **overdispersion**, accrual, or follow-up are wrong, re-estimating total **N** or follow-up after an interim can recover **unconditional power** — only if the adaptation rule is **pre-specified** and **Type I / power** are checked by simulation.
@@ -281,12 +314,55 @@ for (k in k_values) {
 
 - **What it is:** Wald test for treatment effect on **recurrent event counts** with exposure offset — **negative binomial** log-linear model (Mutze et al. 2019-style inference), implemented as **`mutze_test()`** in **gsDesignNB** and used as the default unblinded interim model in **`sim_gs_nbinom()`**.
 - **Variance:** under `MASS::glm.nb`, $\mathrm{Var}(\text{count}) \approx \mu + \mu^2/\theta$; **large** shape $\theta$ means **near-Poisson**, while **tiny** $\theta$ means unstable overdispersion fit.
-- **`poisson_threshold`** $T$ (default **1000**): after fitting NB, if $\theta \notin [1/T, T]$, fall back to **Poisson** Wald with no extra-Poisson term.
-- **Tuning $T$:** **lower** $T$ makes the Poisson fallback happen **sooner**; **raise** $T$ to keep NB unless $\theta$ is more extreme; always **sensitivity-check** the choice.
+- **`poisson_threshold`** $\kappa$ (default **1000**): after fitting NB, if $\theta \notin [1/\kappa, \kappa]$, fall back to **Poisson** Wald with no extra-Poisson term.
+- **Tuning $\kappa$:** **lower** $\kappa$ makes the Poisson fallback happen **sooner**; **raise** $\kappa$ to keep NB unless $\theta$ is more extreme; always **sensitivity-check** the choice.
 - **Method of moments:** **`sim_gs_nbinom()`** also computes **MoM**-based nuisance parameters and **blinded / unblinded information** alongside **ML** — compare the two paths in simulation before fixing SSR or monitoring rules; **`mutze_test()`** does not auto-switch to MoM.
 
 :::: {.notes}
 **~1:15** — MoM is an **additional** diagnostic path in simulation output, not a drop-in replacement for the Wald test unless you change the analysis spec.
+::::
+
+---
+
+## Use of AI: tooling and workflow
+
+- **gsDesignNB** developed through repeated cycles of AI prompt and response.
+- **Environment:** VS Code with GitHub Copilot and Cursor (multi-window interface).
+  - Claude Code available internally: lower learning curve?
+- **Models:** Gemini 3.1, Claude Opus 4.6, GPT-5.4x currently in use.
+- **Hardware:** Power Mac with M4 Pro was key to simulation speed (11 parallel cores, 
+64-scenario sweep with 3500 trials/scenario in ~2 hours).
+- **AI skills** under development; summer intern project.
+
+:::: {.notes}
+**~1:00** — Tooling overview. VS Code + Copilot/Cursor is the main workflow; multiple models used over the course of development.
+::::
+
+---
+
+## Use of AI: what AI contributed
+
+- **Code generation:** simulation engines, data cutting functions, GSD interface.
+- **Preliminary Shiny interface:** for simulation.
+- **Mathematical derivation:** Jensen's correction identified and derived through interactive dialogue analyzing simulation discrepancies — AI performed Monte Carlo verification and Taylor expansion.
+- **Documentation:** vignettes, roxygen2, notation consistency — AI drafting, statistician reviewing.
+- **Debugging:** subtle bugs identified through systematic diagnosis (e.g., `toInteger()` overwriting enrollment, positional argument mismatches in SSR, **gsDesign** collapsing futility bounds).
+- **Simulation studies:** 13-scenario SSR study and 64-scenario Jensen sweep designed collaboratively, coded and refined by AI.
+
+:::: {.notes}
+**~1:30** — Walk through the five contribution areas. Emphasize the Jensen derivation as a case where AI reasoning led to a real methodological insight, not just code.
+::::
+
+---
+
+## Use of AI: lessons learned
+
+- AI accelerates statistical software development but requires **expert oversight** for methodological correctness and interpretation.
+- Statistician's role shifts toward **design decisions**, **mathematical validation**, and **interpretation**; AI handles implementation, debugging, and large-scale computation.
+- AI was key to the productivity needed to complete this scope of research.
+
+:::: {.notes}
+**~1:00** — The punch line: AI is a productivity multiplier, not a replacement for statistical expertise.
 ::::
 
 ---
@@ -311,6 +387,7 @@ for (k in k_values) {
 - Anchor monitoring to **NB information**, not raw event counts alone.
 - If a protocol gap changes counted events, include the **event-gap correction** in planning and verify against simulation; the correction adds 0--40 subjects (0--8%) but prevents 1--2 pp of power loss when $k \geq 0.5$.
 - For SSR, compare **blinded** and **unblinded** rules and check whether a slightly smaller nominal alpha improves calibration.
+- AI was key to productivity needed to complete this research.
 
 :::: {.notes}
 **~1:00** — Final applied slide before references.
