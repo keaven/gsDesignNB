@@ -40,13 +40,25 @@ abstract: |
 # Introduction
 
 Recurrent event endpoints are common in clinical trials for conditions such as multiple sclerosis
-relapses, COPD exacerbations, and heart failure hospitalizations. The negative binomial (NB) model
-provides a natural framework for analyzing such data, accounting for both within-subject correlation
-(overdispersion) and variable follow-up through an exposure offset
-[@zhu2014sample; @friede2010blinded].
+relapses, COPD exacerbations, and heart failure hospitalizations. When every patient has the same
+underlying event rate, a Poisson model suffices: the variance equals the mean, and information
+accrues linearly with exposure. Real patient populations, however, exhibit substantial
+between-patient heterogeneity in event rates. Sicker patients contribute many events while most
+contribute few, inflating the observed variance well beyond the Poisson mean. Ignoring this
+overdispersion leads to anticonservative tests and overstated power, understating the sample size
+needed to detect a clinically meaningful treatment effect.
 
-Sample size calculation for NB outcomes requires specifying not only the event rates and treatment
-effect but also the dispersion parameter, average exposure time, and potentially event gap
+The negative binomial (NB) model addresses this by adding a single dispersion parameter $k$
+that captures the excess variation. Published NB fits from pivotal or large trials confirm that
+$k>0$ is the rule rather than the exception: estimates range from roughly $0.8$ in asthma
+[@lipson2018impact] to $1.2$ in COPD [@wedzicha2016flame], $1.5$ in heart failure
+[@mcmurray2014paradigm], and $3.1$ in multiple sclerosis [@hauser2017ocrelizumab]. Even moderate
+dispersion materially reduces the per-patient information — from $\mu_i$ under the Poisson to
+$\mu_i/(1+k\mu_i)$ under the NB — so that a design ignoring $k$ can understate the required
+sample size by 10–30%.
+
+Sample size calculation for NB outcomes therefore requires specifying not only the event rates and
+treatment effect but also the dispersion parameter, average exposure time, and potentially event gap
 durations. In practice, several of these parameters may be uncertain at the design stage. Group
 sequential designs allow for interim monitoring, and sample size re-estimation (SSR) can adapt the
 trial size when nuisance parameters deviate from assumptions. For NB recurrent-event designs, the
