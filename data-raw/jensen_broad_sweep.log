@@ -1,0 +1,524 @@
+ℹ Loading gsDesignNB
+Using 11 cores for parallel simulation
+Total scenarios: 64
+
+=== Scenario 1/64: lambda1=0.3, k=0.1, gap=10 days ===
+  n_corrected = 162, n_naive = 162 (diff = 0)
+  Power corrected: 0.9051 [0.8950, 0.9147]
+  Power naive:     0.9051 [0.8950, 0.9147]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 2/64: lambda1=0.5, k=0.1, gap=10 days ===
+  n_corrected = 116, n_naive = 114 (diff = 2)
+  Power corrected: 0.9071 [0.8970, 0.9166]
+  Power naive:     0.9040 [0.8938, 0.9136]
+  Paired diff:     0.3143 pp (SE=0.2080)
+
+=== Scenario 3/64: lambda1=1.0, k=0.1, gap=10 days ===
+  n_corrected = 80, n_naive = 80 (diff = 0)
+  Power corrected: 0.9023 [0.8920, 0.9119]
+  Power naive:     0.9023 [0.8920, 0.9119]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 4/64: lambda1=2.0, k=0.1, gap=10 days ===
+  n_corrected = 62, n_naive = 62 (diff = 0)
+  Power corrected: 0.9109 [0.9009, 0.9201]
+  Power naive:     0.9109 [0.9009, 0.9201]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 5/64: lambda1=0.3, k=0.3, gap=10 days ===
+  n_corrected = 232, n_naive = 230 (diff = 2)
+  Power corrected: 0.9174 [0.9078, 0.9263]
+  Power naive:     0.9134 [0.9036, 0.9225]
+  Paired diff:     0.4000 pp (SE=0.2019)
+
+=== Scenario 6/64: lambda1=0.5, k=0.3, gap=10 days ===
+  n_corrected = 186, n_naive = 184 (diff = 2)
+  Power corrected: 0.9046 [0.8944, 0.9141]
+  Power naive:     0.9003 [0.8899, 0.9100]
+  Paired diff:     0.4286 pp (SE=0.1958)
+
+=== Scenario 7/64: lambda1=1.0, k=0.3, gap=10 days ===
+  n_corrected = 150, n_naive = 148 (diff = 2)
+  Power corrected: 0.9091 [0.8991, 0.9185]
+  Power naive:     0.9029 [0.8926, 0.9125]
+  Paired diff:     0.6286 pp (SE=0.2136)
+
+=== Scenario 8/64: lambda1=2.0, k=0.3, gap=10 days ===
+  n_corrected = 132, n_naive = 130 (diff = 2)
+  Power corrected: 0.9000 [0.8896, 0.9097]
+  Power naive:     0.8937 [0.8830, 0.9037]
+  Paired diff:     0.6286 pp (SE=0.2456)
+
+=== Scenario 9/64: lambda1=0.3, k=0.5, gap=10 days ===
+  n_corrected = 302, n_naive = 298 (diff = 4)
+  Power corrected: 0.8989 [0.8884, 0.9087]
+  Power naive:     0.8946 [0.8839, 0.9046]
+  Paired diff:     0.4286 pp (SE=0.2039)
+
+=== Scenario 10/64: lambda1=0.5, k=0.5, gap=10 days ===
+  n_corrected = 256, n_naive = 252 (diff = 4)
+  Power corrected: 0.9077 [0.8976, 0.9171]
+  Power naive:     0.9069 [0.8967, 0.9163]
+  Paired diff:     0.0857 pp (SE=0.2232)
+
+=== Scenario 11/64: lambda1=1.0, k=0.5, gap=10 days ===
+  n_corrected = 220, n_naive = 216 (diff = 4)
+  Power corrected: 0.9080 [0.8979, 0.9174]
+  Power naive:     0.9034 [0.8932, 0.9130]
+  Paired diff:     0.4571 pp (SE=0.2457)
+
+=== Scenario 12/64: lambda1=2.0, k=0.5, gap=10 days ===
+  n_corrected = 202, n_naive = 198 (diff = 4)
+  Power corrected: 0.9089 [0.8988, 0.9182]
+  Power naive:     0.9017 [0.8914, 0.9114]
+  Paired diff:     0.7143 pp (SE=0.2336)
+
+=== Scenario 13/64: lambda1=0.3, k=1.0, gap=10 days ===
+  n_corrected = 478, n_naive = 468 (diff = 10)
+  Power corrected: 0.9109 [0.9009, 0.9201]
+  Power naive:     0.9063 [0.8961, 0.9157]
+  Paired diff:     0.4571 pp (SE=0.2285)
+
+=== Scenario 14/64: lambda1=0.5, k=1.0, gap=10 days ===
+  n_corrected = 432, n_naive = 422 (diff = 10)
+  Power corrected: 0.9077 [0.8976, 0.9171]
+  Power naive:     0.9037 [0.8935, 0.9133]
+  Paired diff:     0.4000 pp (SE=0.2355)
+
+=== Scenario 15/64: lambda1=1.0, k=1.0, gap=10 days ===
+  n_corrected = 396, n_naive = 388 (diff = 8)
+  Power corrected: 0.9071 [0.8970, 0.9166]
+  Power naive:     0.9017 [0.8914, 0.9114]
+  Paired diff:     0.5429 pp (SE=0.2155)
+
+=== Scenario 16/64: lambda1=2.0, k=1.0, gap=10 days ===
+  n_corrected = 378, n_naive = 370 (diff = 8)
+  Power corrected: 0.9103 [0.9003, 0.9196]
+  Power naive:     0.9040 [0.8938, 0.9136]
+  Paired diff:     0.6286 pp (SE=0.2136)
+
+=== Scenario 17/64: lambda1=0.3, k=0.1, gap=20 days ===
+  n_corrected = 172, n_naive = 172 (diff = 0)
+  Power corrected: 0.9174 [0.9078, 0.9263]
+  Power naive:     0.9174 [0.9078, 0.9263]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 18/64: lambda1=0.5, k=0.1, gap=20 days ===
+  n_corrected = 126, n_naive = 124 (diff = 2)
+  Power corrected: 0.9094 [0.8994, 0.9187]
+  Power naive:     0.9071 [0.8970, 0.9166]
+  Paired diff:     0.2286 pp (SE=0.1938)
+
+=== Scenario 19/64: lambda1=1.0, k=0.1, gap=20 days ===
+  n_corrected = 90, n_naive = 90 (diff = 0)
+  Power corrected: 0.9089 [0.8988, 0.9182]
+  Power naive:     0.9089 [0.8988, 0.9182]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 20/64: lambda1=2.0, k=0.1, gap=20 days ===
+  n_corrected = 72, n_naive = 72 (diff = 0)
+  Power corrected: 0.9089 [0.8988, 0.9182]
+  Power naive:     0.9089 [0.8988, 0.9182]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 21/64: lambda1=0.3, k=0.3, gap=20 days ===
+  n_corrected = 244, n_naive = 240 (diff = 4)
+  Power corrected: 0.9063 [0.8961, 0.9157]
+  Power naive:     0.9037 [0.8935, 0.9133]
+  Paired diff:     0.2571 pp (SE=0.2119)
+
+=== Scenario 22/64: lambda1=0.5, k=0.3, gap=20 days ===
+  n_corrected = 198, n_naive = 192 (diff = 6)
+  Power corrected: 0.9117 [0.9018, 0.9209]
+  Power naive:     0.9020 [0.8917, 0.9117]
+  Paired diff:     0.9714 pp (SE=0.2582)
+
+=== Scenario 23/64: lambda1=1.0, k=0.3, gap=20 days ===
+  n_corrected = 162, n_naive = 158 (diff = 4)
+  Power corrected: 0.9034 [0.8932, 0.9130]
+  Power naive:     0.8994 [0.8890, 0.9092]
+  Paired diff:     0.4000 pp (SE=0.2355)
+
+=== Scenario 24/64: lambda1=2.0, k=0.3, gap=20 days ===
+  n_corrected = 142, n_naive = 140 (diff = 2)
+  Power corrected: 0.8946 [0.8839, 0.9046]
+  Power naive:     0.8957 [0.8851, 0.9056]
+  Paired diff:     -0.1143 pp (SE=0.2425)
+
+=== Scenario 25/64: lambda1=0.3, k=0.5, gap=20 days ===
+  n_corrected = 316, n_naive = 308 (diff = 8)
+  Power corrected: 0.9091 [0.8991, 0.9185]
+  Power naive:     0.9046 [0.8944, 0.9141]
+  Paired diff:     0.4571 pp (SE=0.2249)
+
+=== Scenario 26/64: lambda1=0.5, k=0.5, gap=20 days ===
+  n_corrected = 270, n_naive = 260 (diff = 10)
+  Power corrected: 0.9089 [0.8988, 0.9182]
+  Power naive:     0.9051 [0.8950, 0.9147]
+  Paired diff:     0.3714 pp (SE=0.2571)
+
+=== Scenario 27/64: lambda1=1.0, k=0.5, gap=20 days ===
+  n_corrected = 232, n_naive = 226 (diff = 6)
+  Power corrected: 0.9066 [0.8964, 0.9160]
+  Power naive:     0.8966 [0.8860, 0.9065]
+  Paired diff:     1.0000 pp (SE=0.2436)
+
+=== Scenario 28/64: lambda1=2.0, k=0.5, gap=20 days ===
+  n_corrected = 214, n_naive = 208 (diff = 6)
+  Power corrected: 0.9009 [0.8905, 0.9106]
+  Power naive:     0.8963 [0.8857, 0.9062]
+  Paired diff:     0.4571 pp (SE=0.2490)
+
+=== Scenario 29/64: lambda1=0.3, k=1.0, gap=20 days ===
+  n_corrected = 498, n_naive = 478 (diff = 20)
+  Power corrected: 0.9066 [0.8964, 0.9160]
+  Power naive:     0.8971 [0.8866, 0.9070]
+  Paired diff:     0.9429 pp (SE=0.2867)
+
+=== Scenario 30/64: lambda1=0.5, k=1.0, gap=20 days ===
+  n_corrected = 450, n_naive = 432 (diff = 18)
+  Power corrected: 0.9131 [0.9033, 0.9223]
+  Power naive:     0.9031 [0.8929, 0.9127]
+  Paired diff:     1.0000 pp (SE=0.3086)
+
+=== Scenario 31/64: lambda1=1.0, k=1.0, gap=20 days ===
+  n_corrected = 412, n_naive = 396 (diff = 16)
+  Power corrected: 0.9191 [0.9096, 0.9280]
+  Power naive:     0.9083 [0.8982, 0.9176]
+  Paired diff:     1.0857 pp (SE=0.2674)
+
+=== Scenario 32/64: lambda1=2.0, k=1.0, gap=20 days ===
+  n_corrected = 392, n_naive = 378 (diff = 14)
+  Power corrected: 0.9066 [0.8964, 0.9160]
+  Power naive:     0.8989 [0.8884, 0.9087]
+  Paired diff:     0.7714 pp (SE=0.2662)
+
+=== Scenario 33/64: lambda1=0.3, k=0.1, gap=30 days ===
+  n_corrected = 184, n_naive = 180 (diff = 4)
+  Power corrected: 0.9154 [0.9057, 0.9244]
+  Power naive:     0.9086 [0.8985, 0.9179]
+  Paired diff:     0.6857 pp (SE=0.2521)
+
+=== Scenario 34/64: lambda1=0.5, k=0.1, gap=30 days ===
+  n_corrected = 136, n_naive = 134 (diff = 2)
+  Power corrected: 0.9109 [0.9009, 0.9201]
+  Power naive:     0.9086 [0.8985, 0.9179]
+  Paired diff:     0.2286 pp (SE=0.2138)
+
+=== Scenario 35/64: lambda1=1.0, k=0.1, gap=30 days ===
+  n_corrected = 100, n_naive = 98 (diff = 2)
+  Power corrected: 0.9157 [0.9060, 0.9247]
+  Power naive:     0.9083 [0.8982, 0.9176]
+  Paired diff:     0.7429 pp (SE=0.2135)
+
+=== Scenario 36/64: lambda1=2.0, k=0.1, gap=30 days ===
+  n_corrected = 82, n_naive = 82 (diff = 0)
+  Power corrected: 0.9049 [0.8947, 0.9144]
+  Power naive:     0.9049 [0.8947, 0.9144]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 37/64: lambda1=0.3, k=0.3, gap=30 days ===
+  n_corrected = 256, n_naive = 250 (diff = 6)
+  Power corrected: 0.9046 [0.8944, 0.9141]
+  Power naive:     0.8971 [0.8866, 0.9070]
+  Paired diff:     0.7429 pp (SE=0.2247)
+
+=== Scenario 38/64: lambda1=0.5, k=0.3, gap=30 days ===
+  n_corrected = 208, n_naive = 202 (diff = 6)
+  Power corrected: 0.9154 [0.9057, 0.9244]
+  Power naive:     0.9037 [0.8935, 0.9133]
+  Paired diff:     1.1714 pp (SE=0.2500)
+
+=== Scenario 39/64: lambda1=1.0, k=0.3, gap=30 days ===
+  n_corrected = 172, n_naive = 168 (diff = 4)
+  Power corrected: 0.9097 [0.8997, 0.9190]
+  Power naive:     0.9023 [0.8920, 0.9119]
+  Paired diff:     0.7429 pp (SE=0.2421)
+
+=== Scenario 40/64: lambda1=2.0, k=0.3, gap=30 days ===
+  n_corrected = 152, n_naive = 150 (diff = 2)
+  Power corrected: 0.9100 [0.9000, 0.9193]
+  Power naive:     0.9120 [0.9021, 0.9212]
+  Paired diff:     -0.2000 pp (SE=0.2195)
+
+=== Scenario 41/64: lambda1=0.3, k=0.5, gap=30 days ===
+  n_corrected = 330, n_naive = 318 (diff = 12)
+  Power corrected: 0.9066 [0.8964, 0.9160]
+  Power naive:     0.8980 [0.8875, 0.9078]
+  Paired diff:     0.8571 pp (SE=0.2584)
+
+=== Scenario 42/64: lambda1=0.5, k=0.5, gap=30 days ===
+  n_corrected = 282, n_naive = 270 (diff = 12)
+  Power corrected: 0.9089 [0.8988, 0.9182]
+  Power naive:     0.8963 [0.8857, 0.9062]
+  Paired diff:     1.2571 pp (SE=0.2962)
+
+=== Scenario 43/64: lambda1=1.0, k=0.5, gap=30 days ===
+  n_corrected = 244, n_naive = 236 (diff = 8)
+  Power corrected: 0.9014 [0.8911, 0.9111]
+  Power naive:     0.9000 [0.8896, 0.9097]
+  Paired diff:     0.1429 pp (SE=0.2665)
+
+=== Scenario 44/64: lambda1=2.0, k=0.5, gap=30 days ===
+  n_corrected = 224, n_naive = 218 (diff = 6)
+  Power corrected: 0.9103 [0.9003, 0.9196]
+  Power naive:     0.8989 [0.8884, 0.9087]
+  Paired diff:     1.1429 pp (SE=0.2704)
+
+=== Scenario 45/64: lambda1=0.3, k=1.0, gap=30 days ===
+  n_corrected = 516, n_naive = 488 (diff = 28)
+  Power corrected: 0.9137 [0.9039, 0.9228]
+  Power naive:     0.9006 [0.8902, 0.9103]
+  Paired diff:     1.3143 pp (SE=0.3325)
+
+=== Scenario 46/64: lambda1=0.5, k=1.0, gap=30 days ===
+  n_corrected = 466, n_naive = 442 (diff = 24)
+  Power corrected: 0.9154 [0.9057, 0.9244]
+  Power naive:     0.9026 [0.8923, 0.9122]
+  Paired diff:     1.2857 pp (SE=0.3136)
+
+=== Scenario 47/64: lambda1=1.0, k=1.0, gap=30 days ===
+  n_corrected = 426, n_naive = 406 (diff = 20)
+  Power corrected: 0.9131 [0.9033, 0.9223]
+  Power naive:     0.8963 [0.8857, 0.9062]
+  Paired diff:     1.6857 pp (SE=0.3233)
+
+=== Scenario 48/64: lambda1=2.0, k=1.0, gap=30 days ===
+  n_corrected = 402, n_naive = 388 (diff = 14)
+  Power corrected: 0.9034 [0.8932, 0.9130]
+  Power naive:     0.8911 [0.8804, 0.9013]
+  Paired diff:     1.2286 pp (SE=0.2777)
+
+=== Scenario 49/64: lambda1=0.3, k=0.1, gap=45 days ===
+  n_corrected = 198, n_naive = 196 (diff = 2)
+  Power corrected: 0.9091 [0.8991, 0.9185]
+  Power naive:     0.9031 [0.8929, 0.9127]
+  Paired diff:     0.6000 pp (SE=0.2230)
+
+=== Scenario 50/64: lambda1=0.5, k=0.1, gap=45 days ===
+  n_corrected = 150, n_naive = 148 (diff = 2)
+  Power corrected: 0.9191 [0.9096, 0.9280]
+  Power naive:     0.9169 [0.9072, 0.9258]
+  Paired diff:     0.2286 pp (SE=0.2060)
+
+=== Scenario 51/64: lambda1=1.0, k=0.1, gap=45 days ===
+  n_corrected = 116, n_naive = 114 (diff = 2)
+  Power corrected: 0.9154 [0.9057, 0.9244]
+  Power naive:     0.9097 [0.8997, 0.9190]
+  Paired diff:     0.5714 pp (SE=0.2058)
+
+=== Scenario 52/64: lambda1=2.0, k=0.1, gap=45 days ===
+  n_corrected = 96, n_naive = 96 (diff = 0)
+  Power corrected: 0.9140 [0.9042, 0.9231]
+  Power naive:     0.9140 [0.9042, 0.9231]
+  Paired diff:     0.0000 pp (SE=0.0000)
+
+=== Scenario 53/64: lambda1=0.3, k=0.3, gap=45 days ===
+  n_corrected = 274, n_naive = 264 (diff = 10)
+  Power corrected: 0.9111 [0.9012, 0.9204]
+  Power naive:     0.9003 [0.8899, 0.9100]
+  Paired diff:     1.0857 pp (SE=0.2735)
+
+=== Scenario 54/64: lambda1=0.5, k=0.3, gap=45 days ===
+  n_corrected = 224, n_naive = 216 (diff = 8)
+  Power corrected: 0.9074 [0.8973, 0.9168]
+  Power naive:     0.9000 [0.8896, 0.9097]
+  Paired diff:     0.7429 pp (SE=0.2738)
+
+=== Scenario 55/64: lambda1=1.0, k=0.3, gap=45 days ===
+  n_corrected = 188, n_naive = 182 (diff = 6)
+  Power corrected: 0.9109 [0.9009, 0.9201]
+  Power naive:     0.9031 [0.8929, 0.9127]
+  Paired diff:     0.7714 pp (SE=0.2753)
+
+=== Scenario 56/64: lambda1=2.0, k=0.3, gap=45 days ===
+  n_corrected = 168, n_naive = 164 (diff = 4)
+  Power corrected: 0.9091 [0.8991, 0.9185]
+  Power naive:     0.9026 [0.8923, 0.9122]
+  Paired diff:     0.6571 pp (SE=0.2405)
+
+=== Scenario 57/64: lambda1=0.3, k=0.5, gap=45 days ===
+  n_corrected = 348, n_naive = 332 (diff = 16)
+  Power corrected: 0.9123 [0.9024, 0.9215]
+  Power naive:     0.8974 [0.8869, 0.9073]
+  Paired diff:     1.4857 pp (SE=0.3014)
+
+=== Scenario 58/64: lambda1=0.5, k=0.5, gap=45 days ===
+  n_corrected = 300, n_naive = 284 (diff = 16)
+  Power corrected: 0.9069 [0.8967, 0.9163]
+  Power naive:     0.8940 [0.8833, 0.9040]
+  Paired diff:     1.2857 pp (SE=0.2864)
+
+=== Scenario 59/64: lambda1=1.0, k=0.5, gap=45 days ===
+  n_corrected = 260, n_naive = 250 (diff = 10)
+  Power corrected: 0.9066 [0.8964, 0.9160]
+  Power naive:     0.8946 [0.8839, 0.9046]
+  Paired diff:     1.2000 pp (SE=0.2763)
+
+=== Scenario 60/64: lambda1=2.0, k=0.5, gap=45 days ===
+  n_corrected = 238, n_naive = 232 (diff = 6)
+  Power corrected: 0.9020 [0.8917, 0.9117]
+  Power naive:     0.8943 [0.8836, 0.9043]
+  Paired diff:     0.7714 pp (SE=0.2723)
+
+=== Scenario 61/64: lambda1=0.3, k=1.0, gap=45 days ===
+  n_corrected = 542, n_naive = 502 (diff = 40)
+  Power corrected: 0.9194 [0.9099, 0.9282]
+  Power naive:     0.8937 [0.8830, 0.9037]
+  Paired diff:     2.5714 pp (SE=0.3565)
+
+=== Scenario 62/64: lambda1=0.5, k=1.0, gap=45 days ===
+  n_corrected = 490, n_naive = 456 (diff = 34)
+  Power corrected: 0.9123 [0.9024, 0.9215]
+  Power naive:     0.8977 [0.8872, 0.9076]
+  Paired diff:     1.4571 pp (SE=0.3286)
+
+=== Scenario 63/64: lambda1=1.0, k=1.0, gap=45 days ===
+  n_corrected = 446, n_naive = 420 (diff = 26)
+  Power corrected: 0.9043 [0.8941, 0.9138]
+  Power naive:     0.8891 [0.8783, 0.8994]
+  Paired diff:     1.5143 pp (SE=0.3261)
+
+=== Scenario 64/64: lambda1=2.0, k=1.0, gap=45 days ===
+  n_corrected = 418, n_naive = 402 (diff = 16)
+  Power corrected: 0.9049 [0.8947, 0.9144]
+  Power naive:     0.8926 [0.8818, 0.9026]
+  Paired diff:     1.2286 pp (SE=0.3003)
+
+
+Completed in 108.9 minutes
+
+=== SUMMARY TABLE ===
+ lambda1   k gap_days n_corrected n_naive n_diff power_corrected power_naive
+     1.0 1.0       30         426     406     20       0.9131429   0.8962857
+     2.0 1.0       20         392     378     14       0.9065714   0.8988571
+     0.5 1.0       45         490     456     34       0.9122857   0.8977143
+     1.0 1.0       45         446     420     26       0.9042857   0.8891429
+     2.0 1.0       10         378     370      8       0.9102857   0.9040000
+     1.0 1.0       20         412     396     16       0.9191429   0.9082857
+     2.0 1.0       30         402     388     14       0.9034286   0.8911429
+     0.5 1.0       30         466     442     24       0.9154286   0.9025714
+     0.3 1.0       45         542     502     40       0.9194286   0.8937143
+     2.0 1.0       45         418     402     16       0.9048571   0.8925714
+     1.0 1.0       10         396     388      8       0.9071429   0.9017143
+     0.5 1.0       20         450     432     18       0.9131429   0.9031429
+     0.3 1.0       30         516     488     28       0.9137143   0.9005714
+     0.3 1.0       20         498     478     20       0.9065714   0.8971429
+     1.0 0.5       30         244     236      8       0.9014286   0.9000000
+     2.0 0.5       20         214     208      6       0.9008571   0.8962857
+     0.5 0.5       45         300     284     16       0.9068571   0.8940000
+     0.5 1.0       10         432     422     10       0.9077143   0.9037143
+     1.0 0.5       45         260     250     10       0.9065714   0.8945714
+     2.0 0.5       10         202     198      4       0.9088571   0.9017143
+     1.0 0.5       20         232     226      6       0.9065714   0.8965714
+     2.0 0.5       30         224     218      6       0.9102857   0.8988571
+     0.5 0.5       30         282     270     12       0.9088571   0.8962857
+     0.3 0.5       45         348     332     16       0.9122857   0.8974286
+     2.0 0.5       45         238     232      6       0.9020000   0.8942857
+     1.0 0.5       10         220     216      4       0.9080000   0.9034286
+     0.5 0.5       20         270     260     10       0.9088571   0.9051429
+     0.3 0.5       30         330     318     12       0.9065714   0.8980000
+     0.3 1.0       10         478     468     10       0.9108571   0.9062857
+     1.0 0.3       30         172     168      4       0.9097143   0.9022857
+     2.0 0.3       20         142     140      2       0.8945714   0.8957143
+     0.5 0.3       45         224     216      8       0.9074286   0.9000000
+     1.0 0.3       45         188     182      6       0.9108571   0.9031429
+     2.0 0.3       10         132     130      2       0.9000000   0.8937143
+     1.0 0.3       20         162     158      4       0.9034286   0.8994286
+     0.3 0.5       20         316     308      8       0.9091429   0.9045714
+     2.0 0.3       30         152     150      2       0.9100000   0.9120000
+     0.5 0.3       30         208     202      6       0.9154286   0.9037143
+     0.3 0.3       45         274     264     10       0.9111429   0.9002857
+     0.5 0.5       10         256     252      4       0.9077143   0.9068571
+     2.0 0.3       45         168     164      4       0.9091429   0.9025714
+     1.0 0.3       10         150     148      2       0.9091429   0.9028571
+     0.5 0.3       20         198     192      6       0.9117143   0.9020000
+     0.3 0.3       30         256     250      6       0.9045714   0.8971429
+     0.3 0.3       20         244     240      4       0.9062857   0.9037143
+     0.3 0.5       10         302     298      4       0.8988571   0.8945714
+     0.5 0.3       10         186     184      2       0.9045714   0.9002857
+     1.0 0.1       30         100      98      2       0.9157143   0.9082857
+     2.0 0.1       20          72      72      0       0.9088571   0.9088571
+     0.3 0.3       10         232     230      2       0.9174286   0.9134286
+     0.5 0.1       45         150     148      2       0.9191429   0.9168571
+     1.0 0.1       45         116     114      2       0.9154286   0.9097143
+     2.0 0.1       10          62      62      0       0.9108571   0.9108571
+     1.0 0.1       20          90      90      0       0.9088571   0.9088571
+     2.0 0.1       30          82      82      0       0.9048571   0.9048571
+     0.5 0.1       30         136     134      2       0.9108571   0.9085714
+     0.3 0.1       45         198     196      2       0.9091429   0.9031429
+     2.0 0.1       45          96      96      0       0.9140000   0.9140000
+     1.0 0.1       10          80      80      0       0.9022857   0.9022857
+     0.5 0.1       20         126     124      2       0.9094286   0.9071429
+     0.3 0.1       30         184     180      4       0.9154286   0.9085714
+     0.3 0.1       20         172     172      0       0.9174286   0.9174286
+     0.5 0.1       10         116     114      2       0.9071429   0.9040000
+     0.3 0.1       10         162     162      0       0.9051429   0.9051429
+    power_diff correction_pct
+  0.0168571429     24.9987920
+  0.0077142857     24.5373219
+  0.0145714286     24.4400481
+  0.0151428571     24.0657094
+  0.0062857143     23.9322495
+  0.0108571429     23.9322495
+  0.0122857143     22.3244853
+  0.0128571429     22.1185274
+  0.0257142857     21.2896399
+  0.0122857143     18.8801080
+  0.0054285714     18.6194390
+  0.0100000000     18.6194390
+  0.0131428571     17.6184817
+  0.0094285714     13.7603847
+  0.0014285714     12.4993960
+  0.0045714286     12.2686609
+  0.0128571429     12.2200241
+  0.0040000000     12.1236140
+  0.0120000000     12.0328547
+  0.0071428571     11.9661248
+  0.0100000000     11.9661248
+  0.0114285714     11.1622426
+  0.0125714286     11.0592637
+  0.0148571429     10.6448199
+  0.0077142857      9.4400540
+  0.0045714286      9.3097195
+  0.0037142857      9.3097195
+  0.0085714286      8.8092408
+  0.0045714286      8.1708563
+  0.0074285714      7.4996376
+ -0.0011428571      7.3611966
+  0.0074285714      7.3320144
+  0.0077142857      7.2197128
+  0.0062857143      7.1796749
+  0.0040000000      7.1796749
+  0.0045714286      6.8801924
+ -0.0020000000      6.6973456
+  0.0117142857      6.6355582
+  0.0108571429      6.3868920
+  0.0008571429      6.0618070
+  0.0065714286      5.6640324
+  0.0062857143      5.5858317
+  0.0097142857      5.5858317
+  0.0074285714      5.2855445
+  0.0025714286      4.1281154
+  0.0042857143      4.0854282
+  0.0042857143      3.6370842
+  0.0074285714      2.4998792
+  0.0000000000      2.4537322
+  0.0040000000      2.4512569
+  0.0022857143      2.4440048
+  0.0057142857      2.4065709
+  0.0000000000      2.3932250
+  0.0000000000      2.3932250
+  0.0000000000      2.2324485
+  0.0022857143      2.2118527
+  0.0060000000      2.1289640
+  0.0000000000      1.8880108
+  0.0000000000      1.8619439
+  0.0022857143      1.8619439
+  0.0068571429      1.7618482
+  0.0000000000      1.3760385
+  0.0031428571      1.2123614
+  0.0000000000      0.8170856
+
+Results saved to inst/extdata/jensen_broad_sweep_results.rds

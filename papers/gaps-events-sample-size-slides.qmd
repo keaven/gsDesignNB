@@ -145,7 +145,7 @@ Interim times solve **feasibility inequalities**:
 
 **Take the max** of applicable floors, then lift further if information requires it — the same backend timing logic applies once the information path is specified.
 
-**Maximum per patient follow-up (e.g., 1 year) can cap trial duration.
+**Maximum per patient follow-up** (e.g., 1 year) can cap trial duration.
 
 :::: {.notes}
 **~2:00** — $\tau_i$ = calendar time of look $i$. If you schedule looks at fixed event fractions or other crude event proxies **without** $\Delta_i$, the **information path** and spending time axis are wrong whenever enrollment continues during mandatory gaps.
