@@ -14,27 +14,24 @@ bibliography: references.bib
 csl: https://www.zotero.org/styles/american-statistical-association
 abstract: |
   We present the R package **gsDesignNB** for planning, monitoring, and adapting clinical trials
-  with recurrent event endpoints analyzed using negative binomial models. In the working model,
-  conditional on treatment arm and a subject-level gamma frailty, recurrent events follow a
-  Poisson process with constant within-subject rate, yielding marginal negative binomial counts.
-  The package implements sample size calculations that extend the methods of @zhu2014sample and
-  @friede2010blinded to handle piecewise accrual, exponential dropout, maximum follow-up
-  truncation, and event gaps. Because statistical information for the log rate ratio depends
-  jointly on exposure, event rates, and dispersion, it is not directly proportional to raw event
-  counts. We derive and implement a second-order Taylor correction for Jensen's inequality bias in
-  the event gap effective rate; this correction was needed for simulation-based power to agree
-  with the planning formula when event gaps were non-negligible, reducing representative
-  approximation error from 8% to 1%. A 64-scenario simulation sweep across clinically relevant
-  event rates, dispersion values, and gap durations confirms that the correction prevents 1--2.5
-  percentage points of underpowering when dispersion is moderate-to-high ($k \geq 0.5$) and gaps
-  exceed 20 days, while adding negligibly to sample size in low-dispersion settings. The package supports group sequential designs via integration
-  with the **gsDesign** package, and provides both blinded and unblinded sample size
-  re-estimation at interim analyses. A simulation study across 13 scenarios demonstrates that
-  sample size re-estimation effectively recovers power when nuisance parameters are misspecified,
-  provided the treatment effect is as planned. In the vignette design used here, null simulations
-  suggested slight Type I inflation at nominal one-sided \(\alpha = 0.025\); rebuilding at a
-  smaller nominal alpha improved calibration, and blinded updates generally requested larger
-  adapted sample sizes than unblinded updates.
+  with recurrent event endpoints analyzed using negative binomial models. The package links fixed
+  design sample size calculations, calendar-time group sequential design construction, blinded and
+  unblinded information estimation, sample size re-estimation (SSR), and recurrent-event simulation
+  in a single workflow built on the **gsDesign** package. In the working model, conditional on
+  treatment arm and a subject-level gamma frailty, recurrent events follow a Poisson process with
+  constant within-subject rate, yielding marginal negative binomial counts. For fixed designs, the
+  package extends the methods of @zhu2014sample and @friede2010blinded to handle piecewise accrual,
+  exponential dropout, maximum follow-up truncation, and protocol-defined gaps between counted
+  events. Because statistical information for the log rate ratio depends jointly on exposure, event
+  rates, and dispersion, it is not generally proportional to raw event counts. We derive and
+  implement a second-order Taylor correction for Jensen's inequality bias in the event-gap effective
+  rate; in a 64-scenario simulation sweep, the correction reduces representative approximation error
+  from about 8% to 1% and prevents 1--2.5 percentage points of underpowering when dispersion is
+  moderate-to-high and gaps exceed 20 days. The package also supports calendar-time group
+  sequential monitoring and both blinded and unblinded SSR. In a 13-scenario simulation study, SSR
+  recovers power when nuisance parameters are misspecified, with blinded updates generally
+  requesting larger adapted sample sizes than unblinded updates. The paper emphasizes both the
+  statistical methodology and the software architecture that make these workflows reproducible.
 ---
 
 # Introduction
@@ -57,27 +54,102 @@ dispersion materially reduces the per-patient information — from $\mu_i$ under
 $\mu_i/(1+k\mu_i)$ under the NB — so that a design ignoring $k$ can understate the required
 sample size by 10–30%.
 
-Sample size calculation for NB outcomes therefore requires specifying not only the event rates and
-treatment effect but also the dispersion parameter, average exposure time, and potentially event gap
-durations. In practice, several of these parameters may be uncertain at the design stage. Group
-sequential designs allow for interim monitoring, and sample size re-estimation (SSR) can adapt the
-trial size when nuisance parameters deviate from assumptions. For NB recurrent-event designs, the
-design target is the statistical information for the log rate ratio, which depends jointly on
-exposure, event rates, and dispersion; raw event counts are only an incomplete proxy.
+Negative binomial design work also becomes operationally more complicated once a trial moves beyond
+a fixed final analysis. Information for the log rate ratio depends jointly on exposure, event rates,
+and dispersion, so raw event counts are only an incomplete proxy for monitoring. Accrual may be
+piecewise, dropout may truncate follow-up, interim looks may be scheduled on the calendar rather
+than exactly on information fractions, and some protocols only count events separated by a minimum
+patient-level gap. In software, these trial features must be represented consistently in planning
+formulas, recurrent-event simulation, interim data cuts, and alpha-spending calculations.
 
 The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
 
 1. Sample size and power for fixed designs with flexible enrollment, dropout, follow-up truncation,
-   and event gaps.
-2. Group sequential designs via calendar-time analysis schedules compatible with the **gsDesign**
-   package [@JTBook].
-3. Blinded and unblinded SSR at interim analyses.
-4. Simulation utilities for validating designs and evaluating operating characteristics.
+   and protocol event gaps.
+2. Calendar-time group sequential designs that inherit spending-function infrastructure from the
+   **gsDesign** package [@JTBook].
+3. Blinded and unblinded information estimation together with blinded and unblinded SSR.
+4. Recurrent-event simulation, including seasonal rates, event- and information-driven interim
+   cutting rules, and operating-characteristic summaries.
 
-This paper describes the methodology, highlights a novel correction for Jensen's inequality bias
-in the event gap formula, and presents a simulation study of SSR across multiple scenarios. A
-brief final section discusses AI-assisted development as implementation support rather than as the
-primary methodological contribution.
+The contribution of **gsDesignNB** is therefore both scientific and computational. Scientifically,
+the package implements NB design formulas for settings where information is not proportional to
+events and introduces a Jensen-correction for event-gap planning. Computationally, it connects
+planning objects, calendar-time monitoring rules, subject-level simulated trial data, and interim
+analysis summaries in one workflow. The remainder of the paper first describes that workflow,
+including the different notions of "gaps" that arise in recurrent-event trials, and then presents
+the methodological and simulation results that motivated the software design.
+
+# Package overview and workflow
+
+## Scope and relation to gsDesign
+
+`sample_size_nbinom()` is the fixed-design entry point. It returns a
+`sample_size_nbinom_result` object containing the planning assumptions, expected exposure, expected
+events, and variance of the log rate ratio. `gsNBCalendar()` lifts that object into a `gsNB` design
+that inherits from `gsDesign`, so the NB-specific information calculations live in
+**gsDesignNB** while spending functions, boundary summaries, and integer rounding remain compatible
+with the underlying **gsDesign** ecosystem. For simulation, `nb_sim()` and `nb_sim_seasonal()`
+generate subject-level recurrent-event histories, `cut_data_by_date()` and related helpers convert
+them to interim analysis data sets, and `sim_gs_nbinom()` or `sim_ssr_nbinom()` produce operating
+characteristics that can be summarized with `summarize_gs_sim()` and `summarize_ssr_sim()`.
+
+| Task | Primary functions | Main outputs |
+|:-----|:------------------|:-------------|
+| Fixed design planning | `sample_size_nbinom()`, `compute_info_at_time()` | `sample_size_nbinom_result` |
+| Calendar-time GS design | `gsNBCalendar()`, `toInteger()`, `gsBoundSummary()` | `gsNB` object with information and calendar timing |
+| Recurrent-event data generation | `nb_sim()`, `nb_sim_seasonal()` | Subject-level event histories |
+| Interim data construction | `cut_data_by_date()`, `get_cut_date()`, `get_analysis_date()`, `cut_completers()` | One row per randomized subject with events and exposure |
+| Interim inference and information | `mutze_test()`, `calculate_blinded_info()`, `estimate_nb_mom()` | Wald statistics and blinded/unblinded information estimates |
+| GS operating-characteristic simulation | `sim_gs_nbinom()`, `check_gs_bound()`, `summarize_gs_sim()` | Boundary-crossing summaries |
+| Adaptive simulation | `blinded_ssr()`, `unblinded_ssr()`, `sim_ssr_nbinom()`, `summarize_ssr_sim()` | Adapted sample sizes and SSR summaries |
+
+The package also re-exports the common **gsDesign** spending functions so that users can stay in one
+namespace when they move from fixed design planning to spending-function specification. Internally,
+the simulation engines rely on **data.table** for aggregation and on reproducible parallel random
+number streams for larger Monte Carlo studies.
+
+## Timing, information, and three notions of gaps
+
+The slide deck that motivated this manuscript uses the word "gap" in three different senses, and
+distinguishing them is important for both the methods and the software.
+
+| Concept | Scale | Role in the package |
+|:--------|:------|:--------------------|
+| Analysis gap $\Delta_i$ | Trial calendar | Minimum time between database locks or interim looks |
+| Timing heterogeneity | Accrual, dropout, and follow-up | Determines how exposure and information accumulate over calendar time |
+| Event gap $g$ | Patient time | Defines which recurrent events count and how much post-event time is removed from risk |
+
+The first two affect *when* an analysis can occur. The third affects *which* events contribute to
+the endpoint and how much at-risk exposure remains after each counted event. In **gsDesignNB**, the
+same `event_gap` argument is carried through planning, simulation, and interim data cutting, so the
+effective event rate, counted events, and at-risk exposure stay aligned. By contrast, calendar-time
+analysis constraints are handled through `analysis_times` in `gsNBCalendar()` or through the search
+criteria in `get_cut_date()`.
+
+## Primary and secondary workflows
+
+For most users, the package workflow is:
+
+1. Use `sample_size_nbinom()` to build a fixed design under the planned rates, dispersion, accrual,
+   dropout, and follow-up assumptions.
+2. Convert that result to a group sequential design with `gsNBCalendar()`, optionally rounding with
+   `toInteger()`.
+3. Choose the appropriate simulator: `sim_gs_nbinom()` for calendar-time GS verification or
+   `sim_ssr_nbinom()` for adaptive simulations with blinded or unblinded SSR.
+4. Summarize operating characteristics with `check_gs_bound()`, `summarize_gs_sim()`, and
+   `summarize_ssr_sim()`.
+
+The package also includes several secondary workflows that are important in practice but do not
+change the core architecture.
+
+| Additional capability | Main interface | Purpose |
+|:----------------------|:---------------|:--------|
+| Seasonal recurrent-event simulation | `nb_sim_seasonal()` | Time-varying event rates with season-specific intervals |
+| Completer-driven interims | `cut_date_for_completers()`, `cut_completers()` | Interim looks keyed to completed follow-up rather than only calendar time or events |
+| Non-inferiority / super-superiority | `sample_size_nbinom(rr0 = ...)` | Alternative null hypotheses in the same design framework |
+| Blinded-information diagnostics | `calculate_blinded_info()`, `estimate_nb_mom()` | Stability checks for sparse or unstable interims |
+| Interactive review | `run_ssr_shiny()` | Shiny wrapper around the SSR engine for exploratory use |
 
 # Sample size methodology
 
@@ -124,6 +196,10 @@ The practical difference from more familiar first-event formulas is that when th
 an event gap, the expected count $\mu_g$ must reflect the gap-corrected effective rate rather than
 a naive event-count proxy.
 
+In `sample_size_nbinom()`, the same information formula is used for superiority, non-inferiority,
+and super-superiority designs via the `rr0` argument, and the nuisance parameters may be specified
+either as common scalars or as arm-specific vectors.
+
 ## Jensen's inequality correction for event gaps
 
 In trials with a mandatory gap of duration $\gamma$ after each event (e.g., a recovery period),
@@ -162,6 +238,10 @@ conservative power (@tbl-power-comparison). During package development, this cor
 for simulation-based power to agree with the analytical planning formula when event gaps were
 non-negligible.
 
+In software terms, the same gap rule is used by `nb_sim()` and `cut_data_by_date()`: events that
+fall inside the post-event gap are not counted, and the corresponding gap time is removed from the
+at-risk exposure used for information calculations.
+
 | $k$ | Gap (days) | $n$ (corrected) | $n$ (naive) | Power (corr.) | Power (naive) |
 |:---:|:----------:|:---------------:|:-----------:|:--------------:|:-------------:|
 | 0.5 | 20         | 436             | 422         | 0.9061         | 0.8992        |
@@ -170,6 +250,7 @@ non-negligible.
 | 1.0 | 30         | 740             | 700         | 0.9105         | 0.8988        |
 
 : Power comparison: Jensen-corrected vs naive formula (10,000 replicates each). {#tbl-power-comparison}
+
 ### Broader parameter sweep
 
 The four scenarios in @tbl-power-comparison fix $\lambda_1 = 0.4$ and vary only $k$ and the gap
@@ -263,46 +344,215 @@ in therapeutic areas with substantial patient heterogeneity ($k \geq 0.5$) and p
 event gaps exceeding 20 days, such as COPD exacerbation studies with 28-day new-event windows
 or heart failure trials with extended hospitalization-free windows.
 
-# Group sequential design and sample size re-estimation
+# Group sequential design, monitoring, and sample size re-estimation
 
-## Integration with gsDesign
+## Calendar-time design construction
 
-The `gsNBCalendar()` function creates a group sequential design by computing the statistical
-information at each planned analysis time, accounting for staggered enrollment and variable
-exposure. It returns an object that inherits from `gsDesign`, enabling use of spending functions,
-boundary summaries, and integer rounding from the **gsDesign** package.
+The `gsNBCalendar()` function creates a group sequential design from a
+`sample_size_nbinom_result` by evaluating the planned design at user-specified calendar analysis
+times. For each look it recomputes expected enrollment, exposure, events, and variance under the
+planned accrual and follow-up structure, then stores the corresponding statistical information in
+the `n.I` slot inherited from `gsDesign`. The resulting `gsNB` object therefore behaves like a
+`gsDesign` object for spending functions and boundary summaries while retaining the NB-specific
+quantities needed for simulation and interpretation.
+
+This calendar-time emphasis matters because recurrent-event trials are often governed by operational
+rules rather than by exact information fractions. If $C_i$ denotes a calendar floor for look $i$,
+$\Delta_i$ a minimum gap after the prior look, and $\mathcal{I}_i$ the target information for that
+look, the analysis time can be expressed schematically as
+
+$$
+\tau_i =
+\max\left\{
+  C_i,\;
+  \tau_{i-1} + \Delta_i,\;
+  \inf \left\{ t : \widehat{\mathcal{I}}(t) \geq \mathcal{I}_i \right\}
+\right\}.
+$$
+
+`gsNBCalendar()` addresses the planning side of this problem through `analysis_times`, while
+`get_cut_date()` applies the same logic to simulated or observed trial data by combining calendar,
+event-count, completer, and information targets. This is the package's bridge between textbook
+information-time group sequential design and the calendar rules encountered in real monitoring
+charters.
+
+## Interim data cuts and information estimates
+
+The function `cut_data_by_date()` converts subject-level recurrent-event histories into an interim
+analysis data set with one row per randomized subject, containing counted events, time at risk, and
+total follow-up. The same interface is implemented for both `nb_sim()` and `nb_sim_seasonal()`.
+`get_analysis_date()` solves the special case of event-driven looks, whereas
+`cut_date_for_completers()` and `cut_completers()` support analyses defined by the number of
+subjects who have completed their planned follow-up. More generally, `get_cut_date()` takes the
+maximum of whichever criteria are supplied, allowing hybrid rules such as "no earlier than month 8
+and only after 60 blinded information units."
+
+Because information depends on exposure and dispersion, the package distinguishes raw event totals
+from the quantities actually used for monitoring. `calculate_blinded_info()` implements the pooled
+negative binomial fit of @friede2010blinded, then splits the pooled rate according to the planned
+rate ratio. `estimate_nb_mom()` supplies method-of-moments estimates that are useful when maximum
+likelihood fits become unstable in sparse or highly overdispersed interim data.
+
+## Wald inference, Poisson fallback, and diagnostics
+
+For unblinded interim analyses, `mutze_test()` fits the negative binomial log-linear model with an
+offset for exposure and returns the Wald statistic for the treatment effect. This is the basic
+analysis model used throughout the package's GS simulations. When the fitted NB shape parameter
+$\theta$ is either extremely large (near-Poisson data) or extremely small (numerically unstable
+overdispersion), `mutze_test()` falls back to a Poisson Wald analysis using the user-set
+`poisson_threshold`. This fallback is not meant as a theoretical replacement for the NB model; it
+is a defensive device that keeps simulations and diagnostics well behaved when the ML NB fit is not
+reliable.
+
+The simulation engines expose several information paths so that users can stress-test an interim
+monitoring strategy before locking it into a design. In particular, `sim_gs_nbinom()` records
+unblinded and blinded information under both maximum likelihood and method-of-moments estimates.
+These alternative columns are diagnostics rather than different estimands: they help show whether a
+design's monitoring behavior is robust to the nuisance-parameter estimation method used at the
+interim.
 
 ## Blinded and unblinded SSR
 
-At interim analyses, nuisance parameters ($k$ and $\lambda_1$) can be re-estimated to update the
-required sample size. Blinded SSR [@friede2010blinded; @schneider2013blinded] fits a single NB
-model to pooled data and splits the estimated rate using the planned treatment effect ratio.
-Unblinded SSR uses treatment-specific estimates. In our simulations, blinded updates generally
-requested larger adapted sample sizes than unblinded updates, reflecting the conservatism of the
-pooled working model; when operationally acceptable, the unblinded route may therefore be
-preferable for sample efficiency. Both methods accept a `target_info` parameter from the group
-sequential design to account for inflation due to interim alpha spending.
+At interim analyses, nuisance parameters ($k$ and the underlying event rates) can be re-estimated
+to update the required sample size. `blinded_ssr()` uses the pooled model of @friede2010blinded,
+preserving masking but typically producing a more conservative adapted sample size. `unblinded_ssr()`
+instead fits treatment-specific rates and a common dispersion to the interim data, while holding the
+target treatment effect at its planned value for the final sample size calculation.
 
-The `calculate_blinded_info()` function includes a Poisson fallback threshold (matching
-`mutze_test()`) to guard against numerically unstable dispersion estimates that would produce
-extreme information values.
+`sim_ssr_nbinom()` wraps these choices into a full adaptive simulation engine. It supports "No
+adaptation", "Blinded SSR", and "Unblinded SSR" strategies; searches for interim looks using
+information-based timing; and allows efficacy and futility bounds to be driven by alternative
+information measures through `bound_info = "unblinded_ml"`, `"blinded_ml"`, `"unblinded_mom"`, or
+`"blinded_mom"`. In the simulation study below, bounds are computed with spending functions using
+`usTime = lsTime = min(planned IF, actual IF)` at the interim so that spending is not accelerated
+when more information than expected is observed. Futility assessment is deferred until at least 30%
+of the planned information is available.
 
-## Spending function approach
+From a computing perspective, both `sim_gs_nbinom()` and `sim_ssr_nbinom()` are designed for large
+Monte Carlo studies: they use `data.table` for repeated aggregation, support reproducible parallel
+execution, and return both trial-level and analysis-level summaries so that design calibration can
+be checked after the fact.
 
-For the simulation study, bounds are computed using spending functions with
-`usTime = lsTime = min(planned IF, actual IF)` at the interim. This ensures that neither efficacy
-nor futility spending exceeds the planned rate, even when more information than expected is
-available. Futility assessment is deferred until at least 30% of the planned information is
-observed.
+# Reproducible workflows
+
+## Example 1: fixed design to calendar-time GS simulation
+
+The first workflow shows the main path from fixed-design planning to a calendar-time GS simulation.
+The full executable version appears in the group-sequential simulation vignette; the code here is a
+minimal example.
+
+```r
+library(gsDesignNB)
+
+enroll_rate <- data.frame(rate = 12, duration = 6)
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.6, 0.42),
+  dispersion = c(0.4, 0.4)
+)
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.05, 0.05),
+  duration = c(12, 12)
+)
+
+fixed_design <- sample_size_nbinom(
+  lambda1 = 0.6,
+  lambda2 = 0.42,
+  dispersion = 0.4,
+  power = 0.8,
+  alpha = 0.025,
+  accrual_rate = enroll_rate$rate,
+  accrual_duration = enroll_rate$duration,
+  trial_duration = 12,
+  max_followup = 6
+)
+
+gs_design <- gsNBCalendar(
+  fixed_design,
+  k = 3,
+  test.type = 4,
+  analysis_times = c(4, 8, 12)
+)
+
+sim_gs <- sim_gs_nbinom(
+  n_sims = 50,
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = 6,
+  n_target = ceiling(utils::tail(gs_design$n_total, 1)),
+  design = gs_design,
+  cuts = lapply(gs_design$T, function(t) list(planned_calendar = t)),
+  seed = 20260413
+)
+
+oc <- summarize_gs_sim(
+  check_gs_bound(sim_gs, gs_design, info_col = "info_unblinded_ml")
+)
+
+oc$analysis_summary
+```
+
+This example illustrates the main design principle of the package: the fixed design determines the
+target information, `gsNBCalendar()` maps that information to calendar looks, `sim_gs_nbinom()`
+generates trial histories consistent with the planning assumptions, and `check_gs_bound()` applies
+the group sequential boundaries on the selected information scale.
+
+## Example 2: information-based SSR
+
+The second workflow shows how the same design object can be used in an adaptive simulation with
+blinded and unblinded sample size re-estimation.
+
+```r
+library(gsDesignNB)
+
+ssr_res <- sim_ssr_nbinom(
+  n_sims = 50,
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = 6,
+  design = gs_design,
+  strategies = c("No adaptation", "Blinded SSR", "Unblinded SSR"),
+  bound_info = "unblinded_ml",
+  seed = 20260413
+)
+
+summarize_ssr_sim(ssr_res)$trial_summary[
+  , c("strategy", "rejection_rate", "mean_n", "pct_adapted")
+]
+```
+
+The paper's 13-scenario SSR study uses this same engine with a much larger scenario grid, more
+replicates, and additional design constraints on when adaptation is allowed. The essential software
+idea, however, is already visible in the compact example: one `gsNB` planning object can drive both
+non-adaptive and adaptive operating-characteristic evaluations.
+
+## Additional workflows
+
+The package includes further worked examples that round out the software contribution.
+
+| Workflow | Main functions | What it adds |
+|:---------|:---------------|:-------------|
+| Seasonal recurrent-event simulation | `nb_sim_seasonal()`, `cut_data_by_date()` | Calendar-time variation in failure rates |
+| Completer-based monitoring | `cut_date_for_completers()`, `cut_completers()` | Interim looks keyed to completed follow-up |
+| Non-inferiority and super-superiority | `sample_size_nbinom(rr0 = ...)` | Alternative null hypotheses in the same design framework |
+| Blinded-information diagnostics | `calculate_blinded_info()`, `estimate_nb_mom()` | Stability checks for sparse or unstable interims |
+| Verification studies | `nb_sim()`, `mutze_test()`, `sim_gs_nbinom()` | Simulation-based agreement checks for design formulas |
+
+These workflows are documented in the package vignettes so that the manuscript examples can remain
+brief while the installed package still serves as the full replication resource.
 
 # Simulation study
 
 ## Design
 
-We evaluated SSR across 13 scenarios varying the control rate ($\lambda_1$), dispersion ($k$),
-accrual rate, and rate ratio (RR = 0.7, 0.8, 0.9, 1.0). The planned design targeted 90% power
-for RR = 0.7 with $k = 0.3$, $\lambda_1 = 0.5$/month, and accrual of 30/month over 12 months.
-Each non-null scenario used 3,600 simulations; the null scenario used 20,000.
+We evaluated `sim_ssr_nbinom()` across 13 scenarios varying the control rate ($\lambda_1$),
+dispersion ($k$), accrual rate, and rate ratio (RR = 0.7, 0.8, 0.9, 1.0). The planned design was
+built with `sample_size_nbinom()` and `gsNBCalendar()`, targeting 90% power for RR = 0.7 with
+$k = 0.3$, $\lambda_1 = 0.5$/month, and accrual of 30/month over 12 months. Each non-null
+scenario used 3,600 simulations; the null scenario used 20,000.
 
 Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
 using a group sequential design with Hwang--Shih--DeCani spending functions.
@@ -325,67 +575,69 @@ The key findings from the simulation study are:
   conservative. When operationally acceptable, unblinded SSR may therefore be preferable for
   efficiency.
 
-# Role of AI in package development
-
-The **gsDesignNB** package was developed with substantial assistance from AI coding tools. The
-primary development environment was VS Code with GitHub Copilot and Cursor; models used over the
-course of development include Gemini 3.1, Claude Opus 4.6, and GPT-5.4x. The AI contributed to:
-
-- **Code generation:** Implementation of simulation engines, data cutting functions, and the group
-  sequential design interface.
-- **Mathematical derivation:** The Jensen's inequality correction was identified and derived
-  through an interactive dialogue analyzing simulation discrepancies. The AI performed Monte Carlo
-  verification and second-order Taylor expansion to pinpoint the bias source.
-- **Documentation:** Vignettes, roxygen2 documentation, and notation consistency were developed
-  collaboratively, with the AI drafting and the statistician reviewing for correctness.
-- **Debugging:** Several subtle bugs (e.g., `toInteger()` overwriting enrollment with
-  information-scaled values, positional argument mismatches in SSR calls, **gsDesign** collapsing
-  futility bounds when `n.I` is provided directly) were identified through systematic diagnosis.
-- **Simulation studies:** The multi-scenario SSR simulation and the 64-scenario Jensen correction
-  sweep were designed, coded, and iteratively refined through conversation, with the statistician
-  guiding the experimental design and the AI implementing it.
-
-This workflow demonstrates that AI tools can accelerate statistical software development while
-requiring expert oversight for methodological correctness. The statistician's role shifts toward
-design decisions, mathematical validation, and interpretation, while the AI handles implementation,
-debugging, and large-scale computation. AI was key to the productivity needed to complete this
-scope of research.
-
 # Discussion
 
-The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent event
-trials with NB outcomes. While the **gscounts** package [@mutze2019group] implements group
-sequential designs for NB data, **gsDesignNB** extends this with piecewise accrual, event gaps
-with Jensen's correction, blinded and unblinded SSR, and comprehensive simulation utilities.
+The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent-event
+trials with NB outcomes. Its statistical contributions are the alignment of fixed-design planning,
+calendar-time monitoring, and sample size re-estimation around Fisher information for the log rate
+ratio, together with the Jensen correction for event gaps and the accompanying simulation evidence.
+Its computing contributions are the object flow from `sample_size_nbinom_result` to `gsNB` to
+simulation outputs; subject-level recurrent-event simulation with event-gap-aware interim cuts;
+diagnostic information calculations under ML and method-of-moments nuisance estimation; and
+reproducible Monte Carlo engines for both fixed and adaptive monitoring strategies.
 
-The Jensen's inequality correction, while modest in many practical scenarios (1--8% effective rate
-reduction), becomes increasingly important as dispersion and event gap duration grow. The broader
-64-scenario sweep (@tbl-broad-sweep) confirms that the correction is driven primarily by the
-$k \times \gamma$ interaction: at $k \geq 0.5$ with gaps $\geq 30$ days, the naive formula
-underpowers by 1--2 percentage points, whereas at $k = 0.1$ or gaps $\leq 10$ days the
-correction adds negligibly to sample size. The extra subjects required by the correction range
-from 0 to 40 (0--8% of total), a modest cost for reliable power.
-The correction is principled (derived from the known Gamma frailty distribution) and conservative
-(slightly overpowering rather than underpowering).
+The Jensen correction is important precisely because the software is designed to keep planning and
+simulation on the same scale. When event gaps are non-negligible, the naive renewal approximation
+overstates the effective rate and therefore overstates information. The 64-scenario sweep confirms
+that the correction is most valuable when dispersion and event-gap duration are both substantial:
+at $k \geq 0.5$ with gaps $\geq 30$ days, the naive formula underpowers by about 1--2 percentage
+points, whereas at $k = 0.1$ or gaps $\leq 10$ days the correction adds little to the required
+sample size. Because the same gap rule is carried into simulation and interim cutting, users can
+see directly when the correction matters for operating characteristics rather than only for algebra.
 
-The simulation study confirms that SSR is an effective tool for maintaining power when nuisance
-parameters are uncertain, provided the treatment effect assumption is correct. At the same time,
-the vignette configuration used here showed slight Type I inflation at nominal one-sided 2.5%,
-with improved calibration after rebuilding at a smaller nominal alpha. This is best viewed as a
-design-specific operating-characteristic finding, consistent with the caution in @mutze2019group,
-rather than as a universal correction rule.
+The SSR study likewise shows how the package's computational layer supports statistical conclusions.
+When the treatment effect is as planned, both blinded and unblinded SSR recover power lost to
+nuisance-parameter misspecification. Blinded updates preserve masking but tend to request larger
+adapted sample sizes; unblinded updates are more sample-efficient when operationally acceptable.
+The ability to compare `bound_info` choices, ML versus method-of-moments information paths, and
+Poisson fallback behavior inside the same simulation engine is a practical advantage of the package
+design.
 
-For practice, the main operational message is that blinded SSR is conservative: it preserves
-masking but tends to request larger adapted sample sizes than unblinded updates. When charter and
-regulatory conditions allow unblinded nuisance updates, that route may be preferable for sample
-efficiency, provided the full operating characteristics are checked by simulation.
+From a software perspective, **gsDesignNB** is complementary to both **gsDesign** and
+**gscounts**. The general-purpose **gsDesign** package provides mature spending-function and
+boundary calculations but does not itself supply NB recurrent-event planning formulas, calendar-time
+translation of those formulas, or recurrent-event simulation with blinded information and SSR. The
+**gscounts** implementation motivated by @mutze2019group addresses group sequential NB testing,
+whereas **gsDesignNB** emphasizes the broader workflow needed in practice: piecewise accrual and
+dropout, maximum follow-up, protocol event gaps with Jensen correction, seasonal simulation,
+completer- or information-driven interim timing, and blinded as well as unblinded SSR simulation.
 
-# Software availability
+The package's secondary workflows matter for a software paper even when they are not the main
+empirical case study. Seasonal simulation extends the constant-rate gamma-frailty model to a common
+time-varying setting; completer-based cuts capture another operational monitoring rule; and the
+non-inferiority, blinded-diagnostics, and verification vignettes show that the same core objects
+support multiple design questions. In that sense, the package is not only a collection of isolated
+functions but a coherent interface for recurrent-event trial planning and evaluation.
+
+Although the development of the package used modern interactive computing tools, the contribution of
+interest for a statistical software journal is the reproducible software artifact itself: the open
+source implementation, documented API, worked vignettes, and simulation studies that demonstrate
+how the methods behave under realistic trial scenarios.
+
+# Reproducibility and software availability
 
 The **gsDesignNB** package is available on GitHub at
 <https://github.com/keaven/gsDesignNB> with documentation at
-<https://keaven.github.io/gsDesignNB/>.
-The package requires R $\geq$ 4.1.0 and depends on **gsDesign**, **data.table**, **simtrial**,
-and **MASS**.
+<https://keaven.github.io/gsDesignNB/>. The package requires R $\geq$ 4.1.0 and depends primarily
+on **gsDesign**, **data.table**, **simtrial**, and **MASS**.
+
+The source distribution includes vignettes for fixed-design NB sample size calculation, calendar-time
+GS simulation, end-to-end SSR, the larger SSR simulation study, blinded-information diagnostics,
+seasonal simulation, completer-based interims, non-inferiority design, and verification of the
+planning formulas against simulation. The two code examples in this paper are deliberately small
+extracts of those vignettes so that the manuscript highlights the core software interface while the
+installed package retains more extensive executable workflows. For local exploratory use, the
+package also provides `run_ssr_shiny()` as an interactive front end to the SSR engine and
+`preview_pkgdown_site()` for documentation preview.
 
 # References {.unnumbered}
