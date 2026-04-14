@@ -1,0 +1,203 @@
+# gsDesignNB — llm.txt
+
+> gsDesignNB is an R package for designing, simulating, and adapting clinical trials with negative
+> binomial recurrent event endpoints. It extends the gsDesign ecosystem with NB-specific information
+> calculations, event-gap corrections, and blinded/unblinded sample size re-estimation.
+
+## What this package does
+
+gsDesignNB provides an integrated workflow for recurrent-event trials where the primary analysis
+uses a negative binomial model. The core problem it solves is that statistical information for the
+log rate ratio depends jointly on exposure, event rates, and dispersion — not just on raw event
+counts. This makes design, monitoring, and adaptation more complex than for first-event endpoints.
+
+The package connects:
+- Fixed-design sample size and power calculations
+- Calendar-time group sequential design construction
+- Subject-level recurrent-event simulation (constant and seasonal rates)
+- Interim data cutting and information estimation (blinded and unblinded)
+- Sample size re-estimation (blinded and unblinded)
+- Operating-characteristic summaries
+
+## Statistical model
+
+Events follow a Gamma-Poisson mixture. Conditional on a gamma frailty, each subject generates
+events from a Poisson process. Marginally, event count Y_i with exposure t_i has:
+- Mean: μ_i = λ_g × t_i
+- Variance: μ_i + k × μ_i²
+
+where λ_g is the group-specific event rate and k is the dispersion parameter. The treatment effect
+is the log rate ratio θ = log(λ₂/λ₁). Fisher information per subject is μ_i / (1 + k × μ_i).
+
+## Key concepts
+
+### Jensen correction for event gaps
+
+When a protocol requires a minimum gap γ between counted events, the naive effective rate
+λ/(1 + λγ) overestimates information due to Jensen's inequality over the gamma-distributed
+subject rates. The corrected rate is:
+
+λ_eff ≈ [λ/(1 + λγ)] × [1 − k·λ·γ/(1 + λγ)²]
+
+This matters when k ≥ 0.5 and gap ≥ 20 days. A 64-scenario simulation sweep showed the naive
+formula underpowers by 1–2.5 percentage points in these regimes.
+
+### Three kinds of gaps
+
+1. Analysis gap (trial calendar): minimum time between interim looks
+2. Timing heterogeneity (accrual/dropout/follow-up): determines how exposure accumulates
+3. Event gap (patient time): which events count and how much at-risk time is removed
+
+### Information vs events
+
+In NB designs, raw event counts are an incomplete proxy for statistical information. Two analyses
+with similar event totals can carry different information if follow-up distributions or dispersion
+differ. The package tracks information explicitly throughout planning, simulation, and interim
+monitoring.
+
+## Workflow
+
+### Step 1: Fixed design
+```r
+fixed <- sample_size_nbinom(
+  lambda1 = 0.6, lambda2 = 0.42, dispersion = 0.4,
+  power = 0.8, alpha = 0.025,
+  accrual_rate = 12, accrual_duration = 6,
+  trial_duration = 12, max_followup = 6
+)
+```
+
+### Step 2: Group sequential design
+```r
+gs <- gsNBCalendar(fixed, k = 3, test.type = 4, analysis_times = c(4, 8, 12))
+gs_int <- toInteger(gs)
+```
+
+### Step 3: Simulation
+```r
+# GS simulation
+sim <- sim_gs_nbinom(n_sims = 1000, enroll_rate = ..., fail_rate = ...,
+  dropout_rate = ..., max_followup = 6, n_target = ..., design = gs,
+  cuts = lapply(gs$T, function(t) list(planned_calendar = t)), seed = 123)
+
+# OR adaptive SSR simulation
+ssr <- sim_ssr_nbinom(n_sims = 1000, enroll_rate = ..., fail_rate = ...,
+  dropout_rate = ..., max_followup = 6, design = gs,
+  strategies = c("No adaptation", "Blinded SSR", "Unblinded SSR"),
+  bound_info = "unblinded_ml", seed = 123)
+```
+
+### Step 4: Summary
+```r
+summarize_gs_sim(check_gs_bound(sim, gs, info_col = "info_unblinded_ml"))
+summarize_ssr_sim(ssr)
+```
+
+## Functions
+
+### Sample size and design
+- sample_size_nbinom(): Fixed-design sample size/power for NB recurrent events. Supports piecewise
+  accrual, exponential dropout, max follow-up, event gaps, non-inferiority (via rr0).
+- gsNBCalendar(): Calendar-time group sequential design from a sample_size_nbinom_result. Inherits
+  from gsDesign; keeps NB-specific information quantities.
+- toInteger(): Round GS design to integer sample sizes.
+
+### Data simulation
+- nb_sim(): Simulate recurrent events — piecewise accrual, exponential dropout, gamma-Poisson
+  mixture. Returns class nb_sim_data.
+- nb_sim_seasonal(): Same with season-varying event rates. Returns class nb_sim_seasonal.
+
+### Interim data handling
+- cut_data_by_date(): Censor simulated data at calendar date; aggregate per subject. S3 generic.
+- get_cut_date(): Find analysis date from calendar, event, completer, or information targets.
+- get_analysis_date(): Find calendar time for target event count.
+- cut_date_for_completers(): Find calendar time for target completer count.
+- cut_completers(): Convenience wrapper for completer-based cuts.
+
+### Statistical analysis
+- mutze_test(): Wald test for treatment effect (NB GLM with Poisson fallback for unstable fits).
+- calculate_blinded_info(): Blinded dispersion/rate estimation and statistical information.
+- estimate_nb_mom(): Method-of-moments NB parameter estimation (blinded or unblinded).
+
+### Group sequential simulation
+- sim_gs_nbinom(): Monte Carlo GS trial simulation with calendar-time interim cuts.
+- check_gs_bound(): Apply GS boundaries on chosen information scale.
+- summarize_gs_sim(): Operating characteristic summaries.
+
+### Sample size re-estimation
+- blinded_ssr(): Blinded SSR from pooled NB fit (Friede & Schmidli 2010).
+- unblinded_ssr(): Unblinded SSR from arm-specific estimates.
+- sim_ssr_nbinom(): Full adaptive simulation engine with strategy comparison.
+- summarize_ssr_sim(): Summary of SSR simulation results.
+
+### Utilities
+- run_ssr_shiny(): Interactive Shiny app for SSR exploration.
+- preview_pkgdown_site(): Local docs preview with correct CSS.
+
+### Re-exported from gsDesign
+gsDesign(), gsBoundSummary(), and all sf*() spending functions.
+
+## S3 classes
+
+- sample_size_nbinom_result: from sample_size_nbinom(); has print(), summary().
+- gsNB: from gsNBCalendar(); inherits gsDesign; has summary(), toInteger().
+- nb_sim_data / nb_sim_seasonal: from nb_sim() / nb_sim_seasonal(); dispatch cut_data_by_date().
+- mutze_test: from mutze_test(); has print().
+
+## Key arguments
+
+- lambda1, lambda2: Control and experimental event rates
+- dispersion / k: NB dispersion (scalar or arm-specific vector)
+- accrual_rate, accrual_duration: Piecewise enrollment specification
+- enroll_rate: data.frame(rate, duration) for simulation functions
+- fail_rate: data.frame(treatment, rate, dispersion)
+- dropout_rate: data.frame(treatment, rate, duration)
+- max_followup: Maximum per-subject follow-up
+- trial_duration: Total calendar time of the trial
+- event_gap: Minimum gap between counted events (affects planning, simulation, and cutting)
+- rr0: Null rate ratio (default 1; < 1 for non-inferiority)
+- bound_info: Information scale for GS boundaries in SSR simulation
+
+## Disease-area calibration
+
+Published NB parameters from pivotal trials:
+- Heart failure: λ ≈ 0.3/month, k ≈ 0.5 (PARADIGM-HF)
+- COPD: λ ≈ 0.5–0.8/month, k ≈ 0.5–1.0, gap ≥ 28 days (FLAME, IMPACT)
+- MS relapses: λ ≈ 1–2/year, moderate-to-high k (OPERA)
+- Asthma: λ variable, k ≈ 0.8 (IMPACT)
+
+## Vignettes
+
+1. sample-size-nbinom: Fixed-design NB sample size planning
+2. simulation-example: Basic recurrent-event data generation
+3. seasonal-simulation: Seasonal rate simulation
+4. group-sequential-simulation: Calendar-time GS design workflow
+5. ssr-example: Short SSR workflow
+6. ssr-simulation-study: Large SSR simulation case study (13 scenarios)
+7. completers-interim-example: Completer-based interim looks
+8. non-inferiority-example: Non-inferiority design
+9. blinded-info-diagnostics: Edge cases for blinded information
+10. verification-simulation: Design-formula verification against simulation
+
+## Installation
+
+CRAN: install.packages("gsDesignNB")
+Development: remotes::install_github("keaven/gsDesignNB")
+
+## Dependencies
+
+Runtime: gsDesign (>= 3.9.0), data.table, simtrial, MASS, stats
+Suggested: ggplot2, dplyr, gt, DT, shiny, foreach, doFuture, future, testthat, knitr
+
+## Links
+
+- Documentation: https://keaven.github.io/gsDesignNB/
+- Source: https://github.com/keaven/gsDesignNB
+- Issues: https://github.com/keaven/gsDesignNB/issues
+
+## References
+
+- Zhu & Lakkis (2014): Sample size for NB regression
+- Friede & Schmidli (2010): Blinded sample size re-estimation
+- Mutze et al. (2019): Group sequential NB designs
+- Anderson (gsDesign): Spending function framework

@@ -22,14 +22,90 @@ format:
 
 | Block | Minutes | Focus |
 |------|---------|--------|
-| Motivation & “three gaps” | ~5 | Why NB planning can misstate information |
+| Why NB? | ~3 | Poisson vs NB, overdispersion in practice |
+| Motivation & "three gaps" | ~4 | Why NB planning can misstate information |
 | Expected events & timing | ~5 | NB model + information timing |
 | GSD, simulation, SSR | ~7 | gsDesign backend, NB workflows, Jensen sweep |
-| AI in development | ~4 | Tooling, contributions, lessons learned |
-| Conclusions & wrap-up | ~4 | Takeaways, software map |
+| AI in development | ~3 | Tooling, contributions, lessons learned |
+| Conclusions & wrap-up | ~3 | Takeaways, software map |
 
 :::: {.notes}
 **~0:30** — Set expectations: NB recurrent-event methods + implementation story + AI workflow, not a new asymptotic theorem.
+::::
+
+---
+
+## Why not just Poisson?
+
+Poisson counts assume every patient has the **same event rate**, but real recurrent-event trials show:
+
+- **Between-patient heterogeneity** — sicker patients contribute many events while most contribute few.
+- **Overdispersion** — observed variance exceeds the Poisson mean, so Poisson-based tests are **anticonservative** or power calculations **overstate** true power.
+- **Heavy tails** — extra-Poisson variation inflates the tail of the count distribution.
+
+The **negative binomial (NB)** model adds one parameter, the **dispersion** $k$, to capture this heterogeneity.
+
+:::: {.notes}
+**~1:00** — Every major recurrent-event regulatory submission in HF, COPD, MS uses NB or related models. The Poisson is the $k\to 0$ special case.
+::::
+
+---
+
+## Overdispersion in practice
+
+Published NB dispersion estimates from pivotal / large trials:
+
+| Disease area | Trial | $\hat k$ | Source |
+|---|---|---|---|
+| Heart failure | PARADIGM-HF | 1.5 | @mcmurray2014paradigm |
+| COPD | FLAME | 1.2 | @wedzicha2016flame |
+| Asthma | IMPACT | 0.8 | @lipson2018impact |
+| Multiple sclerosis | OPERA I/II | 3.1 | @hauser2017ocrelizumab |
+
+- Even $k=0.5$ materially reduces per-patient information: $\mathscr{I}_i=\mu_i/(1+k\mu_i)$.
+- Ignoring $k$ → **understated sample size** by 10–30 %.
+
+:::: {.notes}
+**~1:00** — These are ballpark estimates read from publications or fitted from summary statistics; the point is that $k>0$ is the rule, not the exception.
+::::
+
+---
+
+## NB count distribution intuition
+
+Same mean $\mu=5$; larger $k$ → more spread, heavier tails → **more patients needed**.
+
+```{r nb-distribution-intuition-early, echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=3.5}
+old_par <- par(no.readonly = TRUE)
+on.exit(par(old_par), add = TRUE)
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+k_values <- c(0, 0.5, 1)
+x <- 0:12
+for (k in k_values) {
+  mu <- 5
+  probs <- if (k == 0) {
+    dpois(x, lambda = mu)
+  } else {
+    dnbinom(x, size = 1 / k, mu = mu)
+  }
+  barplot(
+    probs,
+    names.arg = x,
+    main = paste("k =", k),
+    xlab = "Event count",
+    ylab = "Probability",
+    ylim = c(0, 0.22),
+    col = "steelblue",
+    border = "white",
+    cex.names = 0.7
+  )
+}
+```
+
+- Per-subject information: $\mathscr{I}_i = \mu_i/(1+k\mu_i)$ — at $k=0$ we recover Poisson; as $k$ grows, each event carries **less** information.
+
+:::: {.notes}
+**~1:00** — Visual punch: same mean, bigger $k$, fatter tail, more patients. This motivates every calculation that follows.
 ::::
 
 ---
@@ -69,7 +145,7 @@ Interim times solve **feasibility inequalities**:
 
 **Take the max** of applicable floors, then lift further if information requires it — the same backend timing logic applies once the information path is specified.
 
-**Maximum per patient follow-up (e.g., 1 year) can cap trial duration.
+**Maximum per patient follow-up** (e.g., 1 year) can cap trial duration.
 
 :::: {.notes}
 **~2:00** — $\tau_i$ = calendar time of look $i$. If you schedule looks at fixed event fractions or other crude event proxies **without** $\Delta_i$, the **information path** and spending time axis are wrong whenever enrollment continues during mandatory gaps.
@@ -113,45 +189,6 @@ For subject $i$ in treatment group $g$ with exposure $t_i$:
 
 :::: {.notes}
 **~1:00** — Define the parameters before showing the formula. Key point: $k$ controls how much information each expected event carries — higher $k$ means less information per event.
-::::
-
----
-
-## NB count distribution intuition
-
-Same mean $\mu=5$, larger $k$ gives more spread and heavier tails.
-
-```{r nb-distribution-intuition, echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=3.5}
-old_par <- par(no.readonly = TRUE)
-on.exit(par(old_par), add = TRUE)
-par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
-k_values <- c(0, 0.5, 1)
-x <- 0:12
-for (k in k_values) {
-  mu <- 5
-  probs <- if (k == 0) {
-    dpois(x, lambda = mu)
-  } else {
-    dnbinom(x, size = 1 / k, mu = mu)
-  }
-  barplot(
-    probs,
-    names.arg = x,
-    main = paste("k =", k),
-    xlab = "Event count",
-    ylab = "Probability",
-    ylim = c(0, 0.22),
-    col = "steelblue",
-    border = "white",
-    cex.names = 0.7
-  )
-}
-```
-
-- Per-subject information: $\mathscr{I}_i = \mu_i/(1+k\mu_i)$ — higher $k$ means **less information per expected event**.
-
-:::: {.notes}
-**~1:00** — Same mean, more dispersion means fatter tail and less information per expected event. The formula makes this concrete: at $k=0$ information equals $\mu_i$; at $k>0$ it's always less.
 ::::
 
 ---
