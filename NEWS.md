@@ -1,3 +1,27 @@
+# gsDesignNB 0.3.1 (development)
+
+## Robust NB fallback: method-of-moments replaces Poisson under genuine overdispersion
+
+- `mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()` now fall
+  back to method-of-moments (MoM) estimation via `estimate_nb_mom()` when the
+  maximum likelihood negative binomial fit does not converge or returns an
+  extreme-overdispersion shape estimate. Previously, the Poisson fallback was
+  used in both "near-Poisson" and "extreme-overdispersion" regimes; the
+  latter is anti-conservative because the Poisson variance underestimates the
+  true NB variance under genuine overdispersion. The MoM fallback computes
+  the Wald standard error from the observed Fisher information formula
+  $\mathcal{I} = 1/(1/W_1 + 1/W_2)$ with
+  $W_g = \sum_i \mu_{g,i}/(1 + \hat{k}\mu_{g,i})$, preserving the NB variance
+  structure without requiring ML convergence.
+- `mutze_test()` gains a `mom_threshold` argument (default `20`, corresponding
+  to $\hat{k} > 20$) that controls when the MoM branch is triggered. The
+  existing `poisson_threshold` default is reduced from `1000` to `50`
+  ($\hat{k} < 0.02$) since NB and Poisson Wald standard errors are
+  numerically indistinguishable at that point.
+- All three functions now return an additional `fallback` element in their
+  output (`"ml"`, `"mom"`, or `"poisson"`) so that downstream simulation
+  engines can record which estimator was used at each interim.
+
 # gsDesignNB 0.3.0
 
 ## Sample size methodology deep dive (#14)
