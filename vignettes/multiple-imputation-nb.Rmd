@@ -1,0 +1,439 @@
+---
+title: "Multiple imputation for longitudinal negative binomial counts"
+output: rmarkdown::html_vignette
+bibliography: gsDesignNB.bib
+vignette: >
+  %\VignetteIndexEntry{Multiple imputation for longitudinal negative binomial counts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 7,
+  fig.height = 4
+)
+```
+
+## Introduction
+
+Longitudinal clinical trials with recurrent-event count endpoints (e.g., MRI
+lesion counts in multiple sclerosis, exacerbation counts in COPD) routinely
+encounter missing data due to intercurrent events (ICEs) such as premature
+treatment discontinuation, adverse events requiring rescue therapy, or death.
+Proper handling of these missing values requires a principled strategy that
+reflects the scientific question—the *estimand*—as defined by the ICH E9(R1)
+addendum.
+
+The `gsDesignNB` package provides three imputation strategies for longitudinal
+negative binomial count data:
+
+| Mechanism | Flag value | Strategy |
+|:----------|:-----------|:---------|
+| Missing at Random | `"MAR"` | GLMM-based imputation with subject BLUPs |
+| Missing Not at Random (non-reference arm) | `"MNAR"` | Reference-based (copy-reference) imputation |
+| Intercurrent event — composite | `"Comp"` | Baseline count carried forward |
+
+These mirror the SAS implementation using `PROC GLIMMIX` with
+`dist=negbin link=log` and `PROC PLM` for counterfactual predictions.
+
+## Statistical background
+
+### Negative binomial count model
+
+For subject $i$ at visit $t$, let $Y_{it}$ denote the count endpoint.
+The negative binomial (NB) model used throughout **gsDesignNB** is the
+Gamma–Poisson mixture:
+
+$$
+\Lambda_i \sim \text{Gamma}\!\left(\frac{1}{k},\; \mu_i k\right),
+\qquad
+Y_{it} \mid \Lambda_i \sim \text{Poisson}(\Lambda_i).
+$$
+
+Marginally, $Y_{it}$ has mean $\mu_i$ and variance
+$\text{Var}(Y_{it}) = \mu_i + k\,\mu_i^2$, where $k \geq 0$ is the
+dispersion parameter. In the longitudinal GLMM, the mean is modelled as
+
+$$
+\log(\mu_{it}) = \mathbf{x}_{it}^{\top}\boldsymbol{\beta} + b_i,
+$$
+
+where $\mathbf{x}_{it}$ contains fixed-effect covariates (treatment, visit,
+baseline, stratification factors) and $b_i$ is a subject-level random
+intercept. The model is fitted via [glmmTMB::glmmTMB()] with
+`family = nbinom2(link = "log")`.
+
+### Imputation draw
+
+All three model-based strategies draw imputed counts from the same
+Gamma–Poisson compound:
+
+$$
+\lambda_i^{(m)} \sim \text{Gamma}\!\left(\frac{1}{k},\; \hat\mu_i \cdot k\right),
+\qquad
+Y_i^{(m)} \mid \lambda_i^{(m)} \sim \text{Poisson}\!\left(\lambda_i^{(m)}\right).
+$$
+
+The strategies differ only in how $\hat\mu_i$ is determined:
+
+- **MAR**: $\hat\mu_i = \hat\mu_i^{\text{BLUP}}$ — predicted mean including
+  subject random effects.
+- **MNAR reference-based**: $\hat\mu_i = \hat\mu_i^{\text{FE, ref}} \times
+  \dfrac{\hat\mu_i^{\text{BLUP}}}{\hat\mu_i^{\text{FE}}}$ — counterfactual
+  mean under the reference treatment, adjusted by each subject's estimated
+  random effect. The ratio $\hat\mu_i^{\text{BLUP}} / \hat\mu_i^{\text{FE}}$
+  is the multiplicative random-effect "BLUP multiplier" computed from the
+  original treatment assignment.
+- **Composite**: $Y_i^{(m)} = y_{i,0}$ (baseline value), no model draw.
+
+### Bootstrap–MI combination
+
+When `n_boot > 1`, subjects are resampled with replacement within strata before
+each GLMM fit. This *boot-MI* approach propagates both imputation uncertainty
+and model-fitting uncertainty into the final variance estimate without
+requiring Rubin's combining rules. When `n_boot = 1`, standard MI is performed
+and Rubin's rules should be applied when pooling estimates across the `n_imp`
+imputed datasets.
+
+## Worked example
+
+### Simulating longitudinal count data
+
+We simulate a 3-arm trial (placebo and two active doses) with 4 post-baseline
+visits, negative binomial counts (dispersion $k = 0.5$), and a single
+binary stratification factor.
+
+```{r simulate}
+set.seed(2025)
+
+n_subj   <- 90L   # 30 per arm
+n_visit  <- 4L
+k_true   <- 0.5   # dispersion
+lambda   <- c(placebo = 1.8, low = 1.1, high = 0.7)   # mean counts/visit
+
+trt_labels <- rep(c("placebo", "low", "high"), each = n_subj / 3L)
+strat      <- sample(c(0L, 1L), n_subj, replace = TRUE)
+baseline   <- rnbinom(n_subj, mu = 2.5, size = 1 / k_true)
+id         <- seq_len(n_subj)
+
+# Build long-format data (all visits complete at first)
+long_data <- do.call(rbind, lapply(seq_len(n_subj), function(i) {
+  mu_i <- lambda[trt_labels[i]] * exp(0.15 * strat[i] + 0.05 * baseline[i])
+  data.frame(
+    id       = i,
+    visit    = seq_len(n_visit),
+    trt      = trt_labels[i],
+    strat1   = strat[i],
+    baseline = baseline[i],
+    count    = rnbinom(n_visit, mu = mu_i, size = 1 / k_true),
+    stringsAsFactors = FALSE
+  )
+}))
+
+# Sort
+long_data <- long_data[order(long_data$id, long_data$visit), ]
+rownames(long_data) <- NULL
+str(long_data)
+```
+
+### Introducing missing data by mechanism
+
+We introduce three types of missing data to mirror a realistic trial:
+
+- **MAR**: A random subset of subjects miss visits 3–4 due to non-disease
+  reasons (e.g., logistical dropout). The probability of dropout is unrelated
+  to unobserved counts given the observed history — a plausible MAR assumption.
+- **MNAR**: A subset of active-arm subjects discontinue at visit 2 due to
+  adverse events likely linked to drug exposure. Their later counts are
+  expected to be higher (on the reference arm trajectory) than for subjects
+  who remained on treatment — a MNAR mechanism for which reference-based
+  imputation is appropriate.
+- **Composite ICE**: A small number of subjects in any arm experience a
+  severe disease worsening event (e.g., hospitalisation) that leads to
+  treatment discontinuation. The composite estimand treats this event as part
+  of the outcome; missing post-event counts are filled with the baseline count.
+
+```{r introduce_missing}
+long_data$miss_flag <- NA_character_
+
+# --- MAR: ~15% of subjects drop out from visit 3 onward ---
+mar_subjects <- sample(id, size = round(0.15 * n_subj))
+long_data$miss_flag[
+  long_data$id %in% mar_subjects & long_data$visit >= 3
+] <- "MAR"
+
+# --- MNAR: ~10% of active-arm subjects withdraw at visit 2 ---
+active_ids  <- id[trt_labels != "placebo"]
+mnar_subjects <- sample(active_ids, size = round(0.10 * n_subj))
+long_data$miss_flag[
+  long_data$id %in% mnar_subjects & long_data$visit >= 2
+] <- "MNAR"
+
+# --- Composite ICE: ~5% of all subjects, post-event visits ---
+comp_subjects <- sample(setdiff(id, c(mar_subjects, mnar_subjects)),
+                        size = round(0.05 * n_subj))
+comp_ice_visit <- sample(2L:4L, length(comp_subjects), replace = TRUE)
+for (ci in seq_along(comp_subjects)) {
+  long_data$miss_flag[
+    long_data$id == comp_subjects[ci] &
+    long_data$visit >= comp_ice_visit[ci]
+  ] <- "Comp"
+}
+
+# Set the outcome to NA for flagged rows (simulate non-collection)
+long_data$count[!is.na(long_data$miss_flag)] <- NA_integer_
+
+cat("Missing rows by mechanism:\n")
+print(table(long_data$miss_flag, useNA = "ifany"))
+```
+
+### Running `impute_nb()`
+
+We now run the full MI pipeline. For this illustration we use `n_boot = 1`
+(no bootstrap) and `n_imp = 5` imputations, fitting a random-intercept NB
+GLMM.
+
+```{r run_mi, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+library(gsDesignNB)
+
+# The formula mirrors the fixed-effects structure from the SAS code.
+# A random intercept per subject captures between-subject heterogeneity.
+mi_formula <- count ~ baseline + strat1 + trt + visit + (1 | id)
+
+imp_result <- impute_nb(
+  data            = long_data,
+  formula         = mi_formula,
+  outcome_col     = "count",
+  miss_flag_col   = "miss_flag",
+  baseline_col    = "baseline",
+  trt_col         = "trt",
+  reference_trt   = "placebo",
+  subject_col     = "id",
+  strata_cols     = c("trt", "strat1"),
+  mar_values      = "MAR",
+  mnar_value      = "MNAR",
+  composite_value = "Comp",
+  n_imp           = 5L,
+  n_boot          = 1L,
+  seed            = 42L
+)
+
+# Dimensions: n_subj * n_visit * n_imp rows
+dim(imp_result)
+names(imp_result)
+```
+
+```{r run_mi_fallback, echo=FALSE, eval=!requireNamespace("glmmTMB", quietly = TRUE)}
+message(
+  "NOTE: 'glmmTMB' is not installed in this build environment.\n",
+  "Install it with install.packages('glmmTMB') to run this vignette."
+)
+```
+
+### Inspecting imputed values
+
+The `imputed_value` column contains:
+
+- The **observed value** for non-missing rows.
+- An **imputed draw** for missing rows.
+
+```{r inspect, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+# Show imputed rows only, first 2 imputations
+imp_missing <- imp_result[
+  !is.na(imp_result$miss_flag) & imp_result$imputation <= 2,
+  c("id", "visit", "trt", "miss_flag", "baseline", "count", "imputation",
+    "imputed_value")
+]
+head(imp_missing[order(imp_missing$miss_flag, imp_missing$id,
+                        imp_missing$imputation), ], 20)
+```
+
+### Comparing imputed means by strategy
+
+We can verify that the imputation behaved as expected. Under MAR, imputed
+values should centre around the model prediction for each arm. Under
+reference-based MNAR, imputed values for non-placebo subjects should look
+more like placebo outcomes (higher counts).
+
+```{r means_table, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+# Mean imputed value per mechanism and treatment arm
+agg <- aggregate(
+  imputed_value ~ miss_flag + trt,
+  data   = imp_result[!is.na(imp_result$miss_flag), ],
+  FUN    = mean
+)
+agg <- agg[order(agg$miss_flag, agg$trt), ]
+print(agg, row.names = FALSE)
+```
+
+The MNAR reference-based imputed means for the `low` and `high` arms should
+be closer to the `placebo` mean than the MAR-imputed means, reflecting the
+"what if this subject had been on placebo?" counterfactual.
+
+### Pooled analysis with Rubin's rules (standard MI)
+
+After standard MI (`n_boot = 1`), pool estimates across the `n_imp` imputed
+datasets using Rubin's rules. Here we compute the mean total count per arm at
+visit 4 as a simple illustration.
+
+```{r pooling, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+# Per-imputation mean at visit 4
+v4 <- imp_result[imp_result$visit == 4, ]
+per_imp <- lapply(split(v4, v4$imputation), function(d) {
+  tapply(d$imputed_value, d$trt, mean, na.rm = TRUE)
+})
+
+# Point estimate: average over imputations
+Q_bar <- Reduce("+", per_imp) / length(per_imp)
+
+# Within-imputation variance (using single-imputation SE ~ mean/n, illustrative)
+# In practice use regression SE from each imputed dataset
+cat("Pooled mean imputed count at visit 4 by treatment arm:\n")
+print(round(Q_bar, 2))
+```
+
+### Bootstrap–MI for variance estimation
+
+When `n_boot > 1`, no Rubin's rules are needed. The variance across all
+`n_boot * n_imp` completed datasets directly incorporates both sources of
+uncertainty.
+
+```{r boot_mi, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+imp_boot <- impute_nb(
+  data            = long_data,
+  formula         = mi_formula,
+  outcome_col     = "count",
+  miss_flag_col   = "miss_flag",
+  baseline_col    = "baseline",
+  trt_col         = "trt",
+  reference_trt   = "placebo",
+  subject_col     = "id",
+  strata_cols     = c("trt", "strat1"),
+  n_imp           = 5L,
+  n_boot          = 3L,   # use larger values in practice (e.g., 100–500)
+  seed            = 99L
+)
+
+# Each replicate × imputation combination is an independent completed dataset
+cat("Total rows:", nrow(imp_boot),
+    "= n_subj * n_visit * n_boot * n_imp =",
+    n_subj * n_visit * 3L * 5L, "\n")
+
+# Variance of the arm-level mean at visit 4 across all completed datasets
+v4b <- imp_boot[imp_boot$visit == 4, ]
+dataset_means <- tapply(
+  v4b$imputed_value,
+  list(paste(v4b$replicate, v4b$imputation, sep = "_"), v4b$trt),
+  mean
+)
+cat("\nVariance of dataset-level means across boot×imp datasets:\n")
+print(round(apply(dataset_means, 2, var), 4))
+```
+
+### Using the building-block functions directly
+
+Advanced users can call the individual strategy functions for more control.
+
+#### Step 1 — Fit the GLMM
+
+```{r step1, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+obs_data <- long_data[!is.na(long_data$count), ]
+fits <- fit_nb_glmm(
+  data    = obs_data,
+  formula = count ~ baseline + strat1 + trt + visit + (1 | id)
+)
+cat("Estimated dispersion k:", round(fits[["1"]]$k, 3), "\n")
+```
+
+#### Step 2 — MAR imputation
+
+```{r step2, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+imp_mar <- impute_nb_mar(
+  data          = long_data,
+  fits          = fits,
+  outcome_col   = "count",
+  miss_flag_col = "miss_flag",
+  mar_values    = c("MAR", "MNAR"),  # reference-arm MNAR treated as MAR
+  n_imp         = 3L
+)
+cat("MAR imputed rows:", sum(!is.na(imp_mar$imputed_value[
+  imp_mar$imputation == 1 & !is.na(imp_mar$miss_flag)
+])), "\n")
+```
+
+#### Step 3 — MNAR reference-based imputation
+
+```{r step3, eval=requireNamespace("glmmTMB", quietly = TRUE)}
+imp_mnar <- impute_nb_mnar_ref(
+  data          = long_data,
+  fits          = fits,
+  outcome_col   = "count",
+  miss_flag_col = "miss_flag",
+  mnar_value    = "MNAR",
+  trt_col       = "trt",
+  reference_trt = "placebo",
+  n_imp         = 3L
+)
+```
+
+#### Step 4 — Composite strategy (no model required)
+
+```{r step4}
+library(gsDesignNB)
+
+# Composite fill can be applied to any data frame, no glmmTMB needed
+df_comp_example <- data.frame(
+  count         = c(3L,   NA,     NA,      5L),
+  imputed_value = c(3L,    7L,    NA,      5L),
+  miss_flag     = c(NA,  "MAR", "Comp",    NA),
+  baseline      = c(4L,    4L,    4L,      6L)
+)
+impute_nb_composite(
+  df_comp_example,
+  outcome_col     = "count",
+  miss_flag_col   = "miss_flag",
+  composite_value = "Comp",
+  baseline_col    = "baseline"
+)
+```
+
+The third row (`miss_flag = "Comp"`) now has `imputed_value = 4` (the
+baseline value); the second row (`miss_flag = "MAR"`) retains its
+previously imputed value of 7.
+
+## Key considerations
+
+**Choice of random-effect structure.** The original SAS model uses an
+unstructured residual covariance across visits within each
+subject × endpoint combination. In `glmmTMB` this can be approximated with
+`(0 + visit_factor | id:param)`, but convergence may be slow for small
+datasets. Start with a random intercept `(1 | id)` and add complexity
+incrementally.
+
+**Treatment variable type.** If `trt_col` is a factor, ensure that
+`reference_trt` matches a level in the factor. For counterfactual prediction
+the reference level is inserted into the newdata frame; if new levels arise,
+`allow.new.levels = TRUE` handles them gracefully.
+
+**Composite and MNAR rows that are observed.** The composite strategy only
+overwrites rows where `is.na(outcome_col)`. Observed rows with
+`miss_flag = "Comp"` (e.g., the actual ICE visit itself, if observed) are
+left unchanged.
+
+**Bootstrap sample size.** For the boot-MI approach, `n_boot = 100`–`500`
+replicates is typical in practice. The smaller values used in this vignette
+are for illustration only.
+
+**Pooling.** With standard MI (`n_boot = 1`), pool regression-model estimates
+across imputations using Rubin's rules. With boot-MI (`n_boot > 1`), the
+empirical variance across all `n_boot × n_imp` datasets is a valid variance
+estimator without additional combining rules.
+
+## Session info
+
+```{r session_info}
+sessionInfo()
+```
