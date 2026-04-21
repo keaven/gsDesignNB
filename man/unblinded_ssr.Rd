@@ -62,12 +62,22 @@ A list containing:
 \item{info_fraction}{Estimated information fraction at interim (unblinded information / target information).}
 \item{unblinded_info}{Estimated statistical information from the unblinded interim data.}
 \item{target_info}{Target statistical information required for the planned power.}
+\item{fallback}{Character label for which estimator was used
+(\code{"ml"} or \code{"mom"}).}
 }
 }
 \description{
 Estimates the event rates and dispersion from unblinded interim data
 and calculates the required sample size to maintain power, assuming the
 planned treatment effect holds (or using the observed control rate).
+}
+\details{
+If the maximum likelihood negative binomial fit fails to converge, the
+function falls back to method-of-moments estimation via \code{\link[=estimate_nb_mom]{estimate_nb_mom()}}
+rather than erroring out. The observed Fisher information is then computed
+analytically from the MoM-estimated rates and dispersion using the same
+subject-level weight formula as \code{\link[=calculate_blinded_info]{calculate_blinded_info()}}. This keeps SSR
+updates well-defined under extreme overdispersion or sparse interim data.
 }
 \examples{
 interim <- data.frame(
