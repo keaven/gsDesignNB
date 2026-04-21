@@ -118,6 +118,22 @@ A list containing:
 
   Target statistical information required for the planned power.
 
+- fallback:
+
+  Character label for which estimator was used (`"ml"` or `"mom"`).
+
+## Details
+
+If the maximum likelihood negative binomial fit fails to converge, the
+function falls back to method-of-moments estimation via
+[`estimate_nb_mom()`](https://keaven.github.io/gsDesignNB/reference/estimate_nb_mom.md)
+rather than erroring out. The observed Fisher information is then
+computed analytically from the MoM-estimated rates and dispersion using
+the same subject-level weight formula as
+[`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md).
+This keeps SSR updates well-defined under extreme overdispersion or
+sparse interim data.
+
 ## Examples
 
 ``` r
@@ -137,14 +153,12 @@ unblinded_ssr(
   accrual_duration = 12,
   trial_duration = 18
 )
-#> Warning: iteration limit reached
-#> Warning: iteration limit reached
 #> $n_total_unblinded
 #> (Intercept) 
 #>          10 
 #> 
 #> $dispersion_unblinded
-#> [1] 1.428901e-05
+#> [1] 1.428899e-05
 #> 
 #> $lambda1_unblinded
 #> (Intercept) 
@@ -162,5 +176,8 @@ unblinded_ssr(
 #> 
 #> $target_info
 #> [1] 30.07893
+#> 
+#> $fallback
+#> [1] "ml"
 #> 
 ```

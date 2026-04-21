@@ -249,10 +249,10 @@ inverse of this variance.
 # Variance of the treatment effect coefficient
 var_beta <- vcov(fit)["treatmentExperimental", "treatmentExperimental"]
 message("Variance of Treatment Effect (log-scale): ", var_beta)
-#> Variance of Treatment Effect (log-scale): 1.37404900110776
+#> Variance of Treatment Effect (log-scale): 1.37404900110775
 
 # Statistical Information
 info <- 1 / var_beta
 message("Statistical Information: ", info)
-#> Statistical Information: 0.727776083090051
+#> Statistical Information: 0.727776083090052
 ```

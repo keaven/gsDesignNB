@@ -115,11 +115,20 @@ before computing the rate split.</p></dd>
 <dd><p>Re-estimated experimental rate
 \(\hat\lambda_2\).</p></dd>
 
+<dt>fallback</dt>
+<dd><p>Character label describing which estimator was used
+(<code>"ml"</code> or <code>"mom"</code>).</p></dd>
+
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The statistical information is computed as:
+    <p>If the ML negative binomial fit fails to converge or produces an unreliable
+shape estimate, the function falls back to method-of-moments (MoM)
+estimation via <code><a href="estimate_nb_mom.html">estimate_nb_mom()</a></code> rather than silently assuming
+\(k = 0\). This avoids the anti-conservative behaviour that would result
+from treating overdispersed data as Poisson.</p>
+<p>The statistical information is computed as:
 $$\mathcal{I} = \frac{1}{1/W_1 + 1/W_2}$$
 where \(W_g = p_g \sum_i \mu_{g,i} / (1 + k\,\mu_{g,i})\) and
 \(\mu_{g,i} = \lambda_g t_i\) is the expected count for subject \(i\)
@@ -152,7 +161,7 @@ superiority and non-inferiority trials.
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.640582</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $dispersion_blinded</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.617394e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.617397e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lambda_blinded</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
@@ -165,6 +174,9 @@ superiority and non-inferiority trials.
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lambda2_adjusted</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    1.346155 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $fallback</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ml"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>

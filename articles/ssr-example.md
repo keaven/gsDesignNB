@@ -317,6 +317,9 @@ print(ssr_res)
 #> 
 #> $target_info
 #> [1] 126.9611
+#> 
+#> $fallback
+#> [1] "ml"
 ```
 
 The estimated control rate is 0.079, which is lower than the planned

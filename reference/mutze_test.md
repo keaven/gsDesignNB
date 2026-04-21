@@ -4,7 +4,14 @@ Fits a negative binomial (or Poisson) log-rate model to the aggregated
 subject-level data produced by
 [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md).
 The method matches the Wald test described by Mutze et al. (2019) for
-comparing treatment arms with recurrent event outcomes.
+comparing treatment arms with recurrent event outcomes. When the maximum
+likelihood negative binomial fit is unreliable, the test automatically
+switches to one of two statistically sensible fallbacks: a Poisson Wald
+test when the data are essentially Poisson, or a method-of-moments (MoM)
+variance estimate plugged into the same negative binomial information
+formula when the data are extremely overdispersed or the ML fit fails to
+converge. The latter avoids the anti-conservative behaviour of a blind
+Poisson fallback under genuine overdispersion.
 
 ## Usage
 
@@ -14,7 +21,8 @@ mutze_test(
   method = c("nb", "poisson"),
   conf_level = 0.95,
   sided = 1,
-  poisson_threshold = 1000
+  poisson_threshold = 50,
+  mom_threshold = 20
 )
 
 # S3 method for class 'mutze_test'
@@ -45,11 +53,27 @@ print(x, ...)
 
 - poisson_threshold:
 
-  When `method = "nb"`, the model falls back to Poisson regression if
-  theta (the NB shape parameter) is outside the range
-  `[1/poisson_threshold, poisson_threshold]`. Very large theta indicates
-  near-Poisson data, while very small theta indicates extreme
-  overdispersion with unstable estimates. Default is 1000.
+  Upper threshold (in units of `fit$theta`, the
+  [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) shape
+  parameter \\\theta\_{\text{NB}} = 1/k\\) above which the data are
+  treated as essentially Poisson and the function falls back to a
+  Poisson Wald test. Default is 50, corresponding to \\\hat{k} \<
+  0.02\\, by which point NB and Poisson Wald standard errors are
+  numerically indistinguishable at typical trial sample sizes.
+
+- mom_threshold:
+
+  Lower threshold on `fit$theta` below which the NB ML fit is considered
+  unreliable (extreme overdispersion). When triggered, or when
+  `glm.nb()` fails to converge, the function falls back to a
+  method-of-moments NB Wald test: rates and dispersion are re-estimated
+  via
+  [`estimate_nb_mom()`](https://keaven.github.io/gsDesignNB/reference/estimate_nb_mom.md)
+  and the Wald variance is computed from the Fisher information formula
+  \\\mathcal{I} = 1/(1/W_1 + 1/W_2)\\ with \\W_g = \sum_i
+  \mu\_{g,i}/(1 + \hat{k}\mu\_{g,i})\\. Default is 20, corresponding to
+  \\\hat{k} \> 20\\. This avoids the anti-conservative variance of a
+  Poisson fallback when the data are truly overdispersed.
 
 - x:
 
@@ -76,9 +100,16 @@ elements:
 
 - `rate_ratio`: estimated rate ratio and its confidence interval.
 
-- `dispersion`: estimated dispersion (theta) when `method = "nb"`.
+- `dispersion`: estimated dispersion. For consistency this is reported
+  on the [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html)
+  scale (\\\theta\_{\text{NB}} = 1/k\\), regardless of whether ML,
+  Poisson fallback, or MoM fallback was used. `Inf` indicates Poisson
+  (\\k=0\\).
 
 - `group_summary`: observed subjects/events/exposure per treatment.
+
+- `fallback`: character label describing which fit path was used
+  (`"ml"`, `"poisson"`, or `"mom"`).
 
 Invisibly returns the input object.
 
@@ -101,7 +132,7 @@ mutze_test(cut)
 #> Mutze Test Results
 #> ==================
 #> 
-#> Method:     Poisson Wald (fallback) 
+#> Method:     Poisson Wald (fallback, near-Poisson ML) 
 #> Estimate:   -0.1709
 #> SE:         0.5175
 #> Z:          -0.3302

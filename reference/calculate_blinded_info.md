@@ -71,7 +71,20 @@ A list containing:
 
   Re-estimated experimental rate \\\hat\lambda_2\\.
 
+- fallback:
+
+  Character label describing which estimator was used (`"ml"` or
+  `"mom"`).
+
 ## Details
+
+If the ML negative binomial fit fails to converge or produces an
+unreliable shape estimate, the function falls back to method-of-moments
+(MoM) estimation via
+[`estimate_nb_mom()`](https://keaven.github.io/gsDesignNB/reference/estimate_nb_mom.md)
+rather than silently assuming \\k = 0\\. This avoids the
+anti-conservative behaviour that would result from treating
+overdispersed data as Poisson.
 
 The statistical information is computed as: \$\$\mathcal{I} =
 \frac{1}{1/W_1 + 1/W_2}\$\$ where \\W_g = p_g \sum_i \mu\_{g,i} / (1 +
@@ -106,7 +119,7 @@ calculate_blinded_info(
 #> [1] 1.640582
 #> 
 #> $dispersion_blinded
-#> [1] 1.617394e-05
+#> [1] 1.617397e-05
 #> 
 #> $lambda_blinded
 #> (Intercept) 
@@ -119,5 +132,8 @@ calculate_blinded_info(
 #> $lambda2_adjusted
 #> (Intercept) 
 #>    1.346155 
+#> 
+#> $fallback
+#> [1] "ml"
 #> 
 ```

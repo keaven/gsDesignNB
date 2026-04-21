@@ -147,8 +147,21 @@ Default is NULL (no gap).</p></dd>
 <dt>target_info</dt>
 <dd><p>Target statistical information required for the planned power.</p></dd>
 
+<dt>fallback</dt>
+<dd><p>Character label for which estimator was used
+(<code>"ml"</code> or <code>"mom"</code>).</p></dd>
+
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>If the maximum likelihood negative binomial fit fails to converge, the
+function falls back to method-of-moments estimation via <code><a href="estimate_nb_mom.html">estimate_nb_mom()</a></code>
+rather than erroring out. The observed Fisher information is then computed
+analytically from the MoM-estimated rates and dispersion using the same
+subject-level weight formula as <code><a href="calculate_blinded_info.html">calculate_blinded_info()</a></code>. This keeps SSR
+updates well-defined under extreme overdispersion or sparse interim data.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -168,14 +181,12 @@ Default is NULL (no gap).</p></dd>
 <span class="r-in"><span>  accrual_duration <span class="op">=</span> <span class="fl">12</span>,</span></span>
 <span class="r-in"><span>  trial_duration <span class="op">=</span> <span class="fl">18</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>iteration limit reached</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>iteration limit reached</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_total_unblinded</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $dispersion_unblinded</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.428901e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.428899e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lambda1_unblinded</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
@@ -193,6 +204,9 @@ Default is NULL (no gap).</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $target_info</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 30.07893</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $fallback</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ml"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>

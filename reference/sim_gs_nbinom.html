@@ -294,21 +294,26 @@ simulation replicate. To obtain the same results across runs:</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2         15             30.785474            35.601758           30.785474</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3          1              7.567636             7.918122            7.567636</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4          9             31.001526            33.869952           31.001526</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   exposure_total_exp      z_stat    estimate        se             method_used</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           9.141767  0.40264747  0.25990122 0.6454808 Poisson Wald (fallback)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          35.601758 -0.68724537 -0.29289609 0.4261885  Negative binomial Wald</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           7.918122 -0.03201309 -0.04527334 1.4142134 Poisson Wald (fallback)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          33.869952 -0.62972725 -0.29464890 0.4678992  Negative binomial Wald</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   dispersion blinded_info unblinded_info info_unblinded_ml info_blinded_ml</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        Inf    2.3997486      2.4001220         2.4001220       2.3997486</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   2.689392    5.2833148      5.5054966         5.5054966       5.2833148</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Inf    0.4799814      0.5000001         0.5000001       0.4799814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   7.281096    4.3857137      4.5676764         4.5676764       4.3857137</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   info_unblinded_mom info_blinded_mom</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           2.400000         2.400000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           5.801325         5.606178</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           0.500000         0.480000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           4.692655         4.513762</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   exposure_total_exp      z_stat    estimate        se</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           9.141767  0.40264747  0.25990122 0.6454808</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          35.601758 -0.68724537 -0.29289609 0.4261885</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           7.918122 -0.03201309 -0.04527334 1.4142134</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          33.869952 -0.62972725 -0.29464890 0.4678992</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                method_used dispersion blinded_info</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Poisson Wald (fallback, near-Poisson ML)        Inf    2.3997486</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                   Negative binomial Wald   2.689392    5.2833148</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Poisson Wald (fallback, near-Poisson ML)        Inf    0.4799814</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                   Negative binomial Wald   7.281096    4.3857137</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   unblinded_info info_unblinded_ml info_blinded_ml info_unblinded_mom</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      2.4001220         2.4001220       2.3997486           2.400000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      5.5054966         5.5054966       5.2833148           5.801325</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      0.5000001         0.5000001       0.4799814           0.500000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      4.5676764         4.5676764       4.3857137           4.692655</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   info_blinded_mom</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         2.400000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         5.606178</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         0.480000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         4.513762</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># Parallel execution (requires future and future.apply)</span></span></span>

@@ -172,13 +172,13 @@ cat("\nUnblinded (Mutze Test) Results:\n")
 #> 
 #> Unblinded (Mutze Test) Results:
 cat("  method:", mutze_res$method, "\n")
-#>   method: Poisson Wald (fallback)
+#>   method: Negative binomial Wald (MoM fallback, extreme overdispersion)
 cat("  SE:", round(mutze_res$se, 4), "\n")
-#>   SE: 0.1434
+#>   SE: 0.1553
 cat("  unblinded_info (1/SE^2):", round(1/mutze_res$se^2, 2), "\n")
-#>   unblinded_info (1/SE^2): 48.63
+#>   unblinded_info (1/SE^2): 41.47
 cat("  dispersion:", mutze_res$dispersion, "\n")
-#>   dispersion: Inf
+#>   dispersion: 4.088287
 ```
 
 #### Root Cause Analysis
@@ -303,15 +303,17 @@ blinded_res_2 <- calculate_blinded_info(
   lambda1_planning = 1.5/12,
   lambda2_planning = 1.0/12
 )
+#> Warning: Blinded ML NB fit did not converge; falling back to method-of-moments
+#> (lambda = 0.09262, k = 0.4033).
 
 cat("Blinded Information Results:\n")
 #> Blinded Information Results:
 cat("  blinded_info:", format(blinded_res_2$blinded_info, scientific = TRUE), "\n")
-#>   blinded_info: 1.826963e+38
+#>   blinded_info: 2.312778e+01
 cat("  dispersion_blinded:", format(blinded_res_2$dispersion_blinded, scientific = TRUE), "\n")
-#>   dispersion_blinded: 5.875129e-42
+#>   dispersion_blinded: 4.03252e-01
 cat("  lambda_blinded:", round(blinded_res_2$lambda_blinded, 4), "\n")
-#>   lambda_blinded: 6.078207e+35
+#>   lambda_blinded: 0.0926
 
 # Unblinded calculation via mutze_test
 mutze_res_2 <- mutze_test(cut_data_2)
@@ -320,13 +322,13 @@ cat("\nUnblinded (Mutze Test) Results:\n")
 #> 
 #> Unblinded (Mutze Test) Results:
 cat("  method:", mutze_res_2$method, "\n")
-#>   method: Poisson Wald (fallback)
+#>   method: Negative binomial Wald (MoM fallback, ML non-convergent)
 cat("  SE:", round(mutze_res_2$se, 4), "\n")
-#>   SE: 0.1932
+#>   SE: 0.2078
 cat("  unblinded_info (1/SE^2):", round(1/mutze_res_2$se^2, 2), "\n")
-#>   unblinded_info (1/SE^2): 26.79
+#>   unblinded_info (1/SE^2): 23.16
 cat("  dispersion:", mutze_res_2$dispersion, "\n")
-#>   dispersion: Inf
+#>   dispersion: 3.110089
 ```
 
 #### Root Cause Analysis
@@ -473,22 +475,22 @@ sessionInfo()
 #>  [7] r2rtf_1.3.0         lattice_0.22-9      listenv_0.10.1     
 #> [10] digest_0.6.39       magrittr_2.0.5      evaluate_1.0.5     
 #> [13] grid_4.5.3          RColorBrewer_1.1-3  iterators_1.0.14   
-#> [16] mvtnorm_1.3-6       fastmap_1.2.0       Matrix_1.7-4       
+#> [16] mvtnorm_1.3-7       fastmap_1.2.0       Matrix_1.7-4       
 #> [19] foreach_1.5.2       simtrial_1.0.2      jsonlite_2.0.0     
 #> [22] survival_3.8-6      purrr_1.2.2         scales_1.4.0       
 #> [25] codetools_0.2-20    textshaping_1.0.5   jquerylib_0.1.4    
-#> [28] cli_3.6.6           rlang_1.2.0         parallelly_1.46.1  
+#> [28] cli_3.6.6           rlang_1.2.0         parallelly_1.47.0  
 #> [31] future.apply_1.20.2 splines_4.5.3       withr_3.0.2        
 #> [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.9.0     
 #> [37] otel_0.2.0          tools_4.5.3         parallel_4.5.3     
 #> [40] doFuture_1.2.1      dplyr_1.2.1         globals_0.19.1     
 #> [43] vctrs_0.7.3         R6_2.6.1            lifecycle_1.0.5    
-#> [46] fs_2.0.1            htmlwidgets_1.6.4   ragg_1.5.2         
+#> [46] fs_2.1.0            htmlwidgets_1.6.4   ragg_1.5.2         
 #> [49] pkgconfig_2.0.3     desc_1.4.3          pkgdown_2.2.0      
 #> [52] pillar_1.11.1       bslib_0.10.0        gtable_0.3.6       
-#> [55] glue_1.8.0          Rcpp_1.1.1          systemfonts_1.3.2  
+#> [55] glue_1.8.1          Rcpp_1.1.1-1        systemfonts_1.3.2  
 #> [58] xfun_0.57           tibble_3.3.1        tidyselect_1.2.1   
 #> [61] knitr_1.51          farver_2.1.2        xtable_1.8-8       
 #> [64] htmltools_0.5.9     labeling_0.4.3      rmarkdown_2.31     
-#> [67] compiler_4.5.3      S7_0.2.1
+#> [67] compiler_4.5.3      S7_0.2.1-1
 ```

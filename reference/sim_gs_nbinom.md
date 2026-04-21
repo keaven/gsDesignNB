@@ -287,21 +287,26 @@ head(sim_results)
 #> 2         15             30.785474            35.601758           30.785474
 #> 3          1              7.567636             7.918122            7.567636
 #> 4          9             31.001526            33.869952           31.001526
-#>   exposure_total_exp      z_stat    estimate        se             method_used
-#> 1           9.141767  0.40264747  0.25990122 0.6454808 Poisson Wald (fallback)
-#> 2          35.601758 -0.68724537 -0.29289609 0.4261885  Negative binomial Wald
-#> 3           7.918122 -0.03201309 -0.04527334 1.4142134 Poisson Wald (fallback)
-#> 4          33.869952 -0.62972725 -0.29464890 0.4678992  Negative binomial Wald
-#>   dispersion blinded_info unblinded_info info_unblinded_ml info_blinded_ml
-#> 1        Inf    2.3997486      2.4001220         2.4001220       2.3997486
-#> 2   2.689392    5.2833148      5.5054966         5.5054966       5.2833148
-#> 3        Inf    0.4799814      0.5000001         0.5000001       0.4799814
-#> 4   7.281096    4.3857137      4.5676764         4.5676764       4.3857137
-#>   info_unblinded_mom info_blinded_mom
-#> 1           2.400000         2.400000
-#> 2           5.801325         5.606178
-#> 3           0.500000         0.480000
-#> 4           4.692655         4.513762
+#>   exposure_total_exp      z_stat    estimate        se
+#> 1           9.141767  0.40264747  0.25990122 0.6454808
+#> 2          35.601758 -0.68724537 -0.29289609 0.4261885
+#> 3           7.918122 -0.03201309 -0.04527334 1.4142134
+#> 4          33.869952 -0.62972725 -0.29464890 0.4678992
+#>                                method_used dispersion blinded_info
+#> 1 Poisson Wald (fallback, near-Poisson ML)        Inf    2.3997486
+#> 2                   Negative binomial Wald   2.689392    5.2833148
+#> 3 Poisson Wald (fallback, near-Poisson ML)        Inf    0.4799814
+#> 4                   Negative binomial Wald   7.281096    4.3857137
+#>   unblinded_info info_unblinded_ml info_blinded_ml info_unblinded_mom
+#> 1      2.4001220         2.4001220       2.3997486           2.400000
+#> 2      5.5054966         5.5054966       5.2833148           5.801325
+#> 3      0.5000001         0.5000001       0.4799814           0.500000
+#> 4      4.5676764         4.5676764       4.3857137           4.692655
+#>   info_blinded_mom
+#> 1         2.400000
+#> 2         5.606178
+#> 3         0.480000
+#> 4         4.513762
 
 if (FALSE) { # \dontrun{
 # Parallel execution (requires future and future.apply)

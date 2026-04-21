@@ -179,14 +179,14 @@ summary(results[, c("interim_date", "interim_z", "interim_info", "final_date", "
 #>  Median :1.406   Median :-1.333   Median :14.07   Median :1.983  
 #>  Mean   :1.416   Mean   :-1.357   Mean   :14.51   Mean   :1.992  
 #>  3rd Qu.:1.445   3rd Qu.:-0.620   3rd Qu.:15.65   3rd Qu.:2.029  
-#>  Max.   :1.544   Max.   : 1.303   Max.   :21.49   Max.   :2.173  
+#>  Max.   :1.544   Max.   : 1.303   Max.   :21.54   Max.   :2.173  
 #>     final_z         final_info      info_frac     
 #>  Min.   :-3.949   Min.   :10.71   Min.   :0.7194  
-#>  1st Qu.:-2.163   1st Qu.:15.92   1st Qu.:0.7933  
+#>  1st Qu.:-2.163   1st Qu.:15.95   1st Qu.:0.7932  
 #>  Median :-1.628   Median :17.03   Median :0.8296  
 #>  Mean   :-1.523   Mean   :17.34   Mean   :0.8373  
 #>  3rd Qu.:-0.904   3rd Qu.:19.06   3rd Qu.:0.8809  
-#>  Max.   : 1.396   Max.   :24.68   Max.   :0.9460
+#>  Max.   : 1.397   Max.   :24.68   Max.   :0.9460
 ```
 
 ### Visualization

@@ -34,6 +34,17 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="gsdesignnb-031-development">gsDesignNB 0.3.1 (development)<a class="anchor" aria-label="anchor" href="#gsdesignnb-031-development"></a></h2>
+<div class="section level3">
+<h3 id="robust-nb-fallback-method-of-moments-replaces-poisson-under-genuine-overdispersion-0-3-1">Robust NB fallback: method-of-moments replaces Poisson under genuine overdispersion<a class="anchor" aria-label="anchor" href="#robust-nb-fallback-method-of-moments-replaces-poisson-under-genuine-overdispersion-0-3-1"></a></h3>
+<ul><li>
+<code><a href="../reference/mutze_test.html">mutze_test()</a></code>, <code><a href="../reference/calculate_blinded_info.html">calculate_blinded_info()</a></code>, and <code><a href="../reference/unblinded_ssr.html">unblinded_ssr()</a></code> now fall back to method-of-moments (MoM) estimation via <code><a href="../reference/estimate_nb_mom.html">estimate_nb_mom()</a></code> when the maximum likelihood negative binomial fit does not converge or returns an extreme-overdispersion shape estimate. Previously, the Poisson fallback was used in both “near-Poisson” and “extreme-overdispersion” regimes; the latter is anti-conservative because the Poisson variance underestimates the true NB variance under genuine overdispersion. The MoM fallback computes the Wald standard error from the observed Fisher information formula <span class="math inline">\mathcal{I} = 1/(1/W_1 + 1/W_2)</span> with <span class="math inline">W_g = \sum_i \mu_{g,i}/(1 + \hat{k}\mu_{g,i})</span>, preserving the NB variance structure without requiring ML convergence.</li>
+<li>
+<code><a href="../reference/mutze_test.html">mutze_test()</a></code> gains a <code>mom_threshold</code> argument (default <code>20</code>, corresponding to <span class="math inline">\hat{k} &gt; 20</span>) that controls when the MoM branch is triggered. The existing <code>poisson_threshold</code> default is reduced from <code>1000</code> to <code>50</code> (<span class="math inline">\hat{k} &lt; 0.02</span>) since NB and Poisson Wald standard errors are numerically indistinguishable at that point.</li>
+<li>All three functions now return an additional <code>fallback</code> element in their output (<code>"ml"</code>, <code>"mom"</code>, or <code>"poisson"</code>) so that downstream simulation engines can record which estimator was used at each interim.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="gsdesignnb-030">gsDesignNB 0.3.0<a class="anchor" aria-label="anchor" href="#gsdesignnb-030"></a></h2>
 <div class="section level3">
 <h3 id="sample-size-methodology-deep-dive-0-3-0">Sample size methodology deep dive (<a href="https://github.com/keaven/gsDesignNB/issues/14" class="external-link">#14</a>)<a class="anchor" aria-label="anchor" href="#sample-size-methodology-deep-dive-0-3-0"></a></h3>

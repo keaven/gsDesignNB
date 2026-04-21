@@ -231,13 +231,13 @@ the experimental arm, as expected given the simulation parameters.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Unblinded (Mutze Test) Results:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  method:"</span>, <span class="va">mutze_res</span><span class="op">$</span><span class="va">method</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   method: Poisson Wald (fallback)</span></span>
+<span><span class="co">#&gt;   method: Negative binomial Wald (MoM fallback, extreme overdispersion)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  SE:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mutze_res</span><span class="op">$</span><span class="va">se</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   SE: 0.1434</span></span>
+<span><span class="co">#&gt;   SE: 0.1553</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  unblinded_info (1/SE^2):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">mutze_res</span><span class="op">$</span><span class="va">se</span><span class="op">^</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   unblinded_info (1/SE^2): 48.63</span></span>
+<span><span class="co">#&gt;   unblinded_info (1/SE^2): 41.47</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  dispersion:"</span>, <span class="va">mutze_res</span><span class="op">$</span><span class="va">dispersion</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   dispersion: Inf</span></span></code></pre></div>
+<span><span class="co">#&gt;   dispersion: 4.088287</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="root-cause-analysis">Root Cause Analysis<a class="anchor" aria-label="anchor" href="#root-cause-analysis"></a>
 </h4>
@@ -356,15 +356,17 @@ indicating numerical overflow.</p>
 <span>  lambda1_planning <span class="op">=</span> <span class="fl">1.5</span><span class="op">/</span><span class="fl">12</span>,</span>
 <span>  lambda2_planning <span class="op">=</span> <span class="fl">1.0</span><span class="op">/</span><span class="fl">12</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Blinded ML NB fit did not converge; falling back to method-of-moments</span></span>
+<span><span class="co">#&gt; (lambda = 0.09262, k = 0.4033).</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Blinded Information Results:\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Blinded Information Results:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  blinded_info:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">blinded_res_2</span><span class="op">$</span><span class="va">blinded_info</span>, scientific <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   blinded_info: 1.826963e+38</span></span>
+<span><span class="co">#&gt;   blinded_info: 2.312778e+01</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  dispersion_blinded:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">blinded_res_2</span><span class="op">$</span><span class="va">dispersion_blinded</span>, scientific <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   dispersion_blinded: 5.875129e-42</span></span>
+<span><span class="co">#&gt;   dispersion_blinded: 4.03252e-01</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  lambda_blinded:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">blinded_res_2</span><span class="op">$</span><span class="va">lambda_blinded</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   lambda_blinded: 6.078207e+35</span></span>
+<span><span class="co">#&gt;   lambda_blinded: 0.0926</span></span>
 <span></span>
 <span><span class="co"># Unblinded calculation via mutze_test</span></span>
 <span><span class="va">mutze_res_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mutze_test.html">mutze_test</a></span><span class="op">(</span><span class="va">cut_data_2</span><span class="op">)</span></span>
@@ -373,13 +375,13 @@ indicating numerical overflow.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Unblinded (Mutze Test) Results:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  method:"</span>, <span class="va">mutze_res_2</span><span class="op">$</span><span class="va">method</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   method: Poisson Wald (fallback)</span></span>
+<span><span class="co">#&gt;   method: Negative binomial Wald (MoM fallback, ML non-convergent)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  SE:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mutze_res_2</span><span class="op">$</span><span class="va">se</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   SE: 0.1932</span></span>
+<span><span class="co">#&gt;   SE: 0.2078</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  unblinded_info (1/SE^2):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">mutze_res_2</span><span class="op">$</span><span class="va">se</span><span class="op">^</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   unblinded_info (1/SE^2): 26.79</span></span>
+<span><span class="co">#&gt;   unblinded_info (1/SE^2): 23.16</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"  dispersion:"</span>, <span class="va">mutze_res_2</span><span class="op">$</span><span class="va">dispersion</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   dispersion: Inf</span></span></code></pre></div>
+<span><span class="co">#&gt;   dispersion: 3.110089</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="root-cause-analysis-1">Root Cause Analysis<a class="anchor" aria-label="anchor" href="#root-cause-analysis-1"></a>
 </h4>
@@ -548,24 +550,24 @@ the blinded MLE fails or returns boundary values.</p></li>
 <span><span class="co">#&gt;  [7] r2rtf_1.3.0         lattice_0.22-9      listenv_0.10.1     </span></span>
 <span><span class="co">#&gt; [10] digest_0.6.39       magrittr_2.0.5      evaluate_1.0.5     </span></span>
 <span><span class="co">#&gt; [13] grid_4.5.3          RColorBrewer_1.1-3  iterators_1.0.14   </span></span>
-<span><span class="co">#&gt; [16] mvtnorm_1.3-6       fastmap_1.2.0       Matrix_1.7-4       </span></span>
+<span><span class="co">#&gt; [16] mvtnorm_1.3-7       fastmap_1.2.0       Matrix_1.7-4       </span></span>
 <span><span class="co">#&gt; [19] foreach_1.5.2       simtrial_1.0.2      jsonlite_2.0.0     </span></span>
 <span><span class="co">#&gt; [22] survival_3.8-6      purrr_1.2.2         scales_1.4.0       </span></span>
 <span><span class="co">#&gt; [25] codetools_0.2-20    textshaping_1.0.5   jquerylib_0.1.4    </span></span>
-<span><span class="co">#&gt; [28] cli_3.6.6           rlang_1.2.0         parallelly_1.46.1  </span></span>
+<span><span class="co">#&gt; [28] cli_3.6.6           rlang_1.2.0         parallelly_1.47.0  </span></span>
 <span><span class="co">#&gt; [31] future.apply_1.20.2 splines_4.5.3       withr_3.0.2        </span></span>
 <span><span class="co">#&gt; [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.9.0     </span></span>
 <span><span class="co">#&gt; [37] otel_0.2.0          tools_4.5.3         parallel_4.5.3     </span></span>
 <span><span class="co">#&gt; [40] doFuture_1.2.1      dplyr_1.2.1         globals_0.19.1     </span></span>
 <span><span class="co">#&gt; [43] vctrs_0.7.3         R6_2.6.1            lifecycle_1.0.5    </span></span>
-<span><span class="co">#&gt; [46] fs_2.0.1            htmlwidgets_1.6.4   ragg_1.5.2         </span></span>
+<span><span class="co">#&gt; [46] fs_2.1.0            htmlwidgets_1.6.4   ragg_1.5.2         </span></span>
 <span><span class="co">#&gt; [49] pkgconfig_2.0.3     desc_1.4.3          pkgdown_2.2.0      </span></span>
 <span><span class="co">#&gt; [52] pillar_1.11.1       bslib_0.10.0        gtable_0.3.6       </span></span>
-<span><span class="co">#&gt; [55] glue_1.8.0          Rcpp_1.1.1          systemfonts_1.3.2  </span></span>
+<span><span class="co">#&gt; [55] glue_1.8.1          Rcpp_1.1.1-1        systemfonts_1.3.2  </span></span>
 <span><span class="co">#&gt; [58] xfun_0.57           tibble_3.3.1        tidyselect_1.2.1   </span></span>
 <span><span class="co">#&gt; [61] knitr_1.51          farver_2.1.2        xtable_1.8-8       </span></span>
 <span><span class="co">#&gt; [64] htmltools_0.5.9     labeling_0.4.3      rmarkdown_2.31     </span></span>
-<span><span class="co">#&gt; [67] compiler_4.5.3      S7_0.2.1</span></span></code></pre></div>
+<span><span class="co">#&gt; [67] compiler_4.5.3      S7_0.2.1-1</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
