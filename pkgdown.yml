@@ -5,6 +5,7 @@ articles:
   blinded-info-diagnostics: blinded-info-diagnostics.html
   completers-interim-example: completers-interim-example.html
   group-sequential-simulation: group-sequential-simulation.html
+  multiple-imputation-nb: multiple-imputation-nb.html
   non-inferiority-example: non-inferiority-example.html
   sample-size-nbinom: sample-size-nbinom.html
   seasonal-simulation: seasonal-simulation.html
@@ -12,7 +13,7 @@ articles:
   ssr-example: ssr-example.html
   ssr-simulation-study: ssr-simulation-study.html
   verification-simulation: verification-simulation.html
-last_built: 2026-04-21T18:13Z
+last_built: 2026-04-21T22:29Z
 urls:
   reference: https://keaven.github.io/gsDesignNB/reference
   article: https://keaven.github.io/gsDesignNB/articles

@@ -79,6 +79,23 @@ gsDesign boundaries.
 - [`print(`*`<gsNBsummary>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.gsNBsummary.md)
   : Print method for gsNBsummary objects
 
+## Multiple imputation
+
+Impute missing longitudinal negative binomial counts under MAR,
+reference-based MNAR, and composite ICE strategies.
+
+- [`impute_nb()`](https://keaven.github.io/gsDesignNB/reference/impute_nb.md)
+  : Multiple imputation for longitudinal negative binomial counts
+- [`fit_nb_glmm()`](https://keaven.github.io/gsDesignNB/reference/fit_nb_glmm.md)
+  : Fit a negative binomial GLMM for count imputation
+- [`impute_nb_mar()`](https://keaven.github.io/gsDesignNB/reference/impute_nb_mar.md)
+  : Impute missing counts under Missing at Random (MAR)
+- [`impute_nb_mnar_ref()`](https://keaven.github.io/gsDesignNB/reference/impute_nb_mnar_ref.md)
+  : Impute missing counts under a reference-based MNAR assumption
+- [`impute_nb_composite()`](https://keaven.github.io/gsDesignNB/reference/impute_nb_composite.md)
+  : Apply the composite ICE strategy: replace post-ICE outcomes with
+  baseline
+
 ## Documentation site
 
 Preview the pkgdown website locally over HTTP (avoids unstyled `file://`

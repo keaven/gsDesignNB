@@ -22,3 +22,5 @@
   simulation](https://keaven.github.io/gsDesignNB/articles/group-sequential-simulation.md):
 - [Group sequential simulation with completers
   analysis](https://keaven.github.io/gsDesignNB/articles/completers-interim-example.md):
+- [Multiple imputation for longitudinal negative binomial
+  counts](https://keaven.github.io/gsDesignNB/articles/multiple-imputation-nb.md):
