@@ -13,3 +13,5 @@
 ^cran-comments\.md$
 ^doc$
 ^Meta$
+^RELEASE\.md$
+^create-release-tag\.sh$
