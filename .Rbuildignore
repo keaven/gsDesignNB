@@ -11,3 +11,5 @@
 ^codecov\.yml$
 ^AGENTS\.md$
 ^cran-comments\.md$
+^doc$
+^Meta$
