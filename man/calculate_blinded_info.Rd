@@ -41,6 +41,8 @@ A list containing:
 \eqn{\hat\lambda_1}.}
 \item{lambda2_adjusted}{Re-estimated experimental rate
 \eqn{\hat\lambda_2}.}
+\item{fallback}{Character label describing which estimator was used
+(\code{"ml"} or \code{"mom"}).}
 }
 }
 \description{
@@ -52,6 +54,12 @@ is fit to the pooled data, then the estimated overall rate is split into
 group-specific rates using the \emph{planned} rate ratio.
 }
 \details{
+If the ML negative binomial fit fails to converge or produces an unreliable
+shape estimate, the function falls back to method-of-moments (MoM)
+estimation via \code{\link[=estimate_nb_mom]{estimate_nb_mom()}} rather than silently assuming
+\eqn{k = 0}. This avoids the anti-conservative behaviour that would result
+from treating overdispersed data as Poisson.
+
 The statistical information is computed as:
 \deqn{\mathcal{I} = \frac{1}{1/W_1 + 1/W_2}}
 where \eqn{W_g = p_g \sum_i \mu_{g,i} / (1 + k\,\mu_{g,i})} and

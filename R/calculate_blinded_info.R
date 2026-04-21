@@ -7,6 +7,12 @@
 #' is fit to the pooled data, then the estimated overall rate is split into
 #' group-specific rates using the *planned* rate ratio.
 #'
+#' If the ML negative binomial fit fails to converge or produces an unreliable
+#' shape estimate, the function falls back to method-of-moments (MoM)
+#' estimation via [estimate_nb_mom()] rather than silently assuming
+#' \eqn{k = 0}. This avoids the anti-conservative behaviour that would result
+#' from treating overdispersed data as Poisson.
+#'
 #' @param data A data frame containing the blinded interim data. Must include
 #'   columns `events` (number of events) and `tte` (total exposure/follow-up
 #'   time per subject).
@@ -37,6 +43,8 @@
 #'       \eqn{\hat\lambda_1}.}
 #'     \item{lambda2_adjusted}{Re-estimated experimental rate
 #'       \eqn{\hat\lambda_2}.}
+#'     \item{fallback}{Character label describing which estimator was used
+#'       (\code{"ml"} or \code{"mom"}).}
 #'   }
 #'
 #' @references
@@ -76,7 +84,8 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
       dispersion_blinded = NA_real_,
       lambda_blinded = NA_real_,
       lambda1_adjusted = NA_real_,
-      lambda2_adjusted = NA_real_
+      lambda2_adjusted = NA_real_,
+      fallback = NA_character_
     ))
   }
 
@@ -110,13 +119,38 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
     error = function(e) NULL
   )
 
-  if (is.null(fit_blind) || is.na(fit_blind$theta)) {
-    warning("Negative binomial fit failed on blinded data. Falling back to Poisson (dispersion = 0).")
-    dispersion_est <- 0
-    lambda_est <- sum(df$events) / sum(df$tte)
-  } else {
+  ml_ok <- !is.null(fit_blind) &&
+    isTRUE(fit_blind$converged) &&
+    !is.na(fit_blind$theta) &&
+    is.finite(fit_blind$theta) &&
+    fit_blind$theta > 0
+
+  if (ml_ok) {
     dispersion_est <- 1 / fit_blind$theta
     lambda_est <- exp(coef(fit_blind)[1])
+    fallback <- "ml"
+  } else {
+    # Fall back to method-of-moments rather than silently assuming k = 0.
+    mom <- tryCatch(estimate_nb_mom(df), error = function(e) NULL)
+    if (!is.null(mom) && is.finite(mom$lambda) && is.finite(mom$dispersion)) {
+      warning(
+        "Blinded ML NB fit did not converge; falling back to method-of-moments ",
+        "(lambda = ", signif(mom$lambda, 4),
+        ", k = ", signif(mom$dispersion, 4), ").",
+        call. = FALSE
+      )
+      lambda_est <- mom$lambda
+      dispersion_est <- mom$dispersion
+      fallback <- "mom"
+    } else {
+      warning(
+        "Both ML and MoM fits failed on blinded data; reverting to Poisson (k = 0).",
+        call. = FALSE
+      )
+      lambda_est <- sum(df$events) / sum(df$tte)
+      dispersion_est <- 0
+      fallback <- "poisson"
+    }
   }
 
   # 2. Blinded Information Calculation
@@ -159,6 +193,7 @@ calculate_blinded_info <- function(data, ratio = 1, lambda1_planning, lambda2_pl
     dispersion_blinded = dispersion_est,
     lambda_blinded = lambda_est,
     lambda1_adjusted = lambda1_new,
-    lambda2_adjusted = lambda2_new
+    lambda2_adjusted = lambda2_new,
+    fallback = fallback
   )
 }

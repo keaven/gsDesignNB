@@ -32,7 +32,17 @@
 #'     \item{info_fraction}{Estimated information fraction at interim (unblinded information / target information).}
 #'     \item{unblinded_info}{Estimated statistical information from the unblinded interim data.}
 #'     \item{target_info}{Target statistical information required for the planned power.}
+#'     \item{fallback}{Character label for which estimator was used
+#'       (\code{"ml"} or \code{"mom"}).}
 #'   }
+#'
+#' @details
+#' If the maximum likelihood negative binomial fit fails to converge, the
+#' function falls back to method-of-moments estimation via [estimate_nb_mom()]
+#' rather than erroring out. The observed Fisher information is then computed
+#' analytically from the MoM-estimated rates and dispersion using the same
+#' subject-level weight formula as [calculate_blinded_info()]. This keeps SSR
+#' updates well-defined under extreme overdispersion or sparse interim data.
 #'
 #' @importFrom MASS glm.nb
 #' @importFrom stats qnorm fitted coef vcov
@@ -75,9 +85,13 @@ unblinded_ssr <- function(data,
   # We fit a negative binomial model to estimate rates and dispersion
   # We assume a common dispersion parameter across groups as per standard sample size formula
   
-  # Ensure treatment is a factor
-  data$treatment <- as.factor(data$treatment)
-  
+  # Ensure treatment is a factor with exactly two levels.
+  data$treatment <- droplevels(as.factor(data$treatment))
+  if (nlevels(data$treatment) != 2) {
+    stop("unblinded_ssr requires interim data with exactly two treatment groups.",
+         call. = FALSE)
+  }
+
   # Fit NB model: events ~ treatment + offset(log(tte))
   # We use the observed rates for re-estimation of nuisance parameters,
   # but typically we might stick to the PLANNED effect size (hazard ratio) 
@@ -87,21 +101,42 @@ unblinded_ssr <- function(data,
   # observed control rate and PLANNED relative effect to avoid powering for a noisy observed effect.
   # However, let's calculate both observed rates first.
   
-  fit <- tryCatch({
-    MASS::glm.nb(events ~ treatment + offset(log(tte)), data = data)
-  }, error = function(e) {
-    stop("Failed to fit negative binomial model to interim data: ", e$message)
-  })
-  
-  # Extract estimates
-  k_est <- 1 / fit$theta
-  
-  # Get rates (exp(coef))
-  # Intercept is log(rate_control) (assuming treatment 1 is reference)
-  # Slope is log(rate_ratio)
-  coefs <- coef(fit)
-  lambda1_est <- exp(coefs[1])
-  lambda2_est <- exp(coefs[1] + coefs[2])
+  fit <- tryCatch(
+    suppressWarnings(MASS::glm.nb(events ~ treatment + offset(log(tte)), data = data)),
+    error = function(e) NULL
+  )
+  ml_ok <- !is.null(fit) && isTRUE(fit$converged) && !is.na(fit$theta) &&
+    is.finite(fit$theta) && fit$theta > 0
+
+  if (ml_ok) {
+    k_est <- 1 / fit$theta
+    coefs <- coef(fit)
+    lambda1_est <- exp(coefs[1])
+    lambda2_est <- exp(coefs[1] + coefs[2])
+    fallback <- "ml"
+  } else {
+    # Fall back to method-of-moments so that genuinely overdispersed data do
+    # not collapse to a Poisson/ML failure. Matches the behaviour of
+    # mutze_test() and calculate_blinded_info().
+    mom <- tryCatch(
+      estimate_nb_mom(data, group = "treatment"),
+      error = function(e) NULL
+    )
+    if (is.null(mom) || any(is.na(mom$lambda)) || !is.finite(mom$dispersion)) {
+      stop("Failed to fit negative binomial model to interim data, and ",
+           "method-of-moments fallback also failed.", call. = FALSE)
+    }
+    warning(
+      "Unblinded NB ML fit did not converge; falling back to method-of-moments ",
+      "for nuisance parameter estimation.",
+      call. = FALSE
+    )
+    lev <- levels(data$treatment)
+    lambda1_est <- as.numeric(mom$lambda[lev[1]])
+    lambda2_est <- as.numeric(mom$lambda[lev[2]])
+    k_est <- as.numeric(mom$dispersion)
+    fallback <- "mom"
+  }
   
   # For sample size re-estimation, we usually fix the effect size to the planning assumption
   # to avoid overpowering/underpowering due to early random high/low effect estimates.
@@ -122,13 +157,24 @@ unblinded_ssr <- function(data,
   # Per sample size formula: V_tilde = (1/mu1 + k)/p1 + (1/mu2 + k)/p2
   # Info = n_total / V_tilde
   
-  # Calculate current information from the fitted model
-  # The variance of the log rate ratio (coefficient for treatment) is the element (2,2) of vcov
-  # if using treatment contrast.
-  # vcov(fit) gives covariance of (Intercept, treatment).
-  # Var(log(lambda2) - log(lambda1)) = Var(beta_treatment)
-  var_log_rr <- vcov(fit)[2, 2]
-  current_info <- 1 / var_log_rr
+  # Calculate current information. Under ML we read it directly from vcov().
+  # Under the MoM fallback we compute the observed Fisher information using
+  # the MoM-estimated rates and dispersion and the same formula used
+  # throughout the package: I = 1 / (1/W1 + 1/W2),
+  # W_g = sum_i mu_{g,i} / (1 + k * mu_{g,i}).
+  if (identical(fallback, "ml")) {
+    var_log_rr <- vcov(fit)[2, 2]
+    current_info <- 1 / var_log_rr
+  } else {
+    lev <- levels(data$treatment)
+    t1 <- data$tte[data$treatment == lev[1]]
+    t2 <- data$tte[data$treatment == lev[2]]
+    mu1 <- lambda1_est * t1
+    mu2 <- lambda2_est * t2
+    w1 <- sum(mu1 / (1 + k_est * mu1))
+    w2 <- sum(mu2 / (1 + k_est * mu2))
+    current_info <- if (w1 > 0 && w2 > 0) 1 / (1 / w1 + 1 / w2) else 0
+  }
   
   # 3. Calculate Target Information
   # Target info depends on the PLANNED effect size and power.
@@ -178,6 +224,7 @@ unblinded_ssr <- function(data,
     lambda2_unblinded = lambda2_est, # The observed one, for reference
     info_fraction = current_info / target_info,
     unblinded_info = current_info,
-    target_info = target_info
+    target_info = target_info,
+    fallback = fallback
   )
 }

@@ -10,7 +10,8 @@ mutze_test(
   method = c("nb", "poisson"),
   conf_level = 0.95,
   sided = 1,
-  poisson_threshold = 1000
+  poisson_threshold = 50,
+  mom_threshold = 20
 )
 
 \method{print}{mutze_test}(x, ...)
@@ -26,11 +27,22 @@ GLM via \code{\link[MASS:glm.nb]{MASS::glm.nb()}}, "poisson" fits a Poisson GLM.
 
 \item{sided}{Number of sides for the test: 1 (default) or 2.}
 
-\item{poisson_threshold}{When \code{method = "nb"}, the model falls back to
-Poisson regression if theta (the NB shape parameter) is outside the range
-\verb{[1/poisson_threshold, poisson_threshold]}. Very large theta indicates
-near-Poisson data, while very small theta indicates extreme overdispersion
-with unstable estimates. Default is 1000.}
+\item{poisson_threshold}{Upper threshold (in units of \code{fit$theta}, the
+\code{MASS::glm.nb()} shape parameter \eqn{\theta_{\text{NB}} = 1/k}) above
+which the data are treated as essentially Poisson and the function falls
+back to a Poisson Wald test. Default is 50, corresponding to
+\eqn{\hat{k} < 0.02}, by which point NB and Poisson Wald standard errors
+are numerically indistinguishable at typical trial sample sizes.}
+
+\item{mom_threshold}{Lower threshold on \code{fit$theta} below which the NB ML
+fit is considered unreliable (extreme overdispersion). When triggered, or
+when \code{glm.nb()} fails to converge, the function falls back to a
+method-of-moments NB Wald test: rates and dispersion are re-estimated via
+\code{\link[=estimate_nb_mom]{estimate_nb_mom()}} and the Wald variance is computed from the Fisher
+information formula \eqn{\mathcal{I} = 1/(1/W_1 + 1/W_2)} with
+\eqn{W_g = \sum_i \mu_{g,i}/(1 + \hat{k}\mu_{g,i})}. Default is 20,
+corresponding to \eqn{\hat{k} > 20}. This avoids the anti-conservative
+variance of a Poisson fallback when the data are truly overdispersed.}
 
 \item{x}{An object of class \code{mutze_test}.}
 
@@ -45,8 +57,13 @@ An object of class \code{mutze_test} containing the fitted model summary with el
 \item \code{z}: Wald statistic.
 \item \code{p_value}: one-sided or two-sided p-value.
 \item \code{rate_ratio}: estimated rate ratio and its confidence interval.
-\item \code{dispersion}: estimated dispersion (theta) when \code{method = "nb"}.
+\item \code{dispersion}: estimated dispersion. For consistency this is reported on
+the \code{MASS::glm.nb()} scale (\eqn{\theta_{\text{NB}} = 1/k}), regardless
+of whether ML, Poisson fallback, or MoM fallback was used. \code{Inf}
+indicates Poisson (\eqn{k=0}).
 \item \code{group_summary}: observed subjects/events/exposure per treatment.
+\item \code{fallback}: character label describing which fit path was used
+(\code{"ml"}, \code{"poisson"}, or \code{"mom"}).
 }
 
 Invisibly returns the input object.
@@ -55,7 +72,14 @@ Invisibly returns the input object.
 Fits a negative binomial (or Poisson) log-rate model to the aggregated
 subject-level data produced by \code{\link[=cut_data_by_date]{cut_data_by_date()}}. The method matches the
 Wald test described by Mutze et al. (2019) for comparing treatment arms with
-recurrent event outcomes.
+recurrent event outcomes. When the maximum likelihood negative binomial fit
+is unreliable, the test automatically switches to one of two statistically
+sensible fallbacks: a Poisson Wald test when the data are essentially
+Poisson, or a method-of-moments (MoM) variance estimate plugged into the
+same negative binomial information formula when the data are extremely
+overdispersed or the ML fit fails to converge. The latter avoids the
+anti-conservative behaviour of a blind Poisson fallback under genuine
+overdispersion.
 }
 \section{Methods (by generic)}{
 \itemize{

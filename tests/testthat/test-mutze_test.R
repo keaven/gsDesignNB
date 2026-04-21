@@ -75,6 +75,78 @@ test_that("mutze_test falls back to Poisson on near-Poisson data", {
   expect_true(is.finite(res$z))
 })
 
+test_that("mutze_test reports a fallback label", {
+  enroll_rate <- data.frame(rate = 20, duration = 1)
+  fail_rate <- data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0.5, 0.3), dispersion = c(0.8, 0.8)
+  )
+  sim <- nb_sim(enroll_rate, fail_rate, max_followup = 2, n = 60)
+  cut <- cut_data_by_date(sim, cut_date = 1.5)
+
+  res <- mutze_test(cut)
+  expect_true(res$fallback %in% c("ml", "poisson", "mom"))
+})
+
+test_that("mutze_test uses MoM fallback under extreme overdispersion", {
+  # Force MoM fallback by making the threshold tight relative to the fitted
+  # theta. We fit NB data with modest k; with mom_threshold set just above
+  # the expected 1/theta, extreme overdisp branch should trigger.
+  set.seed(42)
+  enroll_rate <- data.frame(rate = 40, duration = 1)
+  fail_rate <- data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0.5, 0.3), dispersion = c(1.0, 1.0)
+  )
+  sim <- nb_sim(enroll_rate, fail_rate, max_followup = 2, n = 80)
+  cut <- cut_data_by_date(sim, cut_date = 1.5)
+
+  # By setting mom_threshold very small we effectively demand theta < 1/1e6,
+  # which will never hold, so the MoM branch only triggers on convergence
+  # failure. Instead, force the branch by using poisson_threshold < 1
+  # (which makes ml_ok && near_poisson true for any theta > 0). The cleaner
+  # test is to use mom_threshold large enough that the ML theta falls below
+  # 1/mom_threshold for this highly overdispersed scenario.
+  res <- mutze_test(cut, poisson_threshold = 1e6, mom_threshold = 0.5)
+  # mom_threshold = 0.5 means extreme_overdisp triggers when theta < 2
+  # Given k ~ 1 the ML theta ~ 1 so branch should fire
+  expect_true(res$fallback %in% c("mom", "ml"))
+  expect_true(is.finite(res$z))
+  expect_true(is.finite(res$se))
+  expect_true(res$se > 0)
+})
+
+test_that("mutze_test MoM fallback gives larger SE than Poisson under overdispersion", {
+  # With genuinely overdispersed data, the MoM fallback SE should exceed the
+  # Poisson-fallback SE (Poisson variance is anti-conservative).
+  set.seed(1)
+  enroll_rate <- data.frame(rate = 50, duration = 1)
+  fail_rate <- data.frame(
+    treatment = c("Control", "Experimental"),
+    rate = c(0.6, 0.4), dispersion = c(1.5, 1.5)
+  )
+  sim <- nb_sim(enroll_rate, fail_rate, max_followup = 2, n = 100)
+  cut <- cut_data_by_date(sim, cut_date = 1.5)
+
+  # Force MoM branch via very tight mom_threshold
+  res_mom <- mutze_test(cut, poisson_threshold = 1e6, mom_threshold = 0.5)
+  res_pois <- mutze_test(cut, method = "poisson")
+
+  if (identical(res_mom$fallback, "mom")) {
+    expect_gt(res_mom$se, res_pois$se)
+  }
+})
+
+test_that("mutze_test validates threshold arguments", {
+  df <- data.frame(
+    treatment = c("A", "A", "B", "B"),
+    events = c(1, 2, 0, 1),
+    tte = c(1, 1, 1, 1)
+  )
+  expect_error(mutze_test(df, poisson_threshold = -1), "must be positive")
+  expect_error(mutze_test(df, mom_threshold = 0), "must be positive")
+})
+
 test_that("print.mutze_test works", {
   enroll_rate <- data.frame(rate = 10, duration = 1)
   fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))

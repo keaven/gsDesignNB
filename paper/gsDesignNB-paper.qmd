@@ -24,14 +24,20 @@ abstract: |
   exponential dropout, maximum follow-up truncation, and protocol-defined gaps between counted
   events. Because statistical information for the log rate ratio depends jointly on exposure, event
   rates, and dispersion, it is not generally proportional to raw event counts. We derive and
-  implement a second-order Taylor correction for Jensen's inequality bias in the event-gap effective
-  rate; in a 64-scenario simulation sweep, the correction reduces representative approximation error
-  from about 8% to 1% and prevents 1--2.5 percentage points of underpowering when dispersion is
-  moderate-to-high and gaps exceed 20 days. The package also supports calendar-time group
-  sequential monitoring and both blinded and unblinded SSR. In a 13-scenario simulation study, SSR
-  recovers power when nuisance parameters are misspecified, with blinded updates generally
-  requesting larger adapted sample sizes than unblinded updates. The paper emphasizes both the
-  statistical methodology and the software architecture that make these workflows reproducible.
+  implement a second-order delta-method correction for the Jensen-inequality bias in the event-gap
+  effective-rate approximation; in a 64-scenario simulation sweep, the correction reduces
+  representative approximation error from about 8% to 1% and prevents 1--2.5 percentage points of
+  underpowering when dispersion is moderate-to-high and gaps exceed 20 days. A second
+  methodological advance is a disciplined fallback from maximum likelihood to method-of-moments
+  (MoM) nuisance-parameter estimation: when the NB ML fit is near-Poisson the software switches
+  to a Poisson Wald test, but under extreme overdispersion or ML non-convergence it switches to
+  a MoM-based NB Wald test using the observed Fisher information formula, avoiding the
+  anti-conservative behaviour of a blind Poisson fallback. The package also supports calendar-time
+  group sequential monitoring and both blinded and unblinded SSR. In a 90-scenario simulation
+  study, SSR recovers power when nuisance parameters are misspecified, with blinded updates
+  generally requesting larger adapted sample sizes than unblinded updates. The paper emphasizes
+  both the statistical methodology and the software architecture that make these workflows
+  reproducible.
 ---
 
 # Introduction
@@ -47,12 +53,13 @@ needed to detect a clinically meaningful treatment effect.
 
 The negative binomial (NB) model addresses this by adding a single dispersion parameter $k$
 that captures the excess variation. Published NB fits from pivotal or large trials confirm that
-$k>0$ is the rule rather than the exception: estimates range from roughly $0.8$ in asthma
-[@lipson2018impact] to $1.2$ in COPD [@wedzicha2016flame], $1.5$ in heart failure
-[@mcmurray2014paradigm], and $3.1$ in multiple sclerosis [@hauser2017ocrelizumab]. Even moderate
-dispersion materially reduces the per-patient information — from $\mu_i$ under the Poisson to
-$\mu_i/(1+k\mu_i)$ under the NB — so that a design ignoring $k$ can understate the required
-sample size by 10–30%.
+$k>0$ is the rule rather than the exception: estimates commonly fall in the $0.3$–$1.5$ range
+across disease areas where recurrent events are the primary endpoint, including COPD
+exacerbations [@wedzicha2016flame; @lipson2018impact], heart failure hospitalizations
+[@mcmurray2014paradigm], and multiple sclerosis relapses [@hauser2017ocrelizumab]. Even moderate
+dispersion materially reduces the Fisher information for the log rate that each subject
+contributes — from $\mu_i$ under the Poisson to $\mu_i/(1+k\mu_i)$ under the NB — so that a design
+ignoring $k$ can understate the required sample size by 10–30%.
 
 Negative binomial design work also becomes operationally more complicated once a trial moves beyond
 a fixed final analysis. Information for the log rate ratio depends jointly on exposure, event rates,
@@ -68,17 +75,21 @@ The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
    and protocol event gaps.
 2. Calendar-time group sequential designs that inherit spending-function infrastructure from the
    **gsDesign** package [@JTBook].
-3. Blinded and unblinded information estimation together with blinded and unblinded SSR.
+3. Blinded and unblinded information estimation together with blinded and unblinded SSR, with a
+   disciplined maximum likelihood / method-of-moments fallback scheme that keeps Wald inference
+   well-defined under extreme overdispersion or ML non-convergence.
 4. Recurrent-event simulation, including seasonal rates, event- and information-driven interim
    cutting rules, and operating-characteristic summaries.
 
 The contribution of **gsDesignNB** is therefore both scientific and computational. Scientifically,
 the package implements NB design formulas for settings where information is not proportional to
-events and introduces a Jensen-correction for event-gap planning. Computationally, it connects
-planning objects, calendar-time monitoring rules, subject-level simulated trial data, and interim
-analysis summaries in one workflow. The remainder of the paper first describes that workflow,
-including the different notions of "gaps" that arise in recurrent-event trials, and then presents
-the methodological and simulation results that motivated the software design.
+events, introduces a Jensen-correction for event-gap planning, and replaces the usual blind
+Poisson fallback with a method-of-moments NB Wald test under genuine overdispersion.
+Computationally, it connects planning objects, calendar-time monitoring rules, subject-level
+simulated trial data, and interim analysis summaries in one workflow. The remainder of the paper
+first describes that workflow, including the different notions of "gaps" that arise in
+recurrent-event trials, and then presents the methodological and simulation results that motivated
+the software design.
 
 # Package overview and workflow
 
@@ -118,7 +129,7 @@ distinguishing them is important for both the methods and the software.
 |:--------|:------|:--------------------|
 | Analysis gap $\Delta_i$ | Trial calendar | Minimum time between database locks or interim looks |
 | Timing heterogeneity | Accrual, dropout, and follow-up | Determines how exposure and information accumulate over calendar time |
-| Event gap $g$ | Patient time | Defines which recurrent events count and how much post-event time is removed from risk |
+| Event gap $g$ | Patient time | Defines which recurrent events count and how much post-event time is removed from the at-risk set |
 
 The first two affect *when* an analysis can occur. The third affects *which* events contribute to
 the endpoint and how much at-risk exposure remains after each counted event. In **gsDesignNB**, the
@@ -141,26 +152,24 @@ For most users, the package workflow is:
    `summarize_ssr_sim()`.
 
 The package also includes several secondary workflows that are important in practice but do not
-change the core architecture.
-
-| Additional capability | Main interface | Purpose |
-|:----------------------|:---------------|:--------|
-| Seasonal recurrent-event simulation | `nb_sim_seasonal()` | Time-varying event rates with season-specific intervals |
-| Completer-driven interims | `cut_date_for_completers()`, `cut_completers()` | Interim looks keyed to completed follow-up rather than only calendar time or events |
-| Non-inferiority / super-superiority | `sample_size_nbinom(rr0 = ...)` | Alternative null hypotheses in the same design framework |
-| Blinded-information diagnostics | `calculate_blinded_info()`, `estimate_nb_mom()` | Stability checks for sparse or unstable interims |
-| Interactive review | `run_ssr_shiny()` | Shiny wrapper around the SSR engine for exploratory use |
+change the core architecture: seasonal recurrent-event simulation, completer-driven interim
+looks, non-inferiority and super-superiority designs, blinded-information diagnostics, and an
+interactive Shiny front end to the SSR engine. These are enumerated with their corresponding
+vignettes in Section 6.3.
 
 # Sample size methodology
 
 ## Negative binomial model
 
-For subject $i$ in treatment group $g$ with exposure time $t_i$, the event count $Y_i$ follows a
+For subject $i$ in treatment arm $g$ with exposure time $t_i$, the event count $Y_i$ follows a
 negative binomial distribution with mean $\mu_i = \lambda_g t_i$ and variance
-$\text{Var}(Y_i) = \mu_i + k\mu_i^2$, where $\lambda_g$ is the group-specific event rate and $k$
+$\text{Var}(Y_i) = \mu_i + k\mu_i^2$, where $\lambda_g$ is the arm-specific event rate and $k$
 is the dispersion parameter. This arises from a Gamma--Poisson mixture: each subject has a latent
-rate $\Lambda_i \sim \text{Gamma}(1/k, k\lambda_g)$ and generates events from
-$\text{Poisson}(\Lambda_i t_i)$.
+rate
+$\Lambda_i \sim \text{Gamma}(\text{shape}=1/k,\ \text{scale}=k\lambda_g)$,
+so $E[\Lambda_i] = \lambda_g$ and $\text{Var}(\Lambda_i) = k\lambda_g^2$, and, conditional on
+$\Lambda_i$, the event count is $\text{Poisson}(\Lambda_i t_i)$. In `MASS::glm.nb()` terminology
+the shape parameter $\theta_{\text{NB}} = 1/k$.
 
 ## Wald test and sample size formula
 
@@ -178,7 +187,7 @@ When exposures are summarized by arm-specific averages and the randomization rat
 $r = n_2/n_1$, this leads to the fixed-design sample size formula
 
 $$
-n_1 = \frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2}
+n_1 = \frac{(z_\alpha + z_\beta)^2}{(\theta - \theta_0)^2}
 \left[
   \left(\frac{1}{\mu_1} + k_1\right)
   + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)
@@ -202,22 +211,33 @@ either as common scalars or as arm-specific vectors.
 
 ## Jensen's inequality correction for event gaps
 
-In trials with a mandatory gap of duration $\gamma$ after each event (e.g., a recovery period),
-the effective rate is commonly approximated as
-$\lambda_\text{eff} = \lambda/(1 + \lambda\gamma)$. However, this is a population-level average
-that ignores subject-level heterogeneity. Since
-$f(x) = x/(1 + x\gamma)$ is concave and subject rates $\Lambda_i$ are random
-(Gamma-distributed), Jensen's inequality gives $E[f(\Lambda)] < f(E[\Lambda])$.
+In trials with a mandatory gap of duration $\gamma$ after each counted event (e.g., a recovery
+period or a protocol-defined "new-event" window), the effective counted-event rate for a subject
+with underlying Poisson rate $\lambda$ is $\lambda_\text{eff} = \lambda/(1 + \lambda\gamma)$
+[@coxlewis1966]. This follows from elementary renewal theory: expected events per unit calendar
+time equal the reciprocal of the expected inter-event interval $E[T] = 1/\lambda + \gamma$.
+However, applying this expression at the population rate is a population-level average that ignores
+subject-level heterogeneity. Since $f(x) = x/(1 + x\gamma)$ is concave and subject rates
+$\Lambda_i$ are random (Gamma-distributed), Jensen's inequality gives
+$E[f(\Lambda)] < f(E[\Lambda])$.
 
-We derive a second-order Taylor correction:
+A second-order delta-method expansion around $\lambda$,
+$$
+E[f(\Lambda)] \approx f(\lambda) + \tfrac{1}{2} f''(\lambda)\,\text{Var}(\Lambda),
+$$
+with $f''(\lambda) = -2\gamma/(1 + \lambda\gamma)^3$ and $\text{Var}(\Lambda) = k\lambda^2$,
+yields
 
 $$
 \lambda_\text{eff} \approx \frac{\lambda}{1 + \lambda\gamma}
-\left(1 - \frac{k\lambda\gamma}{(1 + \lambda\gamma)^2}\right)
+\left(1 - \frac{k\lambda\gamma}{(1 + \lambda\gamma)^2}\right).
 $$
 
-using $f''(\lambda) = -2\gamma/(1 + \lambda\gamma)^3$ and
-$\text{Var}(\Lambda) = k\lambda^2$. @tbl-jensen-correction shows the correction magnitude.
+@tbl-jensen-correction shows the correction magnitude. When the first-order quantity
+$k\lambda\gamma/(1+\lambda\gamma)^2$ approaches 0.25, as in the first row, the second-order
+expansion is near its limit of accuracy and the full Gamma--Poisson expectation would differ
+modestly from the displayed value; the correction still moves $\lambda_\text{eff}$ in the correct
+direction and reduces simulation-based approximation error (@tbl-power-comparison).
 
 | $\lambda$ | $k$ | $\gamma$ | Correction (%) |
 |:---------:|:---:|:--------:|:--------------:|
@@ -238,9 +258,9 @@ conservative power (@tbl-power-comparison). During package development, this cor
 for simulation-based power to agree with the analytical planning formula when event gaps were
 non-negligible.
 
-In software terms, the same gap rule is used by `nb_sim()` and `cut_data_by_date()`: events that
-fall inside the post-event gap are not counted, and the corresponding gap time is removed from the
-at-risk exposure used for information calculations.
+In the implementation, the same gap rule is used by `nb_sim()` and `cut_data_by_date()`: events
+that fall inside the post-event gap are not counted, and the corresponding gap time is removed
+from the at-risk set used for information calculations.
 
 | $k$ | Gap (days) | $n$ (corrected) | $n$ (naive) | Power (corr.) | Power (naive) |
 |:---:|:----------:|:---------------:|:-----------:|:--------------:|:-------------:|
@@ -393,23 +413,51 @@ negative binomial fit of @friede2010blinded, then splits the pooled rate accordi
 rate ratio. `estimate_nb_mom()` supplies method-of-moments estimates that are useful when maximum
 likelihood fits become unstable in sparse or highly overdispersed interim data.
 
-## Wald inference, Poisson fallback, and diagnostics
+## Wald inference and a two-sided ML/MoM fallback rule
 
 For unblinded interim analyses, `mutze_test()` fits the negative binomial log-linear model with an
 offset for exposure and returns the Wald statistic for the treatment effect. This is the basic
 analysis model used throughout the package's GS simulations. When the fitted NB shape parameter
-$\theta$ is either extremely large (near-Poisson data) or extremely small (numerically unstable
-overdispersion), `mutze_test()` falls back to a Poisson Wald analysis using the user-set
-`poisson_threshold`. This fallback is not meant as a theoretical replacement for the NB model; it
-is a defensive device that keeps simulations and diagnostics well behaved when the ML NB fit is not
-reliable.
+$\theta_{\text{NB}} = 1/\hat{k}$ is well-behaved, the ML Wald test is used directly. When it is
+not, `mutze_test()` applies one of two *statistically principled* fallbacks rather than a blind
+Poisson substitution:
 
-The simulation engines expose several information paths so that users can stress-test an interim
-monitoring strategy before locking it into a design. In particular, `sim_gs_nbinom()` records
-unblinded and blinded information under both maximum likelihood and method-of-moments estimates.
-These alternative columns are diagnostics rather than different estimands: they help show whether a
-design's monitoring behavior is robust to the nuisance-parameter estimation method used at the
-interim.
+- **Near-Poisson regime** ($\hat{k} < 1/\texttt{poisson\_threshold}$, default $\hat{k} < 0.02$):
+  the fitted NB is numerically indistinguishable from a Poisson and the function falls back to a
+  Poisson Wald test. This handles the common case of `MASS::glm.nb()` drifting toward its
+  iteration ceiling when the data truly are Poisson.
+- **Extreme-overdispersion or ML-failure regime**
+  ($\hat{k} > \texttt{mom\_threshold}$, default $\hat{k} > 20$; or `glm.nb()` non-convergence):
+  the function re-estimates $(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ by method of moments via
+  `estimate_nb_mom()` and plugs those values into the same observed Fisher information formula
+  that the package uses everywhere else,
+
+$$
+\widehat{\mathcal{I}} \;=\; \frac{1}{1/W_1 + 1/W_2}, \qquad
+W_g = \sum_{i \in g} \frac{\hat{\mu}_{g,i}}{1 + \hat{k}\,\hat{\mu}_{g,i}}, \qquad
+\hat{\mu}_{g,i} = \hat{\lambda}_g\, t_i.
+$$
+
+  The Wald statistic is then $\hat\theta / \sqrt{1/W_1 + 1/W_2}$ with
+  $\hat\theta = \log(\hat{\lambda}_2/\hat{\lambda}_1)$.
+
+The methodological point of the second branch is straightforward. Under genuine overdispersion
+($k \gg 0$), a Poisson fallback underestimates $\text{Var}(\hat\theta)$ by a factor of
+$(1 + k\mu)^{-1}$ per subject, producing anti-conservative Wald tests exactly when the NB model
+is most needed. MoM does not require ML convergence, always returns a nonnegative $\hat{k}$, and,
+plugged into the NB information formula, yields a variance estimate with the correct
+overdispersion structure. The same two-branch rule is used in `calculate_blinded_info()` (pooled
+blinded estimation) and `unblinded_ssr()` (treatment-specific estimation for SSR), so that every
+entry point in the package handles fit failure in the same statistically sensible way. Each of
+these functions now returns a `fallback` field (`"ml"`, `"mom"`, or `"poisson"`) so that
+simulation engines and diagnostic tables can record which estimator was used at each interim.
+
+The simulation engines also expose blinded and unblinded information columns under both ML and
+MoM estimation (`info_*_ml`, `info_*_mom`) so that users can stress-test whether a design's
+monitoring behaviour is sensitive to the nuisance-parameter estimation method. These alternative
+columns are diagnostics rather than competing estimands; in well-behaved data they agree closely,
+while in sparse or unstable interim data the MoM columns remain finite when the ML columns
+degenerate.
 
 ## Blinded and unblinded SSR
 
@@ -475,6 +523,7 @@ gs_design <- gsNBCalendar(
   analysis_times = c(4, 8, 12)
 )
 
+# n_sims = 50 is for illustration only; the vignettes use 3,500+ replicates.
 sim_gs <- sim_gs_nbinom(
   n_sims = 50,
   enroll_rate = enroll_rate,
@@ -494,10 +543,13 @@ oc <- summarize_gs_sim(
 oc$analysis_summary
 ```
 
-This example illustrates the main design principle of the package: the fixed design determines the
-target information, `gsNBCalendar()` maps that information to calendar looks, `sim_gs_nbinom()`
-generates trial histories consistent with the planning assumptions, and `check_gs_bound()` applies
-the group sequential boundaries on the selected information scale.
+The `analysis_summary` element of `oc` contains per-look cumulative rejection and futility
+probabilities, mean observed information, and mean calendar time at each look, so that the
+simulated operating characteristics can be compared directly to the planned boundaries. This
+example illustrates the main software-design principle of the package: the fixed design determines
+the target information, `gsNBCalendar()` maps that information to calendar looks,
+`sim_gs_nbinom()` generates trial histories consistent with the planning assumptions, and
+`check_gs_bound()` applies the group sequential boundaries on the selected information scale.
 
 ## Example 2: information-based SSR
 
@@ -524,7 +576,7 @@ summarize_ssr_sim(ssr_res)$trial_summary[
 ]
 ```
 
-The paper's 13-scenario SSR study uses this same engine with a much larger scenario grid, more
+The paper's 90-scenario SSR study uses this same engine with a much larger scenario grid, more
 replicates, and additional design constraints on when adaptation is allowed. The essential software
 idea, however, is already visible in the compact example: one `gsNB` planning object can drive both
 non-adaptive and adaptive operating-characteristic evaluations.
@@ -548,43 +600,73 @@ brief while the installed package still serves as the full replication resource.
 
 ## Design
 
-We evaluated `sim_ssr_nbinom()` across 13 scenarios varying the control rate ($\lambda_1$),
-dispersion ($k$), accrual rate, and rate ratio (RR = 0.7, 0.8, 0.9, 1.0). The planned design was
-built with `sample_size_nbinom()` and `gsNBCalendar()`, targeting 90% power for RR = 0.7 with
-$k = 0.3$, $\lambda_1 = 0.5$/month, and accrual of 30/month over 12 months. Each non-null
-scenario used 3,600 simulations; the null scenario used 20,000.
+We evaluated `sim_ssr_nbinom()` across a 90-scenario grid varying the control rate
+$\lambda_1 \in \{0.3, 0.5, 0.8\}$/month, dispersion $k \in \{0.5, 1.0\}$, planned accrual
+rate $\in \{12, 18, 24\}$/month, and true rate ratio $\text{RR} \in \{0.6, 0.7, 0.85, 1.0, 1.1\}$
+(ninety combinations in total). The planned design was built with `sample_size_nbinom()` and
+`gsNBCalendar()`, targeting 90% power for RR = 0.7 with $k = 0.5$, $\lambda_1 = 0.5$/month, and
+planned accrual of 26/month, for a planned total sample size of 312 and a maximum follow-up of
+12 months. Null-case operating characteristics used $20{,}000$ replicates per scenario; power
+scenarios used up to $3{,}600$ replicates. See the `ssr-simulation-study` vignette for the full
+scenario grid and replicate counts.
 
 Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
-using a group sequential design with Hwang--Shih--DeCani spending functions.
+using a group sequential design with Hwang--Shih--DeCani spending functions
+[@hwang1990group].
 
 ## Results
 
-The key findings from the simulation study are:
+**Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
+RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$ and at a
+sensitivity value of $\alpha = 0.020$. With $20{,}000$ replicates per cell the Monte Carlo
+standard error is about $0.001$. At nominal 2.5%, every strategy shows mild inflation, most
+pronounced for blinded SSR at $k = 0.5$ ($0.034$). Reducing the nominal $\alpha$ to $0.020$
+restores empirical Type I to the $0.025$ target in all three strategies.
 
-- **Type I calibration:** Under the null (RR = 1.0, misspecified nuisance parameters), the main
-  vignette configuration showed slight inflation at nominal one-sided 2.5%; a sensitivity rerun at
-  one-sided 2.0% improved calibration.
-- **Power recovery at RR = 0.7:** When the planned rate ratio was correct, both SSR methods
-  recovered power from as low as 60% (no adaptation, worst case) to approximately 85--90%, by
-  increasing the sample size up to 2$\times$ planned.
-- **Diminishing returns at smaller effects:** For RR = 0.8 and RR = 0.9, the planned sample size
-  (designed for RR = 0.7) was inherently insufficient. SSR compensated for nuisance parameter
-  misspecification but could not overcome the smaller treatment effect.
-- **Blinded vs unblinded:** Both methods recovered power, but blinded SSR generally requested
-  larger adapted sample sizes than unblinded SSR because pooled nuisance updates were more
-  conservative. When operationally acceptable, unblinded SSR may therefore be preferable for
-  efficiency.
+| $k$ | Strategy | Type I ($\alpha = 0.025$) | Type I ($\alpha = 0.020$) | Mean $n$ | % adapted |
+|:---:|:---------|:-------------------------:|:-------------------------:|:--------:|:---------:|
+| 0.5 | No adaptation | 0.0318 | 0.0253 | 312 | 0 |
+| 0.5 | Blinded SSR   | 0.0344 | 0.0287 | 479 | 96 |
+| 0.5 | Unblinded SSR | 0.0327 | 0.0258 | 329 | 46 |
+| 1.0 | No adaptation | 0.0236 | 0.0202 | 312 | 0 |
+| 1.0 | Blinded SSR   | 0.0304 | 0.0253 | 620 | 99 |
+| 1.0 | Unblinded SSR | 0.0284 | 0.0249 | 520 | 99 |
+
+: Empirical one-sided Type I error and average adapted sample size under the null
+(RR = 1.0), $20{,}000$ replicates per cell. The "Mean $n$" and "% adapted" columns refer to the
+$\alpha = 0.025$ run. {#tbl-null-type1}
+
+**Power recovery at the designed effect (RR = 0.7).** When the planned rate ratio was correct,
+both SSR strategies recovered power from as low as $\sim$60% (no adaptation, worst-case
+nuisance misspecification) to the 85--90% range, with adapted sample sizes reaching up to roughly
+$2\times$ the planned $n = 312$.
+
+**Diminishing returns at smaller effects.** For RR = 0.85 (true effect smaller than planned), the
+planned design is inherently underpowered; SSR compensates for nuisance-parameter misspecification
+but cannot overcome the effect-size mismatch. For RR = 1.1 (treatment worse than control), all
+three strategies showed rejection rates $<$1%, confirming that SSR does not artificially inflate
+one-sided rejections in the wrong direction.
+
+**Blinded versus unblinded SSR.** Both methods recovered power, but blinded SSR consistently
+requested larger adapted sample sizes than unblinded SSR. This is most visible in the null table:
+at $k = 0.5$, blinded SSR averaged $n = 479$ vs. $329$ for unblinded SSR; at $k = 1.0$, the gap
+narrowed ($620$ vs. $520$) because both strategies hit the adaptation cap in most simulations.
+Blinded updates are more conservative because the pooled rate used by @friede2010blinded inflates
+the effective mean count when the observed RR is below 1, raising the implied required $n$. When
+operationally acceptable, unblinded SSR is therefore the more sample-efficient choice.
 
 # Discussion
 
 The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent-event
 trials with NB outcomes. Its statistical contributions are the alignment of fixed-design planning,
 calendar-time monitoring, and sample size re-estimation around Fisher information for the log rate
-ratio, together with the Jensen correction for event gaps and the accompanying simulation evidence.
-Its computing contributions are the object flow from `sample_size_nbinom_result` to `gsNB` to
-simulation outputs; subject-level recurrent-event simulation with event-gap-aware interim cuts;
-diagnostic information calculations under ML and method-of-moments nuisance estimation; and
-reproducible Monte Carlo engines for both fixed and adaptive monitoring strategies.
+ratio; the Jensen correction for event gaps with accompanying simulation evidence; and a two-sided
+ML/MoM fallback rule that keeps Wald inference well-defined under both near-Poisson and
+extreme-overdispersion regimes. Its computing contributions are the object flow from
+`sample_size_nbinom_result` to `gsNB` to simulation outputs; subject-level recurrent-event
+simulation with event-gap-aware interim cuts; diagnostic information calculations under ML and
+method-of-moments nuisance estimation; and reproducible Monte Carlo engines for both fixed and
+adaptive monitoring strategies.
 
 The Jensen correction is important precisely because the software is designed to keep planning and
 simulation on the same scale. When event gaps are non-negligible, the naive renewal approximation
@@ -600,8 +682,10 @@ When the treatment effect is as planned, both blinded and unblinded SSR recover 
 nuisance-parameter misspecification. Blinded updates preserve masking but tend to request larger
 adapted sample sizes; unblinded updates are more sample-efficient when operationally acceptable.
 The ability to compare `bound_info` choices, ML versus method-of-moments information paths, and
-Poisson fallback behavior inside the same simulation engine is a practical advantage of the package
-design.
+the new ML/MoM fallback behaviour inside the same simulation engine is a practical advantage of
+the package design: because each interim reports the fallback label actually used, simulation
+summaries can verify that adaptive decisions were driven by well-posed estimators rather than
+degenerate ML fits.
 
 From a software perspective, **gsDesignNB** is complementary to both **gsDesign** and
 **gscounts**. The general-purpose **gsDesign** package provides mature spending-function and
@@ -610,7 +694,8 @@ translation of those formulas, or recurrent-event simulation with blinded inform
 **gscounts** implementation motivated by @mutze2019group addresses group sequential NB testing,
 whereas **gsDesignNB** emphasizes the broader workflow needed in practice: piecewise accrual and
 dropout, maximum follow-up, protocol event gaps with Jensen correction, seasonal simulation,
-completer- or information-driven interim timing, and blinded as well as unblinded SSR simulation.
+completer- or information-driven interim timing, blinded as well as unblinded SSR simulation,
+and a two-sided ML/MoM fallback rule for unstable NB ML fits.
 
 The package's secondary workflows matter for a software paper even when they are not the main
 empirical case study. Seasonal simulation extends the constant-rate gamma-frailty model to a common
@@ -619,10 +704,22 @@ non-inferiority, blinded-diagnostics, and verification vignettes show that the s
 support multiple design questions. In that sense, the package is not only a collection of isolated
 functions but a coherent interface for recurrent-event trial planning and evaluation.
 
-Although the development of the package used modern interactive computing tools, the contribution of
-interest for a statistical software journal is the reproducible software artifact itself: the open
-source implementation, documented API, worked vignettes, and simulation studies that demonstrate
-how the methods behave under realistic trial scenarios.
+**A two-sided ML/MoM fallback rule.** A second methodological advance delivered in the current
+release replaces the previously permissive single-sided Poisson fallback with a two-sided rule.
+Near-Poisson data ($\hat{k} < 0.02$) still fall back to a Poisson Wald test, where the Poisson
+variance is statistically correct. Under extreme overdispersion ($\hat{k} > 20$) or ML
+non-convergence, however, the package now falls back to a method-of-moments re-estimation of
+$(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ via `estimate_nb_mom()` and plugs those values into
+the observed Fisher information formula that the package uses everywhere else, rather than a
+Poisson Wald test. This matters because under genuine overdispersion the Poisson variance is
+anti-conservative by a factor of $(1 + k\mu)^{-1}$ per subject, which is exactly the regime where
+a robust fallback is most needed. The MoM path requires no ML convergence, always returns a
+nonnegative $\hat{k}$, and preserves the NB variance structure. The rule is applied uniformly in
+`mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()`, each of which now reports a
+`fallback` label (`"ml"`, `"mom"`, or `"poisson"`) in its return value so that simulation engines
+can audit which estimator was used at each interim. In `mutze_test()` the behaviour is controlled
+by two thresholds, `poisson_threshold` (default $50$, i.e., $\hat{k} < 0.02$) and `mom_threshold`
+(default $20$, i.e., $\hat{k} > 20$); both are user-tunable for sensitivity analyses.
 
 # Reproducibility and software availability
 
