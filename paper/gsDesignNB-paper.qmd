@@ -122,8 +122,8 @@ number streams for larger Monte Carlo studies.
 
 ## Timing, information, and three notions of gaps
 
-The slide deck that motivated this manuscript uses the word "gap" in three different senses, and
-distinguishing them is important for both the methods and the software.
+The package documentation uses the word "gap" in three different senses, and distinguishing them is
+important for both the methods and the software.
 
 | Concept | Scale | Role in the package |
 |:--------|:------|:--------------------|
@@ -156,6 +156,37 @@ change the core architecture: seasonal recurrent-event simulation, completer-dri
 looks, non-inferiority and super-superiority designs, blinded-information diagnostics, and an
 interactive Shiny front end to the SSR engine. These are enumerated with their corresponding
 vignettes in Section 6.3.
+
+## Dropout, MAR, and imputation scope
+
+Dropout is represented in **gsDesignNB** as exposure truncation. At the planning stage,
+`sample_size_nbinom()` accounts for exponential dropout and maximum follow-up through the expected
+exposure $\bar{t}_g$ in each treatment arm; at interim analyses, data-cutting functions retain each
+subject's observed counted events and observed time at risk, including partial follow-up before
+dropout or the analysis cut. Thus the default analysis is not a complete-case analysis that discards
+subjects who discontinue early. It is an observed-exposure likelihood analysis for recurrent-event
+counts.
+
+Under an ignorable missing-data process -- missing at random (MAR) together with distinct parameters
+for the observation and outcome processes -- direct likelihood inference can use the observed data
+without modelling the missingness mechanism [@rubin1976inference]. For the NB log-rate-ratio
+estimand used here, this means that MAR dropout does not by itself require multiple imputation (MI):
+the event count accrued before dropout and its corresponding exposure time already contribute to the
+NB likelihood and to the Wald variance through the offset and information formula. MI may still be
+useful as an auxiliary reporting or modelling device when important covariates are incompletely
+observed, but it is not needed simply to make the MAR recurrent-event analysis valid.
+
+Missing not at random (MNAR) dropout is different. If the post-dropout event process depends on
+unobserved future outcomes or unmeasured deterioration, the observed-exposure likelihood no longer
+identifies the same full-follow-up estimand without additional assumptions. In that setting MI is
+best treated as a sensitivity-analysis framework rather than as a default primary analysis
+[@nrc2010missing]. A useful future extension would preserve the censoring reason and planned
+follow-up horizon in the simulated data, then impute post-dropout counts or event times from an NB
+model with treatment, exposure, prior event history, and prespecified delta adjustments for
+informative dropout. Each imputed data set would be analyzed with the same NB Wald estimand, and
+log-rate-ratio estimates and variances combined with Rubin's rules. When `event_gap` is part of the
+estimand, imputing event times rather than only total counts would be preferable so that the protocol
+counting rule can be re-applied consistently.
 
 # Sample size methodology
 
@@ -467,6 +498,14 @@ preserving masking but typically producing a more conservative adapted sample si
 instead fits treatment-specific rates and a common dispersion to the interim data, while holding the
 target treatment effect at its planned value for the final sample size calculation.
 
+Both SSR routines account for dropout in the same exposure-based sense as the fixed-design
+calculation. The interim nuisance estimates use the observed `tte` supplied by
+`cut_data_by_date()`, so subjects who drop out before the interim contribute their observed exposure
+and events. The recalculated total sample size is then obtained by calling `sample_size_nbinom()`
+with the planned accrual, dropout, maximum follow-up, and event-gap assumptions. The resulting SSR
+therefore adjusts for the loss of information expected from dropout under the specified ignorable
+censoring model; it is not an MNAR sensitivity procedure.
+
 `sim_ssr_nbinom()` wraps these choices into a full adaptive simulation engine. It supports "No
 adaptation", "Blinded SSR", and "Unblinded SSR" strategies; searches for interim looks using
 information-based timing; and allows efficacy and futility bounds to be driven by alternative
@@ -600,6 +639,13 @@ brief while the installed package still serves as the full replication resource.
 
 ## Design
 
+The manuscript reports selected operating characteristics, while the package articles serve as
+executable supplementary material. This keeps the paper readable in a software-journal format but
+still makes the simulation design, code, and fuller numerical output available to readers. In
+particular, the `verification-simulation`, `simulation-example`, and `ssr-simulation-study`
+articles contain the code used to reproduce the verification checks, event-gap studies, and SSR
+operating characteristics summarized below.
+
 We evaluated `sim_ssr_nbinom()` across a 90-scenario grid varying the control rate
 $\lambda_1 \in \{0.3, 0.5, 0.8\}$/month, dispersion $k \in \{0.5, 1.0\}$, planned accrual
 rate $\in \{12, 18, 24\}$/month, and true rate ratio $\text{RR} \in \{0.6, 0.7, 0.85, 1.0, 1.1\}$
@@ -613,6 +659,22 @@ scenario grid and replicate counts.
 Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
 using a group sequential design with Hwang--Shih--DeCani spending functions
 [@hwang1990group].
+
+@tbl-simulation-reporting summarizes how the Monte Carlo evidence is divided between the manuscript
+and the package supplement. For a rejection probability $\hat p$ based on $B$ replicates, the Monte
+Carlo standard error is $\sqrt{\hat p(1-\hat p)/B}$; this is reported or bounded for the main
+simulation summaries.
+
+| Component | Manuscript role | Supplementary package article | Replicates and reported quantities |
+|:----------|:----------------|:------------------------------|:-----------------------------------|
+| Fixed-design verification | Demonstrate agreement between NB planning formulas and simulated power | `verification-simulation`, `sample-size-nbinom` | Scenario-specific power, information, and Monte Carlo error checks |
+| Event-gap correction | Show where the Jensen correction changes sample size and power | `simulation-example`, `verification-simulation` | 64-scenario sweep; 3,500 or 10,000 replicates depending on table; corrected vs naive $n$ and power |
+| SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
+| SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Up to 3,600 replicates per power scenario; rejection rate, mean $n$, adaptation frequency, and cap behaviour |
+| Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
+
+: Simulation reporting map. The package articles are treated as executable supplementary material
+for the condensed results reported in the manuscript. {#tbl-simulation-reporting}
 
 ## Results
 
@@ -687,6 +749,14 @@ the package design: because each interim reports the fallback label actually use
 summaries can verify that adaptive decisions were driven by well-posed estimators rather than
 degenerate ML fits.
 
+The package's current missing-data position is deliberately narrower than a full causal estimand
+framework. Dropout and administrative censoring are handled as exposure truncation under ignorable
+censoring, which is the setting in which observed-data NB likelihood inference is appropriate and MI
+is not required. MNAR sensitivity analyses would need additional data structure -- in particular,
+explicit censoring reason, planned remaining follow-up, and assumptions about post-dropout event
+rates -- before MI can be implemented transparently. This is a natural extension of the simulator
+and data-cutting layer, but it should not be conflated with the primary MAR analysis.
+
 From a software perspective, **gsDesignNB** is complementary to both **gsDesign** and
 **gscounts**. The general-purpose **gsDesign** package provides mature spending-function and
 boundary calculations but does not itself supply NB recurrent-event planning formulas, calendar-time
@@ -731,10 +801,12 @@ on **gsDesign**, **data.table**, **simtrial**, and **MASS**.
 The source distribution includes vignettes for fixed-design NB sample size calculation, calendar-time
 GS simulation, end-to-end SSR, the larger SSR simulation study, blinded-information diagnostics,
 seasonal simulation, completer-based interims, non-inferiority design, and verification of the
-planning formulas against simulation. The two code examples in this paper are deliberately small
-extracts of those vignettes so that the manuscript highlights the core software interface while the
-installed package retains more extensive executable workflows. For local exploratory use, the
-package also provides `run_ssr_shiny()` as an interactive front end to the SSR engine and
-`preview_pkgdown_site()` for documentation preview.
+planning formulas against simulation. We treat these articles as supplementary material for the
+paper: the manuscript gives the design rationale, selected tables, and interpretation, while the
+package articles provide the fuller grids, code paths, and rendered results. The two code examples in
+this paper are deliberately small extracts of those vignettes so that the manuscript highlights the
+core software interface while the installed package retains more extensive executable workflows. For
+local exploratory use, the package also provides `run_ssr_shiny()` as an interactive front end to the
+SSR engine and `preview_pkgdown_site()` for documentation preview.
 
 # References {.unnumbered}
