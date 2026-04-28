@@ -35,15 +35,14 @@ This extends the \code{\link[gsDesign:toInteger]{gsDesign::toInteger()}} functio
 package to work with \code{gsNB} objects.
 }
 \details{
-This function rounds sample sizes at each analysis to integers while maintaining
-the randomization ratio and ensuring monotonically increasing sample sizes across
-analyses. Only the final analysis sample size is rounded to an integer;
-interim sample sizes remain as expected (non-integer) values based on
-the information fraction.
+This function rounds the final sample size while maintaining the
+randomization ratio. When calendar analysis times are available, interim
+sample sizes remain expected enrollment counts at those calendar times after
+rescaling the accrual rate to the rounded final sample size.
 
 When \code{analysis_times} were provided to \code{\link[=gsNBCalendar]{gsNBCalendar()}},
-the statistical information (\code{n.I}) is recomputed at each analysis
-time based on the new sample size and expected exposures.
+expected events, exposure, and statistical information (\code{n.I}) are recomputed
+at each analysis time based on the new sample size and expected exposures.
 }
 \section{Methods (by class)}{
 \itemize{

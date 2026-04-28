@@ -33,11 +33,12 @@ abstract: |
   to a Poisson Wald test, but under extreme overdispersion or ML non-convergence it switches to
   a MoM-based NB Wald test using the observed Fisher information formula, avoiding the
   anti-conservative behaviour of a blind Poisson fallback. The package also supports calendar-time
-  group sequential monitoring and both blinded and unblinded SSR. In a 90-scenario simulation
-  study, SSR recovers power when nuisance parameters are misspecified, with blinded updates
-  generally requesting larger adapted sample sizes than unblinded updates. The paper emphasizes
-  both the statistical methodology and the software architecture that make these workflows
-  reproducible.
+  group sequential monitoring and both blinded and unblinded SSR. A 90-scenario SSR article
+  illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
+  requires explicit Type I calibration; in the reported configuration, reducing nominal one-sided
+  alpha from 0.025 to 0.020 materially improves, but does not universally eliminate, empirical
+  Type I error inflation. The paper emphasizes both the statistical methodology and the software
+  architecture that make these workflows reproducible.
 ---
 
 # Introduction
@@ -568,7 +569,8 @@ gs_design <- gsNBCalendar(
   analysis_times = c(4, 8, 12)
 )
 
-# n_sims = 50 is for illustration only; the vignettes use 3,500+ replicates.
+# n_sims = 50 is for illustration only; the GS verification vignette uses
+# 3,600 replicates for its cached operating-characteristic results.
 sim_gs <- sim_gs_nbinom(
   n_sims = 50,
   enroll_rate = enroll_rate,
@@ -621,10 +623,12 @@ summarize_ssr_sim(ssr_res)$trial_summary[
 ]
 ```
 
-The paper's 90-scenario SSR study uses this same engine with a much larger scenario grid, more
-replicates, and additional design constraints on when adaptation is allowed. The essential software
-idea, however, is already visible in the compact example: one `gsNB` planning object can drive both
-non-adaptive and adaptive operating-characteristic evaluations.
+The SSR simulation-study article uses this same engine to define a 90-scenario grid and adds
+design constraints on when adaptation is allowed. The bundled package cache keeps the non-null
+power grid deliberately small for portable documentation builds, while the null Type I calibration
+tables are stored at production scale. The essential software idea is already visible in the
+compact example: one `gsNB` planning object can drive both non-adaptive and adaptive
+operating-characteristic evaluations.
 
 ## Additional workflows
 
@@ -652,15 +656,19 @@ particular, the `verification-simulation`, `simulation-example`, and `ssr-simula
 articles contain the code used to reproduce the verification checks, event-gap studies, and SSR
 operating characteristics summarized below.
 
-We evaluated `sim_ssr_nbinom()` across a 90-scenario grid varying the control rate
+The `ssr-simulation-study` article defines a 90-scenario grid varying the control rate
 $\lambda_1 \in \{0.3, 0.5, 0.8\}$/month, dispersion $k \in \{0.5, 1.0\}$, planned accrual
 rate $\in \{12, 18, 24\}$/month, and true rate ratio $\text{RR} \in \{0.6, 0.7, 0.85, 1.0, 1.1\}$
 (ninety combinations in total). The planned design was built with `sample_size_nbinom()` and
 `gsNBCalendar()`, targeting 90% power for RR = 0.7 with $k = 0.5$, $\lambda_1 = 0.5$/month, and
 planned accrual of 26/month, for a planned total sample size of 312 and a maximum follow-up of
-12 months. Null-case operating characteristics used $20{,}000$ replicates per scenario; power
-scenarios used up to $3{,}600$ replicates. See the `ssr-simulation-study` vignette for the full
-scenario grid and replicate counts.
+12 months. The bundled article cache uses $20{,}000$ replicates for the dedicated null Type I
+calibration tables and an exploratory 50-replicate cache for the non-null power grid so that
+pkgdown, CI, and CRAN builds remain tractable. Production power runs can be regenerated from the
+same vignette by setting `GSDESIGNNB_PRODUCTION_SSR=true`; until those production outputs are
+stored, power-recovery summaries from the grid should be read as directional rather than
+definitive. See the `ssr-simulation-study` vignette for the full scenario grid and replicate
+controls.
 
 Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
 using a group sequential design with Hwang--Shih--DeCani spending functions
@@ -676,7 +684,7 @@ simulation summaries.
 | Fixed-design verification | Demonstrate agreement between NB planning formulas and simulated power | `verification-simulation`, `sample-size-nbinom` | Scenario-specific power, information, and Monte Carlo error checks |
 | Event-gap correction | Show where the Jensen correction changes sample size and power | `simulation-example`, `verification-simulation` | 64-scenario sweep; 3,500 or 10,000 replicates depending on table; corrected vs naive $n$ and power |
 | SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
-| SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Up to 3,600 replicates per power scenario; rejection rate, mean $n$, adaptation frequency, and cap behaviour |
+| SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled exploratory grid uses 50 replicates per non-null scenario; production setting supports 3,600 replicates per power scenario |
 | Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
 
 : Simulation reporting map. The package articles are treated as executable supplementary material
@@ -687,9 +695,12 @@ for the condensed results reported in the manuscript. {#tbl-simulation-reporting
 **Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
 RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$ and at a
 sensitivity value of $\alpha = 0.020$. With $20{,}000$ replicates per cell the Monte Carlo
-standard error is about $0.001$. At nominal 2.5%, every strategy shows mild inflation, most
-pronounced for blinded SSR at $k = 0.5$ ($0.034$). Reducing the nominal $\alpha$ to $0.020$
-restores empirical Type I to the $0.025$ target in all three strategies.
+standard error is about $0.001$. At nominal 2.5%, most SSR settings show mild inflation, most
+pronounced for blinded SSR at $k = 0.5$ ($0.034$); the no-adaptation design at $k = 1.0$ is not
+inflated in this simulation. Reducing the nominal $\alpha$ to $0.020$ moves empirical Type I error
+closer to the $0.025$ target, but the blinded SSR configuration at $k = 0.5$ remains mildly above
+target. This should therefore be treated as a design-specific calibration sensitivity rather than
+as a universal correction.
 
 | $k$ | Strategy | Type I ($\alpha = 0.025$) | Type I ($\alpha = 0.020$) | Mean $n$ | % adapted |
 |:---:|:---------|:-------------------------:|:-------------------------:|:--------:|:---------:|
@@ -704,10 +715,12 @@ restores empirical Type I to the $0.025$ target in all three strategies.
 (RR = 1.0), $20{,}000$ replicates per cell. The "Mean $n$" and "% adapted" columns refer to the
 $\alpha = 0.025$ run. {#tbl-null-type1}
 
-**Power recovery at the designed effect (RR = 0.7).** When the planned rate ratio was correct,
-both SSR strategies recovered power from as low as $\sim$60% (no adaptation, worst-case
-nuisance misspecification) to the 85--90% range, with adapted sample sizes reaching up to roughly
-$2\times$ the planned $n = 312$.
+**Power recovery at the designed effect (RR = 0.7).** In the bundled exploratory cache, no
+adaptation ranged from about 68% to 96% rejection across nuisance scenarios, while blinded and
+unblinded SSR ranged from about 82% to 98%. Because these non-null cells use only 50 replicates,
+the pattern supports the intended diagnostic use of the article -- SSR can recover information
+when nuisance parameters are unfavorable -- but it should not be quoted as a production-precision
+power estimate without regenerating the production grid.
 
 **Diminishing returns at smaller effects.** For RR = 0.85 (true effect smaller than planned), the
 planned design is inherently underpowered; SSR compensates for nuisance-parameter misspecification
@@ -715,8 +728,9 @@ but cannot overcome the effect-size mismatch. For RR = 1.1 (treatment worse than
 three strategies showed rejection rates $<$1%, confirming that SSR does not artificially inflate
 one-sided rejections in the wrong direction.
 
-**Blinded versus unblinded SSR.** Both methods recovered power, but blinded SSR consistently
-requested larger adapted sample sizes than unblinded SSR. This is most visible in the null table:
+**Blinded versus unblinded SSR.** In both the exploratory power grid and the production null
+calibration, blinded SSR requested larger adapted sample sizes than unblinded SSR. This is most
+visible in the null table:
 at $k = 0.5$, blinded SSR averaged $n = 479$ vs. $329$ for unblinded SSR; at $k = 1.0$, the gap
 narrowed ($620$ vs. $520$) because both strategies hit the adaptation cap in most simulations.
 Blinded updates are more conservative because the pooled rate used by @friede2010blinded inflates
@@ -745,15 +759,18 @@ points, whereas at $k = 0.1$ or gaps $\leq 10$ days the correction adds little t
 sample size. Because the same gap rule is carried into simulation and interim cutting, users can
 see directly when the correction matters for operating characteristics rather than only for algebra.
 
-The SSR study likewise shows how the package's computational layer supports statistical conclusions.
-When the treatment effect is as planned, both blinded and unblinded SSR recover power lost to
-nuisance-parameter misspecification. Blinded updates preserve masking but tend to request larger
-adapted sample sizes; unblinded updates are more sample-efficient when operationally acceptable.
-The ability to compare `bound_info` choices, ML versus method-of-moments information paths, and
-the new ML/MoM fallback behaviour inside the same simulation engine is a practical advantage of
-the package design: because each interim reports the fallback label actually used, simulation
-summaries can verify that adaptive decisions were driven by well-posed estimators rather than
-degenerate ML fits.
+The SSR study likewise shows how the package's computational layer supports statistical design
+checks, but it also illustrates where evidence should be labeled carefully. The bundled non-null
+grid is useful for checking that adverse nuisance-parameter misspecification can be diagnosed and
+that SSR moves sample size in the expected direction; production-precision power claims require
+regenerating the larger grid. The production null simulations show that Type I error is
+design-specific and must be calibrated rather than assumed. In the studied configuration a smaller
+nominal alpha reduced the null rejection rate, while unblinded nuisance updates were more
+sample-size efficient than blinded updates. The ability to compare `bound_info` choices, ML versus
+method-of-moments information paths, and the new ML/MoM fallback behaviour inside the same
+simulation engine is a practical advantage of the package design: because each interim reports the
+fallback label actually used, simulation summaries can verify that adaptive decisions were driven
+by well-posed estimators rather than degenerate ML fits.
 
 The package's current missing-data position is deliberately narrower than a full causal estimand
 framework. Dropout and administrative censoring are handled as exposure truncation under ignorable

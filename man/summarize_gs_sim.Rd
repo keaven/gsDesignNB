@@ -4,11 +4,16 @@
 \alias{summarize_gs_sim}
 \title{Summarize group sequential simulation results}
 \usage{
-summarize_gs_sim(x)
+summarize_gs_sim(x, info_trim = 0.01)
 }
 \arguments{
 \item{x}{A data frame returned by \code{\link[=check_gs_bound]{check_gs_bound()}} (or \code{\link[=sim_gs_nbinom]{sim_gs_nbinom()}} if
 bounds are manually checked). Must contain columns \code{cross_upper}, \code{cross_lower}.}
+
+\item{info_trim}{Proportion of observations trimmed from each tail when
+summarizing information estimates. Defaults to \code{0.01} to reduce sensitivity
+to occasional unstable fitted information estimates in small interim data
+sets.}
 }
 \value{
 A list containing:
@@ -16,7 +21,9 @@ A list containing:
 \item{n_sim}{Number of simulations}
 \item{power}{Overall power (probability of crossing upper bound)}
 \item{futility}{Overall futility rate (probability of crossing lower bound and not upper)}
-\item{analysis_summary}{Data frame with per-analysis statistics (events, crossings)}
+\item{analysis_summary}{Data frame with per-analysis statistics (sample
+size, events, information, crossings, and optional exposure columns when
+present in \code{x}).}
 }
 }
 \description{

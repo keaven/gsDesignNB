@@ -789,6 +789,26 @@ runtime_df |>
   )
 ```
 
+```{r precision_note, results='asis', echo=FALSE}
+power_reps <- unique(summary_dt[rr_true < 1, n_sims])
+min_power_reps <- min(power_reps, na.rm = TRUE)
+mcse_at_90 <- sqrt(0.9 * 0.1 / min_power_reps)
+
+if (is.finite(min_power_reps) && min_power_reps < 1000) {
+  cat(
+    "**Precision note.** The bundled non-null power grid uses ",
+    min_power_reps,
+    " replicates per cell (Monte Carlo SE about ",
+    scales::percent(mcse_at_90, accuracy = 0.1),
+    " near 90% power), so the power plots below are directional diagnostics. ",
+    "The dedicated RR = 1 Type I tables use the production-scale cache shown in their subtitles. ",
+    "Set `GSDESIGNNB_PRODUCTION_SSR=true` and `GSDESIGNNB_SAVE_SSR_OUTPUTS=true` to regenerate ",
+    "and store the larger non-null power grid.\n\n",
+    sep = ""
+  )
+}
+```
+
 ```{r null_nonbinding_summary, results='asis'}
 # Two designs: nominal one-sided alpha = 0.025 (main power sims) vs 0.02 (Type I sensitivity).
 for (alab in c("0.025", "0.02")) {

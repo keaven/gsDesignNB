@@ -1,4 +1,40 @@
-# gsDesignNB 0.3.1 (development)
+# gsDesignNB 0.3.2 (development)
+
+## Group sequential simulation vignette
+
+- Corrected the group sequential simulation vignette and cached results so that
+  simulations use the rounded final group sequential sample size, monthly
+  dropout hazard, and helper functions for boundary checking and summary.
+- `toInteger.gsNB()` now preserves calendar-time enrollment quantities at
+  interim analyses and recomputes expected events, exposures, and information
+  after rounding the final sample size.
+- `summarize_gs_sim()` now reports optional sample-size and exposure summaries
+  when available and uses finite trimmed means for information estimates.
+- Qualified SSR simulation reporting in the manuscript and SSR simulation
+  article so the bundled exploratory non-null power grid is not presented as
+  production-precision evidence; the dedicated null Type I simulations remain
+  documented as 20,000-replicate calibration runs.
+- Updated the blinded-information diagnostics article to distinguish historical
+  raw ML pathologies from the current MoM fallback behavior.
+
+## Missing data and imputation documentation
+
+- Added documentation clarifying that the primary recurrent-event analysis is an
+  observed-exposure negative binomial likelihood analysis. Under ignorable
+  censoring / MAR assumptions, partially followed subjects contribute their
+  observed events and exposure, and multiple imputation is not required simply
+  because follow-up is censored.
+- Expanded MNAR sensitivity-analysis guidance for recurrent-event endpoints,
+  including the need to preserve censoring reason and planned remaining follow-up
+  before post-dropout outcomes can be imputed.
+- Added Keene, Roger, Hartley, and Kenward (2014) as the recurrent-event
+  controlled-imputation reference for de facto / reference-based sensitivity
+  analyses, and aligned the manuscript, slides, and simulation vignette around
+  that framing.
+- Updated the paper and slide materials to cite package articles as executable
+  supplementary material for the fuller simulation grids and reporting.
+
+# gsDesignNB 0.3.1
 
 ## Robust NB fallback: method-of-moments replaces Poisson under genuine overdispersion
 

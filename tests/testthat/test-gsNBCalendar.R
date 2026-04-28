@@ -157,6 +157,23 @@ test_that("toInteger.gsNB respects ratio", {
   expect_equal(gs_int$n_total[2] %% 3, 0)
 })
 
+test_that("toInteger.gsNB preserves calendar enrollment at interim analyses", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24
+  )
+  analysis_times <- c(10, 18, 24)
+  gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = analysis_times)
+
+  gs_int <- toInteger(gs_design)
+
+  expected_n <- gs_int$n_total[gs_int$k] *
+    pmin(analysis_times, nb_ss$accrual_duration) / nb_ss$accrual_duration
+
+  expect_equal(gs_int$n_total, expected_n, tolerance = 1e-8)
+  expect_true(all(diff(gs_int$n.I) > 0))
+})
+
 test_that("toInteger.gsDesign dispatches correctly", {
   gs <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 2)
   gs_int <- toInteger(gs)
