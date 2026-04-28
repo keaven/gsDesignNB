@@ -252,7 +252,7 @@ test_that("sample_size_nbinom input validation errors", {
 
   # Bad dropout_rate
   expect_error(do.call(sample_size_nbinom, c(base, dropout_rate = -0.1)), "non-negative")
-  expect_error(do.call(sample_size_nbinom, c(base, list(dropout_rate = c(0.1, 0.1, 0.1)))), "scalar or a vector of length 2")
+  expect_error(do.call(sample_size_nbinom, c(base, list(dropout_rate = c(0.1, 0.1, 0.1)))), "scalar, a vector of length 2, or a data frame")
 
   # Bad max_followup
   expect_error(do.call(sample_size_nbinom, c(base, max_followup = 0)), "max_followup must be positive")
@@ -433,4 +433,148 @@ test_that("print.sample_size_nbinom_summary works", {
   )
   s <- summary(res)
   expect_output(print(s), "negative binomial")
+})
+
+# --- Piecewise exponential dropout tests ---
+
+test_that("piecewise dropout with one piece matches scalar dropout", {
+  # A data frame with a single constant rate should give identical results
+  # to the scalar specification.
+  res_scalar <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = 0.05
+  )
+
+  res_pw <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = data.frame(rate = 0.05, duration = Inf)
+  )
+
+  expect_equal(res_scalar$n_total, res_pw$n_total)
+  expect_equal(res_scalar$exposure, res_pw$exposure, tolerance = 1e-10)
+  expect_equal(res_scalar$variance, res_pw$variance, tolerance = 1e-10)
+})
+
+test_that("piecewise dropout with treatment column matches per-group scalar", {
+  res_vec <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = c(0.05, 0.10)
+  )
+
+  res_pw <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24,
+    dropout_rate = data.frame(
+      treatment = c(1, 2),
+      rate = c(0.05, 0.10),
+      duration = c(Inf, Inf)
+    )
+  )
+
+  expect_equal(res_vec$n_total, res_pw$n_total)
+  expect_equal(res_vec$exposure, res_pw$exposure, tolerance = 1e-10)
+})
+
+test_that("piecewise dropout higher early rate reduces exposure", {
+  # Two pieces: high dropout first 6 months, low after.
+  # Compared to constant dropout at the low rate, exposure should be less.
+  res_low <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = 0.02, duration = Inf)
+  )
+
+  res_pw <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = c(0.10, 0.02), duration = c(6, Inf))
+  )
+
+  # Higher early dropout means less exposure and more subjects needed
+  expect_true(res_pw$exposure[1] < res_low$exposure[1])
+  expect_true(res_pw$n_total >= res_low$n_total)
+})
+
+test_that("piecewise dropout with zero rate matches no dropout", {
+  res_none <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    dropout_rate = 0
+  )
+
+  res_pw_zero <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+    dropout_rate = data.frame(rate = c(0, 0), duration = c(5, Inf))
+  )
+
+  expect_equal(res_none$n_total, res_pw_zero$n_total)
+  expect_equal(res_none$exposure, res_pw_zero$exposure, tolerance = 1e-10)
+})
+
+test_that("piecewise dropout with max_followup works correctly", {
+  # Piecewise dropout with max_followup should interact properly.
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = c(0.08, 0.03), duration = c(6, Inf)),
+    max_followup = 12
+  )
+
+  expect_true(res$n_total > 0)
+  expect_true(res$exposure[1] > 0)
+  # Exposure must be less than max_followup
+
+  expect_true(res$exposure[1] < 12)
+})
+
+test_that("piecewise dropout per-group data frame works", {
+  # Different piecewise schedules for each group.
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(
+      treatment = c(1, 1, 2, 2),
+      rate = c(0.05, 0.02, 0.08, 0.03),
+      duration = c(6, Inf, 6, Inf)
+    )
+  )
+
+  expect_true(res$n_total > 0)
+  # Group 2 has higher dropout, so lower exposure
+  expect_true(res$exposure[2] < res$exposure[1])
+})
+
+test_that("piecewise dropout input validation works", {
+  # Missing columns
+  expect_error(
+    sample_size_nbinom(
+      lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1,
+      accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+      dropout_rate = data.frame(rate = 0.05)
+    ),
+    "duration"
+  )
+
+  # Negative rate in data frame
+  expect_error(
+    sample_size_nbinom(
+      lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1,
+      accrual_rate = 10, accrual_duration = 10, trial_duration = 15,
+      dropout_rate = data.frame(rate = -0.05, duration = Inf)
+    ),
+    "non-negative"
+  )
+})
+
+test_that("print handles piecewise dropout display", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
+    accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+    dropout_rate = data.frame(rate = c(0.08, 0.03), duration = c(6, Inf))
+  )
+  expect_output(print(res), "piecewise")
 })

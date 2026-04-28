@@ -426,7 +426,11 @@ summary.gsNB <- function(object, ...) {
 
   dropout_str <- ""
   if (!is.null(inputs$dropout_rate)) {
-    if (length(inputs$dropout_rate) == 1) {
+    if (is.data.frame(inputs$dropout_rate)) {
+      if (any(inputs$dropout_rate$rate > 0)) {
+        dropout_str <- ", piecewise dropout"
+      }
+    } else if (length(inputs$dropout_rate) == 1) {
       if (inputs$dropout_rate > 0) {
         dropout_str <- sprintf(", dropout rate %.4f", inputs$dropout_rate)
       }
