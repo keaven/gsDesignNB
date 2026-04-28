@@ -57,8 +57,18 @@ Must be the same length as \code{accrual_rate}.}
 \code{trial_duration} is less than the sum of \code{accrual_duration}, accrual
 is truncated at \code{trial_duration}.}
 
-\item{dropout_rate}{Dropout hazard rate. Default is 0. Can be a vector of
-length 2 for group-specific dropout (control, treatment).}
+\item{dropout_rate}{Dropout hazard rate. Can be:
+\itemize{
+\item A scalar (common constant rate for both groups). Default is 0.
+\item A vector of length 2 (group-specific constant rates: control,
+treatment).
+\item A data frame with columns \code{rate} and \code{duration} (and optionally
+\code{treatment}) defining piecewise constant dropout hazards. When a
+\code{treatment} column is present, use 1 for control and 2 for treatment.
+Without a \code{treatment} column, the same piecewise schedule applies to
+both groups. The last \code{duration} may be \code{Inf} to extend the final rate
+indefinitely.
+}}
 
 \item{max_followup}{Maximum follow-up time for any patient. Default is
 \code{NULL} (infinite). Can be a vector of length 2 for group-specific caps.}
@@ -117,9 +127,15 @@ with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
 \subsection{Average exposure}{
 
 The average exposure \eqn{\bar{t}_g} accounts for piecewise accrual,
-exponential dropout, and maximum follow-up truncation. When dropout rate
-\eqn{\delta > 0}, the expected exposure for a patient with potential
-follow-up \eqn{u} is \eqn{m(u) = (1 - e^{-\delta u})/\delta}.
+piecewise exponential dropout, and maximum follow-up truncation. With
+piecewise constant dropout hazards \eqn{\delta_1, \delta_2, \ldots}
+over successive intervals, the survival function is
+\eqn{S(t) = \exp(-\sum_j \delta_j \ell_j)} where \eqn{\ell_j} is the
+time spent in interval \eqn{j}. The expected exposure for a patient with
+potential follow-up \eqn{u} is \eqn{m(u) = \int_0^u S(t)\,dt}, computed
+as a sum of exponential integrals over each piece. For a single constant
+rate \eqn{\delta > 0} this simplifies to
+\eqn{m(u) = (1 - e^{-\delta u})/\delta}.
 The overall average is a weighted mean across accrual segments.
 }
 

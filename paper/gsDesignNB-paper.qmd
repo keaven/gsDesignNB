@@ -21,7 +21,7 @@ abstract: |
   treatment arm and a subject-level gamma frailty, recurrent events follow a Poisson process with
   constant within-subject rate, yielding marginal negative binomial counts. For fixed designs, the
   package extends the methods of @zhu2014sample and @friede2010blinded to handle piecewise accrual,
-  exponential dropout, maximum follow-up truncation, and protocol-defined gaps between counted
+  piecewise exponential dropout, maximum follow-up truncation, and protocol-defined gaps between counted
   events. Because statistical information for the log rate ratio depends jointly on exposure, event
   rates, and dispersion, it is not generally proportional to raw event counts. We derive and
   implement a second-order delta-method correction for the Jensen-inequality bias in the event-gap
@@ -161,7 +161,7 @@ vignettes in Section 6.3.
 ## Dropout, MAR, and imputation scope
 
 Dropout is represented in **gsDesignNB** as exposure truncation. At the planning stage,
-`sample_size_nbinom()` accounts for exponential dropout and maximum follow-up through the expected
+`sample_size_nbinom()` accounts for piecewise exponential dropout and maximum follow-up through the expected
 exposure $\bar{t}_g$ in each treatment arm; at interim analyses, data-cutting functions retain each
 subject's observed counted events and observed time at risk, including partial follow-up before
 dropout or the analysis cut. Thus the default analysis is not a complete-case analysis that discards

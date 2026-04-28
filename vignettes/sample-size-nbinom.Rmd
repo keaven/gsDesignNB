@@ -191,12 +191,24 @@ This is simply the midpoint of the follow-up range for that segment.
 
 ### Calendar exposure with dropout
 
-When the dropout rate $\delta > 0$ (modeled as an exponential hazard), the expected exposure for a patient with potential follow-up $u$ is:
+Dropout is modeled as a piecewise exponential process with hazard rates
+$\delta_1, \delta_2, \ldots$ over successive intervals
+$[0, c_1), [c_1, c_2), \ldots$ (the last interval extends to $\infty$).
+The survival function is
+$S(t) = \exp\!\bigl(-\sum_j \delta_j \ell_j\bigr)$
+where $\ell_j$ is the time spent in interval $j$.
+The expected exposure for a patient with potential follow-up $u$ is
 
-$$ m(u) = \mathrm{E}[\min(u, \text{dropout time})] = \frac{1 - e^{-\delta u}}{\delta} $$
+$$ m(u) = \int_0^u S(t)\, dt $$
+
+which decomposes into a sum of closed-form exponential integrals over
+each piece. For a single constant rate $\delta > 0$ (the most common
+special case) this simplifies to
+
+$$ m(u) = \frac{1 - e^{-\delta u}}{\delta} $$
 
 The average exposure for segment $j$ is obtained by averaging $m(u)$ over the uniform distribution of enrollment times within the segment.
-This yields:
+For a single constant rate this yields:
 
 $$
 \bar{t}_j = \frac{1}{D_j}\int_{u_{\min}}^{u_{\max}} m(u)\, du
@@ -204,6 +216,11 @@ $$
 $$
 
 Note that as $\delta \to 0$, this reduces to $(u_{\min} + u_{\max})/2$, consistent with the no-dropout case.
+
+The `dropout_rate` argument accepts a scalar (common constant rate), a
+length-2 vector (per-group constant rates), or a data frame with columns
+`rate` and `duration` (and optionally `treatment`) for the full piecewise
+specification.
 
 ### Maximum follow-up
 
@@ -230,8 +247,8 @@ When dropout rates are the same for both groups, $\bar{t}_1 = \bar{t}_2$. When t
 
 ### Group-specific parameters
 
-The function supports specifying `dropout_rate` and `max_followup` as vectors of length 2, corresponding to the control and treatment groups respectively.
-When these differ, the average exposure $\bar{t}_g$, the second moment $\mathrm{E}[t_g^2]$, and the variance inflation factor $Q_g$ are all computed separately for each group.
+The function supports specifying `dropout_rate` as a scalar, a length-2 vector, or a data frame with piecewise rates (see above), and `max_followup` as a scalar or vector of length 2, corresponding to the control and treatment groups respectively.
+When these differ between groups, the average exposure $\bar{t}_g$, the second moment $\mathrm{E}[t_g^2]$, and the variance inflation factor $Q_g$ are all computed separately for each group.
 
 ### Variance inflation for variable follow-up ($Q$ factor)
 
@@ -251,10 +268,12 @@ Variable follow-up inflates $Q$ above 1, increasing the required sample size.
 **Computing $\mathrm{E}[t^2]$:**
 The second moment is computed analogously to $\mathrm{E}[t]$ by integrating $m_2(u) = \mathrm{E}[\min(u, \text{dropout time})^2]$ over the enrollment distribution.
 Without dropout, $m_2(u) = u^2$.
-With dropout rate $\delta$:
+With a single constant dropout rate $\delta$:
 
 $$ m_2(u) = \frac{2}{\delta^2}\left(1 - e^{-\delta u}(1 + \delta u)\right) $$
 
+For piecewise dropout, $m_2(u)$ is computed by integrating
+$2 t\, S(t)$ over the piecewise survival function, analogously to $m(u)$.
 The average of $m_2(u)$ across enrollment segments (with appropriate handling of `max_followup` truncation) gives $\mathrm{E}[t^2_g]$.
 
 ### Event gaps
