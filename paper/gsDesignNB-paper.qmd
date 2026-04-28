@@ -180,13 +180,19 @@ Missing not at random (MNAR) dropout is different. If the post-dropout event pro
 unobserved future outcomes or unmeasured deterioration, the observed-exposure likelihood no longer
 identifies the same full-follow-up estimand without additional assumptions. In that setting MI is
 best treated as a sensitivity-analysis framework rather than as a default primary analysis
-[@nrc2010missing]. A useful future extension would preserve the censoring reason and planned
-follow-up horizon in the simulated data, then impute post-dropout counts or event times from an NB
-model with treatment, exposure, prior event history, and prespecified delta adjustments for
-informative dropout. Each imputed data set would be analyzed with the same NB Wald estimand, and
-log-rate-ratio estimates and variances combined with Rubin's rules. When `event_gap` is part of the
-estimand, imputing event times rather than only total counts would be preferable so that the protocol
-counting rule can be re-applied consistently.
+[@nrc2010missing]. For recurrent events, the controlled-imputation approach of
+@keene2014missing is a useful template: it uses a negative multinomial formulation, compatible with
+the Gamma--Poisson view of NB counts, to impute missing post-withdrawal recurrent events under
+reference-based assumptions such as borrowing the control-arm event behaviour for active-arm
+dropouts. This targets de facto sensitivity estimands rather than replacing the MAR primary analysis.
+
+A useful future extension would therefore preserve the censoring reason and planned follow-up horizon
+in the simulated data, then impute post-dropout counts or event times from an NB recurrent-event
+model with treatment, exposure, prior event history, dropout reason, and prespecified
+reference-based or delta-adjusted assumptions for informative dropout. Each imputed data set would be
+analyzed with the same NB Wald estimand, with variance estimation checked as part of the sensitivity
+analysis. When `event_gap` is part of the estimand, imputing event times rather than only total counts
+would be preferable so that the protocol counting rule can be re-applied consistently.
 
 # Sample size methodology
 

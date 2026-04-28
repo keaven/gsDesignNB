@@ -442,7 +442,7 @@
   <meta name="generator" content="quarto-1.6.42">
 
   <meta name="author" content="Keaven M. Anderson, Hongtao Zhang, Andrea Maes">
-  <meta name="dcterms.date" content="2026-04-26">
+  <meta name="dcterms.date" content="2026-04-27">
   <title>Negative Binomial Group Sequential Designs</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1002,7 +1002,7 @@ Keaven M. Anderson, Hongtao Zhang, Andrea Maes
     </div>
 </div>
 
-  <p class="date">2026-04-26</p>
+  <p class="date">2026-04-27</p>
 </section>
 <section id="talk-plan" class="slide level2 smaller">
 <h2>Talk plan</h2>
@@ -1264,7 +1264,7 @@ display:block!important;
 <li><strong>Dropout in gsDesignNB:</strong> handled as exposure truncation; partial follow-up stays in the analysis through counted events and observed time at risk.</li>
 <li><strong>Planning and SSR:</strong> <code>sample_size_nbinom()</code> accounts for planned dropout / maximum follow-up; SSR uses observed interim exposure, then recalculates total <span class="math inline">\(N\)</span> under the planned dropout assumptions.</li>
 <li><strong>Under MAR / ignorable censoring:</strong> observed-data NB likelihood with an exposure offset gives valid rate-ratio estimates and model-based variances; <strong>MI is not required</strong> simply because follow-up is censored.</li>
-<li><strong>Under MNAR:</strong> MI is a sensitivity-analysis tool; it needs censoring reason, planned remaining follow-up, and assumptions such as delta-adjusted post-dropout rates.</li>
+<li><strong>Under MNAR:</strong> MI is a sensitivity-analysis tool; Keene et al. (2014) give a recurrent-event controlled-imputation template using reference-based assumptions.</li>
 <li>If protocol event gaps matter, MNAR MI should impute <strong>event times</strong> when possible, then re-apply the counting rule.</li>
 </ul>
 <aside class="notes">
@@ -1851,6 +1851,7 @@ display:block!important;
 <li>Jennison &amp; Turnbull (2000). <em>Group Sequential Methods with Applications to Clinical Trials</em>.</li>
 <li>Rubin (1976). Inference and missing data. <em>Biometrika</em>.</li>
 <li>National Research Council (2010). <em>The Prevention and Treatment of Missing Data in Clinical Trials</em>.</li>
+<li>Keene, Roger, Hartley &amp; Kenward (2014). Missing data sensitivity analysis for recurrent event data using controlled imputation. <em>Pharmaceutical Statistics</em>.</li>
 <li><code>gsDesignNB</code> sample-size and SSR vignettes for worked formulas and simulation results.</li>
 </ul>
 <aside class="notes">

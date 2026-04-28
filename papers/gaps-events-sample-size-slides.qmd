@@ -173,7 +173,7 @@ Interim times solve **feasibility inequalities**:
 - **Dropout in gsDesignNB:** handled as exposure truncation; partial follow-up stays in the analysis through counted events and observed time at risk.
 - **Planning and SSR:** `sample_size_nbinom()` accounts for planned dropout / maximum follow-up; SSR uses observed interim exposure, then recalculates total $N$ under the planned dropout assumptions.
 - **Under MAR / ignorable censoring:** observed-data NB likelihood with an exposure offset gives valid rate-ratio estimates and model-based variances; **MI is not required** simply because follow-up is censored.
-- **Under MNAR:** MI is a sensitivity-analysis tool; it needs censoring reason, planned remaining follow-up, and assumptions such as delta-adjusted post-dropout rates.
+- **Under MNAR:** MI is a sensitivity-analysis tool; Keene et al. (2014) give a recurrent-event controlled-imputation template using reference-based assumptions.
 - If protocol event gaps matter, MNAR MI should impute **event times** when possible, then re-apply the counting rule.
 
 :::: {.notes}
@@ -456,6 +456,7 @@ $$
 - Jennison & Turnbull (2000). *Group Sequential Methods with Applications to Clinical Trials*.
 - Rubin (1976). Inference and missing data. *Biometrika*.
 - National Research Council (2010). *The Prevention and Treatment of Missing Data in Clinical Trials*.
+- Keene, Roger, Hartley & Kenward (2014). Missing data sensitivity analysis for recurrent event data using controlled imputation. *Pharmaceutical Statistics*.
 - `gsDesignNB` sample-size and SSR vignettes for worked formulas and simulation results.
 
 :::: {.notes}

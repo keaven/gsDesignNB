@@ -221,9 +221,14 @@ participants differ from completers.
 
 For missing not at random (MNAR), the missing future event process is not
 identified from observed data alone. Imputation can be useful, but only as part
-of an explicit sensitivity analysis [@nrc2010missing]. A future MNAR MI routine
-for this package should first preserve enough information to define what is
-missing:
+of an explicit sensitivity analysis [@nrc2010missing]. For recurrent events,
+Keene et al. provide a directly relevant controlled-imputation framework using a
+negative multinomial formulation compatible with a Gamma-Poisson / negative
+binomial recurrent-event model [@keene2014missing]. Their reference-based
+approach, such as borrowing control-arm event behaviour for active-arm dropouts,
+targets de facto sensitivity estimands rather than replacing the MAR primary
+analysis. A future MNAR MI routine for this package should first preserve enough
+information to define what is missing:
 
 *   record the censoring reason, such as dropout, administrative cut, maximum
     follow-up, or analysis cut;
@@ -237,12 +242,13 @@ An MNAR imputation model should then impute post-dropout recurrent-event counts
 or event times from a negative binomial recurrent-event model with an exposure
 offset. Sensitivity parameters can shift the post-dropout event rate, for
 example by using treatment-specific multipliers
-`\lambda_post = \lambda_model * exp(delta_g)`. Running a grid of `delta_g`
-values gives a tipping-point or pattern-mixture sensitivity analysis. Each
-imputed dataset should be analyzed with the same `mutze_test()` estimand and the
-log-rate-ratio estimates and variances combined across imputations using Rubin
-rules. If `event_gap` is important, imputing event times rather than only total
-counts is preferable so at-risk time after events is handled consistently.
+`\lambda_post = \lambda_model * exp(delta_g)`, or can impose reference-based
+rules such as jump-to-reference or copy-reference. Running a grid of assumptions
+gives a tipping-point or pattern-mixture sensitivity analysis. Each imputed
+dataset should be analyzed with the same `mutze_test()` estimand, with variance
+estimation specified and checked as part of the sensitivity analysis. If
+`event_gap` is important, imputing event times rather than only total counts is
+preferable so at-risk time after events is handled consistently.
 
 ## Wald test [@mutze2019group]
 
