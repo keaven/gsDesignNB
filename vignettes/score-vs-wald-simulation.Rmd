@@ -1,0 +1,344 @@
+---
+title: "Score vs Wald test: multi-scenario comparison"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Score vs Wald test: multi-scenario comparison}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(gsDesignNB)
+library(data.table)
+library(ggplot2)
+library(plotly)
+library(DT)
+library(crosstalk)
+```
+
+## Introduction
+
+This vignette compares the Wald and score test implementations in `mutze_test()` across a
+factorial grid of negative binomial trial scenarios. We also compare sample sizes computed
+using the **Wald variance formula** ($V_1$ only) and the **score variance formula**
+($\sqrt{V_0}$ and $\sqrt{V_1}$) in `sample_size_nbinom()`.
+
+The full $2 \times 2$ factorial comparison is:
+
+| | Wald-sized trial | Score-sized trial |
+|---|---|---|
+| **Wald test** | Wald / Wald | Score / Wald |
+| **Score test** | Wald / Score | Score / Score |
+
+We assess:
+
+- **Type I error control** under $H_0: RR = 1$
+- **Power** under $H_1: RR = 0.70$
+- **Z-score distributions** to check asymptotic normality
+
+All tables are interactive: use the column filters to narrow results.
+All figures are interactive: hover for values, click legend entries to toggle, and
+use the toolbar to zoom/pan.
+
+Results are pre-computed by `data-raw/generate_score_sweep.R` and loaded here.
+
+## Load pre-computed results
+
+```{r}
+results_file <- system.file("extdata", "score_sweep_results.rds",
+                            package = "gsDesignNB")
+if (results_file == "" && file.exists("../inst/extdata/score_sweep_results.rds")) {
+  results_file <- "../inst/extdata/score_sweep_results.rds"
+}
+res <- readRDS(results_file)
+config <- res$config
+scenarios <- as.data.table(res$scenarios)
+base_grid <- as.data.table(res$base_grid)
+```
+
+```{r}
+cat(sprintf(
+  "Expanded scenarios: %d | Power sims: %s | Null sims: %s | RR: %.2f | alpha: %.3f\n",
+  nrow(scenarios),
+  format(config$n_sims_power, big.mark = ","),
+  format(config$n_sims_null, big.mark = ","),
+  config$rr_power,
+  config$alpha
+))
+```
+
+### Scenario grid
+
+The base scenario grid varies control event rate ($\lambda_1$), overdispersion ($k$),
+and minimum inter-event gap. For each base scenario, sample sizes are computed using
+both the Wald and score variance formulas.
+
+```{r}
+base_display <- base_grid[, .(
+  `Control rate` = lambda1,
+  `Dispersion (k)` = k,
+  `Event gap (days)` = gap_days,
+  `N (Wald sizing)` = n_wald,
+  `N (Score sizing)` = n_score,
+  `Difference` = n_wald - n_score
+)]
+
+datatable(
+  base_display,
+  caption = "Base scenario grid with sample sizes by method",
+  filter = "top",
+  options = list(pageLength = 15, dom = "ftip"),
+  rownames = FALSE
+) |> formatRound(columns = "Control rate", digits = 2)
+```
+
+## Type I error comparison
+
+```{r}
+null_dt <- as.data.table(res$null_summary)
+null_long <- melt(
+  null_dt,
+  id.vars = c("lambda1", "k", "gap_days", "n_total", "sizing"),
+  measure.vars = c("rate_wald", "rate_score"),
+  variable.name = "test",
+  value.name = "rejection_rate"
+)
+null_long[, test := fifelse(test == "rate_wald", "Wald", "Score")]
+
+se_long <- melt(
+  null_dt,
+  id.vars = c("lambda1", "k", "gap_days", "sizing"),
+  measure.vars = c("se_wald", "se_score"),
+  variable.name = "test",
+  value.name = "se"
+)
+se_long[, test := fifelse(test == "se_wald", "Wald", "Score")]
+null_long <- merge(null_long, se_long,
+                   by = c("lambda1", "k", "gap_days", "sizing", "test"))
+null_long[, combo := paste0(sizing, "-sized / ", test, " test")]
+```
+
+```{r}
+null_display <- null_long[order(lambda1, k, gap_days, sizing, test),
+  .(
+    `Control rate` = lambda1,
+    Dispersion = k,
+    `Gap (days)` = gap_days,
+    Sizing = sizing,
+    N = n_total,
+    Test = test,
+    `Type I error` = round(rejection_rate, 4),
+    SE = round(se, 4)
+  )
+]
+
+datatable(
+  null_display,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-weight: bold;",
+    sprintf("Type I error rate — nominal alpha = %.3f, %s null sims/scenario",
+            config$alpha, format(config$n_sims_null, big.mark = ","))
+  ),
+  filter = "top",
+  options = list(pageLength = 20, dom = "ftip"),
+  rownames = FALSE
+)
+```
+
+```{r, fig.width=8, fig.height=6}
+null_long[, scenario := paste0("λ₁=", lambda1, " k=", k)]
+
+p_null <- ggplot(null_long,
+  aes(x = scenario, y = rejection_rate,
+      color = combo, shape = test,
+      text = paste0("Sizing: ", sizing, "\nTest: ", test,
+                    "\nRate: ", round(rejection_rate, 4),
+                    "\nN: ", n_total))) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = rejection_rate - 1.96 * se,
+                     ymax = rejection_rate + 1.96 * se),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = config$alpha, linetype = "dashed", color = "grey40") +
+  facet_wrap(~ paste0("Gap = ", gap_days, "d")) +
+  labs(
+    title = "Type I error: sizing method × test type",
+    x = NULL, y = "Rejection rate",
+    color = "Sizing / Test", shape = "Test"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(p_null, tooltip = "text") |>
+  layout(legend = list(orientation = "v", x = 1.02, y = 0.5))
+```
+
+## Power comparison
+
+```{r}
+power_dt <- as.data.table(res$power_summary)
+power_long <- melt(
+  power_dt,
+  id.vars = c("lambda1", "k", "gap_days", "n_total", "sizing"),
+  measure.vars = c("rate_wald", "rate_score"),
+  variable.name = "test",
+  value.name = "power"
+)
+power_long[, test := fifelse(test == "rate_wald", "Wald", "Score")]
+
+se_power <- melt(
+  power_dt,
+  id.vars = c("lambda1", "k", "gap_days", "sizing"),
+  measure.vars = c("se_wald", "se_score"),
+  variable.name = "test",
+  value.name = "se"
+)
+se_power[, test := fifelse(test == "se_wald", "Wald", "Score")]
+power_long <- merge(power_long, se_power,
+                    by = c("lambda1", "k", "gap_days", "sizing", "test"))
+power_long[, combo := paste0(sizing, "-sized / ", test, " test")]
+```
+
+```{r}
+power_display <- power_long[order(lambda1, k, gap_days, sizing, test),
+  .(
+    `Control rate` = lambda1,
+    Dispersion = k,
+    `Gap (days)` = gap_days,
+    Sizing = sizing,
+    N = n_total,
+    Test = test,
+    Power = round(power, 4),
+    SE = round(se, 4)
+  )
+]
+
+datatable(
+  power_display,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-weight: bold;",
+    sprintf("Power — RR = %.2f, %s power sims/scenario",
+            config$rr_power, format(config$n_sims_power, big.mark = ","))
+  ),
+  filter = "top",
+  options = list(pageLength = 20, dom = "ftip"),
+  rownames = FALSE
+)
+```
+
+```{r, fig.width=8, fig.height=6}
+power_long[, scenario := paste0("λ₁=", lambda1, " k=", k)]
+
+p_power <- ggplot(power_long,
+  aes(x = scenario, y = power,
+      color = combo, shape = test,
+      text = paste0("Sizing: ", sizing, "\nTest: ", test,
+                    "\nPower: ", round(power, 4),
+                    "\nN: ", n_total))) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = power - 1.96 * se,
+                     ymax = power + 1.96 * se),
+                width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = config$power_target, linetype = "dashed", color = "grey40") +
+  facet_wrap(~ paste0("Gap = ", gap_days, "d")) +
+  labs(
+    title = "Power: sizing method × test type",
+    subtitle = sprintf("Target = %.0f%%, RR = %.2f",
+                        100 * config$power_target, config$rr_power),
+    x = NULL, y = "Power",
+    color = "Sizing / Test", shape = "Test"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(p_power, tooltip = "text") |>
+  layout(legend = list(orientation = "v", x = 1.02, y = 0.5))
+```
+
+## Z-score density comparison (null simulations)
+
+Under $H_0$, the Z-statistics should follow $N(0, 1)$ if the asymptotic approximation holds.
+
+```{r, fig.width=9, fig.height=7}
+z_null <- as.data.table(res$z_sample_null)
+sc_info <- data.table(
+  scenario_id = seq_len(nrow(scenarios)),
+  scenarios[, .(lambda1, k, gap_days, sizing)]
+)
+z_null <- merge(z_null, sc_info, by = "scenario_id")
+z_null[, label := sprintf("l1=%.2f k=%.1f gap=%dd (%s)",
+                           lambda1, k, gap_days, sizing)]
+
+z_null_long <- melt(
+  z_null,
+  id.vars = c("scenario_id", "label", "sizing"),
+  measure.vars = c("z_wald", "z_score"),
+  variable.name = "test",
+  value.name = "z"
+)
+z_null_long[, test := fifelse(test == "z_wald", "Wald", "Score")]
+z_null_long <- z_null_long[is.finite(z)]
+
+p_z <- ggplot(z_null_long, aes(x = z, color = test)) +
+  geom_density(linewidth = 0.6) +
+  stat_function(fun = dnorm, color = "black", linetype = "dashed", linewidth = 0.4) +
+  facet_wrap(~ label, scales = "free_y") +
+  labs(
+    title = "Null Z-score densities: Wald vs Score",
+    subtitle = "Dashed line = N(0,1) reference",
+    x = "Z-statistic", y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  coord_cartesian(xlim = c(-4, 4))
+
+ggplotly(p_z) |>
+  layout(legend = list(orientation = "h", x = 0.3, y = -0.05))
+```
+
+## Fallback method frequency
+
+When the negative binomial MLE fails to converge or yields non-overdispersed estimates,
+`mutze_test()` falls back to Poisson or method-of-moments estimation.
+
+```{r}
+null_fb <- as.data.table(res$null_summary)
+fb_display <- null_fb[, .(
+  `Control rate` = lambda1,
+  Dispersion = k,
+  `Gap (days)` = gap_days,
+  Sizing = sizing,
+  `Poisson (Wald)` = round(pct_fallback_poisson_wald, 1),
+  `MoM (Wald)` = round(pct_fallback_mom_wald, 1),
+  `Poisson (Score)` = round(pct_fallback_poisson_score, 1),
+  `MoM (Score)` = round(pct_fallback_mom_score, 1)
+)]
+
+datatable(
+  fb_display,
+  caption = "Fallback method frequency (%, null sims)",
+  filter = "top",
+  options = list(pageLength = 20, dom = "ftip"),
+  rownames = FALSE
+)
+```
+
+## Summary
+
+- Both Wald and score tests control Type I error near the nominal $\alpha = `r config$alpha`$
+  across all scenarios and sizing methods.
+- The **score-sized** trials use the two-variance formula
+  $(z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1})^2 / \theta^2$,
+  which typically yields slightly larger sample sizes than the Wald formula.
+- Power is similar between test types for a given sizing; score-sized trials may show
+  marginally higher power due to the larger sample size.
+- The score test tends to be slightly more conservative (lower Type I error),
+  especially in scenarios with smaller sample sizes or lower event rates.
+- Z-score distributions under the null closely follow $N(0,1)$, confirming the
+  validity of the asymptotic approximation for the sample sizes used.

@@ -54,6 +54,8 @@
 #'   the trial.
 #' @param metadata Optional named list or one-row data frame of scenario labels
 #'   to repeat across the returned rows.
+#' @param test_type Type of test statistic passed to [mutze_test()]:
+#'   `"wald"` (default) or `"score"`. See [mutze_test()] for details.
 #' @param seed Random-seed control passed to `future.apply::future_lapply()`.
 #'   Follows the same conventions as [sim_gs_nbinom()].
 #'
@@ -142,9 +144,11 @@ sim_ssr_nbinom <- function(
   min_analysis_gap = 0.5,
   ignore_futility = FALSE,
   metadata = NULL,
+  test_type = c("wald", "score"),
   seed = TRUE
 ) {
   bound_info <- match.arg(bound_info)
+  test_type <- match.arg(test_type)
 
   if (!inherits(design, "gsNB")) {
     stop("design must be a 'gsNB' object created by gsNBCalendar().", call. = FALSE)
@@ -233,7 +237,7 @@ sim_ssr_nbinom <- function(
       return(list(info = blind_res$blinded_info, method = "blinded"))
     }
 
-    mutze_res <- tryCatch(mutze_test(cut_dt), error = function(e) NULL)
+    mutze_res <- tryCatch(mutze_test(cut_dt, test_type = test_type), error = function(e) NULL)
     if (!is.null(mutze_res) &&
         is.finite(mutze_res$se) &&
         !is.na(mutze_res$se) &&
@@ -391,7 +395,8 @@ sim_ssr_nbinom <- function(
           ratio_plan = ratio_plan,
           lambda1_plan = lambda1_plan,
           lambda2_plan = lambda2_plan,
-          event_gap = event_gap
+          event_gap = event_gap,
+          test_type = test_type
         )
 
         selected_info <- .ssr_select_info(metrics, bound_info)
@@ -905,7 +910,8 @@ summarize_ssr_sim <- function(x, by = "strategy") {
   ratio_plan,
   lambda1_plan,
   lambda2_plan,
-  event_gap
+  event_gap,
+  test_type = "wald"
 ) {
   res <- list(
     z_value = NA_real_,
@@ -941,7 +947,7 @@ summarize_ssr_sim <- function(x, by = "strategy") {
     1 / (1 / term_c + 1 / term_e)
   }
 
-  test_res <- tryCatch(mutze_test(cut_data), error = function(e) NULL)
+  test_res <- tryCatch(mutze_test(cut_data, test_type = test_type), error = function(e) NULL)
   if (!is.null(test_res) && is.finite(test_res$se) && !is.na(test_res$se) && test_res$se > 0) {
     res$z_value <- -test_res$z
     res$method_used <- test_res$method

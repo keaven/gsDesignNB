@@ -18,6 +18,7 @@ sample_size_nbinom(
   trial_duration,
   dropout_rate = 0,
   max_followup = NULL,
+  test_type = c("wald", "score"),
   event_gap = NULL
 )
 }
@@ -73,6 +74,11 @@ indefinitely.
 \item{max_followup}{Maximum follow-up time for any patient. Default is
 \code{NULL} (infinite). Can be a vector of length 2 for group-specific caps.}
 
+\item{test_type}{Type of test for which to size the study:
+\code{"wald"} (default) uses a single variance under the alternative;
+\code{"score"} uses separate null and alternative variances
+(\eqn{z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1}}).}
+
 \item{event_gap}{Gap duration after each event during which no new events
 are counted (e.g., a recovery period). Default is \code{NULL} (no gap).
 When specified, the effective rate is reduced to
@@ -107,19 +113,29 @@ target power).}
 }
 \description{
 Computes the sample size (or power) for comparing two treatment groups
-assuming negative binomial distributed event counts. The test is based on
-the Wald statistic for the log rate ratio, corresponding to Method 3 of
-Zhu & Lakkis (2014). The same underlying variance formula is used by
-Friede & Schmidli (2010) and Mutze et al. (2019).
+assuming negative binomial distributed event counts. When
+\code{test_type = "wald"} (default), the formula uses a single variance
+evaluated under the alternative, corresponding to Method 3 of
+Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
+and Mutze et al. (2019). When \code{test_type = "score"}, separate null
+and alternative variances are used (Farrington & Manning style),
+which gives better Type I error control for the score test.
 }
 \details{
 \subsection{Sample size formula}{
 
-The sample size for group 1 is:
-\deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 \tilde{V}}{(\theta - \theta_0)^2}}
+\strong{Wald test} (\code{test_type = "wald"}):
+\deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 V_1}{(\theta - \theta_0)^2}}
+
+\strong{Score test} (\code{test_type = "score"}):
+\deqn{n_1 = \frac{(z_{\alpha/s} \sqrt{V_0} + z_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}}
+
 where \eqn{\theta = \log(\lambda_2/\lambda_1)},
 \eqn{\theta_0 = \log(\mathrm{rr}_0)}, and:
-\deqn{\tilde{V} = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+\deqn{V_1 = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+is the variance under \eqn{H_1}. Under \eqn{H_0} (pooled rate
+\eqn{\lambda_0 = (\lambda_1 + r \lambda_2 \mathrm{rr}_0) / (1 + r)}):
+\deqn{V_0 = \left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)}
 with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
 \eqn{\bar{t}_g} the average exposure for group \eqn{g}.
 }

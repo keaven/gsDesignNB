@@ -101,6 +101,7 @@ articles:
       - simulation-example
       - seasonal-simulation
       - verification-simulation
+      - score-vs-wald-simulation
       - non-inferiority-example
       - ssr-example
       - ssr-simulation-study

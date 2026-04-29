@@ -1,10 +1,13 @@
 #' Sample size calculation for negative binomial outcomes
 #'
 #' Computes the sample size (or power) for comparing two treatment groups
-#' assuming negative binomial distributed event counts. The test is based on
-#' the Wald statistic for the log rate ratio, corresponding to Method 3 of
-#' Zhu & Lakkis (2014). The same underlying variance formula is used by
-#' Friede & Schmidli (2010) and Mutze et al. (2019).
+#' assuming negative binomial distributed event counts. When
+#' `test_type = "wald"` (default), the formula uses a single variance
+#' evaluated under the alternative, corresponding to Method 3 of
+#' Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
+#' and Mutze et al. (2019). When `test_type = "score"`, separate null
+#' and alternative variances are used (Farrington & Manning style),
+#' which gives better Type I error control for the score test.
 #'
 #' @param lambda1 Event rate for group 1 (control), in events per unit time.
 #' @param lambda2 Event rate for group 2 (treatment), in events per unit time.
@@ -44,6 +47,10 @@
 #'   }
 #' @param max_followup Maximum follow-up time for any patient. Default is
 #'   `NULL` (infinite). Can be a vector of length 2 for group-specific caps.
+#' @param test_type Type of test for which to size the study:
+#'   `"wald"` (default) uses a single variance under the alternative;
+#'   `"score"` uses separate null and alternative variances
+#'   (\eqn{z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1}}).
 #' @param event_gap Gap duration after each event during which no new events
 #'   are counted (e.g., a recovery period). Default is `NULL` (no gap).
 #'   When specified, the effective rate is reduced to
@@ -52,11 +59,18 @@
 #' @details
 #' ## Sample size formula
 #'
-#' The sample size for group 1 is:
-#' \deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 \tilde{V}}{(\theta - \theta_0)^2}}
+#' **Wald test** (`test_type = "wald"`):
+#' \deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 V_1}{(\theta - \theta_0)^2}}
+#'
+#' **Score test** (`test_type = "score"`):
+#' \deqn{n_1 = \frac{(z_{\alpha/s} \sqrt{V_0} + z_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}}
+#'
 #' where \eqn{\theta = \log(\lambda_2/\lambda_1)},
 #' \eqn{\theta_0 = \log(\mathrm{rr}_0)}, and:
-#' \deqn{\tilde{V} = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+#' \deqn{V_1 = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+#' is the variance under \eqn{H_1}. Under \eqn{H_0} (pooled rate
+#' \eqn{\lambda_0 = (\lambda_1 + r \lambda_2 \mathrm{rr}_0) / (1 + r)}):
+#' \deqn{V_0 = \left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)}
 #' with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
 #' \eqn{\bar{t}_g} the average exposure for group \eqn{g}.
 #'
@@ -178,8 +192,10 @@ sample_size_nbinom <- function(
   alpha = 0.025, sided = 1, ratio = 1, rr0 = 1,
   accrual_rate, accrual_duration,
   trial_duration, dropout_rate = 0,
-  max_followup = NULL, event_gap = NULL
+  max_followup = NULL, test_type = c("wald", "score"),
+  event_gap = NULL
 ) {
+  test_type <- match.arg(test_type)
   if (lambda1 <= 0 || lambda2 <= 0) {
     stop("Rates lambda1 and lambda2 must be positive.")
   }
@@ -286,6 +302,7 @@ sample_size_nbinom <- function(
     trial_duration = trial_duration,
     dropout_rate = dropout_rate,
     max_followup = max_followup,
+    test_type = test_type,
     event_gap = event_gap
   )
 
@@ -557,10 +574,24 @@ sample_size_nbinom <- function(
   n_total_c <- 0
   computed_accrual_rate <- NULL
 
+  # Variance under H1 (alternative)
+  V1 <- (1 / mu1 + k1) + (1 / ratio) * (1 / mu2 + k2)
+
+  # Variance under H0 (null) — used only for score test
+  # Pooled rate under H0: weighted average assuming equal exposure
+  lambda0_eff <- (lambda1_eff + ratio * lambda2_eff * rr0) / (1 + ratio)
+  mu0 <- lambda0_eff * exposure_calendar[1]  # use control exposure as reference
+  k0 <- mean(dispersion) * mean(Q_inflation)  # pooled dispersion
+  V0 <- (1 / mu0 + k0) * (1 + 1 / ratio)
+
   if (mode == "solve_n") {
     z_beta <- qnorm(power)
 
-    num <- (z_alpha + z_beta)^2 * ((1 / mu1 + k1) + (1 / ratio) * (1 / mu2 + k2))
+    if (test_type == "score") {
+      num <- (z_alpha * sqrt(V0) + z_beta * sqrt(V1))^2
+    } else {
+      num <- (z_alpha + z_beta)^2 * V1
+    }
     den <- (log(lambda1 * rr0 / lambda2))^2
     n1 <- num / den
     n2 <- n1 * ratio
@@ -581,9 +612,13 @@ sample_size_nbinom <- function(
     n1_c <- n_total_c / (1 + ratio)
     n2_c <- n_total_c * ratio / (1 + ratio)
 
-    # z_beta = sqrt( n1 * (log(mu1/mu2))^2 / V ) - z_alpha
-    V <- (1 / mu1 + k1) + (1 / ratio) * (1 / mu2 + k2)
-    z_beta <- sqrt(n1_c * (log(lambda1 * rr0 / lambda2))^2 / V) - z_alpha
+    theta <- log(lambda1 * rr0 / lambda2)
+    if (test_type == "score") {
+      # Solve: z_alpha * sqrt(V0) + z_beta * sqrt(V1) = |theta| * sqrt(n1)
+      z_beta <- (abs(theta) * sqrt(n1_c) - z_alpha * sqrt(V0)) / sqrt(V1)
+    } else {
+      z_beta <- sqrt(n1_c * theta^2 / V1) - z_alpha
+    }
 
     power <- pnorm(z_beta)
   }
@@ -604,6 +639,7 @@ sample_size_nbinom <- function(
       alpha = alpha,
       sided = sided,
       power = power,
+      test_type = test_type,
       exposure = exposure_calendar,
       exposure_at_risk_n1 = exposure1_at_risk,
       exposure_at_risk_n2 = exposure2_at_risk,
@@ -611,6 +647,7 @@ sample_size_nbinom <- function(
       events_n2 = events_n2,
       total_events = total_events,
       variance = variance,
+      variance_null = V0 / n1_c * (1 + ratio) / ratio,
       accrual_rate = computed_accrual_rate,
       accrual_duration = accrual_duration
     )

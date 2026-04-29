@@ -24,6 +24,8 @@
 #'   should be a list of arguments for [get_cut_date()] (e.g., `planned_calendar`,
 #'   `target_events`, `target_info`). If provided, `analysis_times` is ignored
 #'   (or used as a fallback if `planned_calendar` is missing in a cut).
+#' @param test_type Type of test statistic passed to [mutze_test()]:
+#'   `"wald"` (default) or `"score"`. See [mutze_test()] for details.
 #' @param seed Random seed for reproducible simulations. Controls the
 #'   `future.seed` argument of [future.apply::future_lapply()]:
 #'   - `TRUE` (default): Automatically generates parallel-safe L'Ecuyer-CMRG
@@ -162,9 +164,11 @@ sim_gs_nbinom <- function(
   max_followup, event_gap = NULL, analysis_times = NULL,
   n_target = NULL, design = NULL,
   data_cut = cut_data_by_date, cuts = NULL,
+  test_type = c("wald", "score"),
   seed = TRUE
 ) {
   # Validate inputs
+  test_type <- match.arg(test_type)
   if (is.null(design)) {
     stop("design object must be provided to extract planning parameters.")
   }
@@ -280,7 +284,7 @@ sim_gs_nbinom <- function(
       if (n_enrolled >= 4 && events_total >= 2) {
         
         # --- 1. Unblinded ML ---
-        test_res <- tryCatch(mutze_test(cut_data), error = function(e) NULL)
+        test_res <- tryCatch(mutze_test(cut_data, test_type = test_type), error = function(e) NULL)
 
         if (!is.null(test_res)) {
           z_stat <- test_res$z
