@@ -11,6 +11,8 @@ description: >
 
 # gsDesignNB — Comprehensive AI Skill
 
+> **Last updated:** 2026-04-29 — matches package version 0.3.2
+
 ## Package purpose
 
 **gsDesignNB** is an R package for planning, monitoring, and adapting clinical trials whose primary
@@ -33,6 +35,32 @@ exposure offset.
 
 Fisher information per subject: $\mathcal{I}_i = \mu_i / (1 + k \mu_i)$.
 
+### Wald vs score test
+
+`mutze_test()` supports `test_type = "wald"` (default) and `test_type = "score"`:
+
+- **Wald test:** Fits arm-specific NB GLMs; $z = \hat\theta / \text{SE}(\hat\theta)$.
+- **Score test:** Fits a pooled null NB GLM via `MASS::glm.nb()`; score statistic
+  $U = \sum (y_i - \hat\mu_i) / (1 + \hat k_0 \hat\mu_i)$; Fisher information
+  $I_0 = W_1 W_2 / (W_1 + W_2)$; $z = U / \sqrt{I_0}$.
+
+The score test is slightly more conservative under $H_0$ and better controls Type I error
+in small-sample / low-rate scenarios.
+
+### Two-variance sample size formula
+
+`sample_size_nbinom()` supports `test_type = "wald"` (default) and `test_type = "score"`:
+
+- **Wald (single variance):** $n_1 = (z_\alpha + z_\beta)^2 V_1 / \theta^2$
+- **Score (two variance):** $n_1 = (z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1})^2 / \theta^2$
+
+where $V_1 = (1/\mu_1 + k_1)(1 + 1/r) + (1/\mu_2 + k_2)/r$ is the alternative-hypothesis
+variance, and $V_0 = (1/\mu_0 + k_0)(1 + 1/r)$ uses a pooled rate
+$\lambda_0 = (\lambda_1 + r \lambda_2) / (1 + r)$ under $H_0$.
+
+The score formula yields slightly larger sample sizes, matched to the score test's
+null-variance reference distribution.
+
 ## Core workflow
 
 ```
@@ -53,7 +81,7 @@ sample_size_nbinom() → gsNBCalendar() → sim_gs_nbinom() or sim_ssr_nbinom() 
 
 | Function | Purpose |
 |:---------|:--------|
-| `sample_size_nbinom()` | Fixed-design sample size/power for NB recurrent events |
+| `sample_size_nbinom()` | Fixed-design sample size/power; `test_type = "wald"` (V₁ only) or `"score"` (V₀+V₁) |
 | `compute_info_at_time()` | Information at a given calendar time (internal to sample_size_nbinom) |
 | `gsNBCalendar()` | Calendar-time group sequential design from fixed design result |
 | `toInteger()` | Round design to integer sample sizes (S3 method for `gsNB`) |
@@ -79,7 +107,7 @@ sample_size_nbinom() → gsNBCalendar() → sim_gs_nbinom() or sim_ssr_nbinom() 
 
 | Function | Purpose |
 |:---------|:--------|
-| `mutze_test()` | Wald test for treatment effect (NB GLM, Poisson fallback) |
+| `mutze_test()` | Wald or score test for treatment effect (`test_type = "wald"` / `"score"`) |
 | `calculate_blinded_info()` | Blinded dispersion/rate estimation and statistical information |
 | `estimate_nb_mom()` | Method-of-moments NB parameter estimation (blinded or unblinded) |
 
@@ -178,6 +206,7 @@ If units are mixed, fix that first.
 | `trial_duration` | `sample_size_nbinom()` | Total calendar time of the trial |
 | `event_gap` | `sample_size_nbinom()`, `nb_sim()`, `cut_data_by_date()` | Minimum gap between counted events |
 | `rr0` | `sample_size_nbinom()` | Null rate ratio (default 1; set < 1 for non-inferiority) |
+| `test_type` | `mutze_test()`, `sample_size_nbinom()`, `sim_gs_nbinom()`, `sim_ssr_nbinom()` | `"wald"` (default) or `"score"` |
 
 ## S3 class hierarchy
 
@@ -198,6 +227,10 @@ If units are mixed, fix that first.
 | `ssr-simulation-study` | Large SSR simulation case study |
 | `completers-interim-example` | Completer-based interim looks |
 | `non-inferiority-example` | Non-inferiority design |
+| `verification-simulation` | Simulation verification of sample size and test |
+| `score-vs-wald-simulation` | 2×2 comparison: Wald/score sizing × Wald/score test (interactive DT/plotly) |
+| `blinded-info-diagnostics` | Blinded information estimation diagnostics |
+| `multiple-imputation-nb` | Multiple imputation for NB endpoints |
 | `blinded-info-diagnostics` | Edge cases for blinded information |
 | `verification-simulation` | Design-formula verification against simulation |
 
