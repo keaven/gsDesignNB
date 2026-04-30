@@ -9,7 +9,8 @@ template:
 reference:
   - title: "Sample size calculation"
     desc: >
-      Plan fixed negative binomial designs for recurrent-event outcomes.
+      Plan fixed negative binomial designs for recurrent-event outcomes, with
+      Wald or score-test sizing.
     contents:
       - sample_size_nbinom
       - print.sample_size_nbinom_result
@@ -18,7 +19,8 @@ reference:
 
   - title: "Simulation"
     desc: >
-      Simulate recurrent-event data, seasonal intensity patterns, and NB monitoring scenarios.
+      Simulate recurrent-event data, seasonal intensity patterns, and NB
+      monitoring or SSR scenarios.
     contents:
       - nb_sim
       - nb_sim_seasonal
@@ -30,7 +32,8 @@ reference:
 
   - title: "Analysis"
     desc: >
-      Analyze interim negative binomial data and estimate information for monitoring or SSR.
+      Analyze interim negative binomial data with Wald or score tests and
+      estimate information for monitoring or SSR.
     contents:
       - blinded_ssr
       - unblinded_ssr
