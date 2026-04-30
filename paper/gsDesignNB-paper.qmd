@@ -28,17 +28,21 @@ abstract: |
   effective-rate approximation; in a 64-scenario simulation sweep, the correction reduces
   representative approximation error from about 8% to 1% and prevents 1--2.5 percentage points of
   underpowering when dispersion is moderate-to-high and gaps exceed 20 days. A second
-  methodological advance is a disciplined fallback from maximum likelihood to method-of-moments
+  methodological advance is a score-test workflow with a two-variance sample-size formula: the
+  Wald formula of Zhu--Lakkis uses the alternative variance for both Type I error and power,
+  whereas the score formula uses the null variance for the Type I component and the alternative
+  variance for the power component. A factorial null simulation shows mild finite-sample Type I
+  error inflation for the Wald test and conservative Type I behaviour for the score test. The
+  package also implements a disciplined fallback from maximum likelihood to method-of-moments
   (MoM) nuisance-parameter estimation: when the NB ML fit is near-Poisson the software switches
-  to a Poisson Wald test, but under extreme overdispersion or ML non-convergence it switches to
-  a MoM-based NB Wald test using the observed Fisher information formula, avoiding the
+  to a Poisson Wald or score test, but under extreme overdispersion or ML non-convergence it
+  switches to a MoM-based NB test using the observed Fisher information formula, avoiding the
   anti-conservative behaviour of a blind Poisson fallback. The package also supports calendar-time
   group sequential monitoring and both blinded and unblinded SSR. A 90-scenario SSR article
   illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
-  requires explicit Type I calibration; in the reported configuration, reducing nominal one-sided
-  alpha from 0.025 to 0.020 materially improves, but does not universally eliminate, empirical
-  Type I error inflation. The paper emphasizes both the statistical methodology and the software
-  architecture that make these workflows reproducible.
+  requires explicit Type I calibration with the planned final test statistic. The paper emphasizes
+  both the statistical methodology and the software architecture that make these workflows
+  reproducible.
 ---
 
 # Introduction
@@ -73,19 +77,20 @@ formulas, recurrent-event simulation, interim data cuts, and alpha-spending calc
 The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
 
 1. Sample size and power for fixed designs with flexible enrollment, dropout, follow-up truncation,
-   and protocol event gaps.
+   protocol event gaps, and either Wald or score-test sizing.
 2. Calendar-time group sequential designs that inherit spending-function infrastructure from the
    **gsDesign** package [@JTBook].
 3. Blinded and unblinded information estimation together with blinded and unblinded SSR, with a
-   disciplined maximum likelihood / method-of-moments fallback scheme that keeps Wald inference
-   well-defined under extreme overdispersion or ML non-convergence.
+   disciplined maximum likelihood / method-of-moments fallback scheme that keeps Wald and score
+   inference well-defined under extreme overdispersion or ML non-convergence.
 4. Recurrent-event simulation, including seasonal rates, event- and information-driven interim
    cutting rules, and operating-characteristic summaries.
 
 The contribution of **gsDesignNB** is therefore both scientific and computational. Scientifically,
 the package implements NB design formulas for settings where information is not proportional to
-events, introduces a Jensen-correction for event-gap planning, and replaces the usual blind
-Poisson fallback with a method-of-moments NB Wald test under genuine overdispersion.
+events, introduces a Jensen-correction for event-gap planning, adds score-test sizing for designs
+where null calibration is paramount, and replaces the usual blind Poisson fallback with a
+method-of-moments NB test under genuine overdispersion.
 Computationally, it connects planning objects, calendar-time monitoring rules, subject-level
 simulated trial data, and interim analysis summaries in one workflow. The remainder of the paper
 first describes that workflow, including the different notions of "gaps" that arise in
@@ -108,11 +113,11 @@ characteristics that can be summarized with `summarize_gs_sim()` and `summarize_
 
 | Task | Primary functions | Main outputs |
 |:-----|:------------------|:-------------|
-| Fixed design planning | `sample_size_nbinom()`, `compute_info_at_time()` | `sample_size_nbinom_result` |
+| Fixed design planning | `sample_size_nbinom()`, `compute_info_at_time()` | `sample_size_nbinom_result` with Wald or score-test sizing |
 | Calendar-time GS design | `gsNBCalendar()`, `toInteger()`, `gsBoundSummary()` | `gsNB` object with information and calendar timing |
 | Recurrent-event data generation | `nb_sim()`, `nb_sim_seasonal()` | Subject-level event histories |
 | Interim data construction | `cut_data_by_date()`, `get_cut_date()`, `get_analysis_date()`, `cut_completers()` | One row per randomized subject with events and exposure |
-| Interim inference and information | `mutze_test()`, `calculate_blinded_info()`, `estimate_nb_mom()` | Wald statistics and blinded/unblinded information estimates |
+| Interim inference and information | `mutze_test()`, `calculate_blinded_info()`, `estimate_nb_mom()` | Wald or score statistics and blinded/unblinded information estimates |
 | GS operating-characteristic simulation | `sim_gs_nbinom()`, `check_gs_bound()`, `summarize_gs_sim()` | Boundary-crossing summaries |
 | Adaptive simulation | `blinded_ssr()`, `unblinded_ssr()`, `sim_ssr_nbinom()`, `summarize_ssr_sim()` | Adapted sample sizes and SSR summaries |
 
@@ -144,7 +149,7 @@ criteria in `get_cut_date()`.
 For most users, the package workflow is:
 
 1. Use `sample_size_nbinom()` to build a fixed design under the planned rates, dispersion, accrual,
-   dropout, and follow-up assumptions.
+   dropout, follow-up assumptions, and planned final test statistic.
 2. Convert that result to a group sequential design with `gsNBCalendar()`, optionally rounding with
    `toInteger()`.
 3. Choose the appropriate simulator: `sim_gs_nbinom()` for calendar-time GS verification or
@@ -209,7 +214,7 @@ so $E[\Lambda_i] = \lambda_g$ and $\text{Var}(\Lambda_i) = k\lambda_g^2$, and, c
 $\Lambda_i$, the event count is $\text{Poisson}(\Lambda_i t_i)$. In `MASS::glm.nb()` terminology
 the shape parameter $\theta_{\text{NB}} = 1/k$.
 
-## Wald test and sample size formula
+## Wald and score-test sample size formulas
 
 The treatment effect is the log rate ratio $\theta = \log(\lambda_2/\lambda_1)$, estimated via
 maximum likelihood under a negative binomial GLM with log link and exposure offset. The design
@@ -237,15 +242,50 @@ inflated by a variance correction factor $Q_g = E[t_g^2]/(E[t_g])^2$ to account 
 follow-up [@zhu2014sample]. Accordingly, two analyses with similar event totals can carry
 different information if follow-up or dispersion differs.
 
-This formula is equivalent across the three primary references: Method 3 of @zhu2014sample (fixed
-sample size), @friede2010blinded (blinded SSR), and @mutze2019group (group sequential designs).
+This is the default `test_type = "wald"` calculation in `sample_size_nbinom()`. It is equivalent
+across the three primary references: Method 3 of @zhu2014sample (fixed sample size),
+@friede2010blinded (blinded SSR), and @mutze2019group (group sequential designs). It is therefore
+the directly matched planning formula when the final analysis will be the Wald log-rate-ratio test.
 The practical difference from more familiar first-event formulas is that when the protocol imposes
 an event gap, the expected count $\mu_g$ must reflect the gap-corrected effective rate rather than
 a naive event-count proxy.
 
-In `sample_size_nbinom()`, the same information formula is used for superiority, non-inferiority,
-and super-superiority designs via the `rr0` argument, and the nuisance parameters may be specified
-either as common scalars or as arm-specific vectors.
+For a score test evaluated under the null, using only the alternative variance for the Type I error
+component is less natural. `sample_size_nbinom(test_type = "score")` therefore implements a
+two-variance calculation in the spirit of restricted-null score-test sample sizing
+[@farrington1990test]:
+
+$$
+n_1 =
+\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+     {(\theta - \theta_0)^2},
+$$
+
+where
+
+$$
+V_1 =
+  \left(\frac{1}{\mu_1} + k_1\right)
+  + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)
+$$
+
+is the variance factor under the planned alternative and $V_0$ is the corresponding null variance
+factor under the constrained null rate ratio $\exp(\theta_0) = \texttt{rr0}$. The alpha term is
+therefore calibrated on the null information scale, while the beta term remains calibrated on the
+planned alternative information scale.
+
+This distinction leads to a practical recommendation. The Zhu--Lakkis / Friede--Schmidli / Mutze
+formula should remain the baseline for a Wald primary analysis and for moderate-information designs
+where simulation confirms Type I error. Designs should move beyond it when the primary analysis is
+intended to be a score test, when the sample size is modest, when dispersion or event gaps are
+large, when the null margin differs from 1, or when adaptive/group sequential decisions make Type I
+calibration central. In those settings the analysis statistic, sample-size formula, and simulation
+engine should all use the same test type rather than relying on a Wald-sized design to protect a
+score or null-restricted analysis.
+
+In `sample_size_nbinom()`, the same information framework is used for superiority,
+non-inferiority, and super-superiority designs via the `rr0` argument, and the nuisance parameters
+may be specified either as common scalars or as arm-specific vectors.
 
 ## Jensen's inequality correction for event gaps
 
@@ -451,18 +491,22 @@ negative binomial fit of @friede2010blinded, then splits the pooled rate accordi
 rate ratio. `estimate_nb_mom()` supplies method-of-moments estimates that are useful when maximum
 likelihood fits become unstable in sparse or highly overdispersed interim data.
 
-## Wald inference and a two-sided ML/MoM fallback rule
+## Wald and score inference with a two-sided ML/MoM fallback rule
 
 For unblinded interim analyses, `mutze_test()` fits the negative binomial log-linear model with an
-offset for exposure and returns the Wald statistic for the treatment effect. This is the basic
-analysis model used throughout the package's GS simulations. When the fitted NB shape parameter
-$\theta_{\text{NB}} = 1/\hat{k}$ is well-behaved, the ML Wald test is used directly. When it is
-not, `mutze_test()` applies one of two *statistically principled* fallbacks rather than a blind
+offset for exposure and returns either a Wald statistic for the treatment effect
+(`test_type = "wald"`) or a score statistic evaluated under the null (`test_type = "score"`). The
+Wald statistic is the historical analysis model used by @mutze2019group and by the package's
+earlier GS simulations. The score statistic fits only the null model, so the numerator and variance
+are both evaluated on the null information scale; this is the test aligned with the two-variance
+sample-size formula above. When the fitted NB shape parameter
+$\theta_{\text{NB}} = 1/\hat{k}$ is well-behaved, the ML Wald or score test is used directly. When
+it is not, `mutze_test()` applies one of two *statistically principled* fallbacks rather than a blind
 Poisson substitution:
 
 - **Near-Poisson regime** ($\hat{k} < 1/\texttt{poisson\_threshold}$, default $\hat{k} < 0.02$):
-  the fitted NB is numerically indistinguishable from a Poisson and the function falls back to a
-  Poisson Wald test. This handles the common case of `MASS::glm.nb()` drifting toward its
+  the fitted NB is numerically indistinguishable from a Poisson and the function falls back to the
+  corresponding Poisson Wald or score test. This handles the common case of `MASS::glm.nb()` drifting toward its
   iteration ceiling when the data truly are Poisson.
 - **Extreme-overdispersion or ML-failure regime**
   ($\hat{k} > \texttt{mom\_threshold}$, default $\hat{k} > 20$; or `glm.nb()` non-convergence):
@@ -477,18 +521,19 @@ W_g = \sum_{i \in g} \frac{\hat{\mu}_{g,i}}{1 + \hat{k}\,\hat{\mu}_{g,i}}, \qqua
 $$
 
   The Wald statistic is then $\hat\theta / \sqrt{1/W_1 + 1/W_2}$ with
-  $\hat\theta = \log(\hat{\lambda}_2/\hat{\lambda}_1)$.
+  $\hat\theta = \log(\hat{\lambda}_2/\hat{\lambda}_1)$; the score statistic uses the corresponding
+  null score and null information.
 
 The methodological point of the second branch is straightforward. Under genuine overdispersion
 ($k \gg 0$), a Poisson fallback underestimates $\text{Var}(\hat\theta)$ by a factor of
-$(1 + k\mu)^{-1}$ per subject, producing anti-conservative Wald tests exactly when the NB model
-is most needed. MoM does not require ML convergence, always returns a nonnegative $\hat{k}$, and,
-plugged into the NB information formula, yields a variance estimate with the correct
-overdispersion structure. The same two-branch rule is used in `calculate_blinded_info()` (pooled
-blinded estimation) and `unblinded_ssr()` (treatment-specific estimation for SSR), so that every
-entry point in the package handles fit failure in the same statistically sensible way. Each of
-these functions now returns a `fallback` field (`"ml"`, `"mom"`, or `"poisson"`) so that
-simulation engines and diagnostic tables can record which estimator was used at each interim.
+$(1 + k\mu)^{-1}$ per subject, producing anti-conservative tests exactly when the NB model is most
+needed. MoM does not require ML convergence, always returns a nonnegative $\hat{k}$, and, plugged
+into the NB information formula, yields a variance estimate with the correct overdispersion
+structure. The same two-branch rule is used in `calculate_blinded_info()` (pooled blinded
+estimation) and `unblinded_ssr()` (treatment-specific estimation for SSR), so that every entry
+point in the package handles fit failure in the same statistically sensible way. Each of these
+functions now returns a `fallback` field (`"ml"`, `"mom"`, or `"poisson"`) so that simulation
+engines and diagnostic tables can record which estimator was used at each interim.
 
 The simulation engines also expose blinded and unblinded information columns under both ML and
 MoM estimation (`info_*_ml`, `info_*_mom`) so that users can stress-test whether a design's
@@ -652,9 +697,10 @@ brief while the installed package still serves as the full replication resource.
 The manuscript reports selected operating characteristics, while the package articles serve as
 executable supplementary material. This keeps the paper readable in a software-journal format but
 still makes the simulation design, code, and fuller numerical output available to readers. In
-particular, the `verification-simulation`, `simulation-example`, and `ssr-simulation-study`
-articles contain the code used to reproduce the verification checks, event-gap studies, and SSR
-operating characteristics summarized below.
+particular, the `verification-simulation`, `simulation-example`, `score-vs-wald-simulation`, and
+`ssr-simulation-study` articles contain the code used to reproduce the verification checks,
+event-gap studies, score-versus-Wald calibration, and SSR operating characteristics summarized
+below.
 
 The `ssr-simulation-study` article defines a 90-scenario grid varying the control rate
 $\lambda_1 \in \{0.3, 0.5, 0.8\}$/month, dispersion $k \in \{0.5, 1.0\}$, planned accrual
@@ -662,13 +708,11 @@ rate $\in \{12, 18, 24\}$/month, and true rate ratio $\text{RR} \in \{0.6, 0.7, 
 (ninety combinations in total). The planned design was built with `sample_size_nbinom()` and
 `gsNBCalendar()`, targeting 90% power for RR = 0.7 with $k = 0.5$, $\lambda_1 = 0.5$/month, and
 planned accrual of 26/month, for a planned total sample size of 312 and a maximum follow-up of
-12 months. The bundled article cache uses $20{,}000$ replicates for the dedicated null Type I
-calibration tables and an exploratory 50-replicate cache for the non-null power grid so that
-pkgdown, CI, and CRAN builds remain tractable. Production power runs can be regenerated from the
-same vignette by setting `GSDESIGNNB_PRODUCTION_SSR=true`; until those production outputs are
-stored, power-recovery summaries from the grid should be read as directional rather than
-definitive. See the `ssr-simulation-study` vignette for the full scenario grid and replicate
-controls.
+12 months. The bundled article cache uses $3{,}600$ replicates per RR $<1$ power scenario,
+$20{,}000$ replicates per RR $=1$ null scenario, and $1{,}000$ replicates per RR $>1$ interior-null
+scenario. The dedicated non-binding Type I tables use an additional $20{,}000$ replicates per
+dispersion and test statistic. See the `ssr-simulation-study` vignette for the full scenario grid,
+replicate controls, and cache-regeneration code.
 
 Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
 using a group sequential design with Hwang--Shih--DeCani spending functions
@@ -683,8 +727,9 @@ simulation summaries.
 |:----------|:----------------|:------------------------------|:-----------------------------------|
 | Fixed-design verification | Demonstrate agreement between NB planning formulas and simulated power | `verification-simulation`, `sample-size-nbinom` | Scenario-specific power, information, and Monte Carlo error checks |
 | Event-gap correction | Show where the Jensen correction changes sample size and power | `simulation-example`, `verification-simulation` | 64-scenario sweep; 3,500 or 10,000 replicates depending on table; corrected vs naive $n$ and power |
+| Wald versus score inference | Compare Wald and score tests under Wald- and score-sized designs | `score-vs-wald-simulation` | 27-scenario factorial grid; 20,000 null replicates and 3,500 power replicates per cell; Type I error, power, and null Z distributions |
 | SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
-| SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled exploratory grid uses 50 replicates per non-null scenario; production setting supports 3,600 replicates per power scenario |
+| SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled production cache uses 3,600 replicates per RR $<1$ scenario and 1,000 replicates per RR $>1$ scenario |
 | Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
 
 : Simulation reporting map. The package articles are treated as executable supplementary material
@@ -692,50 +737,71 @@ for the condensed results reported in the manuscript. {#tbl-simulation-reporting
 
 ## Results
 
-**Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
-RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$ and at a
-sensitivity value of $\alpha = 0.020$. With $20{,}000$ replicates per cell the Monte Carlo
-standard error is about $0.001$. At nominal 2.5%, most SSR settings show mild inflation, most
-pronounced for blinded SSR at $k = 0.5$ ($0.034$); the no-adaptation design at $k = 1.0$ is not
-inflated in this simulation. Reducing the nominal $\alpha$ to $0.020$ moves empirical Type I error
-closer to the $0.025$ target, but the blinded SSR configuration at $k = 0.5$ remains mildly above
-target. This should therefore be treated as a design-specific calibration sensitivity rather than
-as a universal correction.
+**Wald versus score calibration.** The `score-vs-wald-simulation` article evaluates 27 base
+scenarios varying $\lambda_1 \in \{0.15, 0.40, 1.00\}$, $k \in \{0.2, 0.5, 1.0\}$, and event
+gaps of 0, 15, or 30 days, with both Wald- and score-sized designs. In this grid, score sizing
+changed the total sample size by at most four subjects and was never larger than Wald sizing,
+because the null variance was smaller than the alternative variance for these superiority
+assumptions. The empirical null results therefore isolate the effect of the test statistic more
+than the effect of sample size: Wald-test Type I error ranged from 0.0243 to 0.0317, with 13--15
+of 27 scenarios above nominal beyond Monte Carlo error depending on the sizing method; score-test
+Type I error ranged from 0.0200 to 0.0264, with no scenario above nominal beyond Monte Carlo error
+and several conservative cells. Under RR = 0.70, Wald-test power averaged about 0.904--0.907,
+whereas score-test power averaged about 0.893--0.895. These results support using the score test
+when Type I error preservation is the priority, while also showing that score-test designs should
+be simulated for power and may need a modest information margin.
 
-| $k$ | Strategy | Type I ($\alpha = 0.025$) | Type I ($\alpha = 0.020$) | Mean $n$ | % adapted |
-|:---:|:---------|:-------------------------:|:-------------------------:|:--------:|:---------:|
-| 0.5 | No adaptation | 0.0318 | 0.0253 | 312 | 0 |
-| 0.5 | Blinded SSR   | 0.0344 | 0.0287 | 479 | 96 |
-| 0.5 | Unblinded SSR | 0.0327 | 0.0258 | 329 | 46 |
-| 1.0 | No adaptation | 0.0236 | 0.0202 | 312 | 0 |
-| 1.0 | Blinded SSR   | 0.0304 | 0.0253 | 620 | 99 |
-| 1.0 | Unblinded SSR | 0.0284 | 0.0249 | 520 | 99 |
+**SSR Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
+RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$, comparing the
+Wald statistic with the score statistic under the same group sequential design. With $20{,}000$
+replicates per cell the Monte Carlo standard error is about $0.001$. The Wald statistic is mildly
+anti-conservative, with empirical Type I error ranging from 0.0279 to 0.0312. The score statistic
+is conservative in the same design, with empirical Type I error ranging from 0.0214 to 0.0232.
+Thus the preferred remedy is to align the analysis and simulation engine with the score test and
+then verify power, rather than to lower alpha for a Wald analysis.
+
+| Test | $k$ | Strategy | Type I | Mean $n$ | % adapted |
+|:-----|:---:|:---------|:------:|:--------:|:---------:|
+| Wald | 0.5 | No adaptation | 0.0306 | 312.0 | 0.0 |
+| Wald | 0.5 | Blinded SSR   | 0.0309 | 320.5 | 33.2 |
+| Wald | 0.5 | Unblinded SSR | 0.0309 | 325.4 | 45.3 |
+| Wald | 1.0 | No adaptation | 0.0279 | 312.0 | 0.0 |
+| Wald | 1.0 | Blinded SSR   | 0.0307 | 508.4 | 98.4 |
+| Wald | 1.0 | Unblinded SSR | 0.0312 | 519.5 | 98.4 |
+| Score | 0.5 | No adaptation | 0.0229 | 312.0 | 0.0 |
+| Score | 0.5 | Blinded SSR   | 0.0229 | 320.6 | 33.4 |
+| Score | 0.5 | Unblinded SSR | 0.0232 | 325.4 | 45.5 |
+| Score | 1.0 | No adaptation | 0.0214 | 312.0 | 0.0 |
+| Score | 1.0 | Blinded SSR   | 0.0229 | 509.5 | 99.0 |
+| Score | 1.0 | Unblinded SSR | 0.0232 | 520.5 | 99.0 |
 
 : Empirical one-sided Type I error and average adapted sample size under the null
-(RR = 1.0), $20{,}000$ replicates per cell. The "Mean $n$" and "% adapted" columns refer to the
-$\alpha = 0.025$ run. {#tbl-null-type1}
+(RR = 1.0), $20{,}000$ replicates per cell. Futility stopping is ignored in this non-binding
+calibration table so all trials continue unless they cross an efficacy boundary. {#tbl-null-type1}
 
-**Power recovery at the designed effect (RR = 0.7).** In the bundled exploratory cache, no
-adaptation ranged from about 68% to 96% rejection across nuisance scenarios, while blinded and
-unblinded SSR ranged from about 82% to 98%. Because these non-null cells use only 50 replicates,
-the pattern supports the intended diagnostic use of the article -- SSR can recover information
-when nuisance parameters are unfavorable -- but it should not be quoted as a production-precision
-power estimate without regenerating the production grid.
+**Power recovery at the designed effect (RR = 0.7).** In the production score-test cache,
+no-adaptation power ranged from 0.698 to 0.896 across nuisance scenarios and averaged 0.807.
+Blinded and unblinded SSR both ranged from about 0.880 to 0.903 and averaged 0.893. The recovery
+was most important under the higher-dispersion scenarios: for $k = 1.0$, mean no-adaptation power
+was 0.733, whereas blinded and unblinded SSR averaged 0.889. Because the score test is conservative,
+designs using it may still need a modest information margin to achieve a 90% power target across
+the full nuisance range.
 
 **Diminishing returns at smaller effects.** For RR = 0.85 (true effect smaller than planned), the
 planned design is inherently underpowered; SSR compensates for nuisance-parameter misspecification
-but cannot overcome the effect-size mismatch. For RR = 1.1 (treatment worse than control), all
-three strategies showed rejection rates $<$1%, confirming that SSR does not artificially inflate
-one-sided rejections in the wrong direction.
+but cannot overcome the effect-size mismatch. In the production score-test cache, no-adaptation
+power averaged 0.242, while blinded and unblinded SSR averaged about 0.296 and 0.297. For RR = 1.1
+(treatment worse than control), all three strategies had maximum rejection rates of 0.005 across
+the scenario grid, confirming that SSR does not artificially inflate one-sided rejections in the
+wrong direction.
 
-**Blinded versus unblinded SSR.** In both the exploratory power grid and the production null
-calibration, blinded SSR requested larger adapted sample sizes than unblinded SSR. This is most
-visible in the null table:
-at $k = 0.5$, blinded SSR averaged $n = 479$ vs. $329$ for unblinded SSR; at $k = 1.0$, the gap
-narrowed ($620$ vs. $520$) because both strategies hit the adaptation cap in most simulations.
-Blinded updates are more conservative because the pooled rate used by @friede2010blinded inflates
-the effective mean count when the observed RR is below 1, raising the implied required $n$. When
-operationally acceptable, unblinded SSR is therefore the more sample-efficient choice.
+**Blinded versus unblinded SSR.** In this score-test configuration, blinded and unblinded SSR have
+very similar operating characteristics. At RR = 0.7 their average power differs by less than 0.001
+and their average sample sizes are both about 351 subjects. Under the non-binding null calibration,
+both strategies adapt frequently when $k = 1.0$, and unblinded SSR has slightly larger mean sample
+size in the displayed scenarios. The practical conclusion is therefore not that one approach is
+uniformly more efficient, but that the masked and unmasked update rules should be compared under
+the trial-specific nuisance range, adaptation cap, and analysis statistic.
 
 # Discussion
 
@@ -759,14 +825,29 @@ points, whereas at $k = 0.1$ or gaps $\leq 10$ days the correction adds little t
 sample size. Because the same gap rule is carried into simulation and interim cutting, users can
 see directly when the correction matters for operating characteristics rather than only for algebra.
 
+The score-versus-Wald sweep clarifies how the package should be used for sample-size planning. The
+Zhu--Lakkis / Friede--Schmidli / Mutze calculation remains the appropriate first-line calculation
+for a Wald primary analysis, because its variance factor is exactly the Wald alternative variance
+used by that analysis. It should not, however, be presented as a universal guarantee of finite-sample
+Type I error control. When the design is lower-information, highly overdispersed, affected by event
+gaps, based on a non-unity null margin, or adaptively monitored, a score-test primary analysis is
+often the more defensible default. The corresponding best practice is to use the null variance
+$V_0$ for the alpha component, the planned alternative variance $V_1$ for the beta component, and
+the score statistic in the operating-characteristic simulations. Because the score test can be
+conservative, the final design should still be calibrated for both Type I error and power; increasing
+the target power or total information slightly may be preferable to reverting to an anti-conservative
+Wald test.
+
 The SSR study likewise shows how the package's computational layer supports statistical design
-checks, but it also illustrates where evidence should be labeled carefully. The bundled non-null
-grid is useful for checking that adverse nuisance-parameter misspecification can be diagnosed and
-that SSR moves sample size in the expected direction; production-precision power claims require
-regenerating the larger grid. The production null simulations show that Type I error is
-design-specific and must be calibrated rather than assumed. In the studied configuration a smaller
-nominal alpha reduced the null rejection rate, while unblinded nuisance updates were more
-sample-size efficient than blinded updates. The ability to compare `bound_info` choices, ML versus
+checks. The production score-test grid confirms that adverse nuisance-parameter misspecification
+can be diagnosed and that SSR moves sample size in the expected direction, but it also shows why
+the final test statistic matters. The non-binding null simulations show that Wald analyses are
+mildly anti-conservative in this configuration, whereas score analyses are conservative at the
+same nominal one-sided alpha. The updated SSR article therefore compares Wald and score analyses
+directly rather than treating an ad hoc alpha reduction as the primary remedy. Blinded and
+unblinded nuisance updates had similar power and sample-size behavior in this configuration, so
+their relative efficiency should be calibrated for the trial-specific adaptation rule. The ability
+to compare `bound_info` choices, ML versus
 method-of-moments information paths, and the new ML/MoM fallback behaviour inside the same
 simulation engine is a practical advantage of the package design: because each interim reports the
 fallback label actually used, simulation summaries can verify that adaptive decisions were driven
@@ -797,22 +878,23 @@ non-inferiority, blinded-diagnostics, and verification vignettes show that the s
 support multiple design questions. In that sense, the package is not only a collection of isolated
 functions but a coherent interface for recurrent-event trial planning and evaluation.
 
-**A two-sided ML/MoM fallback rule.** A second methodological advance delivered in the current
+**A two-sided ML/MoM fallback rule.** A further methodological feature delivered in the current
 release replaces the previously permissive single-sided Poisson fallback with a two-sided rule.
-Near-Poisson data ($\hat{k} < 0.02$) still fall back to a Poisson Wald test, where the Poisson
-variance is statistically correct. Under extreme overdispersion ($\hat{k} > 20$) or ML
-non-convergence, however, the package now falls back to a method-of-moments re-estimation of
-$(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ via `estimate_nb_mom()` and plugs those values into
-the observed Fisher information formula that the package uses everywhere else, rather than a
-Poisson Wald test. This matters because under genuine overdispersion the Poisson variance is
-anti-conservative by a factor of $(1 + k\mu)^{-1}$ per subject, which is exactly the regime where
-a robust fallback is most needed. The MoM path requires no ML convergence, always returns a
-nonnegative $\hat{k}$, and preserves the NB variance structure. The rule is applied uniformly in
-`mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()`, each of which now reports a
-`fallback` label (`"ml"`, `"mom"`, or `"poisson"`) in its return value so that simulation engines
-can audit which estimator was used at each interim. In `mutze_test()` the behaviour is controlled
-by two thresholds, `poisson_threshold` (default $50$, i.e., $\hat{k} < 0.02$) and `mom_threshold`
-(default $20$, i.e., $\hat{k} > 20$); both are user-tunable for sensitivity analyses.
+Near-Poisson data ($\hat{k} < 0.02$) still fall back to the corresponding Poisson Wald or score
+test, where the Poisson variance is statistically correct. Under extreme overdispersion
+($\hat{k} > 20$) or ML non-convergence, however, the package now falls back to a
+method-of-moments re-estimation of $(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ via
+`estimate_nb_mom()` and plugs those values into the observed Fisher information formula that the
+package uses everywhere else, rather than a Poisson test. This matters because under genuine
+overdispersion the Poisson variance is anti-conservative by a factor of $(1 + k\mu)^{-1}$ per
+subject, which is exactly the regime where a robust fallback is most needed. The MoM path requires
+no ML convergence, always returns a nonnegative $\hat{k}$, and preserves the NB variance structure.
+The rule is applied uniformly in `mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()`,
+each of which now reports a `fallback` label (`"ml"`, `"mom"`, or `"poisson"`) in its return value
+so that simulation engines can audit which estimator was used at each interim. In `mutze_test()`
+the behaviour is controlled by two thresholds, `poisson_threshold` (default $50$, i.e.,
+$\hat{k} < 0.02$) and `mom_threshold` (default $20$, i.e., $\hat{k} > 20$); both are user-tunable
+for sensitivity analyses.
 
 # Reproducibility and software availability
 

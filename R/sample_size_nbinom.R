@@ -132,6 +132,8 @@
 #'   \item{total_events}{Total expected number of events.}
 #'   \item{variance}{Variance of the log rate ratio
 #'     \eqn{\mathrm{Var}(\hat\theta)}.}
+#'   \item{variance_null}{Null variance of the log rate ratio used for
+#'     score-test sizing, on the same final-analysis scale as `variance`.}
 #'   \item{accrual_rate}{Accrual rate(s) used (possibly scaled to achieve
 #'     target power).}
 #'   \item{accrual_duration}{Accrual duration(s) used.}
@@ -647,7 +649,8 @@ sample_size_nbinom <- function(
       events_n2 = events_n2,
       total_events = total_events,
       variance = variance,
-      variance_null = V0 / n1_c * (1 + ratio) / ratio,
+      # V0 already includes the allocation ratio term, so divide only by n1.
+      variance_null = V0 / n1_c,
       accrual_rate = computed_accrual_rate,
       accrual_duration = accrual_duration
     )

@@ -269,6 +269,19 @@ test_that("sample_size_nbinom handles non-inferiority (rr0 != 1)", {
   expect_equal(res$inputs$rr0, 1.1)
 })
 
+test_that("score sizing reports null variance on final-analysis scale", {
+  res <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0, power = 0.8,
+    accrual_rate = 10, accrual_duration = 2, trial_duration = 2,
+    test_type = "score"
+  )
+
+  mu0 <- mean(c(0.5, 0.3)) * res$exposure[1]
+  v0 <- (1 / mu0) * 2
+  expect_equal(res$exposure[1], 1)
+  expect_equal(res$variance_null, v0 / res$n1)
+})
+
 test_that("sample_size_nbinom handles max_followup with split case", {
   # max_followup shorter than some follow-up times triggers Case 3 (split)
   res <- sample_size_nbinom(

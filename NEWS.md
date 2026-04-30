@@ -1,5 +1,19 @@
 # gsDesignNB 0.3.2 (development)
 
+## Score-test sizing and inference guidance
+
+- Expanded the paper, sample-size vignette, and score-vs-Wald simulation
+  vignette with recommendations for when the Zhu-Lakkis / Friede-Schmidli /
+  Mutze Wald sample-size formula is appropriate and when to use score-test
+  sizing with separate null and alternative variance factors.
+- Documented the cached score-vs-Wald simulation results: the Wald test was
+  mildly anti-conservative in several finite-sample scenarios, while the score
+  test preserved Type I error more conservatively and should be paired with
+  simulation-based power checks.
+- Corrected the reported `variance_null` field from `sample_size_nbinom()` so
+  it is on the same final-analysis scale as `variance`; the score sample-size
+  calculation itself was already using the null variance factor correctly.
+
 ## Group sequential simulation vignette
 
 - Corrected the group sequential simulation vignette and cached results so that
@@ -10,10 +24,15 @@
   after rounding the final sample size.
 - `summarize_gs_sim()` now reports optional sample-size and exposure summaries
   when available and uses finite trimmed means for information estimates.
-- Qualified SSR simulation reporting in the manuscript and SSR simulation
-  article so the bundled exploratory non-null power grid is not presented as
-  production-precision evidence; the dedicated null Type I simulations remain
-  documented as 20,000-replicate calibration runs.
+- Updated SSR simulation reporting in the manuscript and SSR simulation article
+  to use the production score-test cache: 3,600 replicates per power scenario,
+  20,000 per RR = 1 main-grid scenario, 1,000 per RR > 1 scenario, and 20,000
+  per dispersion/test-statistic cell for the non-binding Type I tables.
+- Updated the SSR simulation study to compare Wald and score tests at the same
+  nominal one-sided alpha of 0.025, and aligned the SSR power simulations with
+  the score-test recommendation.
+- Added a checkpointed production generator for the SSR score-test cache so the
+  long-running power and Type I simulations can be resumed from saved chunks.
 - Updated the blinded-information diagnostics article to distinguish historical
   raw ML pathologies from the current MoM fallback behavior.
 

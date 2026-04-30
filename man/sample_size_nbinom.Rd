@@ -106,6 +106,8 @@ length 2 for control and treatment).}
 \item{total_events}{Total expected number of events.}
 \item{variance}{Variance of the log rate ratio
 \eqn{\mathrm{Var}(\hat\theta)}.}
+\item{variance_null}{Null variance of the log rate ratio used for
+score-test sizing, on the same final-analysis scale as \code{variance}.}
 \item{accrual_rate}{Accrual rate(s) used (possibly scaled to achieve
 target power).}
 \item{accrual_duration}{Accrual duration(s) used.}

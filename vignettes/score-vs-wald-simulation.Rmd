@@ -1,8 +1,8 @@
 ---
-title: "Score vs Wald test: multi-scenario comparison"
+title: "Score vs Wald tests and sample-size recommendations"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Score vs Wald test: multi-scenario comparison}
+  %\VignetteIndexEntry{Score vs Wald tests and sample-size recommendations}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,17 +18,31 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
-library(plotly)
 library(DT)
-library(crosstalk)
+has_plotly <- requireNamespace("plotly", quietly = TRUE)
 ```
 
 ## Introduction
 
 This vignette compares the Wald and score test implementations in `mutze_test()` across a
-factorial grid of negative binomial trial scenarios. We also compare sample sizes computed
-using the **Wald variance formula** ($V_1$ only) and the **score variance formula**
-($\sqrt{V_0}$ and $\sqrt{V_1}$) in `sample_size_nbinom()`.
+factorial grid of negative binomial trial scenarios. It also gives practical recommendations for
+sample-size calculation when the usual Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula is
+adequate and when the score-test, two-variance calculation is preferable.
+
+The **Wald sizing** option in `sample_size_nbinom(test_type = "wald")` uses the alternative
+variance $V_1$ for both the Type I and power components. The **score sizing** option in
+`sample_size_nbinom(test_type = "score")` uses the null variance $V_0$ for the Type I component
+and the alternative variance $V_1$ for the power component:
+
+$$
+n_1 =
+\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+     {(\theta - \theta_0)^2}.
+$$
+
+This distinction matters most when the planned final analysis uses a score statistic evaluated
+under the null, or when finite-sample Type I error control is more important than preserving the
+historical Wald analysis convention.
 
 The full $2 \times 2$ factorial comparison is:
 
@@ -44,8 +58,8 @@ We assess:
 - **Z-score distributions** to check asymptotic normality
 
 All tables are interactive: use the column filters to narrow results.
-All figures are interactive: hover for values, click legend entries to toggle, and
-use the toolbar to zoom/pan.
+Figures are interactive when the optional `plotly` package is installed; otherwise they render as
+static `ggplot2` figures.
 
 Results are pre-computed by `data-raw/generate_score_sweep.R` and loaded here.
 
@@ -78,7 +92,10 @@ cat(sprintf(
 
 The base scenario grid varies control event rate ($\lambda_1$), overdispersion ($k$),
 and minimum inter-event gap. For each base scenario, sample sizes are computed using
-both the Wald and score variance formulas.
+both the Wald and score variance formulas. In this superiority grid the score-sized
+trials are equal to or slightly smaller than the Wald-sized trials; score sizing is
+therefore not a generic "add a few subjects" rule, and the operating characteristics
+still need to be checked under the planned analysis test.
 
 ```{r}
 base_display <- base_grid[, .(
@@ -87,7 +104,7 @@ base_display <- base_grid[, .(
   `Event gap (days)` = gap_days,
   `N (Wald sizing)` = n_wald,
   `N (Score sizing)` = n_score,
-  `Difference` = n_wald - n_score
+  `Wald - Score` = n_wald - n_score
 )]
 
 datatable(
@@ -123,6 +140,32 @@ se_long[, test := fifelse(test == "se_wald", "Wald", "Score")]
 null_long <- merge(null_long, se_long,
                    by = c("lambda1", "k", "gap_days", "sizing", "test"))
 null_long[, combo := paste0(sizing, "-sized / ", test, " test")]
+null_long[, `:=`(
+  above_nominal_95 = rejection_rate - 1.96 * se > config$alpha,
+  below_nominal_95 = rejection_rate + 1.96 * se < config$alpha
+)]
+```
+
+```{r}
+type1_summary <- null_long[, .(
+  `Scenarios` = .N,
+  `Minimum` = min(rejection_rate),
+  `Mean` = mean(rejection_rate),
+  `Maximum` = max(rejection_rate),
+  `Above nominal beyond MC error` = sum(above_nominal_95),
+  `Below nominal beyond MC error` = sum(below_nominal_95)
+), by = .(`Sizing` = sizing, `Test` = test)]
+
+datatable(
+  type1_summary[order(Sizing, Test)],
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-weight: bold;",
+    "Type I error synopsis across the scenario grid"
+  ),
+  options = list(pageLength = 8, dom = "tip"),
+  rownames = FALSE
+) |>
+  formatRound(columns = c("Minimum", "Mean", "Maximum"), digits = 4)
 ```
 
 ```{r}
@@ -175,8 +218,12 @@ p_null <- ggplot(null_long,
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplotly(p_null, tooltip = "text") |>
-  layout(legend = list(orientation = "v", x = 1.02, y = 0.5))
+if (has_plotly) {
+  plotly::ggplotly(p_null, tooltip = "text") |>
+    plotly::layout(legend = list(orientation = "v", x = 1.02, y = 0.5))
+} else {
+  p_null
+}
 ```
 
 ## Power comparison
@@ -203,6 +250,27 @@ se_power[, test := fifelse(test == "se_wald", "Wald", "Score")]
 power_long <- merge(power_long, se_power,
                     by = c("lambda1", "k", "gap_days", "sizing", "test"))
 power_long[, combo := paste0(sizing, "-sized / ", test, " test")]
+```
+
+```{r}
+power_summary <- power_long[, .(
+  `Scenarios` = .N,
+  `Minimum` = min(power),
+  `Mean` = mean(power),
+  `Maximum` = max(power),
+  `Below 90%` = sum(power < config$power_target)
+), by = .(`Sizing` = sizing, `Test` = test)]
+
+datatable(
+  power_summary[order(Sizing, Test)],
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: left; font-weight: bold;",
+    "Power synopsis across the scenario grid"
+  ),
+  options = list(pageLength = 8, dom = "tip"),
+  rownames = FALSE
+) |>
+  formatRound(columns = c("Minimum", "Mean", "Maximum"), digits = 4)
 ```
 
 ```{r}
@@ -257,8 +325,12 @@ p_power <- ggplot(power_long,
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplotly(p_power, tooltip = "text") |>
-  layout(legend = list(orientation = "v", x = 1.02, y = 0.5))
+if (has_plotly) {
+  plotly::ggplotly(p_power, tooltip = "text") |>
+    plotly::layout(legend = list(orientation = "v", x = 1.02, y = 0.5))
+} else {
+  p_power
+}
 ```
 
 ## Z-score density comparison (null simulations)
@@ -298,8 +370,12 @@ p_z <- ggplot(z_null_long, aes(x = z, color = test)) +
   theme_minimal() +
   coord_cartesian(xlim = c(-4, 4))
 
-ggplotly(p_z) |>
-  layout(legend = list(orientation = "h", x = 0.3, y = -0.05))
+if (has_plotly) {
+  plotly::ggplotly(p_z) |>
+    plotly::layout(legend = list(orientation = "h", x = 0.3, y = -0.05))
+} else {
+  p_z
+}
 ```
 
 ## Fallback method frequency
@@ -331,14 +407,26 @@ datatable(
 
 ## Summary
 
-- Both Wald and score tests control Type I error near the nominal $\alpha = `r config$alpha`$
-  across all scenarios and sizing methods.
-- The **score-sized** trials use the two-variance formula
-  $(z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1})^2 / \theta^2$,
-  which typically yields slightly larger sample sizes than the Wald formula.
-- Power is similar between test types for a given sizing; score-sized trials may show
-  marginally higher power due to the larger sample size.
-- The score test tends to be slightly more conservative (lower Type I error),
-  especially in scenarios with smaller sample sizes or lower event rates.
-- Z-score distributions under the null closely follow $N(0,1)$, confirming the
-  validity of the asymptotic approximation for the sample sizes used.
+- The choice of final analysis test matters more than the choice of Wald versus score sizing in
+  this grid. Wald and score sample sizes differ by at most four subjects, while the null rejection
+  pattern changes materially when the test statistic changes.
+- The Wald test is mildly anti-conservative in several finite-sample scenarios. Across the grid,
+  its empirical Type I error ranges from `r round(min(null_long[test == "Wald"]$rejection_rate), 4)`
+  to `r round(max(null_long[test == "Wald"]$rejection_rate), 4)`, and many Wald cells are above
+  nominal beyond Monte Carlo error.
+- The score test provides better Type I protection. Its empirical Type I error ranges from
+  `r round(min(null_long[test == "Score"]$rejection_rate), 4)` to
+  `r round(max(null_long[test == "Score"]$rejection_rate), 4)`; no score-test cell is above
+  nominal beyond Monte Carlo error, although several are conservatively below nominal.
+- Use the Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula when the planned primary analysis is
+  the Wald log-rate-ratio test and simulation verifies the intended Type I error and power for the
+  design scenario.
+- Move to the score-test workflow when Type I error preservation is the primary concern, especially
+  for lower-information designs, high dispersion, event gaps, non-inferiority or super-superiority
+  margins, or adaptive/group sequential settings. In that workflow, size with
+  `sample_size_nbinom(test_type = "score")` and analyze or simulate with
+  `mutze_test(test_type = "score")`, `sim_gs_nbinom(test_type = "score")`, or
+  `sim_ssr_nbinom(test_type = "score")`.
+- Score-test power is slightly conservative in this grid. If the score test is the planned primary
+  analysis, verify power by simulation and consider a modest sample-size or target-power margin
+  before finalizing the protocol.

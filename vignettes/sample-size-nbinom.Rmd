@@ -105,7 +105,7 @@ for (k in k_values) {
 
 ### Sample size formula
 
-The sample size formula is based on the asymptotic normality of the maximum likelihood estimator of the log rate ratio $\hat\theta$, using a Wald test.
+The default sample size formula is based on the asymptotic normality of the maximum likelihood estimator of the log rate ratio $\hat\theta$, using a Wald test.
 The required sample size for group 1 is:
 
 $$ n_1 = \frac{(z_{\alpha/s} + z_{\beta})^2 \cdot \tilde{V}}{(\theta - \theta_0)^2} $$
@@ -120,9 +120,22 @@ In the simplest case where both groups share a common dispersion $k$ and a commo
 
 $$ n_{\text{total}} = \frac{(z_{\alpha/s} + z_{\beta})^2 \left[\left(\frac{1}{\mu_1} + k\right) + \left(\frac{1}{\mu_2} + k\right)\right]}{(\theta - \theta_0)^2} $$
 
+When `test_type = "score"`, `sample_size_nbinom()` instead uses a two-variance score-test formula:
+
+$$
+n_1 =
+\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+     {(\theta - \theta_0)^2},
+$$
+
+where $V_1$ is the alternative variance factor above and $V_0$ is the corresponding null variance factor under the constrained null model.
+This aligns the design calculation with a score statistic evaluated under $H_0$.
+It is most useful when finite-sample Type I error control is the dominant objective, for example in lower-information designs, high-dispersion settings, event-gap settings, non-inferiority or super-superiority hypotheses, or adaptive/group sequential designs that will use a score statistic at analysis.
+If the planned analysis remains the Wald log-rate-ratio test, the Zhu--Lakkis Wald formula remains the directly matched calculation; either choice should be verified by simulation for the design scenario.
+
 ### Relationship between Zhu-Lakkis, Friede-Schmidli, and Mutze et al.
 
-The sample size formula implemented in `sample_size_nbinom()` corresponds to **Method 3** of @zhu2014sample, which is the Wald test for the log rate ratio under a negative binomial model with a log link and an exposure offset.
+The default Wald sample size formula implemented in `sample_size_nbinom()` corresponds to **Method 3** of @zhu2014sample, which is the Wald test for the log rate ratio under a negative binomial model with a log link and an exposure offset.
 This same test statistic and variance formula are used by @friede2010blinded in the context of blinded sample size reestimation and by @mutze2019group for group sequential designs.
 
 **What the three references share:**
@@ -153,7 +166,8 @@ The `sample_size_nbinom()` function extends these methods by allowing:
 - **Group-specific dispersion** ($k_1 \ne k_2$),
 - **Variable exposure** across subjects (piecewise accrual, dropout, max follow-up),
 - **Variance inflation** ($Q$ factor) to account for non-constant exposure, following the approach in @zhu2014sample, and
-- **Event gaps** that reduce effective exposure.
+- **Event gaps** that reduce effective exposure, and
+- **Score-test sizing** with separate null and alternative variance factors when `test_type = "score"`.
 
 ### Non-inferiority and super-superiority
 
@@ -451,7 +465,9 @@ and thus:
 
 $$ \mathrm{Var}(\hat\theta) = \frac{1/\mu_1 + k_1}{n_1} + \frac{1/\mu_2 + k_2}{n_2} $$
 
-This is exactly the variance used in the sample size formula.
+This is exactly the alternative variance used in the Wald sample size formula.
+For score-test sizing, the null variance is also computed under the constrained null and used in
+the Type I error component of the sample size calculation.
 
 ### Information in practice: blinded and unblinded estimation
 
@@ -476,11 +492,13 @@ The information is $\mathcal{I} = 1/\text{SE}^2$.
 ### Connection to sample size
 
 The sample size formula can be expressed in terms of information.
-The target information for a fixed design is:
+For the Wald formula, the target information for a fixed design is:
 
 $$ \mathcal{I}_{\text{target}} = \frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2} $$
 
 The sample size is then the smallest $n_{\text{total}}$ such that the expected information at the end of the trial exceeds $\mathcal{I}_{\text{target}}$.
+For score-test sizing, the equivalent calculation separates the information scale under the null
+from the information scale under the planned alternative through $V_0$ and $V_1$.
 
 ## Examples
 
