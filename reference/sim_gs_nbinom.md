@@ -20,6 +20,7 @@ sim_gs_nbinom(
   design = NULL,
   data_cut = cut_data_by_date,
   cuts = NULL,
+  test_type = c("wald", "score"),
   seed = TRUE
 )
 ```
@@ -82,6 +83,14 @@ sim_gs_nbinom(
   (e.g., `planned_calendar`, `target_events`, `target_info`). If
   provided, `analysis_times` is ignored (or used as a fallback if
   `planned_calendar` is missing in a cut).
+
+- test_type:
+
+  Type of test statistic passed to
+  [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md):
+  `"wald"` (default) or `"score"`. See
+  [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
+  for details.
 
 - seed:
 

@@ -1,19 +1,21 @@
-pandoc: 3.1.11
+pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
+  ai-skills: ai-skills.html
   blinded-info-diagnostics: blinded-info-diagnostics.html
   completers-interim-example: completers-interim-example.html
   group-sequential-simulation: group-sequential-simulation.html
   multiple-imputation-nb: multiple-imputation-nb.html
   non-inferiority-example: non-inferiority-example.html
   sample-size-nbinom: sample-size-nbinom.html
+  score-vs-wald-simulation: score-vs-wald-simulation.html
   seasonal-simulation: seasonal-simulation.html
   simulation-example: simulation-example.html
   ssr-example: ssr-example.html
   ssr-simulation-study: ssr-simulation-study.html
   verification-simulation: verification-simulation.html
-last_built: 2026-04-21T22:44Z
+last_built: 2026-05-01T16:06Z
 urls:
   reference: https://keaven.github.io/gsDesignNB/reference
   article: https://keaven.github.io/gsDesignNB/articles

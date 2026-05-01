@@ -15,12 +15,15 @@ with
 [`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
 and
 [`sim_ssr_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_ssr_nbinom.md).
-The `gsDesign` package supplies the underlying spending-function and
-boundary calculations used by those workflows.
+Planning and simulation can use either Wald or score-test inference for
+rate ratios. The `gsDesign` package supplies the underlying
+spending-function and boundary calculations used by those workflows.
 
 ## Start Here
 
 - `sample-size-nbinom` for fixed-design planning
+- `score-vs-wald-simulation` for Wald/score sizing and Type I error
+  guidance
 - `simulation-example` and `seasonal-simulation` for recurrent-event
   data generation
 - `ssr-example` and `ssr-simulation-study` for negative binomial SSR
@@ -31,12 +34,14 @@ boundary calculations used by those workflows.
 You can install gsDesignNB from CRAN with:
 
 ``` r
+
 install.packages("gsDesignNB")
 ```
 
 Or install the development version from GitHub with:
 
 ``` r
+
 remotes::install_github("keaven/gsDesignNB")
 ```
 
@@ -50,6 +55,7 @@ alone: it opens a `file://` URL, and browsers often load little or no
 CSS/JS for local files. From the package root, run:
 
 ``` r
+
 gsDesignNB::preview_pkgdown_site()
 ```
 
@@ -65,7 +71,8 @@ guide](https://style.tidyverse.org/).
 
 ## Sample size calculation
 
-Plan fixed negative binomial designs for recurrent-event outcomes.
+Plan fixed negative binomial designs for recurrent-event outcomes, with
+Wald or score-test sizing.
 
 - [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
   : Sample size calculation for negative binomial outcomes
@@ -79,7 +86,7 @@ Plan fixed negative binomial designs for recurrent-event outcomes.
 ## Simulation
 
 Simulate recurrent-event data, seasonal intensity patterns, and NB
-monitoring scenarios.
+monitoring or SSR scenarios.
 
 - [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
   : Simulate recurrent events with fixed follow-up
@@ -100,8 +107,8 @@ monitoring scenarios.
 
 ## Analysis
 
-Analyze interim negative binomial data and estimate information for
-monitoring or SSR.
+Analyze interim negative binomial data with Wald or score tests and
+estimate information for monitoring or SSR.
 
 - [`blinded_ssr()`](https://keaven.github.io/gsDesignNB/reference/blinded_ssr.md)
   : Blinded sample size re-estimation for recurrent events
@@ -113,8 +120,8 @@ monitoring or SSR.
   : Method of Moments Estimation for Negative Binomial Parameters
 - [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
   [`print(`*`<mutze_test>`*`)`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
-  : Wald test for treatment effect using negative binomial model (Mutze
-  et al.)
+  : Wald or score test for treatment effect using negative binomial
+  model
 - [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md)
   : Cut simulated trial data at a calendar date
 - [`cut_completers()`](https://keaven.github.io/gsDesignNB/reference/cut_completers.md)
@@ -218,6 +225,10 @@ for convenience.
   simulation](https://keaven.github.io/gsDesignNB/articles/seasonal-simulation.md):
 - [Verification of sample size calculation via
   simulation](https://keaven.github.io/gsDesignNB/articles/verification-simulation.md):
+- [Score vs Wald tests and sample-size
+  recommendations](https://keaven.github.io/gsDesignNB/articles/score-vs-wald-simulation.md):
+- [Using the gsDesignNB AI
+  skill](https://keaven.github.io/gsDesignNB/articles/ai-skills.md):
 - [Non-inferiority and super-superiority
   designs](https://keaven.github.io/gsDesignNB/articles/non-inferiority-example.md):
 - [Sample size re-estimation

@@ -1,6 +1,7 @@
 # Group sequential design and simulation
 
 ``` r
+
 library(gsDesign)
 library(gsDesignNB)
 library(data.table)
@@ -13,7 +14,10 @@ negative binomial outcomes using
 [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
 and simulate the design to confirm design operating characteristics
 using
-[`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md).
+[`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md),
+[`check_gs_bound()`](https://keaven.github.io/gsDesignNB/reference/check_gs_bound.md),
+and
+[`summarize_gs_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_gs_sim.md).
 
 ## Trial design parameters
 
@@ -42,6 +46,7 @@ First, we calculate the required sample size for a fixed design using
 the Zhu and Lakkis method:
 
 ``` r
+
 # Sample size calculation
 # Enrollment: constant rate over 12 months
 # Trial duration: 24 months
@@ -95,11 +100,12 @@ achieve a nominal p-value of approximately 0.0025 (one-sided) at each
 interim analysis.
 
 ``` r
+
 # Analysis times (in months)
 analysis_times <- c(10, 18, 24)
 
-# Create group sequential design with integer sample sizes
-gs_nb <- gsNBCalendar(
+# Create group sequential design and round the final sample size
+gs_nb_calendar <- gsNBCalendar(
   x = nb_ss, # Input fixed design for negative binomial
   k = 3, # 3 analyses
   test.type = 4, # Two-sided asymmetric, non-binding futility
@@ -110,12 +116,14 @@ gs_nb <- gsNBCalendar(
   usTime = c(.1, .18, 1), # Upper spending timing
   lsTime = NULL, # Spending based on information
   analysis_times = analysis_times # Calendar times in months
-) |> gsDesignNB::toInteger() # Round to integer sample size
+)
+gs_nb <- gsDesignNB::toInteger(gs_nb_calendar)
 ```
 
 Textual group sequential design summary:
 
 ``` r
+
 summary(gs_nb)
 #> Asymmetric two-sided with non-binding futility bound group sequential design
 #> for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent
@@ -138,6 +146,7 @@ summary(gs_nb)
 Tabular summary:
 
 ``` r
+
 gs_nb |>
   gsDesign::gsBoundSummary(
     deltaname = "RR",
@@ -157,25 +166,25 @@ gs_nb |>
   )
 ```
 
-| Group Sequential Design Bounds for Negative Binomial Outcome |                     |          |          |
-|--------------------------------------------------------------|---------------------|----------|----------|
-| N = 376, Expected events = 408                               |                     |          |          |
-| Analysis                                                     | Value               | Efficacy | Futility |
-| IA 1: 42%                                                    | Z                   | 2.8070   | -1.0128  |
-| Information: 27.03                                           | p (1-sided)         | 0.0025   | 0.8444   |
-| Month: 10                                                    | ~RR at bound        | 0.5828   | 1.2151   |
-|                                                              | P(Cross) if RR=1    | 0.0025   | 0.1556   |
-|                                                              | P(Cross) if RR=0.67 | 0.2422   | 0.0009   |
-| IA 2: 91%                                                    | Z                   | 2.8158   | 1.4448   |
-| Information: 58.96                                           | p (1-sided)         | 0.0024   | 0.0743   |
-| Month: 18                                                    | ~RR at bound        | 0.6930   | 0.8285   |
-|                                                              | P(Cross) if RR=1    | 0.0045   | 0.9254   |
-|                                                              | P(Cross) if RR=0.67 | 0.6340   | 0.0477   |
-| Final                                                        | Z                   | 1.9815   | 1.9796   |
-| Information: 64.98                                           | p (1-sided)         | 0.0238   | 0.0239   |
-| Month: 24                                                    | ~RR at bound        | 0.7820   | 0.7822   |
-|                                                              | P(Cross) if RR=1    | 0.0245   | 0.9754   |
-|                                                              | P(Cross) if RR=0.67 | 0.8997   | 0.1000   |
+| Group Sequential Design Bounds for Negative Binomial Outcome |  |  |  |
+|----|----|----|----|
+| N = 376, Expected events = 408 |  |  |  |
+| Analysis | Value | Efficacy | Futility |
+| IA 1: 42% | Z | 2.8070 | -1.0128 |
+| Information: 27.03 | p (1-sided) | 0.0025 | 0.8444 |
+| Month: 10 | ~RR at bound | 0.5828 | 1.2151 |
+|  | P(Cross) if RR=1 | 0.0025 | 0.1556 |
+|  | P(Cross) if RR=0.67 | 0.2422 | 0.0009 |
+| IA 2: 91% | Z | 2.8158 | 1.4448 |
+| Information: 58.96 | p (1-sided) | 0.0024 | 0.0743 |
+| Month: 18 | ~RR at bound | 0.6930 | 0.8285 |
+|  | P(Cross) if RR=1 | 0.0045 | 0.9254 |
+|  | P(Cross) if RR=0.67 | 0.6340 | 0.0477 |
+| Final | Z | 1.9815 | 1.9796 |
+| Information: 64.98 | p (1-sided) | 0.0238 | 0.0239 |
+| Month: 24 | ~RR at bound | 0.7820 | 0.7822 |
+|  | P(Cross) if RR=1 | 0.0245 | 0.9754 |
+|  | P(Cross) if RR=0.67 | 0.8997 | 0.1000 |
 
 ## Simulation study
 
@@ -184,22 +193,70 @@ the group sequential design. This number of simulations was chosen to
 achieve a standard error for the power estimate of approximately 0.005
 when the true power is 90% (\sqrt{0.9 \times 0.1 / 3600} = 0.005). The
 simulation script is located in
-`data-raw/generate_gs_simulation_data.R`.
+`data-raw/generate_gs_simulation_data.R`. The script uses the same
+helper workflow shown below:
+
+``` r
+
+sim_res <- sim_gs_nbinom(...)
+bounds_checked <- check_gs_bound(sim_res, gs_nb, info_col = "info_unblinded_ml")
+summary_gs <- summarize_gs_sim(bounds_checked)
+```
+
+For this verification, `n_target` is the final group sequential sample
+size after integer rounding, and the dropout hazard is specified on the
+same monthly time scale as the event rates.
 
 ### Load simulation results
 
 ``` r
-# Load pre-computed simulation results
-results_file <- system.file("extdata", "gs_simulation_results.rds", package = "gsDesignNB")
 
-if (results_file == "" && file.exists("../inst/extdata/gs_simulation_results.rds")) {
+# Load pre-computed simulation results
+results_file <- file.path("inst", "extdata", "gs_simulation_results.rds")
+
+if (!file.exists(results_file) && file.exists("../inst/extdata/gs_simulation_results.rds")) {
   results_file <- "../inst/extdata/gs_simulation_results.rds"
+}
+
+if (!file.exists(results_file)) {
+  results_file <- system.file("extdata", "gs_simulation_results.rds", package = "gsDesignNB")
 }
 
 if (results_file != "") {
   sim_data <- readRDS(results_file)
   results <- sim_data$results
-  summary_gs <- sim_data$summary_gs
+  summary_gs <- summarize_gs_sim(results)
+  analysis_summary <- data.table::as.data.table(summary_gs$analysis_summary)
+  required_summary_cols <- c(
+    "n_ctrl", "n_exp",
+    "exposure_total_ctrl", "exposure_total_exp",
+    "exposure_at_risk_ctrl", "exposure_at_risk_exp",
+    "events_ctrl", "events_exp"
+  )
+  if (!all(required_summary_cols %in% names(analysis_summary))) {
+    result_dt <- data.table::as.data.table(results)
+    result_means <- result_dt[, .(
+      n_ctrl = mean(n_ctrl, na.rm = TRUE),
+      n_exp = mean(n_exp, na.rm = TRUE),
+      exposure_total_ctrl = mean(exposure_total_ctrl, na.rm = TRUE),
+      exposure_total_exp = mean(exposure_total_exp, na.rm = TRUE),
+      exposure_at_risk_ctrl = mean(exposure_at_risk_ctrl, na.rm = TRUE),
+      exposure_at_risk_exp = mean(exposure_at_risk_exp, na.rm = TRUE),
+      events_ctrl = mean(events_ctrl, na.rm = TRUE),
+      events_exp = mean(events_exp, na.rm = TRUE)
+    ), by = analysis]
+    existing_result_mean_cols <- intersect(required_summary_cols, names(analysis_summary))
+    if (length(existing_result_mean_cols) > 0) {
+      analysis_summary[, (existing_result_mean_cols) := NULL]
+    }
+    analysis_summary <- merge(
+      analysis_summary,
+      result_means,
+      by = "analysis",
+      all.x = TRUE,
+      sort = FALSE
+    )
+  }
   n_sims <- sim_data$n_sims
   params <- sim_data$params
 } else {
@@ -207,6 +264,7 @@ if (results_file != "") {
   warning("Simulation results not found. Skipping simulation analysis.")
   results <- NULL
   summary_gs <- NULL
+  analysis_summary <- NULL
   n_sims <- 0
 }
 ```
@@ -215,8 +273,13 @@ if (results_file != "") {
 
 ### Summary of verification results
 
-We compare the theoretical predictions from the group sequential design
-with the observed simulation results across multiple metrics.
+We compare planning quantities from the group sequential design with
+simulation summaries from
+[`summarize_gs_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_gs_sim.md).
+The design object reports calendar enrollment at each planned analysis
+in `n_total`, and statistical information in `n.I`; keeping those scales
+distinct is important when comparing simulations with asymptotic design
+calculations.
 
 **Key distinction: Total Exposure vs Exposure at Risk**
 
@@ -231,210 +294,88 @@ with the observed simulation results across multiple metrics.
   gaps.
 
 ``` r
-# Helper function for trimmed mean (to handle outliers in blinded info)
-trimmed_mean <- function(x, trim = 0.01) {
-  x <- x[is.finite(x) & !is.na(x)]
-  if (length(x) == 0) return(NA_real_)
-  mean(x, trim = trim)
+
+sim_summary <- data.table::copy(analysis_summary)
+
+if (!"events" %in% names(sim_summary) && "events_total" %in% names(sim_summary)) {
+  sim_summary[, events := events_total]
+}
+if (!"info_blinded" %in% names(sim_summary) && "blinded_info" %in% names(sim_summary)) {
+  sim_summary[, info_blinded := blinded_info]
+}
+if (!"info_unblinded" %in% names(sim_summary) && "unblinded_info" %in% names(sim_summary)) {
+  sim_summary[, info_unblinded := unblinded_info]
 }
 
-# Create comprehensive theoretical vs simulation comparison table for each analysis
-dt <- data.table::as.data.table(results)
+planning_comparison <- data.frame(
+  Analysis = seq_len(gs_nb$k),
+  Month = params$analysis_times,
+  Planned_N = gs_nb$n_total,
+  Mean_N = sim_summary$n_enrolled,
+  Planned_Total_Exposure = gs_nb$n1 * gs_nb$exposure + gs_nb$n2 * gs_nb$exposure,
+  Mean_Total_Exposure = sim_summary$exposure_total_ctrl + sim_summary$exposure_total_exp,
+  Planned_At_Risk_Exposure =
+    gs_nb$n1 * gs_nb$exposure_at_risk1 + gs_nb$n2 * gs_nb$exposure_at_risk2,
+  Mean_At_Risk_Exposure =
+    sim_summary$exposure_at_risk_ctrl + sim_summary$exposure_at_risk_exp,
+  Planned_Events = gs_nb$events,
+  Mean_Events = sim_summary$events,
+  Planned_Info = gs_nb$n.I,
+  Mean_Unblinded_Info = sim_summary$info_unblinded
+)
 
-# Function to compute comparison for a specific analysis
-get_analysis_comparison <- function(analysis_num) {
-  sub_dt <- dt[analysis == analysis_num]
-  
-  # Get theoretical values from gs_nb design
-  theo_n <- gs_nb$n_total[analysis_num]
-  theo_n1 <- gs_nb$n1[analysis_num]
-  theo_n2 <- gs_nb$n2[analysis_num]
-  theo_exposure <- gs_nb$exposure[analysis_num]
-  theo_exposure_at_risk1 <- gs_nb$exposure_at_risk1[analysis_num]
-  theo_exposure_at_risk2 <- gs_nb$exposure_at_risk2[analysis_num]
-  theo_events1 <- gs_nb$events1[analysis_num]
-  theo_events2 <- gs_nb$events2[analysis_num]
-  theo_events <- gs_nb$events[analysis_num]
-  theo_variance <- gs_nb$variance[analysis_num]
-  theo_info <- gs_nb$n.I[analysis_num]
-  
-  # Observed values (using trimmed means for robustness)
-  obs_n <- mean(sub_dt$n_enrolled)
-  obs_n1 <- mean(sub_dt$n_ctrl)
-  obs_n2 <- mean(sub_dt$n_exp)
-  obs_exposure1 <- mean(sub_dt$exposure_total_ctrl)
-  obs_exposure2 <- mean(sub_dt$exposure_total_exp)
-  obs_exposure_at_risk1 <- mean(sub_dt$exposure_at_risk_ctrl)
-  obs_exposure_at_risk2 <- mean(sub_dt$exposure_at_risk_exp)
-  obs_events1 <- mean(sub_dt$events_ctrl)
-  obs_events2 <- mean(sub_dt$events_exp)
-  obs_events <- mean(sub_dt$events_total)
-  obs_variance <- median(sub_dt$se^2, na.rm = TRUE)
-  obs_info_blinded <- trimmed_mean(sub_dt$blinded_info, trim = 0.01)
-  obs_info_unblinded <- trimmed_mean(sub_dt$unblinded_info, trim = 0.01)
-  
-  # Build comparison data frame
-  data.frame(
-    Metric = c(
-      "N Enrolled",
-      "N Control",
-      "N Experimental",
-      "Total Exposure - Control",
-      "Total Exposure - Experimental",
-      "Exposure at Risk - Control",
-      "Exposure at Risk - Experimental",
-      "Events - Control",
-      "Events - Experimental",
-      "Events - Total",
-      "Variance of log(RR)",
-      "Information (Blinded)",
-      "Information (Unblinded)"
+planning_comparison$Event_Diff <- planning_comparison$Mean_Events -
+  planning_comparison$Planned_Events
+planning_comparison$Info_Diff <- planning_comparison$Mean_Unblinded_Info -
+  planning_comparison$Planned_Info
+
+planning_comparison |>
+  gt() |>
+  tab_header(
+    title = "Design Planning Quantities vs Simulation Means",
+    subtitle = sprintf("Based on %d simulated trials", n_sims)
+  ) |>
+  cols_label(
+    Analysis = "Analysis",
+    Month = "Month",
+    Planned_N = "Planned N",
+    Mean_N = "Mean N",
+    Planned_Total_Exposure = "Planned total exposure",
+    Mean_Total_Exposure = "Mean total exposure",
+    Planned_At_Risk_Exposure = "Planned at-risk exposure",
+    Mean_At_Risk_Exposure = "Mean at-risk exposure",
+    Planned_Events = "Planned events",
+    Mean_Events = "Mean events",
+    Planned_Info = "Planned information",
+    Mean_Unblinded_Info = "Mean unblinded information",
+    Event_Diff = "Event diff.",
+    Info_Diff = "Information diff."
+  ) |>
+  fmt_number(
+    columns = c(
+      Planned_N, Mean_N,
+      Planned_Total_Exposure, Mean_Total_Exposure,
+      Planned_At_Risk_Exposure, Mean_At_Risk_Exposure,
+      Planned_Events, Mean_Events,
+      Planned_Info, Mean_Unblinded_Info,
+      Event_Diff, Info_Diff
     ),
-    Theoretical = c(
-      theo_n, theo_n1, theo_n2,
-      theo_n1 * theo_exposure, theo_n2 * theo_exposure,
-      theo_n1 * theo_exposure_at_risk1, theo_n2 * theo_exposure_at_risk2,
-      theo_events1, theo_events2, theo_events,
-      theo_variance, theo_info, theo_info
-    ),
-    Simulated = c(
-      obs_n, obs_n1, obs_n2,
-      obs_exposure1, obs_exposure2,
-      obs_exposure_at_risk1, obs_exposure_at_risk2,
-      obs_events1, obs_events2, obs_events,
-      obs_variance, obs_info_blinded, obs_info_unblinded
-    ),
-    stringsAsFactors = FALSE
+    decimals = 1
   )
-}
-
-# Generate comparison table for each analysis
-for (k in 1:3) {
-  cat(sprintf("\n### Analysis %d (Month %d)\n\n", k, params$analysis_times[k]))
-  
-  comparison_k <- get_analysis_comparison(k)
-  comparison_k$Difference <- comparison_k$Simulated - comparison_k$Theoretical
-  comparison_k$Rel_Diff_Pct <- 100 * comparison_k$Difference / abs(comparison_k$Theoretical)
-  
-  print(
-    comparison_k |>
-      gt() |>
-      tab_header(
-        title = sprintf("Analysis %d: Theoretical vs Simulated", k),
-        subtitle = sprintf("Calendar time = %d months", params$analysis_times[k])
-      ) |>
-      fmt_number(columns = c(Theoretical, Simulated, Difference), decimals = 2) |>
-      fmt_number(columns = Rel_Diff_Pct, decimals = 1) |>
-      cols_label(
-        Metric = "",
-        Theoretical = "Theoretical",
-        Simulated = "Simulated",
-        Difference = "Difference",
-        Rel_Diff_Pct = "Rel. Diff (%)"
-      ) |>
-      tab_row_group(label = md("**Information**"), rows = grepl("Information|Variance", Metric)) |>
-      tab_row_group(label = md("**Events**"), rows = grepl("Events", Metric)) |>
-      tab_row_group(label = md("**Exposure**"), rows = grepl("Exposure", Metric)) |>
-      tab_row_group(label = md("**Sample Size**"), rows = grepl("^N ", Metric)) |>
-      row_group_order(groups = c("**Sample Size**", "**Exposure**", "**Events**", "**Information**"))
-  )
-  
-  # Add boundary crossing summary
-  sub_dt <- dt[analysis == k]
-  cat(sprintf("\n**Boundary Crossing:**\n"))
-  cat(sprintf("- Efficacy (upper): %.1f%% (n=%d)\n", 
-              mean(sub_dt$cross_upper) * 100, sum(sub_dt$cross_upper)))
-  cat(sprintf("- Futility (lower): %.1f%% (n=%d)\n", 
-              mean(sub_dt$cross_lower) * 100, sum(sub_dt$cross_lower)))
-  cat(sprintf("- Cumulative Efficacy: %.1f%%\n\n", 
-              sum(dt[analysis <= k]$cross_upper) / n_sims * 100))
-}
 ```
 
-### Analysis 1 (Month 10)
-
-| Analysis 1: Theoretical vs Simulated |             |           |            |               |
-|--------------------------------------|-------------|-----------|------------|---------------|
-| Calendar time = 10 months            |             |           |            |               |
-|                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
-| **Sample Size**                      |             |           |            |               |
-| N Enrolled                           | 156.44      | 303.49    | 147.05     | 94.0          |
-| N Control                            | 78.22       | 151.75    | 73.53      | 94.0          |
-| N Experimental                       | 78.22       | 151.74    | 73.52      | 94.0          |
-| **Exposure**                         |             |           |            |               |
-| Total Exposure - Control             | 385.59      | 643.96    | 258.37     | 67.0          |
-| Total Exposure - Experimental        | 385.59      | 644.23    | 258.64     | 67.1          |
-| Exposure at Risk - Control           | 356.32      | 599.78    | 243.46     | 68.3          |
-| Exposure at Risk - Experimental      | 365.57      | 613.87    | 248.30     | 67.9          |
-| **Events**                           |             |           |            |               |
-| Events - Control                     | 86.07       | 72.67     | −13.41     | −15.6         |
-| Events - Experimental                | 59.51       | 49.93     | −9.58      | −16.1         |
-| Events - Total                       | 145.58      | 122.60    | −22.98     | −15.8         |
-| **Information**                      |             |           |            |               |
-| Variance of log(RR)                  | 0.04        | 0.04      | 0.00       | 13.1          |
-| Information (Blinded)                | 27.03       | 23.20     | −3.83      | −14.2         |
-| Information (Unblinded)              | 27.03       | 24.03     | −3.00      | −11.1         |
-
-**Boundary Crossing:** - Efficacy (upper): 21.1% (n=759) - Futility
-(lower): 0.0% (n=1) - Cumulative Efficacy: 21.1%
-
-### Analysis 2 (Month 18)
-
-| Analysis 2: Theoretical vs Simulated |             |           |            |               |
-|--------------------------------------|-------------|-----------|------------|---------------|
-| Calendar time = 18 months            |             |           |            |               |
-|                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
-| **Sample Size**                      |             |           |            |               |
-| N Enrolled                           | 341.22      | 364.00    | 22.78      | 6.7           |
-| N Control                            | 170.61      | 182.00    | 11.39      | 6.7           |
-| N Experimental                       | 170.61      | 182.00    | 11.39      | 6.7           |
-| **Exposure**                         |             |           |            |               |
-| Total Exposure - Control             | 1,750.49    | 1,465.02  | −285.47    | −16.3         |
-| Total Exposure - Experimental        | 1,750.49    | 1,465.87  | −284.62    | −16.3         |
-| Exposure at Risk - Control           | 1,617.62    | 1,361.34  | −256.28    | −15.8         |
-| Exposure at Risk - Experimental      | 1,659.61    | 1,394.47  | −265.14    | −16.0         |
-| **Events**                           |             |           |            |               |
-| Events - Control                     | 214.98      | 164.40    | −50.59     | −23.5         |
-| Events - Experimental                | 148.64      | 113.27    | −35.37     | −23.8         |
-| Events - Total                       | 363.62      | 277.67    | −85.95     | −23.6         |
-| **Information**                      |             |           |            |               |
-| Variance of log(RR)                  | 0.02        | 0.02      | 0.00       | 23.4          |
-| Information (Blinded)                | 58.96       | 46.51     | −12.45     | −21.1         |
-| Information (Unblinded)              | 58.96       | 48.07     | −10.89     | −18.5         |
-
-**Boundary Crossing:** - Efficacy (upper): 32.2% (n=1159) - Futility
-(lower): 1.5% (n=55) - Cumulative Efficacy: 53.3%
-
-### Analysis 3 (Month 24)
-
-| Analysis 3: Theoretical vs Simulated |             |           |            |               |
-|--------------------------------------|-------------|-----------|------------|---------------|
-| Calendar time = 24 months            |             |           |            |               |
-|                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
-| **Sample Size**                      |             |           |            |               |
-| N Enrolled                           | 376.00      | 364.00    | −12.00     | −3.2          |
-| N Control                            | 188.00      | 182.00    | −6.00      | −3.2          |
-| N Experimental                       | 188.00      | 182.00    | −6.00      | −3.2          |
-| **Exposure**                         |             |           |            |               |
-| Total Exposure - Control             | 2,199.12    | 1,630.29  | −568.83    | −25.9         |
-| Total Exposure - Experimental        | 2,199.12    | 1,630.53  | −568.59    | −25.9         |
-| Exposure at Risk - Control           | 2,032.20    | 1,514.50  | −517.70    | −25.5         |
-| Exposure at Risk - Experimental      | 2,084.95    | 1,550.79  | −534.16    | −25.6         |
-| **Events**                           |             |           |            |               |
-| Events - Control                     | 245.10      | 182.82    | −62.28     | −25.4         |
-| Events - Experimental                | 169.46      | 125.94    | −43.51     | −25.7         |
-| Events - Total                       | 414.56      | 308.76    | −105.79    | −25.5         |
-| **Information**                      |             |           |            |               |
-| Variance of log(RR)                  | 0.02        | 0.02      | 0.00       | 26.4          |
-| Information (Blinded)                | 64.98       | 49.95     | −15.03     | −23.1         |
-| Information (Unblinded)              | 64.98       | 51.75     | −13.23     | −20.4         |
-
-**Boundary Crossing:** - Efficacy (upper): 29.2% (n=1050) - Futility
-(lower): 16.0% (n=576) - Cumulative Efficacy: 82.4%
+| Design Planning Quantities vs Simulation Means |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+| Based on 3600 simulated trials |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Analysis | Month | Planned N | Mean N | Planned total exposure | Mean total exposure | Planned at-risk exposure | Mean at-risk exposure | Planned events | Mean events | Planned information | Mean unblinded information | Event diff. | Information diff. |
+| 1 | 10 | 313.3 | 313.8 | 1,544.6 | 1,546.6 | 1,445.9 | 1,456.2 | 145.6 | 147.2 | 27.0 | 28.3 | 1.6 | 1.2 |
+| 2 | 18 | 376.0 | 376.0 | 3,857.8 | 3,855.3 | 3,611.3 | 3,622.9 | 363.6 | 365.3 | 59.0 | 60.8 | 1.7 | 1.8 |
+| 3 | 24 | 376.0 | 376.0 | 4,398.2 | 4,395.9 | 4,117.2 | 4,130.1 | 414.6 | 416.3 | 65.0 | 66.8 | 1.7 | 1.8 |
 
 ### Overall operating characteristics
 
 ``` r
+
 cat("=== Overall Operating Characteristics ===\n")
 #> === Overall Operating Characteristics ===
 cat(sprintf("Number of simulations: %d\n", n_sims))
@@ -442,9 +383,9 @@ cat(sprintf("Number of simulations: %d\n", n_sims))
 cat(sprintf("Overall Power (P[reject H0]): %.1f%% (SE: %.1f%%)\n", 
             summary_gs$power * 100, 
             sqrt(summary_gs$power * (1 - summary_gs$power) / n_sims) * 100))
-#> Overall Power (P[reject H0]): 82.4% (SE: 0.6%)
+#> Overall Power (P[reject H0]): 89.9% (SE: 0.5%)
 cat(sprintf("Futility Stopping Rate: %.1f%%\n", summary_gs$futility * 100))
-#> Futility Stopping Rate: 17.6%
+#> Futility Stopping Rate: 10.1%
 cat(sprintf("Design Power (target): %.1f%%\n", (1 - gs_nb$beta) * 100))
 #> Design Power (target): 90.0%
 ```
@@ -452,6 +393,7 @@ cat(sprintf("Design Power (target): %.1f%%\n", (1 - gs_nb$beta) * 100))
 ### Power comparison by analysis
 
 ``` r
+
 # Create comparison table
 crossing_summary <- data.frame(
   Analysis = 1:3,
@@ -477,17 +419,18 @@ crossing_summary |>
   fmt_percent(columns = c(Sim_Power, Sim_Cum_Power, Design_Cum_Power), decimals = 1)
 ```
 
-| Power Comparison: Simulation vs Design |       |                         |                        |                           |
-|----------------------------------------|-------|-------------------------|------------------------|---------------------------|
-| Based on 3600 simulated trials         |       |                         |                        |                           |
-| Analysis                               | Month | Incremental Power (Sim) | Cumulative Power (Sim) | Cumulative Power (Design) |
-| 1                                      | 10    | 21.1%                   | 21.1%                  | 24.2%                     |
-| 2                                      | 18    | 32.2%                   | 53.3%                  | 63.4%                     |
-| 3                                      | 24    | 29.2%                   | 82.4%                  | 90.0%                     |
+| Power Comparison: Simulation vs Design |  |  |  |  |
+|----|----|----|----|----|
+| Based on 3600 simulated trials |  |  |  |  |
+| Analysis | Month | Incremental Power (Sim) | Cumulative Power (Sim) | Cumulative Power (Design) |
+| 1 | 10 | 25.7% | 25.7% | 24.2% |
+| 2 | 18 | 40.1% | 65.7% | 63.4% |
+| 3 | 24 | 24.1% | 89.9% | 90.0% |
 
 ### Visualization of Z-statistics
 
 ``` r
+
 # Prepare data for plotting
 plot_data <- results
 plot_data$z_flipped <- -plot_data$z_stat # Flip for efficacy direction
@@ -523,9 +466,9 @@ ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
   ) +
   theme_minimal() +
   ylim(c(-4, 6))
-#> Warning: Removed 7 rows containing non-finite outside the scale range
+#> Warning: Removed 22 rows containing non-finite outside the scale range
 #> (`stat_ydensity()`).
-#> Warning: Removed 7 rows containing non-finite outside the scale range
+#> Warning: Removed 22 rows containing non-finite outside the scale range
 #> (`stat_boxplot()`).
 ```
 
@@ -555,5 +498,5 @@ spending at early analyses, preserving most of the Type I error for
 later analyses when more information is available.
 
 With 3600 simulations, the standard error for the power estimate is
-approximately 0.5%. The observed power of 82.4% is close to the design
+approximately 0.5%. The observed power of 89.9% is close to the design
 target of 90%, validating the sample size calculation methodology.

@@ -1,6 +1,7 @@
 # Simulating recurrent events
 
 ``` r
+
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
@@ -33,6 +34,7 @@ We will simulate a small trial with the following parameters:
 ### Defining input parameters
 
 ``` r
+
 # Enrollment: rate of 4 patients/month for 5 months -> ~20 patients
 enroll_rate <- data.frame(
   rate = 4,
@@ -67,6 +69,7 @@ max_followup <- 2
 ## Running the simulation
 
 ``` r
+
 set.seed(123)
 
 sim_data <- nb_sim(
@@ -99,6 +102,7 @@ We can aggregate the data to calculate the observed event rates and
 total follow-up time for each group.
 
 ``` r
+
 sim_dt <- as.data.table(sim_data)
 sim_dt[, censor_followup := ifelse(event == 0, tte, 0)]
 summary_stats <- sim_dt[
@@ -137,6 +141,7 @@ Before plotting, we can look at the first ten records from the simulated
 dataset.
 
 ``` r
+
 head(sim_data, 10)
 #>    id id    treatment enroll_time       tte calendar_time event
 #> 1   1  1      Control  0.01757203 2.0000000     2.0175720     0
@@ -160,6 +165,7 @@ no new events can be recorded. For illustration purposes in this plot,
 we show a **20-day gap** so it is visible on the timeline.
 
 ``` r
+
 sim_plot <- as.data.frame(sim_data)
 names(sim_plot) <- make.names(names(sim_plot), unique = TRUE)
 events_df <- sim_plot[sim_plot$event == 1, ]
@@ -206,6 +212,7 @@ is used, no new events are counted during that gap, and this time is
 excluded from time at risk.
 
 ``` r
+
 cut_summary <- cut_data_by_date(sim_data, cut_date = 1.5)
 head(cut_summary)
 #>   id    treatment enroll_time      tte tte_total events
@@ -217,12 +224,86 @@ head(cut_summary)
 #> 6  6 Experimental  0.06569608 1.434304  1.434304      0
 ```
 
+## Missing data assumptions and imputation
+
+The primary analysis in `gsDesignNB` is an observed-data rate analysis:
+each participant contributes the recurrent events observed before the
+analysis cut and the corresponding exposure time. In
+[`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md),
+this appears as a negative binomial or Poisson log-rate model with
+`offset(log(tte))`; unobserved future events after censoring are not
+filled in.
+
+Under the current estimand and model, missing at random (MAR) censoring
+does not by itself require multiple imputation (MI). Rubin’s
+ignorability result states that, for direct likelihood or Bayesian
+inference, the missing-data process can be ignored when the data are MAR
+and the parameters governing missingness are distinct from the
+outcome-model parameters (Rubin 1976). For this package, the practical
+reading is:
+
+- if dropout or administrative censoring is independent of future
+  unobserved event burden after conditioning on the variables and
+  histories represented in the analysis model, use the observed events
+  and observed exposure;
+- do not discard partially followed participants, since their observed
+  events and exposure remain informative;
+- MI under MAR is optional as a modeling or reporting strategy, not a
+  requirement for valid point estimates and standard errors from a
+  correctly specified observed-data likelihood.
+
+This statement is narrower than saying that any available-case analysis
+is valid under MAR. If MAR depends on auxiliary covariates, prior event
+history, center, season, adherence, or other observed predictors that
+are not represented in the analysis, those variables should be added to
+the analysis, used in an inverse probability weighting model, or used in
+a compatible imputation model. A complete-case analysis of only subjects
+with full follow-up is generally a different and less efficient
+analysis, and may be biased when incomplete participants differ from
+completers.
+
+For missing not at random (MNAR), the missing future event process is
+not identified from observed data alone. Imputation can be useful, but
+only as part of an explicit sensitivity analysis (National Research
+Council 2010). For recurrent events, Keene et al. provide a directly
+relevant controlled-imputation framework using a negative multinomial
+formulation compatible with a Gamma-Poisson / negative binomial
+recurrent-event model (Keene et al. 2014). Their reference-based
+approach, such as borrowing control-arm event behaviour for active-arm
+dropouts, targets de facto sensitivity estimands rather than replacing
+the MAR primary analysis. A future MNAR MI routine for this package
+should first preserve enough information to define what is missing:
+
+- record the censoring reason, such as dropout, administrative cut,
+  maximum follow-up, or analysis cut;
+- keep the planned follow-up horizon so the unobserved exposure window
+  after dropout can be calculated;
+- include observed predictors of both dropout and event burden, such as
+  treatment, observed events, observed exposure, season, enrollment
+  time, and dropout reason.
+
+An MNAR imputation model should then impute post-dropout recurrent-event
+counts or event times from a negative binomial recurrent-event model
+with an exposure offset. Sensitivity parameters can shift the
+post-dropout event rate, for example by using treatment-specific
+multipliers `\lambda_post = \lambda_model * exp(delta_g)`, or can impose
+reference-based rules such as jump-to-reference or copy-reference.
+Running a grid of assumptions gives a tipping-point or pattern-mixture
+sensitivity analysis. Each imputed dataset should be analyzed with the
+same
+[`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
+estimand, with variance estimation specified and checked as part of the
+sensitivity analysis. If `event_gap` is important, imputing event times
+rather than only total counts is preferable so at-risk time after events
+is handled consistently.
+
 ## Wald test (Mütze et al. 2019)
 
 Using the truncated data we can run a negative binomial Wald test as
 described by Mütze et al. (2019).
 
 ``` r
+
 mutze_res <- mutze_test(cut_summary)
 mutze_res
 #> Mutze Test Results
@@ -253,6 +334,7 @@ and then cut the data accordingly. This function also respects the
 `event_gap` (defaulting to 5 days).
 
 ``` r
+
 # Target 15 total events
 target_events <- 15
 analysis_date <- get_analysis_date(sim_data, planned_events = target_events)
@@ -283,6 +365,7 @@ relates the variance to the mean as Var(Y) = \mu + k\mu^2.
 We define a scenario with a known dispersion of 0.5.
 
 ``` r
+
 # Define failure rates with dispersion
 fail_rate_nb <- data.frame(
   treatment = "Control",
@@ -315,6 +398,7 @@ Moments (MoM) estimator:
 \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2}
 
 ``` r
+
 # Count events per subject
 counts_nb <- as.data.table(sim_nb)[, .(events = sum(event)), by = id]
 
@@ -357,6 +441,7 @@ We can compare the observed distribution of event counts to the
 theoretical negative binomial distribution.
 
 ``` r
+
 # Calculate observed proportions
 obs_dist <- counts_nb[, .N, by = events]
 obs_dist[, prop := N / sum(N)]
@@ -400,7 +485,19 @@ ggplot(plot_data, aes(x = events, y = prop, fill = type)) +
 
 ## References
 
+Keene, Oliver N., James H. Roger, Benjamin F. Hartley, and Michael G.
+Kenward. 2014. “Missing Data Sensitivity Analysis for Recurrent Event
+Data Using Controlled Imputation.” *Pharmaceutical Statistics* 13 (4):
+258–64. <https://doi.org/10.1002/pst.1624>.
+
 Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
 “Group Sequential Designs for Negative Binomial Outcomes.” *Statistical
 Methods in Medical Research* 28 (8): 2326–47.
 <https://doi.org/10.1177/0962280218773115>.
+
+National Research Council. 2010. *The Prevention and Treatment of
+Missing Data in Clinical Trials*. National Academies Press.
+<https://doi.org/10.17226/12955>.
+
+Rubin, Donald B. 1976. “Inference and Missing Data.” *Biometrika* 63
+(3): 581–92. <https://doi.org/10.1093/biomet/63.3.581>.

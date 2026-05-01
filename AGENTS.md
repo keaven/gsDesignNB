@@ -9,11 +9,18 @@ with the `gsDesign` package to support group sequential designs.
 ## Architecture & key components
 
 - **Core logic (`R/`)**:
-  - `sample_size_nbinom.R`: Fixed design sample size calculations.
+  - `sample_size_nbinom.R`: Fixed design sample size calculations
+    (`test_type = "wald"` or `"score"`).
+  - `mutze_test.R`: Wald and score tests for NB treatment effect.
   - `sim_gs_nbinom.R`: Group sequential design simulations.
   - `nb_sim.R`: Underlying data generation for simulations.
 - **Data handling**: Uses `data.table` for high-performance data
   manipulation in simulations.
+- **Parallelism**: Use
+  [`future::multicore`](https://future.futureverse.org/reference/multicore.html)
+  (forking) on macOS/Linux for `devtools::load_all()` compatibility;
+  [`future::multisession`](https://future.futureverse.org/reference/multisession.html)
+  on Windows.
 - **Integration**: Re-exports `gsDesign` functions
   (`reexport-gsDesign.R`) to extend its functionality seamlessly.
 

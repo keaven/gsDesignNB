@@ -1,6 +1,7 @@
 # Non-inferiority and super-superiority designs
 
 ``` r
+
 library(gsDesignNB)
 ```
 
@@ -29,6 +30,7 @@ rate by more than 10% (i.e., a rate ratio of 1.1).
 - Alpha = 0.025 (one-sided)
 
 ``` r
+
 ni_design <- sample_size_nbinom(
   lambda1 = 0.1,
   lambda2 = 0.09,
@@ -84,6 +86,7 @@ required. We wish to test if the risk reduction is greater than 50%
 - Max follow-up = 1
 
 ``` r
+
 ss_design <- sample_size_nbinom(
   lambda1 = 0.1,
   lambda2 = 0.02,

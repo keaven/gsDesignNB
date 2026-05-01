@@ -1,10 +1,16 @@
 # Sample size calculation for negative binomial outcomes
 
 Computes the sample size (or power) for comparing two treatment groups
-assuming negative binomial distributed event counts. The test is based
-on the Wald statistic for the log rate ratio, corresponding to Method 3
-of Zhu & Lakkis (2014). The same underlying variance formula is used by
-Friede & Schmidli (2010) and Mutze et al. (2019).
+assuming negative binomial distributed event counts. When
+`test_type = "wald"` (default), the formula uses a single variance
+evaluated under the alternative, corresponding to Method 3 of Zhu &
+Lakkis (2014) and the formulas of Friede & Schmidli (2010) and Mutze et
+al. (2019). When `test_type = "score"`, separate null and alternative
+variances are used (Farrington & Manning style), aligning the
+calculation with the null-variance scale of the score test. In practice,
+the final test statistic affects Type I error more than the small
+difference between Wald and score sizing, so score-test designs should
+be checked by simulation for both Type I error and power.
 
 ## Usage
 
@@ -23,6 +29,7 @@ sample_size_nbinom(
   trial_duration,
   dropout_rate = 0,
   max_followup = NULL,
+  test_type = c("wald", "score"),
   event_gap = NULL
 )
 ```
@@ -87,13 +94,31 @@ sample_size_nbinom(
 
 - dropout_rate:
 
-  Dropout hazard rate. Default is 0. Can be a vector of length 2 for
-  group-specific dropout (control, treatment).
+  Dropout hazard rate. Can be:
+
+  - A scalar (common constant rate for both groups). Default is 0.
+
+  - A vector of length 2 (group-specific constant rates: control,
+    treatment).
+
+  - A data frame with columns `rate` and `duration` (and optionally
+    `treatment`) defining piecewise constant dropout hazards. When a
+    `treatment` column is present, use 1 for control and 2 for
+    treatment. Without a `treatment` column, the same piecewise schedule
+    applies to both groups. The last `duration` may be `Inf` to extend
+    the final rate indefinitely.
 
 - max_followup:
 
   Maximum follow-up time for any patient. Default is `NULL` (infinite).
   Can be a vector of length 2 for group-specific caps.
+
+- test_type:
+
+  Type of test for which to size the study: `"wald"` (default) uses a
+  single variance under the alternative; `"score"` uses separate null
+  and alternative variances (\\z\_\alpha \sqrt{V_0} + z\_\beta
+  \sqrt{V_1}\\).
 
 - event_gap:
 
@@ -164,6 +189,11 @@ containing:
 
   Variance of the log rate ratio \\\mathrm{Var}(\hat\theta)\\.
 
+- variance_null:
+
+  Null variance of the log rate ratio used for score-test sizing, on the
+  same final-analysis scale as `variance`.
+
 - accrual_rate:
 
   Accrual rate(s) used (possibly scaled to achieve target power).
@@ -176,21 +206,39 @@ containing:
 
 ### Sample size formula
 
-The sample size for group 1 is: \$\$n_1 = \frac{(z\_{\alpha/s} +
-z\_\beta)^2 \tilde{V}}{(\theta - \theta_0)^2}\$\$ where \\\theta =
-\log(\lambda_2/\lambda_1)\\, \\\theta_0 = \log(\mathrm{rr}\_0)\\, and:
-\$\$\tilde{V} = \left(\frac{1}{\mu_1} + k_1\right) +
-\frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)\$\$ with \\\mu_g =
-\lambda_g \bar{t}\_g\\ the expected event count and \\\bar{t}\_g\\ the
-average exposure for group \\g\\.
+**Wald test** (`test_type = "wald"`): \$\$n_1 = \frac{(z\_{\alpha/s} +
+z\_\beta)^2 V_1}{(\theta - \theta_0)^2}\$\$
+
+**Score test** (`test_type = "score"`): \$\$n_1 = \frac{(z\_{\alpha/s}
+\sqrt{V_0} + z\_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}\$\$
+
+where \\\theta = \log(\lambda_2/\lambda_1)\\, \\\theta_0 =
+\log(\mathrm{rr}\_0)\\, and: \$\$V_1 = \left(\frac{1}{\mu_1} +
+k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)\$\$ is the
+variance under \\H_1\\. Under \\H_0\\ (pooled rate \\\lambda_0 =
+(\lambda_1 + r \lambda_2 \mathrm{rr}\_0) / (1 + r)\\): \$\$V_0 =
+\left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)\$\$ with
+\\\mu_g = \lambda_g \bar{t}\_g\\ the expected event count and
+\\\bar{t}\_g\\ the average exposure for group \\g\\.
+
+In superiority settings, the traditional Wald/Zhu-Lakkis sample size may
+be slightly larger than score sizing and can provide a useful power
+margin when the final analysis uses the score test. Compare both sizing
+rules and verify the chosen design with simulation when finite-sample
+calibration matters.
 
 ### Average exposure
 
 The average exposure \\\bar{t}\_g\\ accounts for piecewise accrual,
-exponential dropout, and maximum follow-up truncation. When dropout rate
-\\\delta \> 0\\, the expected exposure for a patient with potential
-follow-up \\u\\ is \\m(u) = (1 - e^{-\delta u})/\delta\\. The overall
-average is a weighted mean across accrual segments.
+piecewise exponential dropout, and maximum follow-up truncation. With
+piecewise constant dropout hazards \\\delta_1, \delta_2, \ldots\\ over
+successive intervals, the survival function is \\S(t) = \exp(-\sum_j
+\delta_j \ell_j)\\ where \\\ell_j\\ is the time spent in interval \\j\\.
+The expected exposure for a patient with potential follow-up \\u\\ is
+\\m(u) = \int_0^u S(t)\\dt\\, computed as a sum of exponential integrals
+over each piece. For a single constant rate \\\delta \> 0\\ this
+simplifies to \\m(u) = (1 - e^{-\delta u})/\delta\\. The overall average
+is a weighted mean across accrual segments.
 
 ### Variance inflation
 

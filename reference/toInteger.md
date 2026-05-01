@@ -46,16 +46,16 @@ An object of the same class as input with integer sample sizes.
 
 ## Details
 
-This function rounds sample sizes at each analysis to integers while
-maintaining the randomization ratio and ensuring monotonically
-increasing sample sizes across analyses. Only the final analysis sample
-size is rounded to an integer; interim sample sizes remain as expected
-(non-integer) values based on the information fraction.
+This function rounds the final sample size while maintaining the
+randomization ratio. When calendar analysis times are available, interim
+sample sizes remain expected enrollment counts at those calendar times
+after rescaling the accrual rate to the rounded final sample size.
 
 When `analysis_times` were provided to
 [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md),
-the statistical information (`n.I`) is recomputed at each analysis time
-based on the new sample size and expected exposures.
+expected events, exposure, and statistical information (`n.I`) are
+recomputed at each analysis time based on the new sample size and
+expected exposures.
 
 ## Methods (by class)
 

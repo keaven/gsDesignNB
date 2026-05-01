@@ -15,12 +15,15 @@ with
 [`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
 and
 [`sim_ssr_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_ssr_nbinom.md).
-The `gsDesign` package supplies the underlying spending-function and
-boundary calculations used by those workflows.
+Planning and simulation can use either Wald or score-test inference for
+rate ratios. The `gsDesign` package supplies the underlying
+spending-function and boundary calculations used by those workflows.
 
 ## Start Here
 
 - `sample-size-nbinom` for fixed-design planning
+- `score-vs-wald-simulation` for Wald/score sizing and Type I error
+  guidance
 - `simulation-example` and `seasonal-simulation` for recurrent-event
   data generation
 - `ssr-example` and `ssr-simulation-study` for negative binomial SSR
@@ -31,12 +34,14 @@ boundary calculations used by those workflows.
 You can install gsDesignNB from CRAN with:
 
 ``` r
+
 install.packages("gsDesignNB")
 ```
 
 Or install the development version from GitHub with:
 
 ``` r
+
 remotes::install_github("keaven/gsDesignNB")
 ```
 
@@ -50,6 +55,7 @@ alone: it opens a `file://` URL, and browsers often load little or no
 CSS/JS for local files. From the package root, run:
 
 ``` r
+
 gsDesignNB::preview_pkgdown_site()
 ```
 

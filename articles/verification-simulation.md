@@ -1,6 +1,7 @@
 # Verification of sample size calculation via simulation
 
 ``` r
+
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
@@ -54,6 +55,7 @@ using
 [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md).
 
 ``` r
+
 # Parameters
 lambda1 <- 0.4
 lambda2 <- 0.3
@@ -108,6 +110,7 @@ approximately 0.005 when the true power is 90% (\sqrt{0.9 \times 0.1 /
 `data-raw/generate_simulation_data.R`.
 
 ``` r
+
 # Load pre-computed simulation results
 results_file <- system.file("extdata", "simulation_results.rds", package = "gsDesignNB")
 
@@ -138,32 +141,41 @@ The key question is whether the corrected sample size achieves the
 nominal 90% power.
 
 ``` r
+
 power_full <- mean(results$p_value < alpha, na.rm = TRUE)
 power_naive <- mean(results_naive$p_value < alpha, na.rm = TRUE)
+power_full_score <- mean(results$p_value_score < alpha, na.rm = TRUE)
+power_naive_score <- mean(results_naive$p_value_score < alpha, na.rm = TRUE)
 
 ci_full <- binom.test(sum(results$p_value < alpha, na.rm = TRUE), nrow(results))$conf.int
 ci_naive <- binom.test(sum(results_naive$p_value < alpha, na.rm = TRUE), nrow(results_naive))$conf.int
+ci_full_score <- binom.test(sum(results$p_value_score < alpha, na.rm = TRUE), nrow(results))$conf.int
+ci_naive_score <- binom.test(sum(results_naive$p_value_score < alpha, na.rm = TRUE), nrow(results_naive))$conf.int
 
 power_df <- data.frame(
   Design = c(
     paste0("Corrected (n = ", n_full, ")"),
+    paste0("Naive (n = ", n_naive, ")"),
+    paste0("Corrected (n = ", n_full, ")"),
     paste0("Naive (n = ", n_naive, ")")
   ),
-  Theoretical = c(design_ref$power, design_ref$power),
-  Empirical = c(power_full, power_naive),
-  CI_Lower = c(ci_full[1], ci_naive[1]),
-  CI_Upper = c(ci_full[2], ci_naive[2])
+  Test = c("Wald", "Wald", "Score", "Score"),
+  Theoretical = rep(design_ref$power, 4),
+  Empirical = c(power_full, power_naive, power_full_score, power_naive_score),
+  CI_Lower = c(ci_full[1], ci_naive[1], ci_full_score[1], ci_naive_score[1]),
+  CI_Upper = c(ci_full[2], ci_naive[2], ci_full_score[2], ci_naive_score[2])
 )
 
 power_df |>
   gt() |>
   tab_header(
-    title = md("**Power Comparison: Corrected vs Naive Sample Size**"),
+    title = md("**Power Comparison: Wald vs Score Test**"),
     subtitle = paste0("Based on ", nrow(results), " simulated trials")
   ) |>
   fmt_number(columns = c(Theoretical, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
   cols_label(
     Design = "Design",
+    Test = "Test",
     Theoretical = "Target",
     Empirical = "Empirical",
     CI_Lower = "95% CI Lower",
@@ -171,12 +183,14 @@ power_df |>
   )
 ```
 
-| **Power Comparison: Corrected vs Naive Sample Size** |        |           |              |              |
-|------------------------------------------------------|--------|-----------|--------------|--------------|
-| Based on 3600 simulated trials                       |        |           |              |              |
-| Design                                               | Target | Empirical | 95% CI Lower | 95% CI Upper |
-| Corrected (n = 436)                                  | 0.9000 | 0.9122    | 0.9025       | 0.9213       |
-| Naive (n = 422)                                      | 0.9000 | 0.9039    | 0.8938       | 0.9133       |
+| **Power Comparison: Wald vs Score Test** |  |  |  |  |  |
+|----|----|----|----|----|----|
+| Based on 3600 simulated trials |  |  |  |  |  |
+| Design | Test | Target | Empirical | 95% CI Lower | 95% CI Upper |
+| Corrected (n = 436) | Wald | 0.9000 | 0.9122 | 0.9025 | 0.9213 |
+| Naive (n = 422) | Wald | 0.9000 | 0.9039 | 0.8938 | 0.9133 |
+| Corrected (n = 436) | Score | 0.9000 | 0.8964 | 0.8860 | 0.9062 |
+| Naive (n = 422) | Score | 0.9000 | 0.8872 | 0.8764 | 0.8974 |
 
 ### Summary of verification results (corrected design)
 
@@ -196,6 +210,7 @@ with the observed simulation results at the corrected sample size.
   because the group with more events loses more time to gaps.
 
 ``` r
+
 # ---- Compute all metrics ----
 
 # Number of simulations
@@ -316,24 +331,24 @@ summary_df |>
   sub_missing(missing_text = "—")
 ```
 
-| **Verification of sample_size_nbinom() Predictions** |             |           |            |               |
-|------------------------------------------------------|-------------|-----------|------------|---------------|
-| Based on 3600 simulated trials (n = 436)             |             |           |            |               |
-|                                                      | Theoretical | Simulated | Difference | Rel. Diff (%) |
-| **Exposure**                                         |             |           |            |               |
-| Total Exposure (months) - Control                    | 11.4195     | 11.4142   | −0.0053    | −0.05         |
-| Total Exposure (months) - Experimental               | 11.4195     | 11.4134   | −0.0061    | −0.05         |
-| Exposure at Risk (months) - Control                  | 9.0417      | 9.2563    | 0.2146     | 2.37          |
-| Exposure at Risk (months) - Experimental             | 9.5382      | 9.6883    | 0.1501     | 1.57          |
-| **Events**                                           |             |           |            |               |
-| Events per Subject - Control                         | 3.3185      | 3.3788    | 0.0603     | 1.82          |
-| Events per Subject - Experimental                    | 2.6646      | 2.7013    | 0.0367     | 1.38          |
-| **Treatment Effect**                                 |             |           |            |               |
-| Treatment Effect: log(RR)                            | −0.2877     | −0.2878   | −0.0001    | −0.03         |
-| **Variance**                                         |             |           |            |               |
-| Variance of log(RR)                                  | 0.0078      | 0.0075    | −0.0003    | −3.96         |
-| **Power**                                            |             |           |            |               |
-| Power                                                | 0.9000      | 0.9122    | 0.0122     | 1.36          |
+| **Verification of sample_size_nbinom() Predictions** |  |  |  |  |
+|----|----|----|----|----|
+| Based on 3600 simulated trials (n = 436) |  |  |  |  |
+|  | Theoretical | Simulated | Difference | Rel. Diff (%) |
+| **Exposure** |  |  |  |  |
+| Total Exposure (months) - Control | 11.4195 | 11.4142 | −0.0053 | −0.05 |
+| Total Exposure (months) - Experimental | 11.4195 | 11.4134 | −0.0061 | −0.05 |
+| Exposure at Risk (months) - Control | 9.0417 | 9.2563 | 0.2146 | 2.37 |
+| Exposure at Risk (months) - Experimental | 9.5382 | 9.6883 | 0.1501 | 1.57 |
+| **Events** |  |  |  |  |
+| Events per Subject - Control | 3.3185 | 3.3788 | 0.0603 | 1.82 |
+| Events per Subject - Experimental | 2.6646 | 2.7013 | 0.0367 | 1.38 |
+| **Treatment Effect** |  |  |  |  |
+| Treatment Effect: log(RR) | −0.2877 | −0.2878 | −0.0001 | −0.03 |
+| **Variance** |  |  |  |  |
+| Variance of log(RR) | 0.0078 | 0.0075 | −0.0003 | −3.96 |
+| **Power** |  |  |  |  |
+| Power | 0.9000 | 0.9122 | 0.0122 | 1.36 |
 
 **Notes:**
 
@@ -357,6 +372,7 @@ compare it to the expected normal distribution centered at the
 theoretical mean Z-score.
 
 ``` r
+
 z_scores <- results$estimate / results$se
 
 theo_se <- sqrt(theo_var)
@@ -393,9 +409,45 @@ ggplot(data.frame(z = z_scores), aes(x = z)) +
 
 ![](verification-simulation_files/figure-html/z_score_dist-1.png)
 
+### Wald vs score Z-score comparison
+
+``` r
+
+z_wald <- results$estimate / results$se
+z_score <- results$z_score
+
+z_df <- data.frame(
+  z = c(z_wald, z_score),
+  Test = rep(c("Wald", "Score"), each = length(z_wald))
+)
+
+ggplot(z_df, aes(x = z, color = Test)) +
+  geom_density(linewidth = 1) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = theo_mean_z, sd = 1),
+    linewidth = 0.8,
+    linetype = "dashed",
+    color = "grey40"
+  ) +
+  geom_vline(xintercept = crit_val, linetype = "dotted", color = "black") +
+  labs(
+    title = "Z-score Distribution: Wald vs Score (corrected design)",
+    subtitle = paste0("Dashed = theoretical N(", round(theo_mean_z, 2), ", 1)"),
+    x = "Z-score",
+    y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+![](verification-simulation_files/figure-html/z_score_comparison-1.png)
+
 ### Distribution statistics for log(RR)
 
 ``` r
+
 theo_mean_log_rr <- log(lambda2 / lambda1)
 theo_sd_log_rr <- sqrt(theo_var)
 emp_mean_log_rr <- mean(results$estimate, na.rm = TRUE)
@@ -440,6 +492,98 @@ comparison_log_rr |>
 | Skewness (trimmed)                   | 0.0000      | 0.0056    | 0.0056     |
 | Kurtosis (trimmed)                   | 3.0000      | 2.5476    | −0.4524    |
 
+## Type I error: Wald vs score test
+
+A well-calibrated test should reject at most \alpha = 0.025 under the
+null (\text{RR} = 1). We simulated trials under the null hypothesis
+using the same design parameters (accrual, dropout, dispersion, sample
+size) but with \lambda_2 = \lambda_1 in both arms. The Wald test (based
+on the ML estimate under the alternative) tends to be slightly
+anti-conservative in finite samples, while the score test (evaluated
+entirely under H_0) is expected to be better calibrated.
+
+``` r
+
+null_file <- system.file("extdata", "null_simulation_results.rds", package = "gsDesignNB")
+if (null_file == "" && file.exists("../inst/extdata/null_simulation_results.rds")) {
+  null_file <- "../inst/extdata/null_simulation_results.rds"
+}
+has_null <- null_file != ""
+if (has_null) {
+  null_data <- readRDS(null_file)
+  results_null <- null_data$results_null
+}
+```
+
+``` r
+
+type1_wald <- mean(results_null$p_value_wald < alpha, na.rm = TRUE)
+type1_score <- mean(results_null$p_value_score < alpha, na.rm = TRUE)
+
+n_null <- sum(!is.na(results_null$p_value_wald))
+ci_wald <- binom.test(sum(results_null$p_value_wald < alpha, na.rm = TRUE), n_null)$conf.int
+ci_score <- binom.test(sum(results_null$p_value_score < alpha, na.rm = TRUE), n_null)$conf.int
+
+type1_df <- data.frame(
+  Test = c("Wald (ML)", "Score (null model)"),
+  Nominal = c(alpha, alpha),
+  Empirical = c(type1_wald, type1_score),
+  CI_Lower = c(ci_wald[1], ci_score[1]),
+  CI_Upper = c(ci_wald[2], ci_score[2])
+)
+
+type1_df |>
+  gt() |>
+  tab_header(
+    title = md("**Type I Error: Wald vs Score Test Under RR = 1**"),
+    subtitle = paste0("Based on ", n_null, " simulated null trials (n = ", null_data$n_total, ")")
+  ) |>
+  fmt_number(columns = c(Nominal, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
+  cols_label(
+    Test = "Test",
+    Nominal = "Nominal α",
+    Empirical = "Empirical",
+    CI_Lower = "95% CI Lower",
+    CI_Upper = "95% CI Upper"
+  )
+```
+
+| **Type I Error: Wald vs Score Test Under RR = 1** |  |  |  |  |
+|----|----|----|----|----|
+| Based on 3600 simulated null trials (n = 436) |  |  |  |  |
+| Test | Nominal α | Empirical | 95% CI Lower | 95% CI Upper |
+| Wald (ML) | 0.0250 | 0.0258 | 0.0209 | 0.0316 |
+| Score (null model) | 0.0250 | 0.0200 | 0.0157 | 0.0251 |
+
+``` r
+
+z_null_df <- data.frame(
+  z = c(results_null$z_wald, results_null$z_score),
+  Test = rep(c("Wald", "Score"), each = nrow(results_null))
+)
+
+ggplot(z_null_df, aes(x = z, color = Test)) +
+  geom_density(linewidth = 1) +
+  stat_function(
+    fun = dnorm, args = list(mean = 0, sd = 1),
+    linewidth = 0.8, linetype = "dashed", color = "grey40"
+  ) +
+  geom_vline(xintercept = qnorm(alpha), linetype = "dotted", color = "black") +
+  annotate("text", x = qnorm(alpha), y = 0.02,
+           label = paste0("  α = ", alpha), hjust = 0) +
+  labs(
+    title = "Null Z-score Distribution: Wald vs Score",
+    subtitle = "Dashed = N(0, 1) reference",
+    x = "Z-score",
+    y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+![](verification-simulation_files/figure-html/type1_z_density-1.png)
+
 ## Scenario sweep: impact of the Jensen correction
 
 The Jensen correction for event gaps only applies when both the
@@ -456,6 +600,7 @@ both analyses use the same simulated data, the **paired** comparison is
 very precise.
 
 ``` r
+
 sweep_file <- system.file("extdata", "scenario_sweep_results.rds", package = "gsDesignNB")
 if (sweep_file == "" && file.exists("../inst/extdata/scenario_sweep_results.rds")) {
   sweep_file <- "../inst/extdata/scenario_sweep_results.rds"
@@ -467,6 +612,7 @@ if (has_sweep) {
 ```
 
 ``` r
+
 sweep_display <- data.frame(
   Scenario = sprintf("k = %.1f, gap = %d days", sweep$k, sweep$gap_days),
   `n (corrected)` = sweep$n_corrected,
@@ -497,6 +643,7 @@ sweep_display |>
 ```
 
 ``` r
+
 cat("**Key findings:**\n\n")
 cat("*   The corrected design achieves power at or above the 90% target in **all** scenarios.\n")
 cat("*   The naive design falls below 90% in **three of four** scenarios, with the shortfall increasing as $k$ and $g$ grow.\n")

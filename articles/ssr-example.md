@@ -1,6 +1,7 @@
 # Sample size re-estimation example
 
 ``` r
+
 library(gsDesignNB)
 library(gsDesign)
 library(data.table)
@@ -49,6 +50,7 @@ planned. We will show how to:
 ### Initial sample size calculation
 
 ``` r
+
 # Planned parameters
 lambda1_plan <- 0.1
 lambda2_plan <- 0.075
@@ -87,6 +89,7 @@ gs_plan <- design_plan |>
 ```
 
 ``` r
+
 summary(gs_plan)
 #> Asymmetric two-sided with non-binding futility bound group sequential design
 #> for negative binomial outcomes, 2 analyses, total sample size 882.0, 90 percent
@@ -105,6 +108,7 @@ summary(gs_plan)
 ```
 
 ``` r
+
 gsBoundSummary(gs_plan,
     deltaname = "RR",
     logdelta = TRUE,
@@ -121,20 +125,20 @@ gsBoundSummary(gs_plan,
   )
 ```
 
-| Group Sequential Design Bounds for Negative Binomial Outcome |                     |          |          |
-|--------------------------------------------------------------|---------------------|----------|----------|
-| N = 882, Expected events = 785.4                             |                     |          |          |
-| Analysis                                                     | Value               | Efficacy | Futility |
-| IA 1: 41%                                                    | Z                   | 2.5791   | 0.6354   |
-| Information: 61.25                                           | p (1-sided)         | 0.0050   | 0.2626   |
-| Month: 10                                                    | ~RR at bound        | 0.7192   | 0.9220   |
-|                                                              | P(Cross) if RR=1    | 0.0050   | 0.7374   |
-|                                                              | P(Cross) if RR=0.75 | 0.3714   | 0.0531   |
-| Final                                                        | Z                   | 2.0118   | 2.0118   |
-| Information: 149.77                                          | p (1-sided)         | 0.0221   | 0.0221   |
-| Month: 24                                                    | ~RR at bound        | 0.8484   | 0.8484   |
-|                                                              | P(Cross) if RR=1    | 0.0221   | 0.9779   |
-|                                                              | P(Cross) if RR=0.75 | 0.9038   | 0.0962   |
+| Group Sequential Design Bounds for Negative Binomial Outcome |  |  |  |
+|----|----|----|----|
+| N = 882, Expected events = 785.4 |  |  |  |
+| Analysis | Value | Efficacy | Futility |
+| IA 1: 41% | Z | 2.5791 | 0.6354 |
+| Information: 61.25 | p (1-sided) | 0.0050 | 0.2626 |
+| Month: 10 | ~RR at bound | 0.7192 | 0.9220 |
+|  | P(Cross) if RR=1 | 0.0050 | 0.7374 |
+|  | P(Cross) if RR=0.75 | 0.3714 | 0.0531 |
+| Final | Z | 2.0118 | 2.0118 |
+| Information: 149.77 | p (1-sided) | 0.0221 | 0.0221 |
+| Month: 24 | ~RR at bound | 0.8484 | 0.8484 |
+|  | P(Cross) if RR=1 | 0.0221 | 0.9779 |
+|  | P(Cross) if RR=0.75 | 0.9038 | 0.0962 |
 
 ## End-to-end helper workflow
 
@@ -145,6 +149,7 @@ information-based interim timing, dynamic bounds, optional
 blinded/unblinded re-estimation, and compact summaries.
 
 ``` r
+
 sim_helper <- sim_ssr_nbinom(
   n_sims = 100,
   enroll_rate = data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2),
@@ -174,13 +179,13 @@ helper_summary$trial_summary |>
   )
 ```
 
-| High-level SSR Simulation Summary                                                    |               |        |                |               |        |           |             |                                   |                          |               |             |               |                                   |                          |                |           |                  |                 |               |                 |                                     |                            |                  |             |                    |                     |                       |                            |                   |                   |
-|--------------------------------------------------------------------------------------|---------------|--------|----------------|---------------|--------|-----------|-------------|-----------------------------------|--------------------------|---------------|-------------|---------------|-----------------------------------|--------------------------|----------------|-----------|------------------|-----------------|---------------|-----------------|-------------------------------------|----------------------------|------------------|-------------|--------------------|---------------------|-----------------------|----------------------------|-------------------|-------------------|
-| Expected participants with events and expected events observed are included directly |               |        |                |               |        |           |             |                                   |                          |               |             |               |                                   |                          |                |           |                  |                 |               |                 |                                     |                            |                  |             |                    |                     |                       |                            |                   |                   |
-| scenario                                                                             | strategy      | n_sims | rejection_rate | futility_rate | mean_n | sd_n      | pct_adapted | expected_participants_with_events | expected_events_observed | pct_reach_ia1 | mean_if_ia1 | mean_ia1_time | mean_participants_with_events_ia1 | mean_events_observed_ia1 | n_fallback_ia1 | cross_ia1 | pct_futility_ia1 | pct_reach_final | mean_if_final | mean_final_time | mean_participants_with_events_final | mean_events_observed_final | n_fallback_final | cross_final | pct_futility_final | mean_adapt_cut_time | mean_adapt_enroll_pct | mean_adapt_months_to_close | pct_adapt_allowed | pct_adapt_applied |
-| Lower control rate, higher dispersion                                                | Blinded SSR   | 100    | 0.94           | 0.06          | 878.59 | 107.70959 | 24          | 390.41                            | 902.90                   | 100           | 0.4164735   | 24.78918      | 223.47                            | 433.74                   | 0              | 0.53      | 0.06             | 41              | 1.240871      | 70.48547        | 629.2439                            | 1570.659                   | 0                | 0.41        | 0                  | 24.78918            | 56.51814              | 19.09809                   | 100               | 24                |
-| Lower control rate, higher dispersion                                                | No adaptation | 100    | 0.94           | 0.06          | 859.24 | 90.72448  | 0           | 377.31                            | 868.62                   | 100           | 0.4164735   | 24.78918      | 223.47                            | 433.74                   | 0              | 0.53      | 0.06             | 41              | 1.178834      | 68.11869        | 597.2927                            | 1487.049                   | 0                | 0.41        | 0                  | 24.78918            | 56.51814              | 19.09809                   | 100               | 0                 |
-| Lower control rate, higher dispersion                                                | Unblinded SSR | 100    | 0.94           | 0.06          | 876.81 | 105.94564 | 23          | 389.21                            | 899.54                   | 100           | 0.4164735   | 24.78918      | 223.47                            | 433.74                   | 0              | 0.53      | 0.06             | 41              | 1.235190      | 70.26246        | 626.3171                            | 1562.463                   | 0                | 0.41        | 0                  | 24.78918            | 56.51814              | 19.09809                   | 100               | 23                |
+| High-level SSR Simulation Summary |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+| Expected participants with events and expected events observed are included directly |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| scenario | strategy | n_sims | rejection_rate | futility_rate | mean_n | sd_n | pct_adapted | expected_participants_with_events | expected_events_observed | pct_reach_ia1 | mean_if_ia1 | mean_ia1_time | mean_participants_with_events_ia1 | mean_events_observed_ia1 | n_fallback_ia1 | cross_ia1 | pct_futility_ia1 | pct_reach_final | mean_if_final | mean_final_time | mean_participants_with_events_final | mean_events_observed_final | n_fallback_final | cross_final | pct_futility_final | mean_adapt_cut_time | mean_adapt_enroll_pct | mean_adapt_months_to_close | pct_adapt_allowed | pct_adapt_applied |
+| Lower control rate, higher dispersion | Blinded SSR | 100 | 0.94 | 0.06 | 878.59 | 107.70959 | 24 | 390.41 | 902.90 | 100 | 0.4164735 | 24.78918 | 223.47 | 433.74 | 0 | 0.53 | 0.06 | 41 | 1.240871 | 70.48547 | 629.2439 | 1570.659 | 0 | 0.41 | 0 | 24.78918 | 56.51814 | 19.09809 | 100 | 24 |
+| Lower control rate, higher dispersion | No adaptation | 100 | 0.94 | 0.06 | 859.24 | 90.72448 | 0 | 377.31 | 868.62 | 100 | 0.4164735 | 24.78918 | 223.47 | 433.74 | 0 | 0.53 | 0.06 | 41 | 1.178834 | 68.11869 | 597.2927 | 1487.049 | 0 | 0.41 | 0 | 24.78918 | 56.51814 | 19.09809 | 100 | 0 |
+| Lower control rate, higher dispersion | Unblinded SSR | 100 | 0.94 | 0.06 | 876.81 | 105.94564 | 23 | 389.21 | 899.54 | 100 | 0.4164735 | 24.78918 | 223.47 | 433.74 | 0 | 0.53 | 0.06 | 41 | 1.235190 | 70.26246 | 626.3171 | 1562.463 | 0 | 0.41 | 0 | 24.78918 | 56.51814 | 19.09809 | 100 | 23 |
 
 The remainder of this vignette walks through the same ideas step by step
 on a single simulated trial so the mechanics remain transparent. For
@@ -195,6 +200,7 @@ and a higher dispersion. We will limit the maximum sample size to 40%
 more than the planned size (`max N = 336`) to avoid unbounded increases.
 
 ``` r
+
 set.seed(1234)
 
 # Actual parameters
@@ -235,6 +241,7 @@ We perform an interim analysis at **Month 10**, which is 2 months prior
 to the end of planned enrollment (Month 12).
 
 ``` r
+
 interim_time <- 10
 interim_data <- cut_data_by_date(sim_data_planned, cut_date = interim_time)
 
@@ -263,6 +270,7 @@ log rate ratio.
 \mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}\_{trt})} \right)
 
 ``` r
+
 # Blinded SSR
 blinded_res <- blinded_ssr(
   data = interim_data,
@@ -336,6 +344,7 @@ be 888. We ensure the sample size is at least as large as the planned
 sample size.
 
 ``` r
+
 n_planned <- ceiling(design_plan$n_total)
 n_estimated <- ceiling(ssr_res$n_total_unblinded)
 
@@ -372,6 +381,7 @@ We proceed to the final analysis at Month 56.4. We include the
 additional patients if the sample size was increased.
 
 ``` r
+
 # Update the dataset to include the additional patients
 sim_data_final <- sim_data[1:n_final, ]
 
@@ -428,6 +438,7 @@ use `gsDesign` as the spending-function backend with `usTime`
 (user-specified information fraction) to update the bounds.
 
 ``` r
+
 # Information fraction at final analysis
 # If final_info < target_info, fraction < 1. 
 # However, for the final analysis, we typically want to spend all remaining alpha.
@@ -486,6 +497,7 @@ gsBoundSummary(gs_update,
 |                                        | P(Cross) if RR=2.72 | 1.0000   |
 
 ``` r
+
 
 # Test statistic
 z_score <- coef(fit_final)["treatmentExperimental"] / sqrt(var_beta)

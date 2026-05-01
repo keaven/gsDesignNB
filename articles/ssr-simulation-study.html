@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,10 +92,17 @@ Schmidli 2010)</span> – nuisance parameters are re-estimated from pooled
 <strong>Unblinded SSR</strong> – nuisance parameters are
 re-estimated from treatment-specific interim data.</li>
 </ol>
-<p>For hypothesis testing, all interim and final analyses use the
-<code><a href="../reference/mutze_test.html">mutze_test()</a></code> Wald statistic. This test underpins both
-efficacy/futility crossing decisions and the unblinded-information
-fallback used when blinded information estimation fails.</p>
+<p>For hypothesis testing, the main power simulations use the
+<code><a href="../reference/mutze_test.html">mutze_test()</a></code> score statistic. This is particularly
+important in SSR: adaptation can increase information when nuisance
+parameters are worse than planned, and the final test must still
+preserve one-sided Type I error after that adaptation. The dedicated
+non-binding Type I tables therefore compare Wald and score testing under
+the same one-sided <span class="math inline">\alpha = 0.025</span> group
+sequential design. The sample-size update itself remains a
+nuisance-parameter recalculation that must be calibrated by simulation;
+the score test controls rejection after the adaptation, rather than
+making adaptation unnecessary.</p>
 <p><em>Note:</em> Much of the simulation code in this vignette was
 generated with the assistance of a large language model (LLM) and then
 reviewed and refined by the package authors.</p>
@@ -114,6 +121,8 @@ information levels regardless of the true nuisance parameters.</p>
 <span><span class="va">k_plan</span>            <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
 <span><span class="va">power_plan</span>        <span class="op">&lt;-</span> <span class="fl">0.9</span></span>
 <span><span class="va">alpha_plan</span>        <span class="op">&lt;-</span> <span class="fl">0.025</span></span>
+<span><span class="va">analysis_test_type</span> <span class="op">&lt;-</span> <span class="st">"score"</span></span>
+<span><span class="va">analysis_test_label</span> <span class="op">&lt;-</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/toTitleCase.html" class="external-link">toTitleCase</a></span><span class="op">(</span><span class="va">analysis_test_type</span><span class="op">)</span></span>
 <span><span class="va">accrual_rate_plan</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
 <span><span class="va">accrual_scenario_plan</span> <span class="op">&lt;-</span> <span class="fl">18</span></span>
 <span><span class="va">accrual_dur_plan</span>  <span class="op">&lt;-</span> <span class="fl">12</span></span>
@@ -132,10 +141,36 @@ information levels regardless of the true nuisance parameters.</p>
 <span>  accrual_duration <span class="op">=</span> <span class="va">accrual_dur_plan</span>,</span>
 <span>  trial_duration <span class="op">=</span> <span class="va">trial_dur_plan</span>,</span>
 <span>  max_followup <span class="op">=</span> <span class="va">max_followup</span>,</span>
-<span>  event_gap <span class="op">=</span> <span class="va">event_gap_val</span></span>
+<span>  event_gap <span class="op">=</span> <span class="va">event_gap_val</span>,</span>
+<span>  test_type <span class="op">=</span> <span class="va">analysis_test_type</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">design_plan_wald_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
+<span>  lambda1 <span class="op">=</span> <span class="va">lambda1_plan</span>, lambda2 <span class="op">=</span> <span class="va">lambda2_plan</span>,</span>
+<span>  dispersion <span class="op">=</span> <span class="va">k_plan</span>, power <span class="op">=</span> <span class="va">power_plan</span>, alpha <span class="op">=</span> <span class="va">alpha_plan</span>,</span>
+<span>  accrual_rate <span class="op">=</span> <span class="va">accrual_rate_plan</span>,</span>
+<span>  accrual_duration <span class="op">=</span> <span class="va">accrual_dur_plan</span>,</span>
+<span>  trial_duration <span class="op">=</span> <span class="va">trial_dur_plan</span>,</span>
+<span>  max_followup <span class="op">=</span> <span class="va">max_followup</span>,</span>
+<span>  event_gap <span class="op">=</span> <span class="va">event_gap_val</span>,</span>
+<span>  test_type <span class="op">=</span> <span class="st">"wald"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Fixed-design sample size:"</span>, <span class="va">design_plan</span><span class="op">$</span><span class="va">n_total</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Fixed-design sample size: 258</span></span></code></pre></div>
+<span><span class="co">#&gt; Fixed-design sample size: 258</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Fixed-design sample size using Wald sizing:"</span>, <span class="va">design_plan_wald_check</span><span class="op">$</span><span class="va">n_total</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Fixed-design sample size using Wald sizing: 258</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Primary analysis test:"</span>, <span class="va">analysis_test_type</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Primary analysis test: score</span></span></code></pre></div>
+<p>This production cache uses the score-test sizing option for the fixed
+design. The separate score-vs-Wald simulation vignette shows that, for
+superiority designs, traditional Wald/Zhu–Lakkis sizing paired with the
+score test may be a useful practical margin for power. A protocol-level
+SSR design should therefore compare the score-sized and Wald-sized
+starting designs under the planned score final test before selecting the
+final sample-size target. For the primary SSR design in this article,
+the two formulas round to the same fixed-design sample size, so the long
+production cache is not duplicated under an alternative starting size. A
+focused starting-size sensitivity appears below for a lower-event stress
+setting where the rounded group sequential sample sizes differ.</p>
 </div>
 <div class="section level3">
 <h3 id="group-sequential-design">Group sequential design<a class="anchor" aria-label="anchor" href="#group-sequential-design"></a>
@@ -173,15 +208,11 @@ which is still based on upper boundary control.</p>
 <span>  <span class="st">", planned N="</span>, <span class="va">n_planned</span>,</span>
 <span>  <span class="st">", max follow-up="</span>, <span class="va">max_followup</span>, <span class="st">" mo"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>For <strong>Type I sensitivity</strong> we also calendar a
-group-sequential design at <strong>one-sided <span class="math inline">\alpha = 0.02</span></strong> (same spending and
-nuisance assumptions as above). Its planned maximum enrollment is
-<strong>330</strong> subjects (fixed NB stage <strong>274</strong>
-before GS integer rounding; GS inflation factor <strong>1.204</strong>).
-That design is used <strong>only</strong> for the RR = 1 non-binding
-Type I tables later in this vignette; <strong>all power</strong>
-summaries still use the <span class="math inline">\alpha = 0.025</span>
-design.</p>
+<p>The dedicated non-binding Type I section below uses this same <span class="math inline">\alpha = 0.025</span> group sequential design twice:
+once with the Wald statistic and once with the score statistic. The
+power simulations use the score statistic throughout, so the power
+results should be read as score-test power after SSR rather than as
+Wald-test power.</p>
 <p>The group sequential inflation factor is 1.209, giving a planned
 sample size of 312 (up from the fixed-design 258) with an effective
 accrual rate of 26 patients per month.</p>
@@ -767,7 +798,7 @@ accrual rate of 26 patients per month.</p>
 <td class="gt_footnote" colspan="4"> Cauchy futility spending gives planned futility near observed RR &gt; 0.9 at IA1/IA2; lower bounds are non-binding.</td>
     </tr>
 <tr class="gt_footnotes">
-<td class="gt_footnote" colspan="4"> Planned cumulative sample size: IA1 = 129, IA2 = 240, Final = 312.</td>
+<td class="gt_footnote" colspan="4"> Planned cumulative sample size: IA1 = 234, IA2 = 312, Final = 312.</td>
     </tr>
 </tfoot>
 </table>
@@ -803,7 +834,8 @@ dashed line.</p>
 <span>      accrual_duration <span class="op">=</span> <span class="va">accrual_dur_plan</span>,</span>
 <span>      trial_duration <span class="op">=</span> <span class="va">trial_dur_plan</span>,</span>
 <span>      max_followup <span class="op">=</span> <span class="va">max_followup</span>,</span>
-<span>      event_gap <span class="op">=</span> <span class="va">event_gap_val</span></span>
+<span>      event_gap <span class="op">=</span> <span class="va">event_gap_val</span>,</span>
+<span>      test_type <span class="op">=</span> <span class="va">analysis_test_type</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span></span>
@@ -854,7 +886,7 @@ dashed line.</p>
 <p><img src="ssr-simulation-study_files/figure-html/gs_n_by_scenario-1.png" class="r-plt" alt="" width="864"></p>
 <p>Across the range of <span class="math inline">\lambda_1</span> and
 <span class="math inline">k</span> values considered, the required group
-sequential sample size ranges from 272 to 646. Higher dispersion (<span class="math inline">k = 1.0</span>) consistently requires more subjects
+sequential sample size ranges from 272 to 644. Higher dispersion (<span class="math inline">k = 1.0</span>) consistently requires more subjects
 than <span class="math inline">k = 0.5</span>, while higher control
 rates reduce the required N because each subject contributes more
 information. This wide range highlights why sample size re-estimation
@@ -1558,7 +1590,7 @@ fractions match the GS design reasonably well (41.4%, 76.9%).</p>
 <span><span class="va">analysis_lag_months</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span></span>
 <span><span class="co"># Optional precomputed outputs for fast vignette builds</span></span>
-<span><span class="va">precomputed_basename</span> <span class="op">&lt;-</span> <span class="st">"ssr_sim_vignette_outputs.rds"</span></span>
+<span><span class="va">precomputed_basename</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ssr_sim_vignette_outputs_"</span>, <span class="va">analysis_test_type</span>, <span class="st">".rds"</span><span class="op">)</span></span>
 <span><span class="va">project_root</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="st">"DESCRIPTION"</span><span class="op">)</span><span class="op">)</span> <span class="st">"."</span> <span class="kw">else</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="st">"../DESCRIPTION"</span><span class="op">)</span><span class="op">)</span> <span class="st">".."</span> <span class="kw">else</span> <span class="st">"."</span></span>
 <span><span class="va">precomputed_source_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span>
@@ -1576,8 +1608,12 @@ fractions match the GS design reasonably well (41.4%, 76.9%).</p>
 <span><span class="va">force_type1_sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"GSDESIGNNB_FORCE_TYPE1_SIM"</span><span class="op">)</span>, <span class="st">"true"</span><span class="op">)</span></span>
 <span><span class="va">type1_cache_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">dirname</a></span><span class="op">(</span><span class="va">save_precomputed_path</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Scenarios:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">)</span>, <span class="st">"| Replicates:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">$</span><span class="va">n_sims</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Scenarios: 90 | Replicates: 4500</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Scenarios:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">)</span>, <span class="st">"| Fresh-run replicates requested:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">$</span><span class="va">n_sims</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Scenarios: 90 | Fresh-run replicates requested: 4500</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">use_precomputed</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rendered results use the replicate counts stored in the precomputed cache.\n"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; Rendered results use the replicate counts stored in the precomputed cache.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Accrual rates used in simulation:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">$</span><span class="va">accrual_true</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>,</span>
 <span>    <span class="st">"/month\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Accrual rates used in simulation: 12, 18, 24 /month</span></span>
@@ -1598,15 +1634,16 @@ fractions match the GS design reasonably well (41.4%, 76.9%).</p>
 <span>    <span class="va">n_sims_production_type1</span>, <span class="st">"reps per scenario for RR = 1.0 (Type I);"</span>,</span>
 <span>    <span class="va">n_sims_production_rr_gt1</span>, <span class="st">"reps per scenario for RR &gt; 1.\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Production plan: 3600 reps per scenario for RR &lt; 1 (power); 20000 reps per scenario for RR = 1.0 (Type I); 1000 reps per scenario for RR &gt; 1.</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"separate RR = 1 non-binding futility check uses"</span>, <span class="va">n_sims_production_type1</span>, <span class="st">"reps per k.\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; separate RR = 1 non-binding futility check uses 20000 reps per k.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"separate RR = 1 non-binding futility check uses"</span>, <span class="va">n_sims_production_type1</span>,</span>
+<span>    <span class="st">"reps per k and test statistic.\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; separate RR = 1 non-binding futility check uses 20000 reps per k and test statistic.</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="va">use_precomputed</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Using precomputed outputs:"</span>, <span class="va">precomputed_file</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Using precomputed outputs: /home/runner/work/_temp/Library/gsDesignNB/extdata/ssr_sim_vignette_outputs.rds</span></span>
+<span><span class="co">#&gt; Using precomputed outputs: /home/runner/work/_temp/Library/gsDesignNB/extdata/ssr_sim_vignette_outputs_score.rds</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Type I (RR=1, non-binding) per-alpha cache: inst/extdata/ssr_type1_null_alpha025.rds,"</span>,</span>
-<span>  <span class="st">"ssr_type1_null_alpha020.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.\n"</span></span>
+<span>  <span class="st">"Type I (RR=1, non-binding) per-test cache: inst/extdata/ssr_type1_null_alpha025_wald.rds,"</span>,</span>
+<span>  <span class="st">"ssr_type1_null_alpha025_score.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.\n"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Type I (RR=1, non-binding) per-alpha cache: inst/extdata/ssr_type1_null_alpha025.rds, ssr_type1_null_alpha020.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.</span></span>
+<span><span class="co">#&gt; Type I (RR=1, non-binding) per-test cache: inst/extdata/ssr_type1_null_alpha025_wald.rds, ssr_type1_null_alpha025_score.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Production Type I reps only (keep precomputed power grid):"</span>,</span>
 <span>  <span class="st">"GSDESIGNNB_PRODUCTION_TYPE1=true\n"</span></span>
@@ -1683,11 +1720,13 @@ fallback counts in the results table).</p>
 <span>    analysis_lag_months <span class="op">=</span> <span class="va">analysis_lag_months</span>,</span>
 <span>    event_gap <span class="op">=</span> <span class="va">event_gap_val</span>,</span>
 <span>    ignore_futility <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    test_type <span class="op">=</span> <span class="va">analysis_test_type</span>,</span>
 <span>    metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      lambda1_true <span class="op">=</span> <span class="va">sc</span><span class="op">$</span><span class="va">lambda1_true</span>,</span>
 <span>      k_true <span class="op">=</span> <span class="va">sc</span><span class="op">$</span><span class="va">k_true</span>,</span>
 <span>      accrual_true <span class="op">=</span> <span class="va">sc</span><span class="op">$</span><span class="va">accrual_true</span>,</span>
 <span>      accrual_eff <span class="op">=</span> <span class="va">sc</span><span class="op">$</span><span class="va">accrual_eff</span>,</span>
+<span>      analysis_test <span class="op">=</span> <span class="va">analysis_test_type</span>,</span>
 <span>      rr_true <span class="op">=</span> <span class="va">sc</span><span class="op">$</span><span class="va">rr_true</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    seed <span class="op">=</span> <span class="fl">1000</span> <span class="op">+</span> <span class="va">sc_idx</span></span>
@@ -1696,7 +1735,7 @@ fallback counts in the results table).</p>
 <span>  <span class="va">sim_res</span><span class="op">$</span><span class="va">trial_results</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">run_null_type1_sims</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">gs_plan_x</span>, <span class="va">alpha_plan_x</span>, <span class="va">null_n</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">run_null_type1_sims</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">gs_plan_x</span>, <span class="va">alpha_plan_x</span>, <span class="va">null_n</span>, <span class="va">test_type_x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">null_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"list"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">null_k_scenarios</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">null_k_scenarios</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1715,7 +1754,8 @@ fallback counts in the results table).</p>
 <span>      analysis_lag_months <span class="op">=</span> <span class="va">analysis_lag_months</span>,</span>
 <span>      event_gap <span class="op">=</span> <span class="va">event_gap_val</span>,</span>
 <span>      ignore_futility <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>      metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k_true <span class="op">=</span> <span class="va">k_null</span><span class="op">)</span>,</span>
+<span>      test_type <span class="op">=</span> <span class="va">test_type_x</span>,</span>
+<span>      metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k_true <span class="op">=</span> <span class="va">k_null</span>, analysis_test <span class="op">=</span> <span class="va">test_type_x</span><span class="op">)</span>,</span>
 <span>      seed <span class="op">=</span> <span class="fl">5000</span> <span class="op">+</span> <span class="va">i</span></span>
 <span>    <span class="op">)</span></span>
 <span>    <span class="va">null_all</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sim_res</span><span class="op">$</span><span class="va">trial_results</span></span>
@@ -1724,7 +1764,7 @@ fallback counts in the results table).</p>
 <span>  <span class="va">null_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Negate</a></span><span class="op">(</span><span class="va">is.null</span><span class="op">)</span>, <span class="va">null_all</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">null_all</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
-<span>      k_true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, strategy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>      k_true <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, analysis_test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, strategy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>      n_sims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, type1_error <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>      cross_ia1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, cross_ia2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, cross_final <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>      mean_n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, adapted_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
@@ -1738,6 +1778,11 @@ fallback counts in the results table).</p>
 <span>  <span class="va">sm</span><span class="op">$</span><span class="va">adapted_rate</span> <span class="op">&lt;-</span> <span class="va">sm</span><span class="op">$</span><span class="va">pct_adapted</span> <span class="op">/</span> <span class="fl">100</span></span>
 <span>  <span class="va">sm</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"k_true"</span>, <span class="st">"strategy"</span>, <span class="st">"n_sims"</span>, <span class="st">"type1_error"</span>,</span>
+<span>    <span class="st">"cross_ia1"</span>, <span class="st">"cross_ia2"</span>, <span class="st">"cross_final"</span>, <span class="st">"mean_n"</span>, <span class="st">"adapted_rate"</span></span>
+<span>  <span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="va">sm</span><span class="op">$</span><span class="va">analysis_test</span> <span class="op">&lt;-</span> <span class="va">test_type_x</span></span>
+<span>  <span class="va">sm</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"k_true"</span>, <span class="st">"analysis_test"</span>, <span class="st">"strategy"</span>, <span class="st">"n_sims"</span>, <span class="st">"type1_error"</span>,</span>
 <span>    <span class="st">"cross_ia1"</span>, <span class="st">"cross_ia2"</span>, <span class="st">"cross_final"</span>, <span class="st">"mean_n"</span>, <span class="st">"adapted_rate"</span></span>
 <span>  <span class="op">)</span><span class="op">]</span></span>
 <span><span class="op">}</span></span></code></pre></div>
@@ -1788,69 +1833,65 @@ fallback counts in the results table).</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Workers:"</span>, <span class="va">workers</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Workers: 11</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rows:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 13500</span></span>
+<span><span class="co">#&gt; Rows: 1717200</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">sim_runtime_seconds</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">sim_runtime_seconds</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Simulation wall time: %.2f minutes (%.1f seconds)\n"</span>,</span>
 <span>              <span class="va">sim_runtime_seconds</span> <span class="op">/</span> <span class="fl">60</span>, <span class="va">sim_runtime_seconds</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Simulation wall time: 5.65 minutes (339.1 seconds)</span></span>
+<span><span class="co">#&gt; Simulation wall time: 281.73 minutes (16904.1 seconds)</span></span>
 <span></span>
-<span><span class="co"># RR = 1.0 non-binding futility check (Type I), for nominal alpha = 0.025 and 0.02 designs.</span></span>
-<span><span class="co"># Power simulations elsewhere use alpha_plan (0.025) only.</span></span>
-<span><span class="co"># Results cache: inst/extdata/ssr_type1_null_alpha025.rds and ssr_type1_null_alpha020.rds</span></span>
+<span><span class="co"># RR = 1.0 non-binding futility check (Type I), comparing Wald and score tests</span></span>
+<span><span class="co"># under the same nominal alpha = 0.025 design. Power simulations use the score</span></span>
+<span><span class="co"># test selected by analysis_test_type.</span></span>
+<span><span class="co"># Results cache: inst/extdata/ssr_type1_null_alpha025_wald.rds and</span></span>
+<span><span class="co"># ssr_type1_null_alpha025_score.rds</span></span>
 <span><span class="co"># Re-run after changing sim logic or rep count: Sys.setenv(GSDESIGNNB_FORCE_TYPE1_SIM = "true")</span></span>
 <span><span class="va">null_nonbinding_n</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">use_production_type1</span><span class="op">)</span> <span class="va">n_sims_production_type1</span> <span class="kw">else</span> <span class="va">n_sims_initial</span></span>
 <span><span class="va">null_k_scenarios</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">k_plan</span>, <span class="fl">1.0</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">type1_designs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span><span class="va">type1_tests</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    key <span class="op">=</span> <span class="st">"alpha025"</span>,</span>
-<span>    label <span class="op">=</span> <span class="st">"0.025"</span>,</span>
+<span>    key <span class="op">=</span> <span class="st">"alpha025_wald"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Wald"</span>,</span>
+<span>    test_type <span class="op">=</span> <span class="st">"wald"</span>,</span>
 <span>    gs_plan <span class="op">=</span> <span class="va">gs_plan</span>,</span>
-<span>    n_planned <span class="op">=</span> <span class="va">n_planned</span>,</span>
-<span>    target_info <span class="op">=</span> <span class="va">target_info</span>,</span>
-<span>    planned_timing <span class="op">=</span> <span class="va">planned_timing</span>,</span>
-<span>    gs_inflation <span class="op">=</span> <span class="va">gs_inflation</span>,</span>
 <span>    alpha_plan <span class="op">=</span> <span class="va">alpha_plan</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    key <span class="op">=</span> <span class="st">"alpha020"</span>,</span>
-<span>    label <span class="op">=</span> <span class="st">"0.02"</span>,</span>
-<span>    gs_plan <span class="op">=</span> <span class="va">gs_plan_type1_sens</span>,</span>
-<span>    n_planned <span class="op">=</span> <span class="va">n_planned_type1_sens</span>,</span>
-<span>    target_info <span class="op">=</span> <span class="va">target_info_type1_sens</span>,</span>
-<span>    planned_timing <span class="op">=</span> <span class="va">planned_timing_type1_sens</span>,</span>
-<span>    gs_inflation <span class="op">=</span> <span class="va">gs_inflation_type1_sens</span>,</span>
-<span>    alpha_plan <span class="op">=</span> <span class="va">alpha_plan_type1_sens</span></span>
+<span>    key <span class="op">=</span> <span class="st">"alpha025_score"</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>    test_type <span class="op">=</span> <span class="st">"score"</span>,</span>
+<span>    gs_plan <span class="op">=</span> <span class="va">gs_plan</span>,</span>
+<span>    alpha_plan <span class="op">=</span> <span class="va">alpha_plan</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">null_nonbinding_by_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">null_nonbinding_runtime_by_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">null_nonbinding_mode_by_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">null_nonbinding_by_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">null_nonbinding_runtime_by_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">null_nonbinding_mode_by_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bundle_type1_ok</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="va">use_precomputed</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">is.list</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_alpha</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0.025"</span>, <span class="st">"0.02"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_alpha</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">is.list</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_test</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wald"</span>, <span class="st">"Score"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_test</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="va">bundle_type1_ok</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="st">"0.025"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="st">"0.025"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span>  <span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="st">"0.02"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="st">"0.02"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span>  <span class="va">br</span> <span class="op">&lt;-</span> <span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_runtime_by_alpha</span></span>
+<span>  <span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="st">"Wald"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="st">"Wald"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="st">"Score"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="st">"Score"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">br</span> <span class="op">&lt;-</span> <span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_runtime_by_test</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">br</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">null_nonbinding_runtime_by_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="va">br</span><span class="op">)</span></span>
+<span>    <span class="va">null_nonbinding_runtime_by_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="va">br</span><span class="op">)</span></span>
 <span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>    <span class="va">null_nonbinding_runtime_by_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      <span class="st">"0.025"</span> <span class="op">=</span> <span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_runtime_seconds</span>,</span>
-<span>      <span class="st">"0.02"</span> <span class="op">=</span> <span class="cn">NA_real_</span></span>
+<span>    <span class="va">null_nonbinding_runtime_by_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      <span class="st">"Wald"</span> <span class="op">=</span> <span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_runtime_seconds</span>,</span>
+<span>      <span class="st">"Score"</span> <span class="op">=</span> <span class="cn">NA_real_</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
-<span>  <span class="va">null_nonbinding_mode_by_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"0.025"</span> <span class="op">=</span> <span class="st">"Precomputed bundle"</span>, <span class="st">"0.02"</span> <span class="op">=</span> <span class="st">"Precomputed bundle"</span><span class="op">)</span></span>
+<span>  <span class="va">null_nonbinding_mode_by_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"Wald"</span> <span class="op">=</span> <span class="st">"Precomputed bundle"</span>, <span class="st">"Score"</span> <span class="op">=</span> <span class="st">"Precomputed bundle"</span><span class="op">)</span></span>
 <span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">type1_cache_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">td</span> <span class="kw">in</span> <span class="va">type1_designs</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">td</span> <span class="kw">in</span> <span class="va">type1_tests</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">cache_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">type1_cache_dir</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ssr_type1_null_"</span>, <span class="va">td</span><span class="op">$</span><span class="va">key</span>, <span class="st">".rds"</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="va">loaded</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">force_type1_sim</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">cache_path</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1859,35 +1900,27 @@ fallback counts in the results table).</p>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">cr</span><span class="op">$</span><span class="va">null_nonbinding_n</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">null_nonbinding_n</span><span class="op">)</span></span>
 <span>      <span class="op">)</span></span>
 <span>      <span class="kw">if</span> <span class="op">(</span><span class="va">same_n</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cr</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span>
-<span>        <span class="va">null_nonbinding_runtime_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">cr</span><span class="op">$</span><span class="va">runtime_seconds</span></span>
-<span>        <span class="va">null_nonbinding_mode_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Cached RDS"</span></span>
+<span>        <span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cr</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span>
+<span>        <span class="va">null_nonbinding_runtime_by_test</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">cr</span><span class="op">$</span><span class="va">runtime_seconds</span></span>
+<span>        <span class="va">null_nonbinding_mode_by_test</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Cached RDS"</span></span>
 <span>        <span class="va">loaded</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span>      <span class="op">}</span></span>
 <span>    <span class="op">}</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">loaded</span> <span class="op">&amp;&amp;</span> <span class="va">td</span><span class="op">$</span><span class="va">key</span> <span class="op">==</span> <span class="st">"alpha025"</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="va">use_precomputed</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
-<span>        <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_summary</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>        <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_summary</span><span class="op">)</span></span>
-<span>      <span class="va">null_nonbinding_runtime_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>        <span class="va">precomputed_outputs</span><span class="op">$</span><span class="va">null_nonbinding_runtime_seconds</span></span>
-<span>      <span class="va">null_nonbinding_mode_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Precomputed bundle (legacy)"</span></span>
-<span>      <span class="va">loaded</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">}</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">loaded</span><span class="op">)</span> <span class="op">{</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Running Type I (non-binding) sims: design alpha ="</span>, <span class="va">td</span><span class="op">$</span><span class="va">label</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Running Type I (non-binding) sims:"</span>, <span class="va">td</span><span class="op">$</span><span class="va">label</span>, <span class="st">"test, alpha ="</span>, <span class="va">td</span><span class="op">$</span><span class="va">alpha_plan</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span>      <span class="va">t0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>      <span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu">run_null_type1_sims</span><span class="op">(</span><span class="va">td</span><span class="op">$</span><span class="va">gs_plan</span>, <span class="va">td</span><span class="op">$</span><span class="va">alpha_plan</span>, <span class="va">null_nonbinding_n</span><span class="op">)</span></span>
+<span>      <span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu">run_null_type1_sims</span><span class="op">(</span><span class="va">td</span><span class="op">$</span><span class="va">gs_plan</span>, <span class="va">td</span><span class="op">$</span><span class="va">alpha_plan</span>, <span class="va">null_nonbinding_n</span>, <span class="va">td</span><span class="op">$</span><span class="va">test_type</span><span class="op">)</span></span>
 <span>      <span class="va">rt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/difftime.html" class="external-link">difftime</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">t0</span>, units <span class="op">=</span> <span class="st">"secs"</span><span class="op">)</span><span class="op">)</span></span>
-<span>      <span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sm</span></span>
-<span>      <span class="va">null_nonbinding_runtime_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">rt</span></span>
-<span>      <span class="va">null_nonbinding_mode_by_alpha</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Fresh simulation"</span></span>
+<span>      <span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sm</span></span>
+<span>      <span class="va">null_nonbinding_runtime_by_test</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">rt</span></span>
+<span>      <span class="va">null_nonbinding_mode_by_test</span><span class="op">[[</span><span class="va">td</span><span class="op">$</span><span class="va">label</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Fresh simulation"</span></span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>          summary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span>,</span>
 <span>          runtime_seconds <span class="op">=</span> <span class="va">rt</span>,</span>
 <span>          null_nonbinding_n <span class="op">=</span> <span class="va">null_nonbinding_n</span>,</span>
 <span>          alpha_design <span class="op">=</span> <span class="va">td</span><span class="op">$</span><span class="va">alpha_plan</span>,</span>
+<span>          test_type <span class="op">=</span> <span class="va">td</span><span class="op">$</span><span class="va">test_type</span>,</span>
 <span>          generated_at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span>        <span class="op">)</span>,</span>
 <span>        <span class="va">cache_path</span></span>
@@ -1897,15 +1930,15 @@ fallback counts in the results table).</p>
 <span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">null_nonbinding_summary</span> <span class="op">&lt;-</span> <span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="st">"0.025"</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="va">null_nonbinding_runtime_seconds</span> <span class="op">&lt;-</span> <span class="va">null_nonbinding_runtime_by_alpha</span><span class="op">[[</span><span class="st">"0.025"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">null_nonbinding_summary</span> <span class="op">&lt;-</span> <span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="va">analysis_test_label</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">null_nonbinding_runtime_seconds</span> <span class="op">&lt;-</span> <span class="va">null_nonbinding_runtime_by_test</span><span class="op">[[</span><span class="va">analysis_test_label</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">null_nonbinding_mode</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
-<span>  <span class="st">"0.025: "</span>, <span class="va">null_nonbinding_mode_by_alpha</span><span class="op">[[</span><span class="st">"0.025"</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>  <span class="st">" | 0.02: "</span>, <span class="va">null_nonbinding_mode_by_alpha</span><span class="op">[[</span><span class="st">"0.02"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="st">"Wald: "</span>, <span class="va">null_nonbinding_mode_by_test</span><span class="op">[[</span><span class="st">"Wald"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  <span class="st">" | Score: "</span>, <span class="va">null_nonbinding_mode_by_test</span><span class="op">[[</span><span class="st">"Score"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"RR=1 non-binding Type I modes:"</span>, <span class="va">null_nonbinding_mode</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; RR=1 non-binding Type I modes: 0.025: Precomputed bundle | 0.02: Precomputed bundle</span></span>
+<span><span class="co">#&gt; RR=1 non-binding Type I modes: Wald: Precomputed bundle | Score: Precomputed bundle</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"RR=1 non-binding replications per k:"</span>, <span class="va">null_nonbinding_n</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RR=1 non-binding replications per k: 50</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"k scenarios:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">null_k_scenarios</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
@@ -1923,7 +1956,7 @@ fallback counts in the results table).</p>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="va">dt</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span></span>
-<span>  <span class="va">lambda1_true</span>, <span class="va">k_true</span>, <span class="va">accrual_true</span>, <span class="va">rr_true</span>, <span class="va">strategy</span>,</span>
+<span>  <span class="va">lambda1_true</span>, <span class="va">k_true</span>, <span class="va">accrual_true</span>, <span class="va">rr_true</span>, <span class="va">analysis_test</span>, <span class="va">strategy</span>,</span>
 <span>  <span class="va">reject</span>, <span class="va">futility</span>, <span class="va">reject_stage</span>, <span class="va">futility_stage</span>,</span>
 <span>  <span class="va">n_adapted</span>, <span class="va">adapted</span>,</span>
 <span>  <span class="va">participants_with_events_stop</span>, <span class="va">events_observed_stop</span>,</span>
@@ -1947,12 +1980,13 @@ fallback counts in the results table).</p>
 <span>    sim_runtime_seconds <span class="op">=</span> <span class="va">sim_runtime_seconds</span>,</span>
 <span>    workers <span class="op">=</span> <span class="va">workers</span>,</span>
 <span>    null_nonbinding_summary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">null_nonbinding_summary</span><span class="op">)</span>,</span>
-<span>    null_nonbinding_by_alpha <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">null_nonbinding_by_alpha</span>, <span class="va">as.data.frame</span><span class="op">)</span>,</span>
+<span>    null_nonbinding_by_test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">null_nonbinding_by_test</span>, <span class="va">as.data.frame</span><span class="op">)</span>,</span>
 <span>    null_nonbinding_n <span class="op">=</span> <span class="va">null_nonbinding_n</span>,</span>
 <span>    null_nonbinding_runtime_seconds <span class="op">=</span> <span class="va">null_nonbinding_runtime_seconds</span>,</span>
-<span>    null_nonbinding_runtime_by_alpha <span class="op">=</span> <span class="va">null_nonbinding_runtime_by_alpha</span>,</span>
+<span>    null_nonbinding_runtime_by_test <span class="op">=</span> <span class="va">null_nonbinding_runtime_by_test</span>,</span>
 <span>    generated_at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      analysis_test_type <span class="op">=</span> <span class="va">analysis_test_type</span>,</span>
 <span>      n_sims_initial <span class="op">=</span> <span class="va">n_sims_initial</span>,</span>
 <span>      n_sims_production_power <span class="op">=</span> <span class="va">n_sims_production_power</span>,</span>
 <span>      n_sims_production_type1 <span class="op">=</span> <span class="va">n_sims_production_type1</span>,</span>
@@ -1966,13 +2000,16 @@ fallback counts in the results table).</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Saved precomputed vignette outputs to:"</span>, <span class="va">save_precomputed_path</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">runtime_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">scenario_rep_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">summary_dt</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span></span>
+<span>  <span class="va">lambda1_true</span>, <span class="va">k_true</span>, <span class="va">accrual_true</span>, <span class="va">rr_true</span>, <span class="va">n_sims</span></span>
+<span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">runtime_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  Metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simulation mode"</span>, <span class="st">"Workers"</span>, <span class="st">"Scenarios"</span>, <span class="st">"Replicates"</span>, <span class="st">"Rows"</span>, <span class="st">"Wall time (minutes)"</span><span class="op">)</span>,</span>
 <span>  Value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="va">sim_mode</span>,</span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">workers</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">$</span><span class="va">n_sims</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">scenario_rep_counts</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">scenario_rep_counts</span><span class="op">$</span><span class="va">n_sims</span><span class="op">)</span>,</span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span>,</span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">sim_runtime_seconds</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">sim_runtime_seconds</span><span class="op">)</span><span class="op">)</span></span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.2f"</span>, <span class="va">sim_runtime_seconds</span> <span class="op">/</span> <span class="fl">60</span><span class="op">)</span> <span class="kw">else</span> <span class="st">"NA"</span></span>
@@ -2462,26 +2499,26 @@ fallback counts in the results table).</p>
 </tr>
 <tr>
 <td headers="Metric" class="gt_row gt_left">Replicates</td>
-<td headers="Value" class="gt_row gt_left">4500</td>
+<td headers="Value" class="gt_row gt_left">572400</td>
 </tr>
 <tr>
 <td headers="Metric" class="gt_row gt_left">Rows</td>
-<td headers="Value" class="gt_row gt_left">13500</td>
+<td headers="Value" class="gt_row gt_left">1717200</td>
 </tr>
 <tr>
 <td headers="Metric" class="gt_row gt_left">Wall time (minutes)</td>
-<td headers="Value" class="gt_row gt_left">5.65</td>
+<td headers="Value" class="gt_row gt_left">281.73</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Two designs: nominal one-sided alpha = 0.025 (main power sims) vs 0.02 (Type I sensitivity).</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">alab</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0.025"</span>, <span class="st">"0.02"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n\n### Type I error table: nominal design alpha = "</span>, <span class="va">alab</span>, <span class="st">"\n\n"</span>, sep <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
-<span>  <span class="va">null_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">null_nonbinding_by_alpha</span><span class="op">[[</span><span class="va">alab</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Same nominal one-sided alpha = 0.025 design; compare Wald and score tests.</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">test_label</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wald"</span>, <span class="st">"Score"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\n\n### Type I error table: "</span>, <span class="va">test_label</span>, <span class="st">" test, alpha = 0.025\n\n"</span>, sep <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
+<span>  <span class="va">null_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">null_nonbinding_by_test</span><span class="op">[[</span><span class="va">test_label</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="st">"k_true"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">null_df</span><span class="op">)</span><span class="op">)</span> <span class="va">null_df</span><span class="op">$</span><span class="va">k_true</span> <span class="op">&lt;-</span> <span class="cn">NA_real_</span></span>
-<span>  <span class="va">rt_min</span> <span class="op">&lt;-</span> <span class="va">null_nonbinding_runtime_by_alpha</span><span class="op">[[</span><span class="va">alab</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">rt_min</span> <span class="op">&lt;-</span> <span class="va">null_nonbinding_runtime_by_test</span><span class="op">[[</span><span class="va">test_label</span><span class="op">]</span><span class="op">]</span></span>
 <span>  <span class="va">rt_str</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">rt_min</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">rt_min</span> <span class="op">/</span> <span class="fl">60</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">" min"</span><span class="op">)</span> <span class="kw">else</span> <span class="st">"NA"</span></span>
 <span>  <span class="va">null_display</span> <span class="op">&lt;-</span> <span class="va">null_df</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span></span>
@@ -2498,10 +2535,11 @@ fallback counts in the results table).</p>
 <span>  <span class="va">tab</span> <span class="op">&lt;-</span> <span class="va">null_display</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
-<span>      title <span class="op">=</span> <span class="st">"Type I Error Under RR = 1.0 (Non-binding Futility)"</span>,</span>
+<span>      title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Type I Error Under RR = 1.0: "</span>, <span class="va">test_label</span>, <span class="st">" Test"</span><span class="op">)</span>,</span>
 <span>      subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>        <span class="st">"Nominal one-sided alpha: 0.025 | "</span>,</span>
 <span>        <span class="st">"Replications per k: "</span>, <span class="va">null_nonbinding_n</span>,</span>
-<span>        <span class="st">" | "</span>, <span class="va">null_nonbinding_mode_by_alpha</span><span class="op">[[</span><span class="va">alab</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>        <span class="st">" | "</span>, <span class="va">null_nonbinding_mode_by_test</span><span class="op">[[</span><span class="va">test_label</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>        <span class="st">" | Runtime: "</span>, <span class="va">rt_str</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -2514,474 +2552,182 @@ fallback counts in the results table).</p>
 <span>        <span class="st">"the planned N (planning k ="</span>, <span class="va">k_plan</span>, <span class="st">")."</span>,</span>
 <span>        <span class="st">"Under the null, SSR may still increase N because"</span>,</span>
 <span>        <span class="st">"nuisance parameter estimates can differ from planning values."</span>,</span>
-<span>        <span class="st">"Each table uses the group-sequential design built at the stated nominal alpha;"</span>,</span>
-<span>        <span class="st">"power results elsewhere use alpha = 0.025 only."</span></span>
+<span>        <span class="st">"Both tables use the same group-sequential design built at nominal alpha = 0.025;"</span>,</span>
+<span>        <span class="st">"the only intended difference is the final/interim test statistic."</span>,</span>
+<span>        <span class="st">"Power results elsewhere use the score test."</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="type-i-error-table-nominal-design-alpha-0-025">Type I error table: nominal design alpha = 0.025<a class="anchor" aria-label="anchor" href="#type-i-error-table-nominal-design-alpha-0-025"></a>
+<h3 id="type-i-error-table-wald-test-alpha-0-025">Type I error table: Wald test, alpha = 0.025<a class="anchor" aria-label="anchor" href="#type-i-error-table-wald-test-alpha-0-025"></a>
 </h3>
 <div id="kgufivjubq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#kgufivjubq table {
-  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#kgufivjubq thead, #kgufivjubq tbody, #kgufivjubq tfoot, #kgufivjubq tr, #kgufivjubq td, #kgufivjubq th {
-  border-style: none;
-}
-
-#kgufivjubq p {
-  margin: 0;
-  padding: 0;
-}
-
-#kgufivjubq .gt_table {
-  display: table;
-  border-collapse: collapse;
-  line-height: normal;
-  margin-left: auto;
-  margin-right: auto;
-  color: #333333;
-  font-size: 16px;
-  font-weight: normal;
-  font-style: normal;
-  background-color: #FFFFFF;
-  width: auto;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #A8A8A8;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #A8A8A8;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_caption {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-#kgufivjubq .gt_title {
-  color: #333333;
-  font-size: 125%;
-  font-weight: initial;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-color: #FFFFFF;
-  border-bottom-width: 0;
-}
-
-#kgufivjubq .gt_subtitle {
-  color: #333333;
-  font-size: 85%;
-  font-weight: initial;
-  padding-top: 3px;
-  padding-bottom: 5px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-color: #FFFFFF;
-  border-top-width: 0;
-}
-
-#kgufivjubq .gt_heading {
-  background-color: #FFFFFF;
-  text-align: center;
-  border-bottom-color: #FFFFFF;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_bottom_border {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_col_headings {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_col_heading {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 6px;
-  padding-left: 5px;
-  padding-right: 5px;
-  overflow-x: hidden;
-}
-
-#kgufivjubq .gt_column_spanner_outer {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-
-#kgufivjubq .gt_column_spanner_outer:first-child {
-  padding-left: 0;
-}
-
-#kgufivjubq .gt_column_spanner_outer:last-child {
-  padding-right: 0;
-}
-
-#kgufivjubq .gt_column_spanner {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  overflow-x: hidden;
-  display: inline-block;
-  width: 100%;
-}
-
-#kgufivjubq .gt_spanner_row {
-  border-bottom-style: hidden;
-}
-
-#kgufivjubq .gt_group_heading {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  text-align: left;
-}
-
-#kgufivjubq .gt_empty_group_heading {
-  padding: 0.5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: middle;
-}
-
-#kgufivjubq .gt_from_md > :first-child {
-  margin-top: 0;
-}
-
-#kgufivjubq .gt_from_md > :last-child {
-  margin-bottom: 0;
-}
-
-#kgufivjubq .gt_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin: 10px;
-  border-top-style: solid;
-  border-top-width: 1px;
-  border-top-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  overflow-x: hidden;
-}
-
-#kgufivjubq .gt_stub {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#kgufivjubq .gt_stub_row_group {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 5px;
-  padding-right: 5px;
-  vertical-align: top;
-}
-
-#kgufivjubq .gt_row_group_first td {
-  border-top-width: 2px;
-}
-
-#kgufivjubq .gt_row_group_first th {
-  border-top-width: 2px;
-}
-
-#kgufivjubq .gt_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#kgufivjubq .gt_first_summary_row {
-  border-top-style: solid;
-  border-top-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_first_summary_row.thick {
-  border-top-width: 2px;
-}
-
-#kgufivjubq .gt_last_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_grand_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#kgufivjubq .gt_first_grand_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-style: double;
-  border-top-width: 6px;
-  border-top-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_last_grand_summary_row_top {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-style: double;
-  border-bottom-width: 6px;
-  border-bottom-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_striped {
-  background-color: rgba(128, 128, 128, 0.05);
-}
-
-#kgufivjubq .gt_table_body {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_footnotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_footnote {
-  margin: 0px;
-  font-size: 90%;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#kgufivjubq .gt_sourcenotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#kgufivjubq .gt_sourcenote {
-  font-size: 90%;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#kgufivjubq .gt_left {
-  text-align: left;
-}
-
-#kgufivjubq .gt_center {
-  text-align: center;
-}
-
-#kgufivjubq .gt_right {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-#kgufivjubq .gt_font_normal {
-  font-weight: normal;
-}
-
-#kgufivjubq .gt_font_bold {
-  font-weight: bold;
-}
-
-#kgufivjubq .gt_font_italic {
-  font-style: italic;
-}
-
-#kgufivjubq .gt_super {
-  font-size: 65%;
-}
-
-#kgufivjubq .gt_footnote_marks {
-  font-size: 75%;
-  vertical-align: 0.4em;
-  position: initial;
-}
-
-#kgufivjubq .gt_asterisk {
-  font-size: 100%;
-  vertical-align: 0;
-}
-
-#kgufivjubq .gt_indent_1 {
-  text-indent: 5px;
-}
-
-#kgufivjubq .gt_indent_2 {
-  text-indent: 10px;
-}
-
-#kgufivjubq .gt_indent_3 {
-  text-indent: 15px;
-}
-
-#kgufivjubq .gt_indent_4 {
-  text-indent: 20px;
-}
-
-#kgufivjubq .gt_indent_5 {
-  text-indent: 25px;
-}
-
-#kgufivjubq .katex-display {
-  display: inline-flex !important;
-  margin-bottom: 0.75em !important;
-}
-
-#kgufivjubq div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
-  height: 0px !important;
-}
-</style>
+<p><style>#kgufivjubq table { font-family: system-ui, ‘Segoe UI’,
+Roboto, Helvetica, Arial, sans-serif, ‘Apple Color Emoji’, ‘Segoe UI
+Emoji’, ‘Segoe UI Symbol’, ‘Noto Color Emoji’; -webkit-font-smoothing:
+antialiased; -moz-osx-font-smoothing: grayscale; }</p>
+<p>#kgufivjubq thead, #kgufivjubq tbody, #kgufivjubq tfoot, #kgufivjubq
+tr, #kgufivjubq td, #kgufivjubq th { border-style: none; }</p>
+<p>#kgufivjubq p { margin: 0; padding: 0; }</p>
+<p>#kgufivjubq .gt_table { display: table; border-collapse: collapse;
+line-height: normal; margin-left: auto; margin-right: auto; color:
+#333333; font-size: 16px; font-weight: normal; font-style: normal;
+background-color: #FFFFFF; width: auto; border-top-style: solid;
+border-top-width: 2px; border-top-color: #A8A8A8; border-right-style:
+none; border-right-width: 2px; border-right-color: #D3D3D3;
+border-bottom-style: solid; border-bottom-width: 2px;
+border-bottom-color: #A8A8A8; border-left-style: none;
+border-left-width: 2px; border-left-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_caption { padding-top: 4px; padding-bottom: 4px;
+}</p>
+<p>#kgufivjubq .gt_title { color: #333333; font-size: 125%; font-weight:
+initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px;
+padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width:
+0; }</p>
+<p>#kgufivjubq .gt_subtitle { color: #333333; font-size: 85%;
+font-weight: initial; padding-top: 3px; padding-bottom: 5px;
+padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF;
+border-top-width: 0; }</p>
+<p>#kgufivjubq .gt_heading { background-color: #FFFFFF; text-align:
+center; border-bottom-color: #FFFFFF; border-left-style: none;
+border-left-width: 1px; border-left-color: #D3D3D3; border-right-style:
+none; border-right-width: 1px; border-right-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_bottom_border { border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_col_headings { border-top-style: solid;
+border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style:
+solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_col_heading { color: #333333; background-color:
+#FFFFFF; font-size: 100%; font-weight: normal; text-transform: inherit;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px;
+padding-bottom: 6px; padding-left: 5px; padding-right: 5px; overflow-x:
+hidden; }</p>
+<p>#kgufivjubq .gt_column_spanner_outer { color: #333333;
+background-color: #FFFFFF; font-size: 100%; font-weight: normal;
+text-transform: inherit; padding-top: 0; padding-bottom: 0;
+padding-left: 4px; padding-right: 4px; }</p>
+<p>#kgufivjubq .gt_column_spanner_outer:first-child { padding-left: 0;
+}</p>
+<p>#kgufivjubq .gt_column_spanner_outer:last-child { padding-right: 0;
+}</p>
+<p>#kgufivjubq .gt_column_spanner { border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3; vertical-align:
+bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden;
+display: inline-block; width: 100%; }</p>
+<p>#kgufivjubq .gt_spanner_row { border-bottom-style: hidden; }</p>
+<p>#kgufivjubq .gt_group_heading { padding-top: 8px; padding-bottom:
+8px; padding-left: 5px; padding-right: 5px; color: #333333;
+background-color: #FFFFFF; font-size: 100%; font-weight: initial;
+text-transform: inherit; border-top-style: solid; border-top-width: 2px;
+border-top-color: #D3D3D3; border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; vertical-align: middle; text-align: left;
+}</p>
+<p>#kgufivjubq .gt_empty_group_heading { padding: 0.5px; color: #333333;
+background-color: #FFFFFF; font-size: 100%; font-weight: initial;
+border-top-style: solid; border-top-width: 2px; border-top-color:
+#D3D3D3; border-bottom-style: solid; border-bottom-width: 2px;
+border-bottom-color: #D3D3D3; vertical-align: middle; }</p>
+<p>#kgufivjubq .gt_from_md &gt; :first-child { margin-top: 0; }</p>
+<p>#kgufivjubq .gt_from_md &gt; :last-child { margin-bottom: 0; }</p>
+<p>#kgufivjubq .gt_row { padding-top: 8px; padding-bottom: 8px;
+padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style:
+solid; border-top-width: 1px; border-top-color: #D3D3D3;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden;
+}</p>
+<p>#kgufivjubq .gt_stub { color: #333333; background-color: #FFFFFF;
+font-size: 100%; font-weight: initial; text-transform: inherit;
+border-right-style: solid; border-right-width: 2px; border-right-color:
+#D3D3D3; padding-left: 5px; padding-right: 5px; }</p>
+<p>#kgufivjubq .gt_stub_row_group { color: #333333; background-color:
+#FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit;
+border-right-style: solid; border-right-width: 2px; border-right-color:
+#D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top;
+}</p>
+<p>#kgufivjubq .gt_row_group_first td { border-top-width: 2px; }</p>
+<p>#kgufivjubq .gt_row_group_first th { border-top-width: 2px; }</p>
+<p>#kgufivjubq .gt_summary_row { color: #333333; background-color:
+#FFFFFF; text-transform: inherit; padding-top: 8px; padding-bottom: 8px;
+padding-left: 5px; padding-right: 5px; }</p>
+<p>#kgufivjubq .gt_first_summary_row { border-top-style: solid;
+border-top-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_first_summary_row.thick { border-top-width: 2px;
+}</p>
+<p>#kgufivjubq .gt_last_summary_row { padding-top: 8px; padding-bottom:
+8px; padding-left: 5px; padding-right: 5px; border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_grand_summary_row { color: #333333; background-color:
+#FFFFFF; text-transform: inherit; padding-top: 8px; padding-bottom: 8px;
+padding-left: 5px; padding-right: 5px; }</p>
+<p>#kgufivjubq .gt_first_grand_summary_row { padding-top: 8px;
+padding-bottom: 8px; padding-left: 5px; padding-right: 5px;
+border-top-style: double; border-top-width: 6px; border-top-color:
+#D3D3D3; }</p>
+<p>#kgufivjubq .gt_last_grand_summary_row_top { padding-top: 8px;
+padding-bottom: 8px; padding-left: 5px; padding-right: 5px;
+border-bottom-style: double; border-bottom-width: 6px;
+border-bottom-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_striped { background-color: rgba(128, 128, 128,
+0.05); }</p>
+<p>#kgufivjubq .gt_table_body { border-top-style: solid;
+border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style:
+solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_footnotes { color: #333333; background-color:
+#FFFFFF; border-bottom-style: none; border-bottom-width: 2px;
+border-bottom-color: #D3D3D3; border-left-style: none;
+border-left-width: 2px; border-left-color: #D3D3D3; border-right-style:
+none; border-right-width: 2px; border-right-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_footnote { margin: 0px; font-size: 90%; padding-top:
+4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; }</p>
+<p>#kgufivjubq .gt_sourcenotes { color: #333333; background-color:
+#FFFFFF; border-bottom-style: none; border-bottom-width: 2px;
+border-bottom-color: #D3D3D3; border-left-style: none;
+border-left-width: 2px; border-left-color: #D3D3D3; border-right-style:
+none; border-right-width: 2px; border-right-color: #D3D3D3; }</p>
+<p>#kgufivjubq .gt_sourcenote { font-size: 90%; padding-top: 4px;
+padding-bottom: 4px; padding-left: 5px; padding-right: 5px; }</p>
+<p>#kgufivjubq .gt_left { text-align: left; }</p>
+<p>#kgufivjubq .gt_center { text-align: center; }</p>
+<p>#kgufivjubq .gt_right { text-align: right; font-variant-numeric:
+tabular-nums; }</p>
+<p>#kgufivjubq .gt_font_normal { font-weight: normal; }</p>
+<p>#kgufivjubq .gt_font_bold { font-weight: bold; }</p>
+<p>#kgufivjubq .gt_font_italic { font-style: italic; }</p>
+<p>#kgufivjubq .gt_super { font-size: 65%; }</p>
+<p>#kgufivjubq .gt_footnote_marks { font-size: 75%; vertical-align:
+0.4em; position: initial; }</p>
+<p>#kgufivjubq .gt_asterisk { font-size: 100%; vertical-align: 0; }</p>
+<p>#kgufivjubq .gt_indent_1 { text-indent: 5px; }</p>
+<p>#kgufivjubq .gt_indent_2 { text-indent: 10px; }</p>
+<p>#kgufivjubq .gt_indent_3 { text-indent: 15px; }</p>
+<p>#kgufivjubq .gt_indent_4 { text-indent: 20px; }</p>
+<p>#kgufivjubq .gt_indent_5 { text-indent: 25px; }</p>
+<p>#kgufivjubq .katex-display { display: inline-flex !important;
+margin-bottom: 0.75em !important; }</p>
+#kgufivjubq div.Reactable &gt; div.rt-table &gt; div.rt-thead &gt;
+div.rt-tr.rt-tr-group-header &gt; div.rt-th-group:after { height: 0px
+!important; } </style></p>
 <table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
 <thead>
 <tr class="gt_heading">
 <td colspan="8" class="gt_heading gt_title gt_font_normal" style>
-Type I Error Under RR = 1.0 (Non-binding Futility)
+Type I Error Under RR = 1.0: Wald Test
 </td>
 </tr>
 <tr class="gt_heading">
 <td colspan="8" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>
-Replications per k: 50 | Precomputed bundle | Runtime: 57.28 min
+Nominal one-sided alpha: 0.025 | Replications per k: 50 | Precomputed
+bundle | Runtime: 72.25 min
 </td>
 </tr>
 <tr class="gt_col_headings gt_spanner_row">
@@ -3024,19 +2770,45 @@ Final
 0.5
 </td>
 <td headers="Strategy" class="gt_row gt_left">
+Blinded SSR
+</td>
+<td headers="Type I error" class="gt_row gt_right">
+0.0308
+</td>
+<td headers="IA1" class="gt_row gt_right">
+0.0074
+</td>
+<td headers="IA2" class="gt_row gt_right">
+0.0111
+</td>
+<td headers="Final" class="gt_row gt_right">
+0.0124
+</td>
+<td headers="Mean N" class="gt_row gt_right">
+320.5
+</td>
+<td headers="SSR applied (%)" class="gt_row gt_right">
+33.2
+</td>
+</tr>
+<tr>
+<td headers="k" class="gt_row gt_right">
+0.5
+</td>
+<td headers="Strategy" class="gt_row gt_left">
 No adaptation
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0318
+0.0306
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0078
+0.0074
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0120
+0.0111
 </td>
 <td headers="Final" class="gt_row gt_right">
-0.0120
+0.0121
 </td>
 <td headers="Mean N" class="gt_row gt_right">
 312.0
@@ -3050,51 +2822,51 @@ No adaptation
 0.5
 </td>
 <td headers="Strategy" class="gt_row gt_left">
-Blinded SSR
+Unblinded SSR
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0344
+0.0309
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0078
+0.0074
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0120
+0.0111
 </td>
 <td headers="Final" class="gt_row gt_right">
-0.0145
+0.0124
 </td>
 <td headers="Mean N" class="gt_row gt_right">
-479.3
+325.4
 </td>
 <td headers="SSR applied (%)" class="gt_row gt_right">
-96.0
+45.3
 </td>
 </tr>
 <tr>
 <td headers="k" class="gt_row gt_right">
-0.5
+1.0
 </td>
 <td headers="Strategy" class="gt_row gt_left">
-Unblinded SSR
+Blinded SSR
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0327
+0.0306
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0078
+0.0082
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0120
+0.0073
 </td>
 <td headers="Final" class="gt_row gt_right">
-0.0128
+0.0150
 </td>
 <td headers="Mean N" class="gt_row gt_right">
-329.3
+508.4
 </td>
 <td headers="SSR applied (%)" class="gt_row gt_right">
-46.0
+98.4
 </td>
 </tr>
 <tr>
@@ -3105,16 +2877,16 @@ Unblinded SSR
 No adaptation
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0236
+0.0279
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0069
+0.0082
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0056
+0.0073
 </td>
 <td headers="Final" class="gt_row gt_right">
-0.0110
+0.0123
 </td>
 <td headers="Mean N" class="gt_row gt_right">
 312.0
@@ -3128,51 +2900,25 @@ No adaptation
 1.0
 </td>
 <td headers="Strategy" class="gt_row gt_left">
-Blinded SSR
-</td>
-<td headers="Type I error" class="gt_row gt_right">
-0.0304
-</td>
-<td headers="IA1" class="gt_row gt_right">
-0.0069
-</td>
-<td headers="IA2" class="gt_row gt_right">
-0.0056
-</td>
-<td headers="Final" class="gt_row gt_right">
-0.0178
-</td>
-<td headers="Mean N" class="gt_row gt_right">
-619.7
-</td>
-<td headers="SSR applied (%)" class="gt_row gt_right">
-98.6
-</td>
-</tr>
-<tr>
-<td headers="k" class="gt_row gt_right">
-1.0
-</td>
-<td headers="Strategy" class="gt_row gt_left">
 Unblinded SSR
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0284
+0.0312
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0069
+0.0082
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0056
+0.0073
 </td>
 <td headers="Final" class="gt_row gt_right">
-0.0158
+0.0156
 </td>
 <td headers="Mean N" class="gt_row gt_right">
-519.7
+519.5
 </td>
 <td headers="SSR applied (%)" class="gt_row gt_right">
-98.6
+98.4
 </td>
 </tr>
 </tbody>
@@ -3182,476 +2928,184 @@ Futility stopping is ignored (non-binding) so all trials continue to the
 final analysis unless stopped for efficacy. ‘SSR applied’ is the
 percentage of trials where the adapted N exceeded the planned N
 (planning k = 0.5 ). Under the null, SSR may still increase N because
-nuisance parameter estimates can differ from planning values. Each table
-uses the group-sequential design built at the stated nominal alpha;
-power results elsewhere use alpha = 0.025 only.
+nuisance parameter estimates can differ from planning values. Both
+tables use the same group-sequential design built at nominal alpha =
+0.025; the only intended difference is the final/interim test statistic.
+Power results elsewhere use the score test.
 </td>
 </tr></tfoot>
 </table>
 </div>
 </div>
 <div class="section level3">
-<h3 id="type-i-error-table-nominal-design-alpha-0-02">Type I error table: nominal design alpha = 0.02<a class="anchor" aria-label="anchor" href="#type-i-error-table-nominal-design-alpha-0-02"></a>
+<h3 id="type-i-error-table-score-test-alpha-0-025">Type I error table: Score test, alpha = 0.025<a class="anchor" aria-label="anchor" href="#type-i-error-table-score-test-alpha-0-025"></a>
 </h3>
 <div id="txvafbsnay" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#txvafbsnay table {
-  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#txvafbsnay thead, #txvafbsnay tbody, #txvafbsnay tfoot, #txvafbsnay tr, #txvafbsnay td, #txvafbsnay th {
-  border-style: none;
-}
-
-#txvafbsnay p {
-  margin: 0;
-  padding: 0;
-}
-
-#txvafbsnay .gt_table {
-  display: table;
-  border-collapse: collapse;
-  line-height: normal;
-  margin-left: auto;
-  margin-right: auto;
-  color: #333333;
-  font-size: 16px;
-  font-weight: normal;
-  font-style: normal;
-  background-color: #FFFFFF;
-  width: auto;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #A8A8A8;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #A8A8A8;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_caption {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-#txvafbsnay .gt_title {
-  color: #333333;
-  font-size: 125%;
-  font-weight: initial;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-color: #FFFFFF;
-  border-bottom-width: 0;
-}
-
-#txvafbsnay .gt_subtitle {
-  color: #333333;
-  font-size: 85%;
-  font-weight: initial;
-  padding-top: 3px;
-  padding-bottom: 5px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-color: #FFFFFF;
-  border-top-width: 0;
-}
-
-#txvafbsnay .gt_heading {
-  background-color: #FFFFFF;
-  text-align: center;
-  border-bottom-color: #FFFFFF;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_bottom_border {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_col_headings {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_col_heading {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 6px;
-  padding-left: 5px;
-  padding-right: 5px;
-  overflow-x: hidden;
-}
-
-#txvafbsnay .gt_column_spanner_outer {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: normal;
-  text-transform: inherit;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-
-#txvafbsnay .gt_column_spanner_outer:first-child {
-  padding-left: 0;
-}
-
-#txvafbsnay .gt_column_spanner_outer:last-child {
-  padding-right: 0;
-}
-
-#txvafbsnay .gt_column_spanner {
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: bottom;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  overflow-x: hidden;
-  display: inline-block;
-  width: 100%;
-}
-
-#txvafbsnay .gt_spanner_row {
-  border-bottom-style: hidden;
-}
-
-#txvafbsnay .gt_group_heading {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  text-align: left;
-}
-
-#txvafbsnay .gt_empty_group_heading {
-  padding: 0.5px;
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  vertical-align: middle;
-}
-
-#txvafbsnay .gt_from_md > :first-child {
-  margin-top: 0;
-}
-
-#txvafbsnay .gt_from_md > :last-child {
-  margin-bottom: 0;
-}
-
-#txvafbsnay .gt_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin: 10px;
-  border-top-style: solid;
-  border-top-width: 1px;
-  border-top-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 1px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 1px;
-  border-right-color: #D3D3D3;
-  vertical-align: middle;
-  overflow-x: hidden;
-}
-
-#txvafbsnay .gt_stub {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#txvafbsnay .gt_stub_row_group {
-  color: #333333;
-  background-color: #FFFFFF;
-  font-size: 100%;
-  font-weight: initial;
-  text-transform: inherit;
-  border-right-style: solid;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-  padding-left: 5px;
-  padding-right: 5px;
-  vertical-align: top;
-}
-
-#txvafbsnay .gt_row_group_first td {
-  border-top-width: 2px;
-}
-
-#txvafbsnay .gt_row_group_first th {
-  border-top-width: 2px;
-}
-
-#txvafbsnay .gt_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#txvafbsnay .gt_first_summary_row {
-  border-top-style: solid;
-  border-top-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_first_summary_row.thick {
-  border-top-width: 2px;
-}
-
-#txvafbsnay .gt_last_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_grand_summary_row {
-  color: #333333;
-  background-color: #FFFFFF;
-  text-transform: inherit;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#txvafbsnay .gt_first_grand_summary_row {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-top-style: double;
-  border-top-width: 6px;
-  border-top-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_last_grand_summary_row_top {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 5px;
-  padding-right: 5px;
-  border-bottom-style: double;
-  border-bottom-width: 6px;
-  border-bottom-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_striped {
-  background-color: rgba(128, 128, 128, 0.05);
-}
-
-#txvafbsnay .gt_table_body {
-  border-top-style: solid;
-  border-top-width: 2px;
-  border-top-color: #D3D3D3;
-  border-bottom-style: solid;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_footnotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_footnote {
-  margin: 0px;
-  font-size: 90%;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#txvafbsnay .gt_sourcenotes {
-  color: #333333;
-  background-color: #FFFFFF;
-  border-bottom-style: none;
-  border-bottom-width: 2px;
-  border-bottom-color: #D3D3D3;
-  border-left-style: none;
-  border-left-width: 2px;
-  border-left-color: #D3D3D3;
-  border-right-style: none;
-  border-right-width: 2px;
-  border-right-color: #D3D3D3;
-}
-
-#txvafbsnay .gt_sourcenote {
-  font-size: 90%;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-#txvafbsnay .gt_left {
-  text-align: left;
-}
-
-#txvafbsnay .gt_center {
-  text-align: center;
-}
-
-#txvafbsnay .gt_right {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-#txvafbsnay .gt_font_normal {
-  font-weight: normal;
-}
-
-#txvafbsnay .gt_font_bold {
-  font-weight: bold;
-}
-
-#txvafbsnay .gt_font_italic {
-  font-style: italic;
-}
-
-#txvafbsnay .gt_super {
-  font-size: 65%;
-}
-
-#txvafbsnay .gt_footnote_marks {
-  font-size: 75%;
-  vertical-align: 0.4em;
-  position: initial;
-}
-
-#txvafbsnay .gt_asterisk {
-  font-size: 100%;
-  vertical-align: 0;
-}
-
-#txvafbsnay .gt_indent_1 {
-  text-indent: 5px;
-}
-
-#txvafbsnay .gt_indent_2 {
-  text-indent: 10px;
-}
-
-#txvafbsnay .gt_indent_3 {
-  text-indent: 15px;
-}
-
-#txvafbsnay .gt_indent_4 {
-  text-indent: 20px;
-}
-
-#txvafbsnay .gt_indent_5 {
-  text-indent: 25px;
-}
-
-#txvafbsnay .katex-display {
-  display: inline-flex !important;
-  margin-bottom: 0.75em !important;
-}
-
-#txvafbsnay div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
-  height: 0px !important;
-}
-</style>
+<p><style>#txvafbsnay table { font-family: system-ui, ‘Segoe UI’,
+Roboto, Helvetica, Arial, sans-serif, ‘Apple Color Emoji’, ‘Segoe UI
+Emoji’, ‘Segoe UI Symbol’, ‘Noto Color Emoji’; -webkit-font-smoothing:
+antialiased; -moz-osx-font-smoothing: grayscale; }</p>
+<p>#txvafbsnay thead, #txvafbsnay tbody, #txvafbsnay tfoot, #txvafbsnay
+tr, #txvafbsnay td, #txvafbsnay th { border-style: none; }</p>
+<p>#txvafbsnay p { margin: 0; padding: 0; }</p>
+<p>#txvafbsnay .gt_table { display: table; border-collapse: collapse;
+line-height: normal; margin-left: auto; margin-right: auto; color:
+#333333; font-size: 16px; font-weight: normal; font-style: normal;
+background-color: #FFFFFF; width: auto; border-top-style: solid;
+border-top-width: 2px; border-top-color: #A8A8A8; border-right-style:
+none; border-right-width: 2px; border-right-color: #D3D3D3;
+border-bottom-style: solid; border-bottom-width: 2px;
+border-bottom-color: #A8A8A8; border-left-style: none;
+border-left-width: 2px; border-left-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_caption { padding-top: 4px; padding-bottom: 4px;
+}</p>
+<p>#txvafbsnay .gt_title { color: #333333; font-size: 125%; font-weight:
+initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px;
+padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width:
+0; }</p>
+<p>#txvafbsnay .gt_subtitle { color: #333333; font-size: 85%;
+font-weight: initial; padding-top: 3px; padding-bottom: 5px;
+padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF;
+border-top-width: 0; }</p>
+<p>#txvafbsnay .gt_heading { background-color: #FFFFFF; text-align:
+center; border-bottom-color: #FFFFFF; border-left-style: none;
+border-left-width: 1px; border-left-color: #D3D3D3; border-right-style:
+none; border-right-width: 1px; border-right-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_bottom_border { border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_col_headings { border-top-style: solid;
+border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style:
+solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_col_heading { color: #333333; background-color:
+#FFFFFF; font-size: 100%; font-weight: normal; text-transform: inherit;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px;
+padding-bottom: 6px; padding-left: 5px; padding-right: 5px; overflow-x:
+hidden; }</p>
+<p>#txvafbsnay .gt_column_spanner_outer { color: #333333;
+background-color: #FFFFFF; font-size: 100%; font-weight: normal;
+text-transform: inherit; padding-top: 0; padding-bottom: 0;
+padding-left: 4px; padding-right: 4px; }</p>
+<p>#txvafbsnay .gt_column_spanner_outer:first-child { padding-left: 0;
+}</p>
+<p>#txvafbsnay .gt_column_spanner_outer:last-child { padding-right: 0;
+}</p>
+<p>#txvafbsnay .gt_column_spanner { border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3; vertical-align:
+bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden;
+display: inline-block; width: 100%; }</p>
+<p>#txvafbsnay .gt_spanner_row { border-bottom-style: hidden; }</p>
+<p>#txvafbsnay .gt_group_heading { padding-top: 8px; padding-bottom:
+8px; padding-left: 5px; padding-right: 5px; color: #333333;
+background-color: #FFFFFF; font-size: 100%; font-weight: initial;
+text-transform: inherit; border-top-style: solid; border-top-width: 2px;
+border-top-color: #D3D3D3; border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; vertical-align: middle; text-align: left;
+}</p>
+<p>#txvafbsnay .gt_empty_group_heading { padding: 0.5px; color: #333333;
+background-color: #FFFFFF; font-size: 100%; font-weight: initial;
+border-top-style: solid; border-top-width: 2px; border-top-color:
+#D3D3D3; border-bottom-style: solid; border-bottom-width: 2px;
+border-bottom-color: #D3D3D3; vertical-align: middle; }</p>
+<p>#txvafbsnay .gt_from_md &gt; :first-child { margin-top: 0; }</p>
+<p>#txvafbsnay .gt_from_md &gt; :last-child { margin-bottom: 0; }</p>
+<p>#txvafbsnay .gt_row { padding-top: 8px; padding-bottom: 8px;
+padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style:
+solid; border-top-width: 1px; border-top-color: #D3D3D3;
+border-left-style: none; border-left-width: 1px; border-left-color:
+#D3D3D3; border-right-style: none; border-right-width: 1px;
+border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden;
+}</p>
+<p>#txvafbsnay .gt_stub { color: #333333; background-color: #FFFFFF;
+font-size: 100%; font-weight: initial; text-transform: inherit;
+border-right-style: solid; border-right-width: 2px; border-right-color:
+#D3D3D3; padding-left: 5px; padding-right: 5px; }</p>
+<p>#txvafbsnay .gt_stub_row_group { color: #333333; background-color:
+#FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit;
+border-right-style: solid; border-right-width: 2px; border-right-color:
+#D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top;
+}</p>
+<p>#txvafbsnay .gt_row_group_first td { border-top-width: 2px; }</p>
+<p>#txvafbsnay .gt_row_group_first th { border-top-width: 2px; }</p>
+<p>#txvafbsnay .gt_summary_row { color: #333333; background-color:
+#FFFFFF; text-transform: inherit; padding-top: 8px; padding-bottom: 8px;
+padding-left: 5px; padding-right: 5px; }</p>
+<p>#txvafbsnay .gt_first_summary_row { border-top-style: solid;
+border-top-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_first_summary_row.thick { border-top-width: 2px;
+}</p>
+<p>#txvafbsnay .gt_last_summary_row { padding-top: 8px; padding-bottom:
+8px; padding-left: 5px; padding-right: 5px; border-bottom-style: solid;
+border-bottom-width: 2px; border-bottom-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_grand_summary_row { color: #333333; background-color:
+#FFFFFF; text-transform: inherit; padding-top: 8px; padding-bottom: 8px;
+padding-left: 5px; padding-right: 5px; }</p>
+<p>#txvafbsnay .gt_first_grand_summary_row { padding-top: 8px;
+padding-bottom: 8px; padding-left: 5px; padding-right: 5px;
+border-top-style: double; border-top-width: 6px; border-top-color:
+#D3D3D3; }</p>
+<p>#txvafbsnay .gt_last_grand_summary_row_top { padding-top: 8px;
+padding-bottom: 8px; padding-left: 5px; padding-right: 5px;
+border-bottom-style: double; border-bottom-width: 6px;
+border-bottom-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_striped { background-color: rgba(128, 128, 128,
+0.05); }</p>
+<p>#txvafbsnay .gt_table_body { border-top-style: solid;
+border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style:
+solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_footnotes { color: #333333; background-color:
+#FFFFFF; border-bottom-style: none; border-bottom-width: 2px;
+border-bottom-color: #D3D3D3; border-left-style: none;
+border-left-width: 2px; border-left-color: #D3D3D3; border-right-style:
+none; border-right-width: 2px; border-right-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_footnote { margin: 0px; font-size: 90%; padding-top:
+4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; }</p>
+<p>#txvafbsnay .gt_sourcenotes { color: #333333; background-color:
+#FFFFFF; border-bottom-style: none; border-bottom-width: 2px;
+border-bottom-color: #D3D3D3; border-left-style: none;
+border-left-width: 2px; border-left-color: #D3D3D3; border-right-style:
+none; border-right-width: 2px; border-right-color: #D3D3D3; }</p>
+<p>#txvafbsnay .gt_sourcenote { font-size: 90%; padding-top: 4px;
+padding-bottom: 4px; padding-left: 5px; padding-right: 5px; }</p>
+<p>#txvafbsnay .gt_left { text-align: left; }</p>
+<p>#txvafbsnay .gt_center { text-align: center; }</p>
+<p>#txvafbsnay .gt_right { text-align: right; font-variant-numeric:
+tabular-nums; }</p>
+<p>#txvafbsnay .gt_font_normal { font-weight: normal; }</p>
+<p>#txvafbsnay .gt_font_bold { font-weight: bold; }</p>
+<p>#txvafbsnay .gt_font_italic { font-style: italic; }</p>
+<p>#txvafbsnay .gt_super { font-size: 65%; }</p>
+<p>#txvafbsnay .gt_footnote_marks { font-size: 75%; vertical-align:
+0.4em; position: initial; }</p>
+<p>#txvafbsnay .gt_asterisk { font-size: 100%; vertical-align: 0; }</p>
+<p>#txvafbsnay .gt_indent_1 { text-indent: 5px; }</p>
+<p>#txvafbsnay .gt_indent_2 { text-indent: 10px; }</p>
+<p>#txvafbsnay .gt_indent_3 { text-indent: 15px; }</p>
+<p>#txvafbsnay .gt_indent_4 { text-indent: 20px; }</p>
+<p>#txvafbsnay .gt_indent_5 { text-indent: 25px; }</p>
+<p>#txvafbsnay .katex-display { display: inline-flex !important;
+margin-bottom: 0.75em !important; }</p>
+#txvafbsnay div.Reactable &gt; div.rt-table &gt; div.rt-thead &gt;
+div.rt-tr.rt-tr-group-header &gt; div.rt-th-group:after { height: 0px
+!important; } </style></p>
 <table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
 <thead>
 <tr class="gt_heading">
 <td colspan="8" class="gt_heading gt_title gt_font_normal" style>
-Type I Error Under RR = 1.0 (Non-binding Futility)
+Type I Error Under RR = 1.0: Score Test
 </td>
 </tr>
 <tr class="gt_heading">
 <td colspan="8" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>
-Replications per k: 50 | Precomputed bundle | Runtime: 58.75 min
+Nominal one-sided alpha: 0.025 | Replications per k: 50 | Precomputed
+bundle | Runtime: 72.18 min
 </td>
 </tr>
 <tr class="gt_col_headings gt_spanner_row">
@@ -3694,22 +3148,48 @@ Final
 0.5
 </td>
 <td headers="Strategy" class="gt_row gt_left">
+Blinded SSR
+</td>
+<td headers="Type I error" class="gt_row gt_right">
+0.0229
+</td>
+<td headers="IA1" class="gt_row gt_right">
+0.0040
+</td>
+<td headers="IA2" class="gt_row gt_right">
+0.0086
+</td>
+<td headers="Final" class="gt_row gt_right">
+0.0103
+</td>
+<td headers="Mean N" class="gt_row gt_right">
+320.6
+</td>
+<td headers="SSR applied (%)" class="gt_row gt_right">
+33.4
+</td>
+</tr>
+<tr>
+<td headers="k" class="gt_row gt_right">
+0.5
+</td>
+<td headers="Strategy" class="gt_row gt_left">
 No adaptation
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0253
+0.0228
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0060
+0.0040
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0094
+0.0086
 </td>
 <td headers="Final" class="gt_row gt_right">
-0.0100
+0.0102
 </td>
 <td headers="Mean N" class="gt_row gt_right">
-330.0
+312.0
 </td>
 <td headers="SSR applied (%)" class="gt_row gt_right">
 0.0
@@ -3720,129 +3200,103 @@ No adaptation
 0.5
 </td>
 <td headers="Strategy" class="gt_row gt_left">
+Unblinded SSR
+</td>
+<td headers="Type I error" class="gt_row gt_right">
+0.0232
+</td>
+<td headers="IA1" class="gt_row gt_right">
+0.0040
+</td>
+<td headers="IA2" class="gt_row gt_right">
+0.0086
+</td>
+<td headers="Final" class="gt_row gt_right">
+0.0106
+</td>
+<td headers="Mean N" class="gt_row gt_right">
+325.4
+</td>
+<td headers="SSR applied (%)" class="gt_row gt_right">
+45.5
+</td>
+</tr>
+<tr>
+<td headers="k" class="gt_row gt_right">
+1.0
+</td>
+<td headers="Strategy" class="gt_row gt_left">
 Blinded SSR
 </td>
 <td headers="Type I error" class="gt_row gt_right">
-0.0286
+0.0228
 </td>
 <td headers="IA1" class="gt_row gt_right">
-0.0060
+0.0047
 </td>
 <td headers="IA2" class="gt_row gt_right">
-0.0094
+0.0050
+</td>
+<td headers="Final" class="gt_row gt_right">
+0.0131
+</td>
+<td headers="Mean N" class="gt_row gt_right">
+509.5
+</td>
+<td headers="SSR applied (%)" class="gt_row gt_right">
+99.0
+</td>
+</tr>
+<tr>
+<td headers="k" class="gt_row gt_right">
+1.0
+</td>
+<td headers="Strategy" class="gt_row gt_left">
+No adaptation
+</td>
+<td headers="Type I error" class="gt_row gt_right">
+0.0214
+</td>
+<td headers="IA1" class="gt_row gt_right">
+0.0047
+</td>
+<td headers="IA2" class="gt_row gt_right">
+0.0050
+</td>
+<td headers="Final" class="gt_row gt_right">
+0.0117
+</td>
+<td headers="Mean N" class="gt_row gt_right">
+312.0
+</td>
+<td headers="SSR applied (%)" class="gt_row gt_right">
+0.0
+</td>
+</tr>
+<tr>
+<td headers="k" class="gt_row gt_right">
+1.0
+</td>
+<td headers="Strategy" class="gt_row gt_left">
+Unblinded SSR
+</td>
+<td headers="Type I error" class="gt_row gt_right">
+0.0232
+</td>
+<td headers="IA1" class="gt_row gt_right">
+0.0047
+</td>
+<td headers="IA2" class="gt_row gt_right">
+0.0050
 </td>
 <td headers="Final" class="gt_row gt_right">
 0.0134
 </td>
 <td headers="Mean N" class="gt_row gt_right">
-505.3
+520.5
 </td>
 <td headers="SSR applied (%)" class="gt_row gt_right">
-96.5
-</td>
-</tr>
-<tr>
-<td headers="k" class="gt_row gt_right">
-0.5
-</td>
-<td headers="Strategy" class="gt_row gt_left">
-Unblinded SSR
-</td>
-<td headers="Type I error" class="gt_row gt_right">
-0.0257
-</td>
-<td headers="IA1" class="gt_row gt_right">
-0.0060
-</td>
-<td headers="IA2" class="gt_row gt_right">
-0.0094
-</td>
-<td headers="Final" class="gt_row gt_right">
-0.0104
-</td>
-<td headers="Mean N" class="gt_row gt_right">
-346.4
-</td>
-<td headers="SSR applied (%)" class="gt_row gt_right">
-45.0
-</td>
-</tr>
-<tr>
-<td headers="k" class="gt_row gt_right">
-1.0
-</td>
-<td headers="Strategy" class="gt_row gt_left">
-No adaptation
-</td>
-<td headers="Type I error" class="gt_row gt_right">
-0.0202
-</td>
-<td headers="IA1" class="gt_row gt_right">
-0.0053
-</td>
-<td headers="IA2" class="gt_row gt_right">
-0.0053
-</td>
-<td headers="Final" class="gt_row gt_right">
-0.0096
-</td>
-<td headers="Mean N" class="gt_row gt_right">
-330.0
-</td>
-<td headers="SSR applied (%)" class="gt_row gt_right">
-0.0
-</td>
-</tr>
-<tr>
-<td headers="k" class="gt_row gt_right">
-1.0
-</td>
-<td headers="Strategy" class="gt_row gt_left">
-Blinded SSR
-</td>
-<td headers="Type I error" class="gt_row gt_right">
-0.0253
-</td>
-<td headers="IA1" class="gt_row gt_right">
-0.0053
-</td>
-<td headers="IA2" class="gt_row gt_right">
-0.0053
-</td>
-<td headers="Final" class="gt_row gt_right">
-0.0147
-</td>
-<td headers="Mean N" class="gt_row gt_right">
-620.7
-</td>
-<td headers="SSR applied (%)" class="gt_row gt_right">
-98.9
-</td>
-</tr>
-<tr>
-<td headers="k" class="gt_row gt_right">
-1.0
-</td>
-<td headers="Strategy" class="gt_row gt_left">
-Unblinded SSR
-</td>
-<td headers="Type I error" class="gt_row gt_right">
-0.0249
-</td>
-<td headers="IA1" class="gt_row gt_right">
-0.0053
-</td>
-<td headers="IA2" class="gt_row gt_right">
-0.0053
-</td>
-<td headers="Final" class="gt_row gt_right">
-0.0143
-</td>
-<td headers="Mean N" class="gt_row gt_right">
-547.6
-</td>
-<td headers="SSR applied (%)" class="gt_row gt_right">
-98.9
+99.0
 </td>
 </tr>
 </tbody>
@@ -3852,18 +3306,707 @@ Futility stopping is ignored (non-binding) so all trials continue to the
 final analysis unless stopped for efficacy. ‘SSR applied’ is the
 percentage of trials where the adapted N exceeded the planned N
 (planning k = 0.5 ). Under the null, SSR may still increase N because
-nuisance parameter estimates can differ from planning values. Each table
-uses the group-sequential design built at the stated nominal alpha;
-power results elsewhere use alpha = 0.025 only.
+nuisance parameter estimates can differ from planning values. Both
+tables use the same group-sequential design built at nominal alpha =
+0.025; the only intended difference is the final/interim test statistic.
+Power results elsewhere use the score test.
 </td>
 </tr></tfoot>
 </table>
 </div>
 </div>
 <div class="section level3">
+<h3 id="starting-sample-size-sensitivity">Starting sample-size sensitivity<a class="anchor" aria-label="anchor" href="#starting-sample-size-sensitivity"></a>
+</h3>
+<p>The main SSR production cache is based on the score-sized fixed
+design, but in the primary planning example the Wald and score formulas
+round to the same starting sample size. To check whether the
+fixed-design power margin from Wald sizing carries through an adaptive
+SSR workflow, we add a targeted sensitivity in a low-event stress
+setting (<span class="math inline">\lambda_1 = 0.15</span>, <span class="math inline">k = 0.5</span>, RR = 0.7, no event gap). In that
+setting the Wald-sized group sequential design enrolls 472 participants
+at the final analysis, compared with 464 for the score-sized design.
+Both starting-size rules below still use the score test for interim and
+final analyses; only the starting design is changed.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sizing_sens_source_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span>
+<span>  <span class="va">project_root</span>, <span class="st">"inst"</span>, <span class="st">"extdata"</span>, <span class="st">"ssr_sizing_sensitivity.rds"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sizing_sens_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata"</span>, <span class="st">"ssr_sizing_sensitivity.rds"</span>, package <span class="op">=</span> <span class="st">"gsDesignNB"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">sizing_sens_file</span> <span class="op">==</span> <span class="st">""</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">sizing_sens_source_path</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">sizing_sens_file</span> <span class="op">&lt;-</span> <span class="va">sizing_sens_source_path</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">sizing_sens_file</span> <span class="op">==</span> <span class="st">""</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span></span>
+<span>    <span class="st">"The supplemental SSR sizing-sensitivity cache is not available. "</span>,</span>
+<span>    <span class="st">"Run `Rscript data-raw/generate_ssr_sizing_sensitivity.R` to regenerate it.\n"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>  <span class="va">sizing_sens</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">sizing_sens_file</span><span class="op">)</span></span>
+<span>  <span class="va">sizing_sens_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">sizing_sens</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span>
+<span>  <span class="va">sizing_sens_dt</span><span class="op">[</span>, <span class="va">Metric</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/fifelse.html" class="external-link">fifelse</a></span><span class="op">(</span></span>
+<span>    <span class="va">rr_true</span> <span class="op">==</span> <span class="fl">1</span>,</span>
+<span>    <span class="st">"Type I error (RR = 1.0; non-binding futility)"</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Power (RR = "</span>, <span class="va">rr_true</span>, <span class="st">")"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="va">sizing_sens_dt</span><span class="op">[</span>, <span class="va">`Starting design`</span> <span class="op">:=</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/toTitleCase.html" class="external-link">toTitleCase</a></span><span class="op">(</span><span class="va">starting_sizing</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="va">sizing_sens_dt</span><span class="op">[</span>, <span class="va">`Estimate`</span> <span class="op">:=</span> <span class="va">rejection_rate</span><span class="op">]</span></span>
+<span>  <span class="va">sizing_sens_dt</span><span class="op">[</span>, <span class="va">`SSR applied (%)`</span> <span class="op">:=</span> <span class="va">pct_adapted</span><span class="op">]</span></span>
+<span></span>
+<span>  <span class="va">sizing_sens_display</span> <span class="op">&lt;-</span> <span class="va">sizing_sens_dt</span><span class="op">[</span></span>
+<span>    <span class="va">strategy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"No adaptation"</span>, <span class="st">"Blinded SSR"</span>, <span class="st">"Unblinded SSR"</span><span class="op">)</span>,</span>
+<span>    <span class="fu">.</span><span class="op">(</span></span>
+<span>      <span class="va">Metric</span>,</span>
+<span>      <span class="va">`Starting design`</span>,</span>
+<span>      Strategy <span class="op">=</span> <span class="va">strategy</span>,</span>
+<span>      `Fixed N` <span class="op">=</span> <span class="va">fixed_n</span>,</span>
+<span>      `GS N` <span class="op">=</span> <span class="va">gs_n</span>,</span>
+<span>      Estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">Estimate</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>      MCSE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mcse</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>      `Mean N` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mean_n</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>      `SSR applied (%)` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">`SSR applied (%)`</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/setorder.html" class="external-link">setorder</a></span><span class="op">(</span><span class="va">sizing_sens_display</span>, <span class="va">Metric</span>, <span class="va">`Starting design`</span>, <span class="va">Strategy</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">sizing_sens_display</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span>groupname_col <span class="op">=</span> <span class="st">"Metric"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
+<span>      title <span class="op">=</span> <span class="st">"Supplemental SSR Starting-Size Sensitivity"</span>,</span>
+<span>      subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>        <span class="st">"Score final test; Wald-sized GS N ="</span>,</span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">sizing_sens_display</span><span class="op">$</span><span class="va">`GS N`</span><span class="op">)</span>,</span>
+<span>        <span class="st">"vs score-sized GS N ="</span>,</span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">sizing_sens_display</span><span class="op">$</span><span class="va">`GS N`</span><span class="op">)</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://gt.rstudio.com/reference/tab_footnote.html" class="external-link">tab_footnote</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>        <span class="st">"This targeted sensitivity uses a lower-event stress setting and is"</span>,</span>
+<span>        <span class="st">"intended to check the direction of the starting-size recommendation,"</span>,</span>
+<span>        <span class="st">"not to replace the full SSR production grid."</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div id="orehalspkz" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#orehalspkz table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#orehalspkz thead, #orehalspkz tbody, #orehalspkz tfoot, #orehalspkz tr, #orehalspkz td, #orehalspkz th {
+  border-style: none;
+}
+
+#orehalspkz p {
+  margin: 0;
+  padding: 0;
+}
+
+#orehalspkz .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#orehalspkz .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#orehalspkz .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#orehalspkz .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#orehalspkz .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#orehalspkz .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#orehalspkz .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#orehalspkz .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#orehalspkz .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#orehalspkz .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#orehalspkz .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#orehalspkz .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#orehalspkz .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#orehalspkz .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#orehalspkz .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#orehalspkz .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#orehalspkz .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#orehalspkz .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#orehalspkz .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#orehalspkz .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#orehalspkz .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#orehalspkz .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#orehalspkz .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#orehalspkz .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#orehalspkz .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#orehalspkz .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#orehalspkz .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#orehalspkz .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#orehalspkz .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#orehalspkz .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#orehalspkz .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#orehalspkz .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#orehalspkz .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#orehalspkz .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#orehalspkz .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#orehalspkz .gt_left {
+  text-align: left;
+}
+
+#orehalspkz .gt_center {
+  text-align: center;
+}
+
+#orehalspkz .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#orehalspkz .gt_font_normal {
+  font-weight: normal;
+}
+
+#orehalspkz .gt_font_bold {
+  font-weight: bold;
+}
+
+#orehalspkz .gt_font_italic {
+  font-style: italic;
+}
+
+#orehalspkz .gt_super {
+  font-size: 65%;
+}
+
+#orehalspkz .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#orehalspkz .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#orehalspkz .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#orehalspkz .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#orehalspkz .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#orehalspkz .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#orehalspkz .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#orehalspkz .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#orehalspkz div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="8" class="gt_heading gt_title gt_font_normal" style>Supplemental SSR Starting-Size Sensitivity</td>
+    </tr>
+<tr class="gt_heading">
+<td colspan="8" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Score final test; Wald-sized GS N = 472 vs score-sized GS N = 464</td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Starting-design">Starting design</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Strategy">Strategy</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Fixed-N">Fixed N</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="GS-N">GS N</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Estimate">Estimate</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="MCSE">MCSE</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Mean-N">Mean N</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="SSR-applied-(%)">SSR applied (%)</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="gt_group_heading_row">
+<th colspan="8" class="gt_group_heading" scope="colgroup" id="Power (RR = 0.7)">Power (RR = 0.7)</th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="Power (RR = 0.7)  Starting design" class="gt_row gt_left">Score</td>
+<td headers="Power (RR = 0.7)  Strategy" class="gt_row gt_left">Blinded SSR</td>
+<td headers="Power (RR = 0.7)  Fixed N" class="gt_row gt_right">384</td>
+<td headers="Power (RR = 0.7)  GS N" class="gt_row gt_right">464</td>
+<td headers="Power (RR = 0.7)  Estimate" class="gt_row gt_right">0.9083</td>
+<td headers="Power (RR = 0.7)  MCSE" class="gt_row gt_right">0.0053</td>
+<td headers="Power (RR = 0.7)  Mean N" class="gt_row gt_right">466.9</td>
+<td headers="Power (RR = 0.7)  SSR applied (%)" class="gt_row gt_right">10.5</td>
+</tr>
+<tr>
+<td headers="Power (RR = 0.7)  Starting design" class="gt_row gt_left">Score</td>
+<td headers="Power (RR = 0.7)  Strategy" class="gt_row gt_left">No adaptation</td>
+<td headers="Power (RR = 0.7)  Fixed N" class="gt_row gt_right">384</td>
+<td headers="Power (RR = 0.7)  GS N" class="gt_row gt_right">464</td>
+<td headers="Power (RR = 0.7)  Estimate" class="gt_row gt_right">0.8997</td>
+<td headers="Power (RR = 0.7)  MCSE" class="gt_row gt_right">0.0055</td>
+<td headers="Power (RR = 0.7)  Mean N" class="gt_row gt_right">461.3</td>
+<td headers="Power (RR = 0.7)  SSR applied (%)" class="gt_row gt_right">0.0</td>
+</tr>
+<tr>
+<td headers="Power (RR = 0.7)  Starting design" class="gt_row gt_left">Score</td>
+<td headers="Power (RR = 0.7)  Strategy" class="gt_row gt_left">Unblinded SSR</td>
+<td headers="Power (RR = 0.7)  Fixed N" class="gt_row gt_right">384</td>
+<td headers="Power (RR = 0.7)  GS N" class="gt_row gt_right">464</td>
+<td headers="Power (RR = 0.7)  Estimate" class="gt_row gt_right">0.9110</td>
+<td headers="Power (RR = 0.7)  MCSE" class="gt_row gt_right">0.0052</td>
+<td headers="Power (RR = 0.7)  Mean N" class="gt_row gt_right">468.0</td>
+<td headers="Power (RR = 0.7)  SSR applied (%)" class="gt_row gt_right">11.2</td>
+</tr>
+<tr>
+<td headers="Power (RR = 0.7)  Starting design" class="gt_row gt_left">Wald</td>
+<td headers="Power (RR = 0.7)  Strategy" class="gt_row gt_left">Blinded SSR</td>
+<td headers="Power (RR = 0.7)  Fixed N" class="gt_row gt_right">390</td>
+<td headers="Power (RR = 0.7)  GS N" class="gt_row gt_right">472</td>
+<td headers="Power (RR = 0.7)  Estimate" class="gt_row gt_right">0.9050</td>
+<td headers="Power (RR = 0.7)  MCSE" class="gt_row gt_right">0.0054</td>
+<td headers="Power (RR = 0.7)  Mean N" class="gt_row gt_right">474.7</td>
+<td headers="Power (RR = 0.7)  SSR applied (%)" class="gt_row gt_right">10.5</td>
+</tr>
+<tr>
+<td headers="Power (RR = 0.7)  Starting design" class="gt_row gt_left">Wald</td>
+<td headers="Power (RR = 0.7)  Strategy" class="gt_row gt_left">No adaptation</td>
+<td headers="Power (RR = 0.7)  Fixed N" class="gt_row gt_right">390</td>
+<td headers="Power (RR = 0.7)  GS N" class="gt_row gt_right">472</td>
+<td headers="Power (RR = 0.7)  Estimate" class="gt_row gt_right">0.8977</td>
+<td headers="Power (RR = 0.7)  MCSE" class="gt_row gt_right">0.0055</td>
+<td headers="Power (RR = 0.7)  Mean N" class="gt_row gt_right">469.6</td>
+<td headers="Power (RR = 0.7)  SSR applied (%)" class="gt_row gt_right">0.0</td>
+</tr>
+<tr>
+<td headers="Power (RR = 0.7)  Starting design" class="gt_row gt_left">Wald</td>
+<td headers="Power (RR = 0.7)  Strategy" class="gt_row gt_left">Unblinded SSR</td>
+<td headers="Power (RR = 0.7)  Fixed N" class="gt_row gt_right">390</td>
+<td headers="Power (RR = 0.7)  GS N" class="gt_row gt_right">472</td>
+<td headers="Power (RR = 0.7)  Estimate" class="gt_row gt_right">0.9067</td>
+<td headers="Power (RR = 0.7)  MCSE" class="gt_row gt_right">0.0053</td>
+<td headers="Power (RR = 0.7)  Mean N" class="gt_row gt_right">475.6</td>
+<td headers="Power (RR = 0.7)  SSR applied (%)" class="gt_row gt_right">11.3</td>
+</tr>
+<tr class="gt_group_heading_row">
+<th colspan="8" class="gt_group_heading" scope="colgroup" id="Type I error (RR = 1.0; non-binding futility)">Type I error (RR = 1.0; non-binding futility)</th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="Type I error (RR = 1.0; non-binding futility)  Starting design" class="gt_row gt_left">Score</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Strategy" class="gt_row gt_left">Blinded SSR</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Fixed N" class="gt_row gt_right">384</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  GS N" class="gt_row gt_right">464</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Estimate" class="gt_row gt_right">0.0266</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  MCSE" class="gt_row gt_right">0.0023</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Mean N" class="gt_row gt_right">473.0</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  SSR applied (%)" class="gt_row gt_right">25.8</td>
+</tr>
+<tr>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Starting design" class="gt_row gt_left">Score</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Strategy" class="gt_row gt_left">No adaptation</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Fixed N" class="gt_row gt_right">384</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  GS N" class="gt_row gt_right">464</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Estimate" class="gt_row gt_right">0.0260</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  MCSE" class="gt_row gt_right">0.0023</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Mean N" class="gt_row gt_right">464.0</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  SSR applied (%)" class="gt_row gt_right">0.0</td>
+</tr>
+<tr>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Starting design" class="gt_row gt_left">Score</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Strategy" class="gt_row gt_left">Unblinded SSR</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Fixed N" class="gt_row gt_right">384</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  GS N" class="gt_row gt_right">464</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Estimate" class="gt_row gt_right">0.0258</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  MCSE" class="gt_row gt_right">0.0022</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Mean N" class="gt_row gt_right">490.3</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  SSR applied (%)" class="gt_row gt_right">51.6</td>
+</tr>
+<tr>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Starting design" class="gt_row gt_left">Wald</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Strategy" class="gt_row gt_left">Blinded SSR</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Fixed N" class="gt_row gt_right">390</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  GS N" class="gt_row gt_right">472</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Estimate" class="gt_row gt_right">0.0252</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  MCSE" class="gt_row gt_right">0.0022</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Mean N" class="gt_row gt_right">478.9</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  SSR applied (%)" class="gt_row gt_right">21.5</td>
+</tr>
+<tr>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Starting design" class="gt_row gt_left">Wald</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Strategy" class="gt_row gt_left">No adaptation</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Fixed N" class="gt_row gt_right">390</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  GS N" class="gt_row gt_right">472</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Estimate" class="gt_row gt_right">0.0258</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  MCSE" class="gt_row gt_right">0.0022</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Mean N" class="gt_row gt_right">472.0</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  SSR applied (%)" class="gt_row gt_right">0.0</td>
+</tr>
+<tr>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Starting design" class="gt_row gt_left">Wald</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Strategy" class="gt_row gt_left">Unblinded SSR</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Fixed N" class="gt_row gt_right">390</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  GS N" class="gt_row gt_right">472</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Estimate" class="gt_row gt_right">0.0252</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  MCSE" class="gt_row gt_right">0.0022</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  Mean N" class="gt_row gt_right">494.5</td>
+<td headers="Type I error (RR = 1.0; non-binding futility)  SSR applied (%)" class="gt_row gt_right">48.1</td>
+</tr>
+</tbody>
+<tfoot><tr class="gt_footnotes">
+<td class="gt_footnote" colspan="8"> This targeted sensitivity uses a lower-event stress setting and is intended to check the direction of the starting-size recommendation, not to replace the full SSR production grid.</td>
+    </tr></tfoot>
+</table>
+</div>
+<p>In this stress setting, the score-test Type I estimates remain close
+to nominal for both starting-size rules: 0.0252–0.0258 with the
+Wald-sized start and 0.0258–0.0266 with the score-sized start, with MCSE
+about 0.0022. At RR = 0.7, the power estimates are also similar across
+starting-size rules and within Monte Carlo uncertainty. The Wald-sized
+start increases the group sequential sample size from 464 to 472, but it
+does not produce a clear additional power advantage in this SSR setting.
+This supports the practical recommendation to simulate the specific SSR
+rule rather than assuming that a fixed-design sizing margin will
+automatically translate into adaptive-design power.</p>
+</div>
+<div class="section level3">
 <h3 id="power-by-rate-ratio-and-ssr-strategy">Power by rate ratio and SSR strategy<a class="anchor" aria-label="anchor" href="#power-by-rate-ratio-and-ssr-strategy"></a>
 </h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">power_avg</span> <span class="op">&lt;-</span> <span class="va">dt</span><span class="op">[</span><span class="va">rr_true</span> <span class="op">&lt;</span> <span class="fl">1.0</span>, <span class="fu">.</span><span class="op">(</span></span>
 <span>  power <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">reject</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  mean_final_if <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">if_final</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
@@ -3890,7 +4033,7 @@ power results elsewhere use alpha = 0.025 only.
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">13</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="ssr-simulation-study_files/figure-html/power_curves-1.png" class="r-plt" alt="" width="960"></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">power_rr_plan</span> <span class="op">&lt;-</span> <span class="va">summary_dt</span><span class="op">[</span></span>
 <span>  <span class="va">rr_true</span> <span class="op">==</span> <span class="va">rr_plan</span> <span class="op">&amp;</span></span>
 <span>    <span class="va">strategy</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"No adaptation"</span>, <span class="st">"Blinded SSR"</span>, <span class="st">"Unblinded SSR"</span><span class="op">)</span></span>
@@ -4023,7 +4166,7 @@ power results elsewhere use alpha = 0.025 only.
 <span class="math inline">k = 0.5</span> and <span class="math inline">k
 = 1.0</span>, with vertical panels for IA1, IA2, and Final analysis.
 Panels use free y-scales.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">time_long</span> <span class="op">&lt;-</span> <span class="va">dt</span><span class="op">[</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"No adaptation"</span> <span class="op">&amp;</span> <span class="va">rr_true</span> <span class="op">==</span> <span class="va">rr_plan</span>, <span class="fu">.</span><span class="op">(</span></span>
 <span>  <span class="va">lambda1_true</span>, <span class="va">k_true</span>, <span class="va">accrual_true</span>,</span>
 <span>  IA1 <span class="op">=</span> <span class="va">ia1_time</span>, IA2 <span class="op">=</span> <span class="va">ia2_time</span>, Final <span class="op">=</span> <span class="va">final_time</span></span>
@@ -4063,10 +4206,10 @@ Panels use free y-scales.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Removed 1093 rows containing non-finite outside the scale range</span></span>
+<span><span class="co">#&gt; Warning: Removed 73998 rows containing non-finite outside the scale range</span></span>
 <span><span class="co">#&gt; (`stat_ydensity()`).</span></span></code></pre></div>
 <p><img src="ssr-simulation-study_files/figure-html/analysis_time_violin-1.png" class="r-plt" alt="" width="1152"></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">if_long</span> <span class="op">&lt;-</span> <span class="va">dt</span><span class="op">[</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"No adaptation"</span> <span class="op">&amp;</span> <span class="va">rr_true</span> <span class="op">==</span> <span class="va">rr_plan</span>, <span class="fu">.</span><span class="op">(</span></span>
 <span>  <span class="va">lambda1_true</span>, <span class="va">k_true</span>, <span class="va">accrual_true</span>,</span>
 <span>  IA1 <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="va">if_ia1</span>, IA2 <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="va">if_ia2</span>, Final <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="va">if_final</span></span>
@@ -4105,7 +4248,7 @@ Panels use free y-scales.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Removed 1093 rows containing non-finite outside the scale range</span></span>
+<span><span class="co">#&gt; Warning: Removed 73998 rows containing non-finite outside the scale range</span></span>
 <span><span class="co">#&gt; (`stat_ydensity()`).</span></span></code></pre></div>
 <p><img src="ssr-simulation-study_files/figure-html/analysis_info_violin-1.png" class="r-plt" alt="" width="1152"></p>
 </div>
@@ -4118,30 +4261,45 @@ Panels use free y-scales.</p>
 </h3>
 <ol style="list-style-type: decimal">
 <li><p><strong>Type I error.</strong> Under the null (RR <span class="math inline">\geq</span> 1.0), nominal one-sided control is 2.5%.
-In <strong>production</strong> runs we use 20 000 replicates for each
-main-grid scenario with RR <span class="math inline">= 1.0</span>; at
-that count, Monte Carlo error around 2.5% is only on the order of <span class="math inline">\pm 0.2</span> percentage points (roughly 95%). In
-<strong>most</strong> nuisance/strategy combinations the estimated Type
-I error <strong>exceeds</strong> that band—i.e., it is inflated relative
-to what sampling fluctuation alone would typically explain. (Default
-pkgdown/CRAN builds use far fewer replicates for speed; rely on
-production output for quantitative Type I conclusions.) For RR = 1.0,
-futility stopping is also evaluated with futility ignored (non-binding
-supplement) in the dedicated tables above. A parallel table uses a
-group-sequential design planned at <strong>nominal <span class="math inline">\alpha = 0.02</span></strong> to illustrate how a
-more conservative boundary calibration affects simulated Type I error
-(power simulations still use <span class="math inline">\alpha =
-0.025</span>).</p></li>
+The dedicated non-binding Type I tables use 20 000 replicates per
+dispersion and test statistic. With the Wald statistic, empirical Type I
+error ranges from about 2.8% to 3.1%, indicating mild finite-sample
+inflation. With the score statistic under the same <span class="math inline">\alpha = 0.025</span> group sequential design,
+empirical Type I error ranges from about 2.1% to 2.3%. The score-test
+result is conservative rather than inflated, so the simulation-based
+recommendation is to use the score test directly and then check power,
+rather than lowering alpha for a Wald analysis. This distinction is more
+important in SSR than in a fixed design because adaptation can add
+information; the score test controls how that additional information is
+converted into rejection probability.</p></li>
 <li><p><strong>Largest no-adaptation power deficit.</strong> At planned
-RR = 0.7, the largest deficit from the 90% target under no adaptation is
-concentrated in scenarios with lower event rates and larger dispersion
-(see the “Power Shortfall Without Adaptation” table).</p></li>
+RR = 0.7, the score-test production grid shows no-adaptation power
+ranging from about 70% to 90%. The largest deficit from the 90% target
+is concentrated in scenarios with lower event rates and larger
+dispersion (see the “Power Shortfall Without Adaptation”
+table).</p></li>
 <li><p><strong>IA2-only adaptation recovers power where information is
 low.</strong> In lower event-rate / higher-dispersion scenarios, IA2
 adaptation raises final information and materially improves power versus
-no adaptation, while still preserving IA1-only monitoring (see “Power by
-nuisance scenario” and “Final information at final analysis by
-strategy”).</p></li>
+no adaptation. Across the RR = 0.7 scenarios, blinded and unblinded SSR
+both average about 89% power with the score test, versus about 81% for
+no adaptation. The score test is intentionally conservative, so final
+designs should still verify whether a small information margin is needed
+to reach the desired power. Large adapted sample sizes in
+high-dispersion scenarios reflect the nuisance-parameter update and
+adaptation cap, not a failure of blinding. Compared with Wald testing,
+the score-test analysis makes those adaptations look better calibrated
+because the null rejection rate remains conservative rather than
+inflated.</p></li>
+<li><p><strong>Starting-size margins need SSR-specific
+confirmation.</strong> The supplemental low-event sensitivity compares
+Wald- and score-sized starting designs under the same score final test.
+Although the Wald-sized group sequential design starts with eight
+additional participants, its power is not materially higher than the
+score-sized design in this adaptive setting, and both starts have
+score-test Type I estimates close to nominal. Thus the fixed-design
+recommendation to consider Wald sizing as a power margin should be
+checked within the planned SSR rule.</p></li>
 </ol>
 </div>
 <div class="section level3">
@@ -4194,19 +4352,21 @@ required this fallback at each interim analysis.</p>
 <p>Production-scale runs use 3 600 replicates per scenario for RR <span class="math inline">&lt; 1</span> (power), 20 000 for each scenario with
 RR <span class="math inline">= 1.0</span> (Type I), and 1 000 for RR
 <span class="math inline">&gt; 1</span> (interior null, lower priority
-for precision), plus 20 000 replicates per <span class="math inline">k</span> in the separate RR = 1 non-binding futility
-check; these are computationally intensive. Parallel execution via the
-<code>future</code> / <code>future.apply</code> framework is essential.
-The simulation runtime table above reports the wall-clock time and
-number of workers used for the current build. For reference, a
-production run on a Mac Studio with an M4 chip using 11 of 12 available
-cores completed in approximately 2–3 hours.</p>
+for precision), plus 20 000 replicates per <span class="math inline">k</span> and per test statistic in the separate RR =
+1 non-binding futility check; these are computationally intensive.
+Parallel execution via the <code>future</code> /
+<code>future.apply</code> framework is essential. The simulation runtime
+table above reports the wall-clock time and number of workers used for
+the current build. For reference, the local 11-worker production cache
+was generated with checkpointed chunks and took an overnight run;
+resumed runs report only the wall-clock time since restart, not the
+cumulative time spent on previously cached chunks.</p>
 </div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-friede2010blinded" class="csl-entry">
 Friede, Tim, and Heinz Schmidli. 2010. <span>“Blinded Sample Size
 Reestimation with Negative Binomial Counts in Superiority and

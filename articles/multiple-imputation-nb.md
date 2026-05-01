@@ -13,11 +13,11 @@ principled strategy that reflects the scientific question—the
 The `gsDesignNB` package provides three imputation strategies for
 longitudinal negative binomial count data:
 
-| Mechanism                                 | Flag value | Strategy                                    |
-|:------------------------------------------|:-----------|:--------------------------------------------|
-| Missing at Random                         | `"MAR"`    | GLMM-based imputation with subject BLUPs    |
-| Missing Not at Random (non-reference arm) | `"MNAR"`   | Reference-based (copy-reference) imputation |
-| Intercurrent event — composite            | `"Comp"`   | Baseline count carried forward              |
+| Mechanism | Flag value | Strategy |
+|:---|:---|:---|
+| Missing at Random | `"MAR"` | GLMM-based imputation with subject BLUPs |
+| Missing Not at Random (non-reference arm) | `"MNAR"` | Reference-based (copy-reference) imputation |
+| Intercurrent event — composite | `"Comp"` | Baseline count carried forward |
 
 These mirror the SAS implementation using `PROC GLIMMIX` with
 `dist=negbin link=log` and `PROC PLM` for counterfactual predictions.
@@ -83,6 +83,7 @@ post-baseline visits, negative binomial counts (dispersion k = 0.5), and
 a single binary stratification factor.
 
 ``` r
+
 set.seed(2025)
 
 n_subj   <- 90L   # 30 per arm
@@ -142,6 +143,7 @@ We introduce three types of missing data to mirror a realistic trial:
   baseline count.
 
 ``` r
+
 long_data$miss_flag <- NA_character_
 
 # --- MAR: ~15% of subjects drop out from visit 3 onward ---
@@ -186,6 +188,7 @@ We now run the full MI pipeline. For this illustration we use
 random-intercept NB GLMM.
 
 ``` r
+
 library(gsDesignNB)
 
 # The formula mirrors the fixed-effects structure from the SAS code.
@@ -227,6 +230,7 @@ The `imputed_value` column contains:
 - An **imputed draw** for missing rows.
 
 ``` r
+
 # Show imputed rows only, first 2 imputations
 imp_missing <- imp_result[
   !is.na(imp_result$miss_flag) & imp_result$imputation <= 2,
@@ -266,6 +270,7 @@ Under reference-based MNAR, imputed values for non-placebo subjects
 should look more like placebo outcomes (higher counts).
 
 ``` r
+
 # Mean imputed value per mechanism and treatment arm
 agg <- aggregate(
   imputed_value ~ miss_flag + trt,
@@ -297,6 +302,7 @@ imputed datasets using Rubin’s rules. Here we compute the mean total
 count per arm at visit 4 as a simple illustration.
 
 ``` r
+
 # Per-imputation mean at visit 4
 v4 <- imp_result[imp_result$visit == 4, ]
 per_imp <- lapply(split(v4, v4$imputation), function(d) {
@@ -322,6 +328,7 @@ When `n_boot > 1`, no Rubin’s rules are needed. The variance across all
 of uncertainty.
 
 ``` r
+
 imp_boot <- impute_nb(
   data            = long_data,
   formula         = mi_formula,
@@ -366,6 +373,7 @@ control.
 #### Step 1 — Fit the GLMM
 
 ``` r
+
 obs_data <- long_data[!is.na(long_data$count), ]
 fits <- fit_nb_glmm(
   data    = obs_data,
@@ -378,6 +386,7 @@ cat("Estimated dispersion k:", round(fits[["1"]]$k, 3), "\n")
 #### Step 2 — MAR imputation
 
 ``` r
+
 imp_mar <- impute_nb_mar(
   data          = long_data,
   fits          = fits,
@@ -395,6 +404,7 @@ cat("MAR imputed rows:", sum(!is.na(imp_mar$imputed_value[
 #### Step 3 — MNAR reference-based imputation
 
 ``` r
+
 imp_mnar <- impute_nb_mnar_ref(
   data          = long_data,
   fits          = fits,
@@ -410,6 +420,7 @@ imp_mnar <- impute_nb_mnar_ref(
 #### Step 4 — Composite strategy (no model required)
 
 ``` r
+
 library(gsDesignNB)
 
 # Composite fill can be applied to any data frame, no glmmTMB needed
@@ -469,8 +480,9 @@ rules.
 ## Session info
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.3 (2026-03-11)
+#> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -491,34 +503,34 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] gsDesignNB_0.3.0
+#> [1] gsDesignNB_0.3.2
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6        TMB_1.9.21          xfun_0.57          
-#>  [4] bslib_0.10.0        ggplot2_4.0.2       htmlwidgets_1.6.4  
+#>  [4] bslib_0.10.0        ggplot2_4.0.3       htmlwidgets_1.6.4  
 #>  [7] lattice_0.22-9      numDeriv_2016.8-1.1 vctrs_0.7.3        
-#> [10] tools_4.5.3         Rdpack_2.6.6        generics_0.1.4     
-#> [13] parallel_4.5.3      sandwich_3.1-1      tibble_3.3.1       
-#> [16] pkgconfig_2.0.3     Matrix_1.7-4        data.table_1.18.2.1
-#> [19] RColorBrewer_1.1-3  S7_0.2.1-1          desc_1.4.3         
+#> [10] tools_4.6.0         Rdpack_2.6.6        generics_0.1.4     
+#> [13] parallel_4.6.0      sandwich_3.1-1      tibble_3.3.1       
+#> [16] pkgconfig_2.0.3     Matrix_1.7-5        data.table_1.18.2.1
+#> [19] RColorBrewer_1.1-3  S7_0.2.2            desc_1.4.3         
 #> [22] gt_1.3.0            lifecycle_1.0.5     doFuture_1.2.1     
-#> [25] compiler_4.5.3      farver_2.1.2        textshaping_1.0.5  
+#> [25] compiler_4.6.0      farver_2.1.2        textshaping_1.0.5  
 #> [28] codetools_0.2-20    htmltools_0.5.9     sass_0.4.10        
 #> [31] yaml_2.3.12         pkgdown_2.2.0       pillar_1.11.1      
 #> [34] nloptr_2.2.1        gsDesign_3.9.0      jquerylib_0.1.4    
 #> [37] tidyr_1.3.2         MASS_7.3-65         cachem_1.1.0       
 #> [40] iterators_1.0.14    reformulas_0.4.4    foreach_1.5.2      
-#> [43] boot_1.3-32         parallelly_1.47.0   nlme_3.1-168       
+#> [43] boot_1.3-32         parallelly_1.47.0   nlme_3.1-169       
 #> [46] r2rtf_1.3.0         tidyselect_1.2.1    digest_0.6.39      
 #> [49] mvtnorm_1.3-7       future_1.70.0       listenv_0.10.1     
-#> [52] dplyr_1.2.1         purrr_1.2.2         splines_4.5.3      
-#> [55] fastmap_1.2.0       grid_4.5.3          cli_3.6.6          
+#> [52] dplyr_1.2.1         purrr_1.2.2         splines_4.6.0      
+#> [55] fastmap_1.2.0       grid_4.6.0          cli_3.6.6          
 #> [58] magrittr_2.0.5      survival_3.8-6      future.apply_1.20.2
 #> [61] scales_1.4.0        simtrial_1.0.2      rmarkdown_2.31     
 #> [64] globals_0.19.1      otel_0.2.0          lme4_2.0-1         
 #> [67] ragg_1.5.2          zoo_1.8-15          evaluate_1.0.5     
 #> [70] knitr_1.51          glmmTMB_1.1.14      rbibutils_2.4.1    
-#> [73] mgcv_1.9-4          rlang_1.2.0         Rcpp_1.1.1-1       
+#> [73] mgcv_1.9-4          rlang_1.2.0         Rcpp_1.1.1-1.1     
 #> [76] xtable_1.8-8        glue_1.8.1          xml2_1.5.2         
 #> [79] minqa_1.2.8         jsonlite_2.0.0      R6_2.6.1           
 #> [82] systemfonts_1.3.2   fs_2.1.0

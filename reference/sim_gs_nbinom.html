@@ -13,7 +13,7 @@ with reproducible random number generation."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@ with reproducible random number generation.</p>
 <span>  design <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  data_cut <span class="op">=</span> <span class="va">cut_data_by_date</span>,</span>
 <span>  cuts <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  test_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wald"</span>, <span class="st">"score"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -119,6 +120,11 @@ The function must accept <code>sim_data</code>, <code>cut_date</code>, and <code
 should be a list of arguments for <code><a href="get_cut_date.html">get_cut_date()</a></code> (e.g., <code>planned_calendar</code>,
 <code>target_events</code>, <code>target_info</code>). If provided, <code>analysis_times</code> is ignored
 (or used as a fallback if <code>planned_calendar</code> is missing in a cut).</p></dd>
+
+
+<dt id="arg-test-type">test_type<a class="anchor" aria-label="anchor" href="#arg-test-type"></a></dt>
+<dd><p>Type of test statistic passed to <code><a href="mutze_test.html">mutze_test()</a></code>:
+<code>"wald"</code> (default) or <code>"score"</code>. See <code><a href="mutze_test.html">mutze_test()</a></code> for details.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>

@@ -1,6 +1,7 @@
 # Seasonal event simulation
 
 ``` r
+
 library(gsDesignNB)
 library(data.table)
 library(dplyr)
@@ -24,6 +25,7 @@ We design a small trial with the following characteristics:
 ### Define parameters
 
 ``` r
+
 # Randomization starts in Winter
 rand_start <- as.Date("2024-01-01")
 
@@ -81,6 +83,7 @@ We use
 to simulate the trial.
 
 ``` r
+
 set.seed(123)
 
 sim_data <- nb_sim_seasonal(
@@ -122,6 +125,7 @@ This function aggregates the seasonal intervals up to the cut date,
 subtracting any event gaps if specified.
 
 ``` r
+
 # Cut data at 9 months (0.75 years)
 cut_date <- 0.75
 
@@ -144,6 +148,7 @@ The `analysis_data` is aggregated by subject and season. This allows for
 seasonal adjustments in the analysis if desired.
 
 ``` r
+
 # Summarize events by season
 library(dplyr)
 analysis_data %>%
@@ -181,6 +186,7 @@ negative binomial generalized linear model. We use the logarithm of the
 exposure time as an offset.
 
 ``` r
+
 # Fit negative binomial GLM
 # We include season and treatment in the model
 fit <- MASS::glm.nb(
@@ -246,6 +252,7 @@ covariance matrix of the model. The statistical information is the
 inverse of this variance.
 
 ``` r
+
 # Variance of the treatment effect coefficient
 var_beta <- vcov(fit)["treatmentExperimental", "treatmentExperimental"]
 message("Variance of Treatment Effect (log-scale): ", var_beta)

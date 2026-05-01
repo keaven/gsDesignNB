@@ -1,6 +1,7 @@
 # Group sequential simulation with completers analysis
 
 ``` r
+
 library(gsDesignNB)
 library(gsDesign)
 library(data.table)
@@ -26,6 +27,7 @@ We define a trial with the following parameters:
   follow-up (or dropped out). Includes all available data.
 
 ``` r
+
 # Parameters
 n_total <- 200
 enroll_duration <- 12 # months
@@ -62,6 +64,7 @@ We will simulate 50 trials. For each trial, we perform the interim and
 final analyses.
 
 ``` r
+
 set.seed(2024)
 n_sims <- 50
 results <- data.frame(
@@ -172,6 +175,7 @@ We summarize the distribution of the test statistics (Z-scores) at the
 interim and final analyses.
 
 ``` r
+
 summary(results[, c("interim_date", "interim_z", "interim_info", "final_date", "final_z", "final_info", "info_frac")])
 #>   interim_date     interim_z       interim_info     final_date   
 #>  Min.   :1.310   Min.   :-3.461   Min.   : 9.16   Min.   :1.877  
@@ -194,6 +198,7 @@ summary(results[, c("interim_date", "interim_z", "interim_info", "final_date", "
 Comparison of Z-scores at Interim vs Final Analysis.
 
 ``` r
+
 # Correlation between interim and final Z-scores
 cor_z <- cor(results$interim_z, results$final_z)
 message("Correlation between interim and final Z-scores: ", round(cor_z, 3))
@@ -222,6 +227,7 @@ simulated Z-scores and information fractions. We assume an
 O’Brien-Fleming spending function for the upper bound.
 
 ``` r
+
 # Define design parameters
 alpha <- 0.025
 k <- 2

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,9 @@
 <ul><li>
 <strong>Core logic (<code>R/</code>)</strong>:
 <ul><li>
-<code>sample_size_nbinom.R</code>: Fixed design sample size calculations.</li>
+<code>sample_size_nbinom.R</code>: Fixed design sample size calculations (<code>test_type = "wald"</code> or <code>"score"</code>).</li>
+<li>
+<code>mutze_test.R</code>: Wald and score tests for NB treatment effect.</li>
 <li>
 <code>sim_gs_nbinom.R</code>: Group sequential design simulations.</li>
 <li>
@@ -52,6 +54,8 @@
 </ul></li>
 <li>
 <strong>Data handling</strong>: Uses <code>data.table</code> for high-performance data manipulation in simulations.</li>
+<li>
+<strong>Parallelism</strong>: Use <code><a href="https://future.futureverse.org/reference/multicore.html" class="external-link">future::multicore</a></code> (forking) on macOS/Linux for <code>devtools::load_all()</code> compatibility; <code><a href="https://future.futureverse.org/reference/multisession.html" class="external-link">future::multisession</a></code> on Windows.</li>
 <li>
 <strong>Integration</strong>: Re-exports <code>gsDesign</code> functions (<code>reexport-gsDesign.R</code>) to extend its functionality seamlessly.</li>
 </ul></div>

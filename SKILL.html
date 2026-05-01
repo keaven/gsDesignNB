@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,6 +35,9 @@
 
 <div id="gsdesignnb--comprehensive-ai-skill" class="section level1">
 
+<blockquote>
+<p><strong>Last updated:</strong> 2026-04-30 — matches package version 0.3.2</p>
+</blockquote>
 <div class="section level2">
 <h2 id="package-purpose">Package purpose<a class="anchor" aria-label="anchor" href="#package-purpose"></a></h2>
 <p><strong>gsDesignNB</strong> is an R package for planning, monitoring, and adapting clinical trials whose primary endpoint is a recurrent event count analyzed with a negative binomial (NB) model. It extends the <strong>gsDesign</strong> ecosystem to handle the special features of NB designs: information that depends on exposure and dispersion (not just event counts), protocol event gaps, calendar-time interim looks, and blinded/unblinded sample size re-estimation.</p>
@@ -48,6 +51,27 @@
 </li>
 </ul><p>where <span class="math inline">\lambda_g</span> is the group rate and <span class="math inline">k</span> is the dispersion parameter. The treatment effect is the log rate ratio <span class="math inline">\theta = \log(\lambda_2 / \lambda_1)</span>, estimated via NB GLM with log link and exposure offset.</p>
 <p>Fisher information per subject: <span class="math inline">\mathcal{I}_i = \mu_i / (1 + k \mu_i)</span>.</p>
+<div class="section level3">
+<h3 id="wald-vs-score-test">Wald vs score test<a class="anchor" aria-label="anchor" href="#wald-vs-score-test"></a></h3>
+<p><code><a href="reference/mutze_test.html">mutze_test()</a></code> supports <code>test_type = "wald"</code> (default) and <code>test_type = "score"</code>:</p>
+<ul><li>
+<strong>Wald test:</strong> Fits arm-specific NB GLMs; <span class="math inline">z = \hat\theta / \text{SE}(\hat\theta)</span>.</li>
+<li>
+<strong>Score test:</strong> Fits a pooled null NB GLM via <code><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">MASS::glm.nb()</a></code>; score statistic <span class="math inline">U = \sum (y_i - \hat\mu_i) / (1 + \hat k_0 \hat\mu_i)</span>; Fisher information <span class="math inline">I_0 = W_1 W_2 / (W_1 + W_2)</span>; <span class="math inline">z = U / \sqrt{I_0}</span>.</li>
+</ul><p>The score test is slightly more conservative under <span class="math inline">H_0</span> and better controls Type I error in small-sample / low-rate scenarios.</p>
+</div>
+<div class="section level3">
+<h3 id="two-variance-sample-size-formula">Two-variance sample size formula<a class="anchor" aria-label="anchor" href="#two-variance-sample-size-formula"></a></h3>
+<p><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> supports <code>test_type = "wald"</code> (default) and <code>test_type = "score"</code>:</p>
+<ul><li>
+<strong>Wald (single variance):</strong> <span class="math inline">n_1 = (z_\alpha + z_\beta)^2 V_1 / \theta^2</span>
+</li>
+<li>
+<strong>Score (two variance):</strong> <span class="math inline">n_1 = (z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1})^2 / \theta^2</span>
+</li>
+</ul><p>where <span class="math inline">V_1 = (1/\mu_1 + k_1)(1 + 1/r) + (1/\mu_2 + k_2)/r</span> is the alternative-hypothesis variance, and <span class="math inline">V_0 = (1/\mu_0 + k_0)(1 + 1/r)</span> uses a pooled rate <span class="math inline">\lambda_0 = (\lambda_1 + r \lambda_2) / (1 + r)</span> under <span class="math inline">H_0</span>.</p>
+<p>The score formula is matched to the score test’s null-variance reference distribution, but it is not automatically more powerful. In the package superiority grid, Wald/Zhu–Lakkis sizing paired with the score test preserved Type I error and gave slightly higher score-test power than score sizing because it retained a small sample-size margin. Compare both sizing rules and verify Type I error and power by simulation for the design setting.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="core-workflow">Core workflow<a class="anchor" aria-label="anchor" href="#core-workflow"></a></h2>
@@ -65,83 +89,83 @@
 <h2 id="function-reference">Function reference<a class="anchor" aria-label="anchor" href="#function-reference"></a></h2>
 <div class="section level3">
 <h3 id="sample-size-and-design">Sample size and design<a class="anchor" aria-label="anchor" href="#sample-size-and-design"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code></td>
-<td align="left">Fixed-design sample size/power for NB recurrent events</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/compute_info_at_time.html">compute_info_at_time()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code></td>
+<td align="left">Fixed-design sample size/power; <code>test_type = "wald"</code> (V₁ only) or <code>"score"</code> (V₀+V₁)</td>
+</tr><tr><td align="left"><code><a href="reference/compute_info_at_time.html">compute_info_at_time()</a></code></td>
 <td align="left">Information at a given calendar time (internal to sample_size_nbinom)</td>
-</tr><tr class="odd"><td align="left"><code><a href="reference/gsNBCalendar.html">gsNBCalendar()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/gsNBCalendar.html">gsNBCalendar()</a></code></td>
 <td align="left">Calendar-time group sequential design from fixed design result</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/toInteger.html">toInteger()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/toInteger.html">toInteger()</a></code></td>
 <td align="left">Round design to integer sample sizes (S3 method for <code>gsNB</code>)</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="data-simulation">Data simulation<a class="anchor" aria-label="anchor" href="#data-simulation"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/nb_sim.html">nb_sim()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/nb_sim.html">nb_sim()</a></code></td>
 <td align="left">Simulate recurrent events — piecewise accrual, exponential dropout, gamma-Poisson mixture</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/nb_sim_seasonal.html">nb_sim_seasonal()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/nb_sim_seasonal.html">nb_sim_seasonal()</a></code></td>
 <td align="left">Same as <code><a href="reference/nb_sim.html">nb_sim()</a></code> but with season-varying event rates</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="interim-data-handling">Interim data handling<a class="anchor" aria-label="anchor" href="#interim-data-handling"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/cut_data_by_date.html">cut_data_by_date()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/cut_data_by_date.html">cut_data_by_date()</a></code></td>
 <td align="left">Censor simulated data at a calendar date; aggregate events/exposure per subject</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/get_cut_date.html">get_cut_date()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/get_cut_date.html">get_cut_date()</a></code></td>
 <td align="left">Find analysis date from calendar, event, completer, or information targets</td>
-</tr><tr class="odd"><td align="left"><code><a href="reference/get_analysis_date.html">get_analysis_date()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/get_analysis_date.html">get_analysis_date()</a></code></td>
 <td align="left">Find calendar time when target event count is reached</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/cut_date_for_completers.html">cut_date_for_completers()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/cut_date_for_completers.html">cut_date_for_completers()</a></code></td>
 <td align="left">Find calendar time when target completer count is reached</td>
-</tr><tr class="odd"><td align="left"><code><a href="reference/cut_completers.html">cut_completers()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/cut_completers.html">cut_completers()</a></code></td>
 <td align="left">Convenience wrapper: find completer date + cut data</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="statistical-analysis-and-information">Statistical analysis and information<a class="anchor" aria-label="anchor" href="#statistical-analysis-and-information"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/mutze_test.html">mutze_test()</a></code></td>
-<td align="left">Wald test for treatment effect (NB GLM, Poisson fallback)</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/calculate_blinded_info.html">calculate_blinded_info()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/mutze_test.html">mutze_test()</a></code></td>
+<td align="left">Wald or score test for treatment effect (<code>test_type = "wald"</code> / <code>"score"</code>)</td>
+</tr><tr><td align="left"><code><a href="reference/calculate_blinded_info.html">calculate_blinded_info()</a></code></td>
 <td align="left">Blinded dispersion/rate estimation and statistical information</td>
-</tr><tr class="odd"><td align="left"><code><a href="reference/estimate_nb_mom.html">estimate_nb_mom()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/estimate_nb_mom.html">estimate_nb_mom()</a></code></td>
 <td align="left">Method-of-moments NB parameter estimation (blinded or unblinded)</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="group-sequential-simulation">Group sequential simulation<a class="anchor" aria-label="anchor" href="#group-sequential-simulation"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code></td>
 <td align="left">Monte Carlo GS trial simulation with calendar-time cuts</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/check_gs_bound.html">check_gs_bound()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/check_gs_bound.html">check_gs_bound()</a></code></td>
 <td align="left">Apply GS boundaries to simulation results on chosen info scale</td>
-</tr><tr class="odd"><td align="left"><code><a href="reference/summarize_gs_sim.html">summarize_gs_sim()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/summarize_gs_sim.html">summarize_gs_sim()</a></code></td>
 <td align="left">Operating characteristic summaries (power, futility, per-analysis)</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="sample-size-re-estimation">Sample size re-estimation<a class="anchor" aria-label="anchor" href="#sample-size-re-estimation"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/blinded_ssr.html">blinded_ssr()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/blinded_ssr.html">blinded_ssr()</a></code></td>
 <td align="left">Blinded SSR using pooled NB fit (Friede &amp; Schmidli 2010)</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/unblinded_ssr.html">unblinded_ssr()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/unblinded_ssr.html">unblinded_ssr()</a></code></td>
 <td align="left">Unblinded SSR using arm-specific rate/dispersion estimates</td>
-</tr><tr class="odd"><td align="left"><code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code></td>
 <td align="left">Full adaptive simulation engine (No adaptation / Blinded / Unblinded)</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/summarize_ssr_sim.html">summarize_ssr_sim()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/summarize_ssr_sim.html">summarize_ssr_sim()</a></code></td>
 <td align="left">Summary of SSR simulation results</td>
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h3>
-<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr class="header"><th align="left">Function</th>
+<table class="table"><colgroup><col width="52%"><col width="47%"></colgroup><thead><tr><th align="left">Function</th>
 <th align="left">Purpose</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code><a href="reference/run_ssr_shiny.html">run_ssr_shiny()</a></code></td>
+</tr></thead><tbody><tr><td align="left"><code><a href="reference/run_ssr_shiny.html">run_ssr_shiny()</a></code></td>
 <td align="left">Interactive Shiny interface for SSR exploration</td>
-</tr><tr class="even"><td align="left"><code><a href="reference/preview_pkgdown_site.html">preview_pkgdown_site()</a></code></td>
+</tr><tr><td align="left"><code><a href="reference/preview_pkgdown_site.html">preview_pkgdown_site()</a></code></td>
 <td align="left">Serve docs locally with correct CSS (not <code><a href="https://pkgdown.r-lib.org/reference/preview_site.html" class="external-link">pkgdown::preview_site()</a></code>)</td>
 </tr></tbody></table></div>
 <div class="section level3">
@@ -162,21 +186,21 @@
 </div>
 <div class="section level2">
 <h2 id="three-kinds-of-gaps">Three kinds of “gaps”<a class="anchor" aria-label="anchor" href="#three-kinds-of-gaps"></a></h2>
-<table class="table"><colgroup><col width="25%"><col width="20%"><col width="54%"></colgroup><thead><tr class="header"><th align="left">Concept</th>
+<table class="table"><colgroup><col width="25%"><col width="20%"><col width="54%"></colgroup><thead><tr><th align="left">Concept</th>
 <th align="left">Scale</th>
 <th align="left">Package interface</th>
-</tr></thead><tbody><tr class="odd"><td align="left">Analysis gap <span class="math inline">\Delta_i</span>
+</tr></thead><tbody><tr><td align="left">Analysis gap <span class="math inline">\Delta_i</span>
 </td>
 <td align="left">Trial calendar</td>
 <td align="left">
 <code>analysis_times</code> in <code><a href="reference/gsNBCalendar.html">gsNBCalendar()</a></code>, search criteria in <code><a href="reference/get_cut_date.html">get_cut_date()</a></code>
 </td>
-</tr><tr class="even"><td align="left">Timing heterogeneity</td>
+</tr><tr><td align="left">Timing heterogeneity</td>
 <td align="left">Accrual, dropout, follow-up</td>
 <td align="left">
 <code>accrual_rate/duration</code>, <code>dropout_rate</code>, <code>max_followup</code>, <code>trial_duration</code>
 </td>
-</tr><tr class="odd"><td align="left">Event gap <span class="math inline">g</span>
+</tr><tr><td align="left">Event gap <span class="math inline">g</span>
 </td>
 <td align="left">Patient time</td>
 <td align="left">
@@ -188,7 +212,10 @@
 <code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code> supports strategies: <code>"No adaptation"</code>, <code>"Blinded SSR"</code>, <code>"Unblinded SSR"</code>.</li>
 <li>
 <code>bound_info</code> controls which information scale drives boundaries: <code>"unblinded_ml"</code> (default), <code>"blinded_ml"</code>, <code>"unblinded_mom"</code>, <code>"blinded_mom"</code>.</li>
-<li>Blinded SSR preserves masking but requests larger sample sizes; unblinded SSR is more efficient when operationally acceptable.</li>
+<li>For SSR studies, treat the final test statistic as central. The current production SSR study uses the score test for power simulations and compares Wald vs score Type I error at the same nominal one-sided <span class="math inline">\alpha = 0.025</span>.</li>
+<li>In that non-binding Type I comparison, Wald is mildly anti-conservative (about 2.8%–3.1%) and score is conservative (about 2.1%–2.3%). Prefer the score final test when Type I calibration is the priority, then check whether Wald sizing, a higher target power, or a modest information margin is needed for power.</li>
+<li>SSR adaptation is driven mainly by interim nuisance estimates and the adaptation cap; the score test reduces anti-conservative rejection after adaptation rather than eliminating the need to simulate adapted sample-size behavior.</li>
+<li>Blinded SSR preserves masking. Unblinded SSR may be more sample-efficient, but the relative behavior is design-specific and should be compared under the trial’s nuisance range, adaptation cap, and final test statistic.</li>
 <li>Spending is not accelerated when observed information exceeds planned: uses <code>min(planned IF, actual IF)</code>.</li>
 <li>Futility assessment is deferred until ≥ 30% of planned information.</li>
 </ul></div>
@@ -211,50 +238,57 @@
 </div>
 <div class="section level2">
 <h2 id="key-arguments-shared-across-functions">Key arguments shared across functions<a class="anchor" aria-label="anchor" href="#key-arguments-shared-across-functions"></a></h2>
-<table class="table"><colgroup><col width="35%"><col width="32%"><col width="32%"></colgroup><thead><tr class="header"><th align="left">Argument</th>
+<table class="table"><colgroup><col width="35%"><col width="32%"><col width="32%"></colgroup><thead><tr><th align="left">Argument</th>
 <th align="left">Used in</th>
 <th align="left">Meaning</th>
-</tr></thead><tbody><tr class="odd"><td align="left">
+</tr></thead><tbody><tr><td align="left">
 <code>lambda1</code>, <code>lambda2</code>
 </td>
 <td align="left"><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code></td>
 <td align="left">Control and experimental event rates</td>
-</tr><tr class="even"><td align="left">
+</tr><tr><td align="left">
 <code>dispersion</code> / <code>k</code>
 </td>
 <td align="left">Multiple</td>
 <td align="left">NB dispersion (scalar or arm-specific vector)</td>
-</tr><tr class="odd"><td align="left">
+</tr><tr><td align="left">
 <code>accrual_rate</code>, <code>accrual_duration</code>
 </td>
 <td align="left"><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code></td>
 <td align="left">Piecewise enrollment</td>
-</tr><tr class="even"><td align="left"><code>enroll_rate</code></td>
+</tr><tr><td align="left"><code>enroll_rate</code></td>
 <td align="left">
 <code><a href="reference/nb_sim.html">nb_sim()</a></code>, <code><a href="reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code>, <code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code>
 </td>
 <td align="left"><code>data.frame(rate, duration)</code></td>
-</tr><tr class="odd"><td align="left"><code>fail_rate</code></td>
+</tr><tr><td align="left"><code>fail_rate</code></td>
 <td align="left">Simulation functions</td>
 <td align="left"><code>data.frame(treatment, rate, dispersion)</code></td>
-</tr><tr class="even"><td align="left"><code>dropout_rate</code></td>
+</tr><tr><td align="left"><code>dropout_rate</code></td>
 <td align="left">Multiple</td>
 <td align="left">
 <code>data.frame(treatment, rate, duration)</code> for exponential dropout</td>
-</tr><tr class="odd"><td align="left"><code>max_followup</code></td>
+</tr><tr><td align="left"><code>max_followup</code></td>
 <td align="left">Multiple</td>
 <td align="left">Maximum per-subject follow-up</td>
-</tr><tr class="even"><td align="left"><code>trial_duration</code></td>
+</tr><tr><td align="left"><code>trial_duration</code></td>
 <td align="left"><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code></td>
 <td align="left">Total calendar time of the trial</td>
-</tr><tr class="odd"><td align="left"><code>event_gap</code></td>
+</tr><tr><td align="left"><code>event_gap</code></td>
 <td align="left">
 <code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>, <code><a href="reference/nb_sim.html">nb_sim()</a></code>, <code><a href="reference/cut_data_by_date.html">cut_data_by_date()</a></code>
 </td>
 <td align="left">Minimum gap between counted events</td>
-</tr><tr class="even"><td align="left"><code>rr0</code></td>
+</tr><tr><td align="left"><code>rr0</code></td>
 <td align="left"><code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code></td>
 <td align="left">Null rate ratio (default 1; set &lt; 1 for non-inferiority)</td>
+</tr><tr><td align="left"><code>test_type</code></td>
+<td align="left">
+<code><a href="reference/mutze_test.html">mutze_test()</a></code>, <code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>, <code><a href="reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code>, <code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code>
+</td>
+<td align="left">
+<code>"wald"</code> (default) or <code>"score"</code>
+</td>
 </tr></tbody></table></div>
 <div class="section level2">
 <h2 id="s3-class-hierarchy">S3 class hierarchy<a class="anchor" aria-label="anchor" href="#s3-class-hierarchy"></a></h2>
@@ -269,27 +303,35 @@
 </ul></div>
 <div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a></h2>
-<table class="table"><colgroup><col width="58%"><col width="41%"></colgroup><thead><tr class="header"><th align="left">Vignette</th>
+<table class="table"><colgroup><col width="58%"><col width="41%"></colgroup><thead><tr><th align="left">Vignette</th>
 <th align="left">Topic</th>
-</tr></thead><tbody><tr class="odd"><td align="left"><code>sample-size-nbinom</code></td>
+</tr></thead><tbody><tr><td align="left"><code>sample-size-nbinom</code></td>
 <td align="left">Fixed-design NB sample size planning</td>
-</tr><tr class="even"><td align="left"><code>simulation-example</code></td>
+</tr><tr><td align="left"><code>simulation-example</code></td>
 <td align="left">Basic recurrent-event data generation</td>
-</tr><tr class="odd"><td align="left"><code>seasonal-simulation</code></td>
+</tr><tr><td align="left"><code>seasonal-simulation</code></td>
 <td align="left">Seasonal rate simulation</td>
-</tr><tr class="even"><td align="left"><code>group-sequential-simulation</code></td>
+</tr><tr><td align="left"><code>group-sequential-simulation</code></td>
 <td align="left">Calendar-time GS design workflow</td>
-</tr><tr class="odd"><td align="left"><code>ssr-example</code></td>
+</tr><tr><td align="left"><code>ssr-example</code></td>
 <td align="left">Short SSR workflow</td>
-</tr><tr class="even"><td align="left"><code>ssr-simulation-study</code></td>
+</tr><tr><td align="left"><code>ssr-simulation-study</code></td>
 <td align="left">Large SSR simulation case study</td>
-</tr><tr class="odd"><td align="left"><code>completers-interim-example</code></td>
+</tr><tr><td align="left"><code>completers-interim-example</code></td>
 <td align="left">Completer-based interim looks</td>
-</tr><tr class="even"><td align="left"><code>non-inferiority-example</code></td>
+</tr><tr><td align="left"><code>non-inferiority-example</code></td>
 <td align="left">Non-inferiority design</td>
-</tr><tr class="odd"><td align="left"><code>blinded-info-diagnostics</code></td>
+</tr><tr><td align="left"><code>verification-simulation</code></td>
+<td align="left">Simulation verification of sample size and test</td>
+</tr><tr><td align="left"><code>score-vs-wald-simulation</code></td>
+<td align="left">2×2 comparison: Wald/score sizing × Wald/score test (interactive DT/plotly)</td>
+</tr><tr><td align="left"><code>ai-skills</code></td>
+<td align="left">Demonstrates how to use <code>SKILL.md</code> and <code>llms.txt</code> to guide package-native workflows</td>
+</tr><tr><td align="left"><code>blinded-info-diagnostics</code></td>
+<td align="left">Blinded information estimation diagnostics</td>
+</tr><tr><td align="left"><code>blinded-info-diagnostics</code></td>
 <td align="left">Edge cases for blinded information</td>
-</tr><tr class="even"><td align="left"><code>verification-simulation</code></td>
+</tr><tr><td align="left"><code>verification-simulation</code></td>
 <td align="left">Design-formula verification against simulation</td>
 </tr></tbody></table></div>
 <div class="section level2">
@@ -306,23 +348,23 @@
 <div class="section level2">
 <h2 id="disease-area-calibration">Disease-area calibration<a class="anchor" aria-label="anchor" href="#disease-area-calibration"></a></h2>
 <p>Published NB trial parameters for reference:</p>
-<table class="table"><colgroup><col width="38%"><col width="42%"><col width="8%"><col width="10%"></colgroup><thead><tr class="header"><th align="left">Therapeutic area</th>
+<table class="table"><colgroup><col width="38%"><col width="42%"><col width="8%"><col width="10%"></colgroup><thead><tr><th align="left">Therapeutic area</th>
 <th align="center">~λ (events/month)</th>
 <th align="center">~k</th>
 <th align="left">Gap</th>
-</tr></thead><tbody><tr class="odd"><td align="left">Heart failure hospitalizations</td>
+</tr></thead><tbody><tr><td align="left">Heart failure hospitalizations</td>
 <td align="center">0.3</td>
 <td align="center">0.5</td>
 <td align="left">Extended hospitalization-free window</td>
-</tr><tr class="even"><td align="left">COPD exacerbations</td>
+</tr><tr><td align="left">COPD exacerbations</td>
 <td align="center">0.5–0.8</td>
 <td align="center">0.5–1.0</td>
 <td align="left">≥ 28 symptom-free days</td>
-</tr><tr class="odd"><td align="left">MS relapses</td>
+</tr><tr><td align="left">MS relapses</td>
 <td align="center">1–2/year</td>
 <td align="center">moderate–high</td>
 <td align="left">Variable</td>
-</tr><tr class="even"><td align="left">Asthma exacerbations</td>
+</tr><tr><td align="left">Asthma exacerbations</td>
 <td align="center">Variable</td>
 <td align="center">~0.8</td>
 <td align="left">Protocol-specific</td>

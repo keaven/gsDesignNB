@@ -2,23 +2,27 @@
 
 ## Overview
 
-This vignette examines two problematic datasets where the blinded
-information calculation produced extreme values. Understanding these
-edge cases helps inform potential improvements to the
-[`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md)
-function.
+This vignette examines two diagnostic datasets where direct
+maximum-likelihood blinded information estimation produced extreme
+values during development. Understanding these edge cases explains why
+the current implementation records estimator fallback paths and uses
+method-of-moments (MoM) estimates when the pooled negative binomial fit
+is unreliable.
 
 We examine two scenarios:
 
-1.  **Near-zero blinded information**: Cases where `blinded_info` is
-    essentially 0 despite reasonable `unblinded_info`
-2.  **Extreme high blinded information**: Cases where `blinded_info` is
-    astronomically large (10^38)
+1.  **Near-zero blinded information**: Cases where direct pooled ML
+    estimation can drive `blinded_info` close to 0 despite reasonable
+    `unblinded_info`
+2.  **Historical extreme high blinded information**: A case where the
+    raw pooled ML fit produced an astronomical information estimate
+    before the MoM fallback was added
 
-Both scenarios arise from instability in the negative binomial model
-fitting on blinded (pooled) data.
+Both scenarios arise from instability in negative binomial model fitting
+on blinded (pooled) data.
 
 ``` r
+
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
@@ -31,6 +35,7 @@ This dataset was identified from simulations where `blinded_info = 0.02`
 while `unblinded_info = 48.6` — a ratio of 0.0004.
 
 ``` r
+
 # Load the problematic dataset
 # Try package location first, fall back to relative path for development
 data_path <- system.file("extdata", "problematic_dataset.rds", package = "gsDesignNB")
@@ -45,6 +50,7 @@ dt <- as.data.table(cut_data)
 ### Event Counts Summary
 
 ``` r
+
 # Overall summary
 cat("Total subjects:", nrow(dt), "\n")
 #> Total subjects: 360
@@ -74,6 +80,7 @@ dt[, .(
 ### Event Distribution
 
 ``` r
+
 # Event count distribution
 event_dist <- dt[, .(count = .N), by = .(treatment, events)]
 event_dist[order(treatment, events)]
@@ -100,6 +107,7 @@ We calculate the event rate as events divided by follow-up duration
 (`tte`).
 
 ``` r
+
 dt[, event_rate := events / tte]
 
 # Summary of event rates
@@ -119,6 +127,7 @@ dt[, .(
 ### Violin Plot of Event Rates
 
 ``` r
+
 # Add overall group for comparison
 dt_plot <- rbind(
   dt[, .(treatment = treatment, event_rate = event_rate)],
@@ -148,6 +157,7 @@ experimental arm, as expected given the simulation parameters.
 ### What Happened with the Information Calculations
 
 ``` r
+
 # Blinded information calculation
 blinded_res <- calculate_blinded_info(
   cut_data,
@@ -186,6 +196,7 @@ cat("  dispersion:", mutze_res$dispersion, "\n")
 The issue stems from the blinded `glm.nb` fit:
 
 ``` r
+
 df <- as.data.frame(cut_data)
 df <- df[df$tte > 0, ]
 
@@ -232,6 +243,7 @@ Here we compare the problematic MLE estimate with the Method of Moments
 (MoM) estimator.
 
 ``` r
+
 # Calculate MoM estimates
 mom_res <- estimate_nb_mom(df)
 
@@ -250,12 +262,17 @@ robust to this specific data distribution where the “blinded” assumption
 
 ## Dataset 2: Extreme High Blinded Information
 
-This dataset was identified from simulation 630 in the group-sequential
-simulation, where `blinded_info = 1.84 × 10^38` — an astronomically
-large value indicating numerical overflow.
+This dataset was originally identified from a group-sequential
+simulation where the direct pooled ML calculation produced
+`blinded_info = 1.84 × 10^38`, an astronomically large value indicating
+numerical overflow. The current
+[`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md)
+implementation falls back to MoM for this dataset, so the helper output
+below should be finite.
 
 ``` r
-# Load the extreme high dataset (reproduced from simulation 630)
+
+# Load the historical extreme-high dataset
 data_path_2 <- system.file("extdata", "extreme_high_dataset.rds", package = "gsDesignNB")
 if (data_path_2 == "") {
   data_path_2 <- file.path("..", "inst", "extdata", "extreme_high_dataset.rds")
@@ -267,6 +284,7 @@ dt2 <- as.data.table(cut_data_2)
 ### Event Counts Summary
 
 ``` r
+
 # Overall summary
 cat("Total subjects:", nrow(dt2), "\n")
 #> Total subjects: 313
@@ -296,6 +314,7 @@ dt2[, .(
 ### What Happened with the Information Calculations
 
 ``` r
+
 # Blinded information calculation
 blinded_res_2 <- calculate_blinded_info(
   cut_data_2,
@@ -334,6 +353,7 @@ cat("  dispersion:", mutze_res_2$dispersion, "\n")
 #### Root Cause Analysis
 
 ``` r
+
 df2 <- as.data.frame(cut_data_2)
 df2 <- df2[df2$tte > 0, ]
 
@@ -389,6 +409,7 @@ to infinity.
 Again, we compare with the Method of Moments (MoM) estimator.
 
 ``` r
+
 # Calculate MoM estimates
 mom_res_2 <- estimate_nb_mom(df2)
 
@@ -400,9 +421,8 @@ cat("  Dispersion (k):", mom_res_2$dispersion, "\n")
 #>   Dispersion (k): 0.403252
 ```
 
-In this case, the MoM estimator likely returns a positive dispersion (or
-0 if underdispersed), avoiding the numerical instability of the infinite
-theta from the MLE.
+In this case, the MoM estimator returns a finite dispersion estimate,
+avoiding the numerical instability of the infinite-theta ML path.
 
 ### Why the Mutze Test Falls Back to Poisson
 
@@ -414,19 +434,20 @@ model.
 
 ## Summary of Issues
 
-| Issue         | Blinded Info | Cause                               | Dispersion (blinded) |
-|---------------|--------------|-------------------------------------|----------------------|
-| Near-zero     | 0.02         | Extremely large dispersion estimate | 4454                 |
-| Near-infinite | 1.84×10^38   | Extremely small dispersion estimate | ~0                   |
+| Issue | Current helper behavior | Historical / raw ML cause |
+|----|----|----|
+| Near-zero | ML path can still produce very small blinded information; compare against unblinded and MoM paths | Extremely large pooled dispersion estimate |
+| Historical near-infinite | Current helper uses MoM fallback and returns finite information | Non-convergent or boundary pooled ML fit with effectively zero dispersion |
 
 Both issues arise from instability in `glm.nb` when fitting to pooled
 (blinded) data. The pooling can create artificial variance patterns that
-don’t represent the true data-generating process.
+do not represent the true data-generating process.
 
 ## Recommendations
 
-1.  **Bound the dispersion estimate**: Cap `dispersion_blinded` to a
-    reasonable range (e.g., 0.01 to 100)
+1.  **Inspect extreme ML paths**: Compare ML and MoM information
+    estimates when pooled ML produces boundary-like dispersion
+    estimates.
 
 2.  **Use assumed dispersion**: Consider using the planned/assumed
     dispersion from the design rather than estimating from blinded data
@@ -438,14 +459,15 @@ don’t represent the true data-generating process.
     values, fall back to the unblinded information
 
 5.  **Use Method of Moments (MoM)**: The analysis above demonstrates
-    that a simple Method of Moments estimator is far more robust than
+    that a simple Method of Moments estimator is more robust than
     `glm.nb` for blinded parameter estimation in these edge cases. It
-    provides reasonable dispersion estimates even when the blinded MLE
-    fails or returns boundary values.
+    provides reasonable dispersion estimates when the blinded MLE fails
+    or returns boundary-like values.
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.3 (2026-03-11)
+#> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -466,31 +488,31 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] MASS_7.3-65         ggplot2_4.0.2       data.table_1.18.2.1
-#> [4] gsDesignNB_0.3.0   
+#> [1] MASS_7.3-65         ggplot2_4.0.3       data.table_1.18.2.1
+#> [4] gsDesignNB_0.3.2   
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gt_1.3.0            sass_0.4.10         future_1.70.0      
 #>  [4] generics_0.1.4      tidyr_1.3.2         xml2_1.5.2         
 #>  [7] r2rtf_1.3.0         lattice_0.22-9      listenv_0.10.1     
 #> [10] digest_0.6.39       magrittr_2.0.5      evaluate_1.0.5     
-#> [13] grid_4.5.3          RColorBrewer_1.1-3  iterators_1.0.14   
-#> [16] mvtnorm_1.3-7       fastmap_1.2.0       Matrix_1.7-4       
+#> [13] grid_4.6.0          RColorBrewer_1.1-3  iterators_1.0.14   
+#> [16] mvtnorm_1.3-7       fastmap_1.2.0       Matrix_1.7-5       
 #> [19] foreach_1.5.2       simtrial_1.0.2      jsonlite_2.0.0     
 #> [22] survival_3.8-6      purrr_1.2.2         scales_1.4.0       
 #> [25] codetools_0.2-20    textshaping_1.0.5   jquerylib_0.1.4    
 #> [28] cli_3.6.6           rlang_1.2.0         parallelly_1.47.0  
-#> [31] future.apply_1.20.2 splines_4.5.3       withr_3.0.2        
+#> [31] future.apply_1.20.2 splines_4.6.0       withr_3.0.2        
 #> [34] cachem_1.1.0        yaml_2.3.12         gsDesign_3.9.0     
-#> [37] otel_0.2.0          tools_4.5.3         parallel_4.5.3     
+#> [37] otel_0.2.0          tools_4.6.0         parallel_4.6.0     
 #> [40] doFuture_1.2.1      dplyr_1.2.1         globals_0.19.1     
 #> [43] vctrs_0.7.3         R6_2.6.1            lifecycle_1.0.5    
 #> [46] fs_2.1.0            htmlwidgets_1.6.4   ragg_1.5.2         
 #> [49] pkgconfig_2.0.3     desc_1.4.3          pkgdown_2.2.0      
 #> [52] pillar_1.11.1       bslib_0.10.0        gtable_0.3.6       
-#> [55] glue_1.8.1          Rcpp_1.1.1-1        systemfonts_1.3.2  
+#> [55] glue_1.8.1          Rcpp_1.1.1-1.1      systemfonts_1.3.2  
 #> [58] xfun_0.57           tibble_3.3.1        tidyselect_1.2.1   
 #> [61] knitr_1.51          farver_2.1.2        xtable_1.8-8       
 #> [64] htmltools_0.5.9     labeling_0.4.3      rmarkdown_2.31     
-#> [67] compiler_4.5.3      S7_0.2.1-1
+#> [67] compiler_4.6.0      S7_0.2.2
 ```

@@ -11,7 +11,7 @@ package to work with gsNB objects."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,14 +86,13 @@ integer.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function rounds sample sizes at each analysis to integers while maintaining
-the randomization ratio and ensuring monotonically increasing sample sizes across
-analyses. Only the final analysis sample size is rounded to an integer;
-interim sample sizes remain as expected (non-integer) values based on
-the information fraction.</p>
+    <p>This function rounds the final sample size while maintaining the
+randomization ratio. When calendar analysis times are available, interim
+sample sizes remain expected enrollment counts at those calendar times after
+rescaling the accrual rate to the rounded final sample size.</p>
 <p>When <code>analysis_times</code> were provided to <code><a href="gsNBCalendar.html">gsNBCalendar()</a></code>,
-the statistical information (<code>n.I</code>) is recomputed at each analysis
-time based on the new sample size and expected exposures.</p>
+expected events, exposure, and statistical information (<code>n.I</code>) are recomputed
+at each analysis time based on the new sample size and expected exposures.</p>
     </div>
     <div class="section level2">
     <h2 id="methods-by-class-">Methods (by class)<a class="anchor" aria-label="anchor" href="#methods-by-class-"></a></h2>

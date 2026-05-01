@@ -32,6 +32,7 @@ sim_ssr_nbinom(
   min_analysis_gap = 0.5,
   ignore_futility = FALSE,
   metadata = NULL,
+  test_type = c("wald", "score"),
   seed = TRUE
 )
 ```
@@ -135,6 +136,14 @@ sim_ssr_nbinom(
 
   Optional named list or one-row data frame of scenario labels to repeat
   across the returned rows.
+
+- test_type:
+
+  Type of test statistic passed to
+  [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md):
+  `"wald"` (default) or `"score"`. See
+  [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
+  for details.
 
 - seed:
 

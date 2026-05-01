@@ -13,8 +13,8 @@
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
 <script src="extra.js"></script><meta property="og:title" content="Sample Size and Simulation for Negative Binomial Outcomes">
-<meta name="description" content="Provides tools for planning and simulating recurrent event trials with overdispersed count endpoints analyzed using negative binomial (or Poisson) rate models. Implements sample size and power calculations for fixed designs with variable accrual, dropout, maximum follow-up, and event gaps, including methods of Zhu and Lakkis (2014) &lt;doi:10.1002/sim.5947&gt; and Friede and Schmidli (2010) &lt;doi:10.3414/ME09-02-0060&gt; as well as an extension to account for gaps between events. Supports group sequential monitoring by building on the gsDesign package. Includes recurrent-event simulation utilities (including seasonal rates), interim data truncation, Wald-based inference for rate ratios, and blinded or unblinded information estimation and sample size re-estimation.">
-<meta property="og:description" content="Provides tools for planning and simulating recurrent event trials with overdispersed count endpoints analyzed using negative binomial (or Poisson) rate models. Implements sample size and power calculations for fixed designs with variable accrual, dropout, maximum follow-up, and event gaps, including methods of Zhu and Lakkis (2014) &lt;doi:10.1002/sim.5947&gt; and Friede and Schmidli (2010) &lt;doi:10.3414/ME09-02-0060&gt; as well as an extension to account for gaps between events. Supports group sequential monitoring by building on the gsDesign package. Includes recurrent-event simulation utilities (including seasonal rates), interim data truncation, Wald-based inference for rate ratios, and blinded or unblinded information estimation and sample size re-estimation.">
+<meta name="description" content="Provides tools for planning and simulating recurrent event trials with overdispersed count endpoints analyzed using negative binomial (or Poisson) rate models. Implements sample size and power calculations for fixed designs with variable accrual, dropout, maximum follow-up, and event gaps, including methods of Zhu and Lakkis (2014) &lt;doi:10.1002/sim.5947&gt; and Friede and Schmidli (2010) &lt;doi:10.3414/ME09-02-0060&gt; as well as extensions for score-test sizing and gaps between events. Supports group sequential monitoring by building on the gsDesign package. Includes recurrent-event simulation utilities (including seasonal rates), interim data truncation, Wald and score-test inference for rate ratios, and blinded or unblinded information estimation and sample size re-estimation.">
+<meta property="og:description" content="Provides tools for planning and simulating recurrent event trials with overdispersed count endpoints analyzed using negative binomial (or Poisson) rate models. Implements sample size and power calculations for fixed designs with variable accrual, dropout, maximum follow-up, and event gaps, including methods of Zhu and Lakkis (2014) &lt;doi:10.1002/sim.5947&gt; and Friede and Schmidli (2010) &lt;doi:10.3414/ME09-02-0060&gt; as well as extensions for score-test sizing and gaps between events. Supports group sequential monitoring by building on the gsDesign package. Includes recurrent-event simulation utilities (including seasonal rates), interim data truncation, Wald and score-test inference for rate ratios, and blinded or unblinded information estimation and sample size re-estimation.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,13 +55,15 @@
 <!-- badges: start -->
 
 <p>gsDesignNB provides design, simulation, and interim monitoring tools for recurrent-event trials analyzed with negative binomial rate models, with Poisson methods available as the limiting special case when dispersion is negligible.</p>
-<p>The package is NB-first: plan designs with <code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>, simulate recurrent-event data with <code><a href="reference/nb_sim.html">nb_sim()</a></code> or <code><a href="reference/nb_sim_seasonal.html">nb_sim_seasonal()</a></code>, and evaluate group sequential monitoring or sample size re-estimation with <code><a href="reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code> and <code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code>. The <code>gsDesign</code> package supplies the underlying spending-function and boundary calculations used by those workflows.</p>
+<p>The package is NB-first: plan designs with <code><a href="reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>, simulate recurrent-event data with <code><a href="reference/nb_sim.html">nb_sim()</a></code> or <code><a href="reference/nb_sim_seasonal.html">nb_sim_seasonal()</a></code>, and evaluate group sequential monitoring or sample size re-estimation with <code><a href="reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code> and <code><a href="reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code>. Planning and simulation can use either Wald or score-test inference for rate ratios. The <code>gsDesign</code> package supplies the underlying spending-function and boundary calculations used by those workflows.</p>
 <div class="section level2">
 <h2 id="start-here">Start Here<a class="anchor" aria-label="anchor" href="#start-here"></a>
 </h2>
 <ul>
 <li>
 <code>sample-size-nbinom</code> for fixed-design planning</li>
+<li>
+<code>score-vs-wald-simulation</code> for Wald/score sizing and Type I error guidance</li>
 <li>
 <code>simulation-example</code> and <code>seasonal-simulation</code> for recurrent-event data generation</li>
 <li>

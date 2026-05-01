@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -759,6 +759,76 @@ gap, and this time is excluded from time at risk.</p>
 <span><span class="co">#&gt; 6  6 Experimental  0.06569608 1.434304  1.434304      0</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="missing-data-assumptions-and-imputation">Missing data assumptions and imputation<a class="anchor" aria-label="anchor" href="#missing-data-assumptions-and-imputation"></a>
+</h2>
+<p>The primary analysis in <code>gsDesignNB</code> is an observed-data
+rate analysis: each participant contributes the recurrent events
+observed before the analysis cut and the corresponding exposure time. In
+<code><a href="../reference/mutze_test.html">mutze_test()</a></code>, this appears as a negative binomial or
+Poisson log-rate model with <code>offset(log(tte))</code>; unobserved
+future events after censoring are not filled in.</p>
+<p>Under the current estimand and model, missing at random (MAR)
+censoring does not by itself require multiple imputation (MI). Rubin’s
+ignorability result states that, for direct likelihood or Bayesian
+inference, the missing-data process can be ignored when the data are MAR
+and the parameters governing missingness are distinct from the
+outcome-model parameters <span class="citation">(Rubin 1976)</span>. For
+this package, the practical reading is:</p>
+<ul>
+<li>if dropout or administrative censoring is independent of future
+unobserved event burden after conditioning on the variables and
+histories represented in the analysis model, use the observed events and
+observed exposure;</li>
+<li>do not discard partially followed participants, since their observed
+events and exposure remain informative;</li>
+<li>MI under MAR is optional as a modeling or reporting strategy, not a
+requirement for valid point estimates and standard errors from a
+correctly specified observed-data likelihood.</li>
+</ul>
+<p>This statement is narrower than saying that any available-case
+analysis is valid under MAR. If MAR depends on auxiliary covariates,
+prior event history, center, season, adherence, or other observed
+predictors that are not represented in the analysis, those variables
+should be added to the analysis, used in an inverse probability
+weighting model, or used in a compatible imputation model. A
+complete-case analysis of only subjects with full follow-up is generally
+a different and less efficient analysis, and may be biased when
+incomplete participants differ from completers.</p>
+<p>For missing not at random (MNAR), the missing future event process is
+not identified from observed data alone. Imputation can be useful, but
+only as part of an explicit sensitivity analysis <span class="citation">(National Research Council 2010)</span>. For recurrent
+events, Keene et al. provide a directly relevant controlled-imputation
+framework using a negative multinomial formulation compatible with a
+Gamma-Poisson / negative binomial recurrent-event model <span class="citation">(Keene et al. 2014)</span>. Their reference-based
+approach, such as borrowing control-arm event behaviour for active-arm
+dropouts, targets de facto sensitivity estimands rather than replacing
+the MAR primary analysis. A future MNAR MI routine for this package
+should first preserve enough information to define what is missing:</p>
+<ul>
+<li>record the censoring reason, such as dropout, administrative cut,
+maximum follow-up, or analysis cut;</li>
+<li>keep the planned follow-up horizon so the unobserved exposure window
+after dropout can be calculated;</li>
+<li>include observed predictors of both dropout and event burden, such
+as treatment, observed events, observed exposure, season, enrollment
+time, and dropout reason.</li>
+</ul>
+<p>An MNAR imputation model should then impute post-dropout
+recurrent-event counts or event times from a negative binomial
+recurrent-event model with an exposure offset. Sensitivity parameters
+can shift the post-dropout event rate, for example by using
+treatment-specific multipliers
+<code>\lambda_post = \lambda_model * exp(delta_g)</code>, or can impose
+reference-based rules such as jump-to-reference or copy-reference.
+Running a grid of assumptions gives a tipping-point or pattern-mixture
+sensitivity analysis. Each imputed dataset should be analyzed with the
+same <code><a href="../reference/mutze_test.html">mutze_test()</a></code> estimand, with variance estimation
+specified and checked as part of the sensitivity analysis. If
+<code>event_gap</code> is important, imputing event times rather than
+only total counts is preferable so at-risk time after events is handled
+consistently.</p>
+</div>
+<div class="section level2">
 <h2 id="wald-test-mutze2019group">Wald test <span class="citation">(Mütze et al. 2019)</span><a class="anchor" aria-label="anchor" href="#wald-test-mutze2019group"></a>
 </h2>
 <p>Using the truncated data we can run a negative binomial Wald test as
@@ -934,11 +1004,25 @@ theoretical negative binomial distribution.</p>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-keene2014missing" class="csl-entry">
+Keene, Oliver N., James H. Roger, Benjamin F. Hartley, and Michael G.
+Kenward. 2014. <span>“Missing Data Sensitivity Analysis for Recurrent
+Event Data Using Controlled Imputation.”</span> <em>Pharmaceutical
+Statistics</em> 13 (4): 258–64. <a href="https://doi.org/10.1002/pst.1624" class="external-link">https://doi.org/10.1002/pst.1624</a>.
+</div>
 <div id="ref-mutze2019group" class="csl-entry">
 Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
 <span>“Group Sequential Designs for Negative Binomial Outcomes.”</span>
 <em>Statistical Methods in Medical Research</em> 28 (8): 2326–47. <a href="https://doi.org/10.1177/0962280218773115" class="external-link">https://doi.org/10.1177/0962280218773115</a>.
+</div>
+<div id="ref-nrc2010missing" class="csl-entry">
+National Research Council. 2010. <em>The Prevention and Treatment of
+Missing Data in Clinical Trials</em>. National Academies Press. <a href="https://doi.org/10.17226/12955" class="external-link">https://doi.org/10.17226/12955</a>.
+</div>
+<div id="ref-rubin1976inference" class="csl-entry">
+Rubin, Donald B. 1976. <span>“Inference and Missing Data.”</span>
+<em>Biometrika</em> 63 (3): 581–92. <a href="https://doi.org/10.1093/biomet/63.3.581" class="external-link">https://doi.org/10.1093/biomet/63.3.581</a>.
 </div>
 </div>
 </div>

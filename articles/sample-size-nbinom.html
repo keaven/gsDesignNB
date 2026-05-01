@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -231,8 +231,8 @@ distribution becomes more spread out.</p>
 <div class="section level3">
 <h3 id="sample-size-formula">Sample size formula<a class="anchor" aria-label="anchor" href="#sample-size-formula"></a>
 </h3>
-<p>The sample size formula is based on the asymptotic normality of the
-maximum likelihood estimator of the log rate ratio <span class="math inline">\hat\theta</span>, using a Wald test. The required
+<p>The default sample size formula is based on the asymptotic normality
+of the maximum likelihood estimator of the log rate ratio <span class="math inline">\hat\theta</span>, using a Wald test. The required
 sample size for group 1 is:</p>
 <p><span class="math display"> n_1 = \frac{(z_{\alpha/s} + z_{\beta})^2
 \cdot \tilde{V}}{(\theta - \theta_0)^2} </span></p>
@@ -250,12 +250,41 @@ is the (possibly inflated) dispersion parameter for group <span class="math inli
 z_{\beta})^2 \left[\left(\frac{1}{\mu_1} + k\right) +
 \left(\frac{1}{\mu_2} + k\right)\right]}{(\theta - \theta_0)^2}
 </span></p>
+<p>When <code>test_type = "score"</code>,
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> instead uses a two-variance score-test
+formula:</p>
+<p><span class="math display">
+n_1 =
+\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+     {(\theta - \theta_0)^2},
+</span></p>
+<p>where <span class="math inline">V_1</span> is the alternative
+variance factor above and <span class="math inline">V_0</span> is the
+corresponding null variance factor under the constrained null model.
+This aligns the design calculation with a score statistic evaluated
+under <span class="math inline">H_0</span>. It is most useful as a
+diagnostic and alternative sizing rule when finite-sample Type I error
+control is the dominant objective, for example in lower-information
+designs, high-dispersion settings, event-gap settings, non-inferiority
+or super-superiority hypotheses, or adaptive/group sequential designs
+that will use a score statistic at analysis. The simulation grid in
+<code><a href="../articles/score-vs-wald-simulation.html">vignette("score-vs-wald-simulation")</a></code> shows that the final
+test statistic can matter more than the small difference between Wald
+and score sample sizes: in the displayed superiority scenarios, the
+traditional Zhu–Lakkis Wald sample size paired with the score test
+preserved Type I error and gave slightly higher score-test power than
+score sizing. Thus, if the planned analysis remains the Wald
+log-rate-ratio test, the Zhu–Lakkis Wald formula is the directly matched
+calculation. If the planned analysis is the score test, the practical
+default is to compare Wald and score sizing, often retaining Wald sizing
+as a modest sample-size margin, and then verify both Type I error and
+power by simulation.</p>
 </div>
 <div class="section level3">
 <h3 id="relationship-between-zhu-lakkis-friede-schmidli-and-mutze-et-al-">Relationship between Zhu-Lakkis, Friede-Schmidli, and Mutze et
 al.<a class="anchor" aria-label="anchor" href="#relationship-between-zhu-lakkis-friede-schmidli-and-mutze-et-al-"></a>
 </h3>
-<p>The sample size formula implemented in
+<p>The default Wald sample size formula implemented in
 <code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> corresponds to <strong>Method
 3</strong> of <span class="citation">Zhu and Lakkis (2014)</span>, which
 is the Wald test for the log rate ratio under a negative binomial model
@@ -347,7 +376,10 @@ accrual, dropout, max follow-up),</li>
 exposure, following the approach in <span class="citation">Zhu and
 Lakkis (2014)</span>, and</li>
 <li>
-<strong>Event gaps</strong> that reduce effective exposure.</li>
+<strong>Event gaps</strong> that reduce effective exposure, and</li>
+<li>
+<strong>Score-test sizing</strong> with separate null and
+alternative variance factors when <code>test_type = "score"</code>.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -413,15 +445,23 @@ segment.</p>
 <div class="section level3">
 <h3 id="calendar-exposure-with-dropout">Calendar exposure with dropout<a class="anchor" aria-label="anchor" href="#calendar-exposure-with-dropout"></a>
 </h3>
-<p>When the dropout rate <span class="math inline">\delta &gt; 0</span>
-(modeled as an exponential hazard), the expected exposure for a patient
-with potential follow-up <span class="math inline">u</span> is:</p>
-<p><span class="math display"> m(u) = \mathrm{E}[\min(u, \text{dropout
-time})] = \frac{1 - e^{-\delta u}}{\delta} </span></p>
+<p>Dropout is modeled as a piecewise exponential process with hazard
+rates <span class="math inline">\delta_1, \delta_2, \ldots</span> over
+successive intervals <span class="math inline">[0, c_1), [c_1, c_2),
+\ldots</span> (the last interval extends to <span class="math inline">\infty</span>). The survival function is <span class="math inline">S(t) = \exp\!\bigl(-\sum_j \delta_j
+\ell_j\bigr)</span> where <span class="math inline">\ell_j</span> is the
+time spent in interval <span class="math inline">j</span>. The expected
+exposure for a patient with potential follow-up <span class="math inline">u</span> is</p>
+<p><span class="math display"> m(u) = \int_0^u S(t)\, dt </span></p>
+<p>which decomposes into a sum of closed-form exponential integrals over
+each piece. For a single constant rate <span class="math inline">\delta
+&gt; 0</span> (the most common special case) this simplifies to</p>
+<p><span class="math display"> m(u) = \frac{1 - e^{-\delta u}}{\delta}
+</span></p>
 <p>The average exposure for segment <span class="math inline">j</span>
 is obtained by averaging <span class="math inline">m(u)</span> over the
-uniform distribution of enrollment times within the segment. This
-yields:</p>
+uniform distribution of enrollment times within the segment. For a
+single constant rate this yields:</p>
 <p><span class="math display">
 \bar{t}_j = \frac{1}{D_j}\int_{u_{\min}}^{u_{\max}} m(u)\, du
 = \frac{1}{\delta} - \frac{e^{-\delta u_{\min}} - e^{-\delta
@@ -430,6 +470,11 @@ u_{\max}}}{\delta^2 D_j}
 <p>Note that as <span class="math inline">\delta \to 0</span>, this
 reduces to <span class="math inline">(u_{\min} + u_{\max})/2</span>,
 consistent with the no-dropout case.</p>
+<p>The <code>dropout_rate</code> argument accepts a scalar (common
+constant rate), a length-2 vector (per-group constant rates), or a data
+frame with columns <code>rate</code> and <code>duration</code> (and
+optionally <code>treatment</code>) for the full piecewise
+specification.</p>
 </div>
 <div class="section level3">
 <h3 id="maximum-follow-up">Maximum follow-up<a class="anchor" aria-label="anchor" href="#maximum-follow-up"></a>
@@ -471,13 +516,13 @@ group has its own average exposure.</p>
 <div class="section level3">
 <h3 id="group-specific-parameters">Group-specific parameters<a class="anchor" aria-label="anchor" href="#group-specific-parameters"></a>
 </h3>
-<p>The function supports specifying <code>dropout_rate</code> and
-<code>max_followup</code> as vectors of length 2, corresponding to the
-control and treatment groups respectively. When these differ, the
-average exposure <span class="math inline">\bar{t}_g</span>, the second
-moment <span class="math inline">\mathrm{E}[t_g^2]</span>, and the
-variance inflation factor <span class="math inline">Q_g</span> are all
-computed separately for each group.</p>
+<p>The function supports specifying <code>dropout_rate</code> as a
+scalar, a length-2 vector, or a data frame with piecewise rates (see
+above), and <code>max_followup</code> as a scalar or vector of length 2,
+corresponding to the control and treatment groups respectively. When
+these differ between groups, the average exposure <span class="math inline">\bar{t}_g</span>, the second moment <span class="math inline">\mathrm{E}[t_g^2]</span>, and the variance inflation
+factor <span class="math inline">Q_g</span> are all computed separately
+for each group.</p>
 </div>
 <div class="section level3">
 <h3 id="variance-inflation-for-variable-follow-up-q-factor">Variance inflation for variable follow-up (<span class="math inline">Q</span> factor)<a class="anchor" aria-label="anchor" href="#variance-inflation-for-variable-follow-up-q-factor"></a>
@@ -499,12 +544,15 @@ increasing the required sample size.</p>
 <p><strong>Computing <span class="math inline">\mathrm{E}[t^2]</span>:</strong> The second moment
 is computed analogously to <span class="math inline">\mathrm{E}[t]</span> by integrating <span class="math inline">m_2(u) = \mathrm{E}[\min(u, \text{dropout
 time})^2]</span> over the enrollment distribution. Without dropout,
-<span class="math inline">m_2(u) = u^2</span>. With dropout rate <span class="math inline">\delta</span>:</p>
+<span class="math inline">m_2(u) = u^2</span>. With a single constant
+dropout rate <span class="math inline">\delta</span>:</p>
 <p><span class="math display"> m_2(u) = \frac{2}{\delta^2}\left(1 -
 e^{-\delta u}(1 + \delta u)\right) </span></p>
-<p>The average of <span class="math inline">m_2(u)</span> across
-enrollment segments (with appropriate handling of
-<code>max_followup</code> truncation) gives <span class="math inline">\mathrm{E}[t^2_g]</span>.</p>
+<p>For piecewise dropout, <span class="math inline">m_2(u)</span> is
+computed by integrating <span class="math inline">2 t\, S(t)</span> over
+the piecewise survival function, analogously to <span class="math inline">m(u)</span>. The average of <span class="math inline">m_2(u)</span> across enrollment segments (with
+appropriate handling of <code>max_followup</code> truncation) gives
+<span class="math inline">\mathrm{E}[t^2_g]</span>.</p>
 </div>
 <div class="section level3">
 <h3 id="event-gaps">Event gaps<a class="anchor" aria-label="anchor" href="#event-gaps"></a>
@@ -819,7 +867,10 @@ overdispersion): <span class="math inline">\mathcal{I}_i \approx
 <p>and thus:</p>
 <p><span class="math display"> \mathrm{Var}(\hat\theta) = \frac{1/\mu_1
 + k_1}{n_1} + \frac{1/\mu_2 + k_2}{n_2} </span></p>
-<p>This is exactly the variance used in the sample size formula.</p>
+<p>This is exactly the alternative variance used in the Wald sample size
+formula. For score-test sizing, the null variance is also computed under
+the constrained null and used in the Type I error component of the
+sample size calculation.</p>
 </div>
 <div class="section level3">
 <h3 id="information-in-practice-blinded-and-unblinded-estimation">Information in practice: blinded and unblinded estimation<a class="anchor" aria-label="anchor" href="#information-in-practice-blinded-and-unblinded-estimation"></a>
@@ -887,12 +938,15 @@ error. The information is <span class="math inline">\mathcal{I} =
 <div class="section level3">
 <h3 id="connection-to-sample-size">Connection to sample size<a class="anchor" aria-label="anchor" href="#connection-to-sample-size"></a>
 </h3>
-<p>The sample size formula can be expressed in terms of information. The
-target information for a fixed design is:</p>
+<p>The sample size formula can be expressed in terms of information. For
+the Wald formula, the target information for a fixed design is:</p>
 <p><span class="math display"> \mathcal{I}_{\text{target}} =
 \frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2} </span></p>
 <p>The sample size is then the smallest <span class="math inline">n_{\text{total}}</span> such that the expected
-information at the end of the trial exceeds <span class="math inline">\mathcal{I}_{\text{target}}</span>.</p>
+information at the end of the trial exceeds <span class="math inline">\mathcal{I}_{\text{target}}</span>. For score-test
+sizing, the equivalent calculation separates the information scale under
+the null from the information scale under the planned alternative
+through <span class="math inline">V_0</span> and <span class="math inline">V_1</span>.</p>
 </div>
 </div>
 <div class="section level2">
@@ -1132,7 +1186,7 @@ have more events and thus more gap time.</p>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-friede2010blinded" class="csl-entry">
 Friede, Tim, and Heinz Schmidli. 2010. <span>“Blinded Sample Size
 Reestimation with Negative Binomial Counts in Superiority and

@@ -1,6 +1,7 @@
 # Sample size calculation for negative binomial outcomes
 
 ``` r
+
 library(gsDesignNB)
 ```
 
@@ -17,20 +18,20 @@ verification.
 We use the following notation throughout this vignette and the package
 documentation.
 
-| Symbol                                            | Description                                                                                                    |
-|:--------------------------------------------------|:---------------------------------------------------------------------------------------------------------------|
-| \lambda_g                                         | Event rate (events per unit time) for group g (g = 1 for control, g = 2 for treatment)                         |
-| k (or k_g)                                        | Dispersion parameter such that \mathrm{Var}(Y) = \mu + k \mu^2; equivalent to 1/\texttt{size} in R’s `rnbinom` |
-| t_i                                               | Exposure (follow-up) time for subject i                                                                        |
-| \bar{t}\_g                                        | Average exposure time for group g: \bar{t}\_g = \mathrm{E}\[t_i \mid \text{group } g\]                         |
-| \mu\_{g} = \lambda_g \bar{t}\_g                   | Expected event count per subject in group g                                                                    |
-| \theta = \log(\lambda_2 / \lambda_1)              | Log rate ratio (treatment effect)                                                                              |
-| \theta_0 = \log(\text{rr}\_0)                     | Log rate ratio under the null hypothesis                                                                       |
-| p_g = n_g / n\_{\text{total}}                     | Allocation proportion for group g                                                                              |
-| r = n_2 / n_1                                     | Allocation ratio                                                                                               |
-| Q_g = \mathrm{E}\[t^2_g\] / (\mathrm{E}\[t_g\])^2 | Variance inflation factor for variable follow-up in group g                                                    |
-| \mathcal{I}                                       | Statistical information: \mathcal{I} = 1 / \mathrm{Var}(\hat\theta)                                            |
-| z\_\alpha, z\_\beta                               | Standard normal quantiles at levels \alpha and \beta                                                           |
+| Symbol | Description |
+|:---|:---|
+| \lambda_g | Event rate (events per unit time) for group g (g = 1 for control, g = 2 for treatment) |
+| k (or k_g) | Dispersion parameter such that \mathrm{Var}(Y) = \mu + k \mu^2; equivalent to 1/\texttt{size} in R’s `rnbinom` |
+| t_i | Exposure (follow-up) time for subject i |
+| \bar{t}\_g | Average exposure time for group g: \bar{t}\_g = \mathrm{E}\[t_i \mid \text{group } g\] |
+| \mu\_{g} = \lambda_g \bar{t}\_g | Expected event count per subject in group g |
+| \theta = \log(\lambda_2 / \lambda_1) | Log rate ratio (treatment effect) |
+| \theta_0 = \log(\text{rr}\_0) | Log rate ratio under the null hypothesis |
+| p_g = n_g / n\_{\text{total}} | Allocation proportion for group g |
+| r = n_2 / n_1 | Allocation ratio |
+| Q_g = \mathrm{E}\[t^2_g\] / (\mathrm{E}\[t_g\])^2 | Variance inflation factor for variable follow-up in group g |
+| \mathcal{I} | Statistical information: \mathcal{I} = 1 / \mathrm{Var}(\hat\theta) |
+| z\_\alpha, z\_\beta | Standard normal quantiles at levels \alpha and \beta |
 
 ## Methodology
 
@@ -82,6 +83,7 @@ increases, the variance increases and the distribution becomes more
 spread out.
 
 ``` r
+
 par(mfrow = c(1, 3))
 k_values <- c(0, 0.5, 1)
 for (k in k_values) {
@@ -104,9 +106,9 @@ for (k in k_values) {
 
 ### Sample size formula
 
-The sample size formula is based on the asymptotic normality of the
-maximum likelihood estimator of the log rate ratio \hat\theta, using a
-Wald test. The required sample size for group 1 is:
+The default sample size formula is based on the asymptotic normality of
+the maximum likelihood estimator of the log rate ratio \hat\theta, using
+a Wald test. The required sample size for group 1 is:
 
 n_1 = \frac{(z\_{\alpha/s} + z\_{\beta})^2 \cdot \tilde{V}}{(\theta -
 \theta_0)^2}
@@ -129,9 +131,37 @@ n\_{\text{total}} = \frac{(z\_{\alpha/s} + z\_{\beta})^2
 \left\[\left(\frac{1}{\mu_1} + k\right) + \left(\frac{1}{\mu_2} +
 k\right)\right\]}{(\theta - \theta_0)^2}
 
+When `test_type = "score"`,
+[`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
+instead uses a two-variance score-test formula:
+
+n_1 = \frac{(z\_{\alpha/s}\sqrt{V_0} + z\_\beta\sqrt{V_1})^2} {(\theta -
+\theta_0)^2},
+
+where V_1 is the alternative variance factor above and V_0 is the
+corresponding null variance factor under the constrained null model.
+This aligns the design calculation with a score statistic evaluated
+under H_0. It is most useful as a diagnostic and alternative sizing rule
+when finite-sample Type I error control is the dominant objective, for
+example in lower-information designs, high-dispersion settings,
+event-gap settings, non-inferiority or super-superiority hypotheses, or
+adaptive/group sequential designs that will use a score statistic at
+analysis. The simulation grid in
+[`vignette("score-vs-wald-simulation")`](https://keaven.github.io/gsDesignNB/articles/score-vs-wald-simulation.md)
+shows that the final test statistic can matter more than the small
+difference between Wald and score sample sizes: in the displayed
+superiority scenarios, the traditional Zhu–Lakkis Wald sample size
+paired with the score test preserved Type I error and gave slightly
+higher score-test power than score sizing. Thus, if the planned analysis
+remains the Wald log-rate-ratio test, the Zhu–Lakkis Wald formula is the
+directly matched calculation. If the planned analysis is the score test,
+the practical default is to compare Wald and score sizing, often
+retaining Wald sizing as a modest sample-size margin, and then verify
+both Type I error and power by simulation.
+
 ### Relationship between Zhu-Lakkis, Friede-Schmidli, and Mutze et al.
 
-The sample size formula implemented in
+The default Wald sample size formula implemented in
 [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
 corresponds to **Method 3** of Zhu and Lakkis (2014), which is the Wald
 test for the log rate ratio under a negative binomial model with a log
@@ -160,12 +190,12 @@ familiar formula above.
 
 **How the references differ:**
 
-| Aspect               | Zhu and Lakkis (2014)                           | Friede and Schmidli (2010)                                            | Mütze et al. (2019)                                   |
-|:---------------------|:------------------------------------------------|:----------------------------------------------------------------------|:------------------------------------------------------|
-| **Focus**            | Fixed sample size calculation                   | Blinded sample size reestimation                                      | Group sequential designs                              |
-| **Methods compared** | Five different test statistics (Methods 1–5)    | One method (equivalent to Zhu Method 3)                               | One method (same Wald test)                           |
-| **Dispersion**       | Common k across groups                          | Common k; estimated from blinded data                                 | Common k                                              |
-| **Exposure**         | Fixed \bar{t} for all subjects                  | Fixed \bar{t}                                                         | Fixed \bar{t}                                         |
+| Aspect | Zhu and Lakkis (2014) | Friede and Schmidli (2010) | Mütze et al. (2019) |
+|:---|:---|:---|:---|
+| **Focus** | Fixed sample size calculation | Blinded sample size reestimation | Group sequential designs |
+| **Methods compared** | Five different test statistics (Methods 1–5) | One method (equivalent to Zhu Method 3) | One method (same Wald test) |
+| **Dispersion** | Common k across groups | Common k; estimated from blinded data | Common k |
+| **Exposure** | Fixed \bar{t} for all subjects | Fixed \bar{t} | Fixed \bar{t} |
 | **Key contribution** | Systematic comparison of NB sample size methods | Blinded estimation of nuisance parameters (k, \lambda) during a trial | Extension to interim analyses with spending functions |
 
 The
@@ -177,7 +207,9 @@ function extends these methods by allowing:
   follow-up),
 - **Variance inflation** (Q factor) to account for non-constant
   exposure, following the approach in Zhu and Lakkis (2014), and
-- **Event gaps** that reduce effective exposure.
+- **Event gaps** that reduce effective exposure, and
+- **Score-test sizing** with separate null and alternative variance
+  factors when `test_type = "score"`.
 
 ### Non-inferiority and super-superiority
 
@@ -229,15 +261,24 @@ This is simply the midpoint of the follow-up range for that segment.
 
 ### Calendar exposure with dropout
 
-When the dropout rate \delta \> 0 (modeled as an exponential hazard),
-the expected exposure for a patient with potential follow-up u is:
+Dropout is modeled as a piecewise exponential process with hazard rates
+\delta_1, \delta_2, \ldots over successive intervals \[0, c_1), \[c_1,
+c_2), \ldots (the last interval extends to \infty). The survival
+function is S(t) = \exp\\\bigl(-\sum_j \delta_j \ell_j\bigr) where
+\ell_j is the time spent in interval j. The expected exposure for a
+patient with potential follow-up u is
 
-m(u) = \mathrm{E}\[\min(u, \text{dropout time})\] = \frac{1 - e^{-\delta
-u}}{\delta}
+m(u) = \int_0^u S(t)\\ dt
+
+which decomposes into a sum of closed-form exponential integrals over
+each piece. For a single constant rate \delta \> 0 (the most common
+special case) this simplifies to
+
+m(u) = \frac{1 - e^{-\delta u}}{\delta}
 
 The average exposure for segment j is obtained by averaging m(u) over
-the uniform distribution of enrollment times within the segment. This
-yields:
+the uniform distribution of enrollment times within the segment. For a
+single constant rate this yields:
 
 \bar{t}\_j = \frac{1}{D_j}\int\_{u\_{\min}}^{u\_{\max}} m(u)\\ du =
 \frac{1}{\delta} - \frac{e^{-\delta u\_{\min}} - e^{-\delta
@@ -245,6 +286,11 @@ u\_{\max}}}{\delta^2 D_j}
 
 Note that as \delta \to 0, this reduces to (u\_{\min} + u\_{\max})/2,
 consistent with the no-dropout case.
+
+The `dropout_rate` argument accepts a scalar (common constant rate), a
+length-2 vector (per-group constant rates), or a data frame with columns
+`rate` and `duration` (and optionally `treatment`) for the full
+piecewise specification.
 
 ### Maximum follow-up
 
@@ -281,11 +327,13 @@ When dropout rates are the same for both groups, \bar{t}\_1 =
 
 ### Group-specific parameters
 
-The function supports specifying `dropout_rate` and `max_followup` as
-vectors of length 2, corresponding to the control and treatment groups
-respectively. When these differ, the average exposure \bar{t}\_g, the
-second moment \mathrm{E}\[t_g^2\], and the variance inflation factor Q_g
-are all computed separately for each group.
+The function supports specifying `dropout_rate` as a scalar, a length-2
+vector, or a data frame with piecewise rates (see above), and
+`max_followup` as a scalar or vector of length 2, corresponding to the
+control and treatment groups respectively. When these differ between
+groups, the average exposure \bar{t}\_g, the second moment
+\mathrm{E}\[t_g^2\], and the variance inflation factor Q_g are all
+computed separately for each group.
 
 ### Variance inflation for variable follow-up (Q factor)
 
@@ -308,12 +356,15 @@ the required sample size.
 **Computing \mathrm{E}\[t^2\]:** The second moment is computed
 analogously to \mathrm{E}\[t\] by integrating m_2(u) =
 \mathrm{E}\[\min(u, \text{dropout time})^2\] over the enrollment
-distribution. Without dropout, m_2(u) = u^2. With dropout rate \delta:
+distribution. Without dropout, m_2(u) = u^2. With a single constant
+dropout rate \delta:
 
 m_2(u) = \frac{2}{\delta^2}\left(1 - e^{-\delta u}(1 + \delta u)\right)
 
-The average of m_2(u) across enrollment segments (with appropriate
-handling of `max_followup` truncation) gives \mathrm{E}\[t^2_g\].
+For piecewise dropout, m_2(u) is computed by integrating 2 t\\ S(t) over
+the piecewise survival function, analogously to m(u). The average of
+m_2(u) across enrollment segments (with appropriate handling of
+`max_followup` truncation) gives \mathrm{E}\[t^2_g\].
 
 ### Event gaps
 
@@ -370,6 +421,7 @@ small, but can reach 5–10% for high-dispersion, high-rate, large-gap
 scenarios.
 
 ``` r
+
 # Show correction magnitude for various parameter combos
 params <- expand.grid(
   lambda = c(0.3, 0.5, 1.0, 2.0),
@@ -414,6 +466,7 @@ known parameters and comparing the simulated average exposure to the
 theoretical prediction.
 
 ``` r
+
 set.seed(42)
 
 # Design parameters
@@ -537,7 +590,10 @@ and thus:
 \mathrm{Var}(\hat\theta) = \frac{1/\mu_1 + k_1}{n_1} + \frac{1/\mu_2 +
 k_2}{n_2}
 
-This is exactly the variance used in the sample size formula.
+This is exactly the alternative variance used in the Wald sample size
+formula. For score-test sizing, the null variance is also computed under
+the constrained null and used in the Type I error component of the
+sample size calculation.
 
 ### Information in practice: blinded and unblinded estimation
 
@@ -545,12 +601,12 @@ During a clinical trial, the statistical information can be estimated at
 interim analyses for information monitoring. The package provides four
 variants:
 
-| Method        | Blinding  | Estimation                                                                          | Function                                                                                              |
-|:--------------|:----------|:------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------|
-| Blinded ML    | Blinded   | Maximum likelihood via [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) | [`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md) |
-| Unblinded ML  | Unblinded | Maximum likelihood via [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) | [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md) (SE gives info)         |
-| Blinded MoM   | Blinded   | Method of moments                                                                   | [`estimate_nb_mom()`](https://keaven.github.io/gsDesignNB/reference/estimate_nb_mom.md)               |
-| Unblinded MoM | Unblinded | Method of moments                                                                   | `estimate_nb_mom(group = "treatment")`                                                                |
+| Method | Blinding | Estimation | Function |
+|:---|:---|:---|:---|
+| Blinded ML | Blinded | Maximum likelihood via [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) | [`calculate_blinded_info()`](https://keaven.github.io/gsDesignNB/reference/calculate_blinded_info.md) |
+| Unblinded ML | Unblinded | Maximum likelihood via [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) | [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md) (SE gives info) |
+| Blinded MoM | Blinded | Method of moments | [`estimate_nb_mom()`](https://keaven.github.io/gsDesignNB/reference/estimate_nb_mom.md) |
+| Unblinded MoM | Unblinded | Method of moments | `estimate_nb_mom(group = "treatment")` |
 
 **Blinded estimation** (Friede and Schmidli 2010) fits a single model to
 pooled data (ignoring treatment assignment) and then “splits” the
@@ -566,15 +622,17 @@ information is \mathcal{I} = 1/\text{SE}^2.
 
 ### Connection to sample size
 
-The sample size formula can be expressed in terms of information. The
-target information for a fixed design is:
+The sample size formula can be expressed in terms of information. For
+the Wald formula, the target information for a fixed design is:
 
 \mathcal{I}\_{\text{target}} = \frac{(z\_{\alpha/s} +
 z\_\beta)^2}{(\theta - \theta_0)^2}
 
 The sample size is then the smallest n\_{\text{total}} such that the
 expected information at the end of the trial exceeds
-\mathcal{I}\_{\text{target}}.
+\mathcal{I}\_{\text{target}}. For score-test sizing, the equivalent
+calculation separates the information scale under the null from the
+information scale under the planned alternative through V_0 and V_1.
 
 ## Examples
 
@@ -591,6 +649,7 @@ Calculate sample size for:
 - Trial duration 12 months (implying average exposure of 6 months)
 
 ``` r
+
 sample_size_nbinom(
   lambda1 = 0.5,
   lambda2 = 0.3,
@@ -625,6 +684,7 @@ The function automatically calculates the average exposure based on this
 accrual pattern.
 
 ``` r
+
 sample_size_nbinom(
   lambda1 = 0.5,
   lambda2 = 0.3,
@@ -651,6 +711,7 @@ Same design as above, but with a 5% dropout rate per unit time and a
 maximum follow-up of 6 months.
 
 ``` r
+
 sample_size_nbinom(
   lambda1 = 0.5,
   lambda2 = 0.3,
@@ -681,6 +742,7 @@ Suppose the control group has a higher dropout rate (10%) than the
 treatment group (5%).
 
 ``` r
+
 sample_size_nbinom(
   lambda1 = 0.5,
   lambda2 = 0.3,
@@ -713,6 +775,7 @@ want to calculate the power if the treatment effect is smaller
 the previous step.
 
 ``` r
+
 # Store the result from the previous calculation
 design_result <- sample_size_nbinom(
   lambda1 = 0.5,
@@ -756,6 +819,7 @@ sample_size_nbinom(
 Sample size with a 2:1 allocation ratio (n_2 = 2 n_1).
 
 ``` r
+
 sample_size_nbinom(
   lambda1 = 0.5,
   lambda2 = 0.3,
@@ -785,6 +849,7 @@ more time in gap periods than the group with the lower rate (\lambda_2 =
 1.0).
 
 ``` r
+
 sample_size_nbinom(
   lambda1 = 2.0,
   lambda2 = 1.0,

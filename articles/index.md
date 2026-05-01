@@ -10,6 +10,10 @@
   simulation](https://keaven.github.io/gsDesignNB/articles/seasonal-simulation.md):
 - [Verification of sample size calculation via
   simulation](https://keaven.github.io/gsDesignNB/articles/verification-simulation.md):
+- [Score vs Wald tests and sample-size
+  recommendations](https://keaven.github.io/gsDesignNB/articles/score-vs-wald-simulation.md):
+- [Using the gsDesignNB AI
+  skill](https://keaven.github.io/gsDesignNB/articles/ai-skills.md):
 - [Non-inferiority and super-superiority
   designs](https://keaven.github.io/gsDesignNB/articles/non-inferiority-example.md):
 - [Sample size re-estimation

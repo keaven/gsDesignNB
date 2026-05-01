@@ -9,7 +9,7 @@ based on simulation results."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,7 +43,7 @@ based on simulation results.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">summarize_gs_sim</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">summarize_gs_sim</span><span class="op">(</span><span class="va">x</span>, info_trim <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -53,6 +53,13 @@ based on simulation results.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A data frame returned by <code><a href="check_gs_bound.html">check_gs_bound()</a></code> (or <code><a href="sim_gs_nbinom.html">sim_gs_nbinom()</a></code> if
 bounds are manually checked). Must contain columns <code>cross_upper</code>, <code>cross_lower</code>.</p></dd>
+
+
+<dt id="arg-info-trim">info_trim<a class="anchor" aria-label="anchor" href="#arg-info-trim"></a></dt>
+<dd><p>Proportion of observations trimmed from each tail when
+summarizing information estimates. Defaults to <code>0.01</code> to reduce sensitivity
+to occasional unstable fitted information estimates in small interim data
+sets.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -67,7 +74,9 @@ bounds are manually checked). Must contain columns <code>cross_upper</code>, <co
 <dd><p>Overall futility rate (probability of crossing lower bound and not upper)</p></dd>
 
 <dt>analysis_summary</dt>
-<dd><p>Data frame with per-analysis statistics (events, crossings)</p></dd>
+<dd><p>Data frame with per-analysis statistics (sample
+size, events, information, crossings, and optional exposure columns when
+present in <code>x</code>).</p></dd>
 
 
 </dl></div>

@@ -2,7 +2,8 @@
 
 ## Sample size calculation
 
-Plan fixed negative binomial designs for recurrent-event outcomes.
+Plan fixed negative binomial designs for recurrent-event outcomes, with
+Wald or score-test sizing.
 
 - [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
   : Sample size calculation for negative binomial outcomes
@@ -16,7 +17,7 @@ Plan fixed negative binomial designs for recurrent-event outcomes.
 ## Simulation
 
 Simulate recurrent-event data, seasonal intensity patterns, and NB
-monitoring scenarios.
+monitoring or SSR scenarios.
 
 - [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
   : Simulate recurrent events with fixed follow-up
@@ -37,8 +38,8 @@ monitoring scenarios.
 
 ## Analysis
 
-Analyze interim negative binomial data and estimate information for
-monitoring or SSR.
+Analyze interim negative binomial data with Wald or score tests and
+estimate information for monitoring or SSR.
 
 - [`blinded_ssr()`](https://keaven.github.io/gsDesignNB/reference/blinded_ssr.md)
   : Blinded sample size re-estimation for recurrent events
@@ -50,8 +51,8 @@ monitoring or SSR.
   : Method of Moments Estimation for Negative Binomial Parameters
 - [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
   [`print(`*`<mutze_test>`*`)`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
-  : Wald test for treatment effect using negative binomial model (Mutze
-  et al.)
+  : Wald or score test for treatment effect using negative binomial
+  model
 - [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md)
   : Cut simulated trial data at a calendar date
 - [`cut_completers()`](https://keaven.github.io/gsDesignNB/reference/cut_completers.md)

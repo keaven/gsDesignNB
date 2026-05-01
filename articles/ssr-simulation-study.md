@@ -1,6 +1,7 @@
 # SSR simulation study
 
 ``` r
+
 library(gsDesignNB)
 library(gsDesign)
 library(data.table)
@@ -25,11 +26,17 @@ recurrent event endpoints. We compare three strategies:
 3.  **Unblinded SSR** – nuisance parameters are re-estimated from
     treatment-specific interim data.
 
-For hypothesis testing, all interim and final analyses use the
+For hypothesis testing, the main power simulations use the
 [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
-Wald statistic. This test underpins both efficacy/futility crossing
-decisions and the unblinded-information fallback used when blinded
-information estimation fails.
+score statistic. This is particularly important in SSR: adaptation can
+increase information when nuisance parameters are worse than planned,
+and the final test must still preserve one-sided Type I error after that
+adaptation. The dedicated non-binding Type I tables therefore compare
+Wald and score testing under the same one-sided \alpha = 0.025 group
+sequential design. The sample-size update itself remains a
+nuisance-parameter recalculation that must be calibrated by simulation;
+the score test controls rejection after the adaptation, rather than
+making adaptation unnecessary.
 
 *Note:* Much of the simulation code in this vignette was generated with
 the assistance of a large language model (LLM) and then reviewed and
@@ -43,12 +50,15 @@ information levels regardless of the true nuisance parameters.
 ## Planned trial design
 
 ``` r
+
 lambda1_plan      <- 0.5
 rr_plan           <- 0.7
 lambda2_plan      <- lambda1_plan * rr_plan
 k_plan            <- 0.5
 power_plan        <- 0.9
 alpha_plan        <- 0.025
+analysis_test_type <- "score"
+analysis_test_label <- tools::toTitleCase(analysis_test_type)
 accrual_rate_plan <- 30
 accrual_scenario_plan <- 18
 accrual_dur_plan  <- 12
@@ -61,6 +71,7 @@ analysis_times_plan <- c(9, 14, 24)  # Calendar times under plan
 ### Fixed design
 
 ``` r
+
 design_plan <- sample_size_nbinom(
   lambda1 = lambda1_plan, lambda2 = lambda2_plan,
   dispersion = k_plan, power = power_plan, alpha = alpha_plan,
@@ -68,11 +79,38 @@ design_plan <- sample_size_nbinom(
   accrual_duration = accrual_dur_plan,
   trial_duration = trial_dur_plan,
   max_followup = max_followup,
-  event_gap = event_gap_val
+  event_gap = event_gap_val,
+  test_type = analysis_test_type
+)
+design_plan_wald_check <- sample_size_nbinom(
+  lambda1 = lambda1_plan, lambda2 = lambda2_plan,
+  dispersion = k_plan, power = power_plan, alpha = alpha_plan,
+  accrual_rate = accrual_rate_plan,
+  accrual_duration = accrual_dur_plan,
+  trial_duration = trial_dur_plan,
+  max_followup = max_followup,
+  event_gap = event_gap_val,
+  test_type = "wald"
 )
 cat("Fixed-design sample size:", design_plan$n_total, "\n")
 #> Fixed-design sample size: 258
+cat("Fixed-design sample size using Wald sizing:", design_plan_wald_check$n_total, "\n")
+#> Fixed-design sample size using Wald sizing: 258
+cat("Primary analysis test:", analysis_test_type, "\n")
+#> Primary analysis test: score
 ```
+
+This production cache uses the score-test sizing option for the fixed
+design. The separate score-vs-Wald simulation vignette shows that, for
+superiority designs, traditional Wald/Zhu–Lakkis sizing paired with the
+score test may be a useful practical margin for power. A protocol-level
+SSR design should therefore compare the score-sized and Wald-sized
+starting designs under the planned score final test before selecting the
+final sample-size target. For the primary SSR design in this article,
+the two formulas round to the same fixed-design sample size, so the long
+production cache is not duplicated under an alternative starting size. A
+focused starting-size sensitivity appears below for a lower-event stress
+setting where the rounded group sequential sample sizes differ.
 
 ### Group sequential design
 
@@ -88,6 +126,7 @@ lower-bound crossing does not invalidate the final efficacy decision,
 which is still based on upper boundary control.
 
 ``` r
+
 gs_plan <- design_plan |>
   gsNBCalendar(
     k = 3, test.type = 4, alpha = alpha_plan,
@@ -112,19 +151,18 @@ design_note <- paste0(
 )
 ```
 
-For **Type I sensitivity** we also calendar a group-sequential design at
-**one-sided \alpha = 0.02** (same spending and nuisance assumptions as
-above). Its planned maximum enrollment is **330** subjects (fixed NB
-stage **274** before GS integer rounding; GS inflation factor
-**1.204**). That design is used **only** for the RR = 1 non-binding Type
-I tables later in this vignette; **all power** summaries still use the
-\alpha = 0.025 design.
+The dedicated non-binding Type I section below uses this same \alpha =
+0.025 group sequential design twice: once with the Wald statistic and
+once with the score statistic. The power simulations use the score
+statistic throughout, so the power results should be read as score-test
+power after SSR rather than as Wald-test power.
 
 The group sequential inflation factor is 1.209, giving a planned sample
 size of 312 (up from the fixed-design 258) with an effective accrual
 rate of 26 patients per month.
 
 ``` r
+
 gsBoundSummary(gs_plan,
   deltaname = "RR", logdelta = TRUE,
   Nname = "Information", timename = "Month",
@@ -147,27 +185,27 @@ gsBoundSummary(gs_plan,
   )
 ```
 
-| Planned Group Sequential Design                                                                                   |                    |          |          |
-|-------------------------------------------------------------------------------------------------------------------|--------------------|----------|----------|
-| Design: lambda1=0.5, RR=0.7, k=0.5, planned accrual=26/mo, planned N=312, max follow-up=12 mo                     |                    |          |          |
-| Analysis                                                                                                          | Value              | Efficacy | Futility |
-| IA 1: 41%                                                                                                         | Z                  | 2.5732   | 0.7060   |
-| Information: 41.35                                                                                                | p (1-sided)        | 0.0050   | 0.2401   |
-| Month: 9                                                                                                          | ~RR at bound       | 0.6701   | 0.8960   |
-|                                                                                                                   | P(Cross) if RR=1   | 0.0050   | 0.7599   |
-|                                                                                                                   | P(Cross) if RR=0.7 | 0.3897   | 0.0563   |
-| IA 2: 77%                                                                                                         | Z                  | 2.2790   | 1.0491   |
-| Information: 76.87                                                                                                | p (1-sided)        | 0.0113   | 0.1471   |
-| Month: 14                                                                                                         | ~RR at bound       | 0.7711   | 0.8872   |
-|                                                                                                                   | P(Cross) if RR=1   | 0.0138   | 0.8940   |
-|                                                                                                                   | P(Cross) if RR=0.7 | 0.7984   | 0.0636   |
-| Final                                                                                                             | Z                  | 2.0877   | 2.0877   |
-| Information: 99.93                                                                                                | p (1-sided)        | 0.0184   | 0.0184   |
-| Month: 24                                                                                                         | ~RR at bound       | 0.8115   | 0.8115   |
-|                                                                                                                   | P(Cross) if RR=1   | 0.0221   | 0.9779   |
-|                                                                                                                   | P(Cross) if RR=0.7 | 0.9018   | 0.0982   |
-| Cauchy futility spending gives planned futility near observed RR \> 0.9 at IA1/IA2; lower bounds are non-binding. |                    |          |          |
-| Planned cumulative sample size: IA1 = 129, IA2 = 240, Final = 312.                                                |                    |          |          |
+| Planned Group Sequential Design |  |  |  |
+|----|----|----|----|
+| Design: lambda1=0.5, RR=0.7, k=0.5, planned accrual=26/mo, planned N=312, max follow-up=12 mo |  |  |  |
+| Analysis | Value | Efficacy | Futility |
+| IA 1: 41% | Z | 2.5732 | 0.7060 |
+| Information: 41.35 | p (1-sided) | 0.0050 | 0.2401 |
+| Month: 9 | ~RR at bound | 0.6701 | 0.8960 |
+|  | P(Cross) if RR=1 | 0.0050 | 0.7599 |
+|  | P(Cross) if RR=0.7 | 0.3897 | 0.0563 |
+| IA 2: 77% | Z | 2.2790 | 1.0491 |
+| Information: 76.87 | p (1-sided) | 0.0113 | 0.1471 |
+| Month: 14 | ~RR at bound | 0.7711 | 0.8872 |
+|  | P(Cross) if RR=1 | 0.0138 | 0.8940 |
+|  | P(Cross) if RR=0.7 | 0.7984 | 0.0636 |
+| Final | Z | 2.0877 | 2.0877 |
+| Information: 99.93 | p (1-sided) | 0.0184 | 0.0184 |
+| Month: 24 | ~RR at bound | 0.8115 | 0.8115 |
+|  | P(Cross) if RR=1 | 0.0221 | 0.9779 |
+|  | P(Cross) if RR=0.7 | 0.9018 | 0.0982 |
+| Cauchy futility spending gives planned futility near observed RR \> 0.9 at IA1/IA2; lower bounds are non-binding. |  |  |  |
+| Planned cumulative sample size: IA1 = 234, IA2 = 312, Final = 312. |  |  |  |
 
 ### Group sequential sample size under each nuisance scenario
 
@@ -180,6 +218,7 @@ design assumptions (\lambda_1 = 0.5, k = 0.5) are marked with a dashed
 line.
 
 ``` r
+
 lambda1_seq <- seq(0.2, 1.0, by = 0.1)
 gs_n_grid <- expand.grid(
   lambda1_true = lambda1_seq,
@@ -198,7 +237,8 @@ gs_n_grid$GS_N <- sapply(seq_len(nrow(gs_n_grid)), function(i) {
       accrual_duration = accrual_dur_plan,
       trial_duration = trial_dur_plan,
       max_followup = max_followup,
-      event_gap = event_gap_val
+      event_gap = event_gap_val,
+      test_type = analysis_test_type
     ),
     error = function(e) NULL
   )
@@ -251,7 +291,7 @@ gridExtra::grid.arrange(plot_n, plot_rate, ncol = 2,
 ![](ssr-simulation-study_files/figure-html/gs_n_by_scenario-1.png)
 
 Across the range of \lambda_1 and k values considered, the required
-group sequential sample size ranges from 272 to 646. Higher dispersion
+group sequential sample size ranges from 272 to 644. Higher dispersion
 (k = 1.0) consistently requires more subjects than k = 0.5, while higher
 control rates reduce the required N because each subject contributes
 more information. This wide range highlights why sample size
@@ -265,6 +305,7 @@ approximate design assumptions (bold green row), the information
 fractions match the GS design reasonably well (41.4%, 76.9%).
 
 ``` r
+
 nuisance_grid <- expand.grid(
   lambda1_true = c(0.3, 0.5, 0.8),
   k_true = c(0.5, 1.0),
@@ -316,33 +357,34 @@ nuisance_grid |>
   )
 ```
 
-| Expected Information Fraction (%) at Planned Time of Each Interim                                                                                                                                                                                                                                                        |     |                  |             |              |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----|------------------|-------------|--------------|
-| Design: lambda1=0.5, RR=0.7, k=0.5, planned accrual=26/mo, planned N=312, max follow-up=12 mo                                                                                                                                                                                                                            |     |                  |             |              |
-| lambda1                                                                                                                                                                                                                                                                                                                  | k   | Accrual (pts/mo) | IA 1 (mo 9) | IA 2 (mo 14) |
-| 0.3                                                                                                                                                                                                                                                                                                                      | 0.5 | 12               | 15.2        | 29.4         |
-| 0.5                                                                                                                                                                                                                                                                                                                      | 0.5 | 12               | 19.1        | 35.5         |
-| 0.8                                                                                                                                                                                                                                                                                                                      | 0.5 | 12               | 22.4        | 40.3         |
-| 0.3                                                                                                                                                                                                                                                                                                                      | 1.0 | 12               | 10.7        | 19.4         |
-| 0.5                                                                                                                                                                                                                                                                                                                      | 1.0 | 12               | 12.5        | 21.9         |
-| 0.8                                                                                                                                                                                                                                                                                                                      | 1.0 | 12               | 13.9        | 23.7         |
-| 0.3                                                                                                                                                                                                                                                                                                                      | 0.5 | 18               | 22.8        | 44.2         |
-| 0.5                                                                                                                                                                                                                                                                                                                      | 0.5 | 18               | 28.6        | 53.3         |
-| 0.8                                                                                                                                                                                                                                                                                                                      | 0.5 | 18               | 33.6        | 60.4         |
-| 0.3                                                                                                                                                                                                                                                                                                                      | 1.0 | 18               | 16.1        | 29.2         |
-| 0.5                                                                                                                                                                                                                                                                                                                      | 1.0 | 18               | 18.8        | 32.9         |
-| 0.8                                                                                                                                                                                                                                                                                                                      | 1.0 | 18               | 20.8        | 35.5         |
-| 0.3                                                                                                                                                                                                                                                                                                                      | 0.5 | 24               | 30.4        | 58.9         |
-| 0.5                                                                                                                                                                                                                                                                                                                      | 0.5 | 24               | 38.2        | 71.0         |
-| 0.8                                                                                                                                                                                                                                                                                                                      | 0.5 | 24               | 44.8        | 80.5         |
-| 0.3                                                                                                                                                                                                                                                                                                                      | 1.0 | 24               | 21.4        | 38.9         |
-| 0.5                                                                                                                                                                                                                                                                                                                      | 1.0 | 24               | 25.1        | 43.9         |
-| 0.8                                                                                                                                                                                                                                                                                                                      | 1.0 | 24               | 27.8        | 47.4         |
-| Computed via compute_info_at_time() divided by planned final information. Accrual values (12/18/24) are effective enrollment rates used directly. Bold green = design assumptions. With information-based timing, interims occur when blinded info reaches the target fraction, so the calendar time varies by scenario. |     |                  |             |              |
+| Expected Information Fraction (%) at Planned Time of Each Interim |  |  |  |  |
+|----|----|----|----|----|
+| Design: lambda1=0.5, RR=0.7, k=0.5, planned accrual=26/mo, planned N=312, max follow-up=12 mo |  |  |  |  |
+| lambda1 | k | Accrual (pts/mo) | IA 1 (mo 9) | IA 2 (mo 14) |
+| 0.3 | 0.5 | 12 | 15.2 | 29.4 |
+| 0.5 | 0.5 | 12 | 19.1 | 35.5 |
+| 0.8 | 0.5 | 12 | 22.4 | 40.3 |
+| 0.3 | 1.0 | 12 | 10.7 | 19.4 |
+| 0.5 | 1.0 | 12 | 12.5 | 21.9 |
+| 0.8 | 1.0 | 12 | 13.9 | 23.7 |
+| 0.3 | 0.5 | 18 | 22.8 | 44.2 |
+| 0.5 | 0.5 | 18 | 28.6 | 53.3 |
+| 0.8 | 0.5 | 18 | 33.6 | 60.4 |
+| 0.3 | 1.0 | 18 | 16.1 | 29.2 |
+| 0.5 | 1.0 | 18 | 18.8 | 32.9 |
+| 0.8 | 1.0 | 18 | 20.8 | 35.5 |
+| 0.3 | 0.5 | 24 | 30.4 | 58.9 |
+| 0.5 | 0.5 | 24 | 38.2 | 71.0 |
+| 0.8 | 0.5 | 24 | 44.8 | 80.5 |
+| 0.3 | 1.0 | 24 | 21.4 | 38.9 |
+| 0.5 | 1.0 | 24 | 25.1 | 43.9 |
+| 0.8 | 1.0 | 24 | 27.8 | 47.4 |
+| Computed via compute_info_at_time() divided by planned final information. Accrual values (12/18/24) are effective enrollment rates used directly. Bold green = design assumptions. With information-based timing, interims occur when blinded info reaches the target fraction, so the calendar time varies by scenario. |  |  |  |  |
 
 ## Scenario grid
 
 ``` r
+
 scenarios <- expand.grid(
   lambda1_true = c(0.3, 0.5, 0.8),
   k_true = c(0.5, 1.0),
@@ -380,7 +422,7 @@ min_months_to_close_for_adapt <- 2
 analysis_lag_months <- 2
 
 # Optional precomputed outputs for fast vignette builds
-precomputed_basename <- "ssr_sim_vignette_outputs.rds"
+precomputed_basename <- paste0("ssr_sim_vignette_outputs_", analysis_test_type, ".rds")
 project_root <- if (file.exists("DESCRIPTION")) "." else
   if (file.exists("../DESCRIPTION")) ".." else "."
 precomputed_source_path <- file.path(
@@ -398,8 +440,12 @@ save_precomputed_path <- precomputed_source_path
 force_type1_sim <- identical(Sys.getenv("GSDESIGNNB_FORCE_TYPE1_SIM"), "true")
 type1_cache_dir <- dirname(save_precomputed_path)
 
-cat("Scenarios:", nrow(scenarios), "| Replicates:", sum(scenarios$n_sims), "\n")
-#> Scenarios: 90 | Replicates: 4500
+cat("Scenarios:", nrow(scenarios), "| Fresh-run replicates requested:", sum(scenarios$n_sims), "\n")
+#> Scenarios: 90 | Fresh-run replicates requested: 4500
+if (use_precomputed) {
+  cat("Rendered results use the replicate counts stored in the precomputed cache.\n")
+}
+#> Rendered results use the replicate counts stored in the precomputed cache.
 cat("Accrual rates used in simulation:", paste(round(sort(unique(scenarios$accrual_true)), 1), collapse = ", "),
     "/month\n")
 #> Accrual rates used in simulation: 12, 18, 24 /month
@@ -420,15 +466,16 @@ cat("Production plan:", n_sims_production_power,
     n_sims_production_type1, "reps per scenario for RR = 1.0 (Type I);",
     n_sims_production_rr_gt1, "reps per scenario for RR > 1.\n")
 #> Production plan: 3600 reps per scenario for RR < 1 (power); 20000 reps per scenario for RR = 1.0 (Type I); 1000 reps per scenario for RR > 1.
-cat("separate RR = 1 non-binding futility check uses", n_sims_production_type1, "reps per k.\n")
-#> separate RR = 1 non-binding futility check uses 20000 reps per k.
+cat("separate RR = 1 non-binding futility check uses", n_sims_production_type1,
+    "reps per k and test statistic.\n")
+#> separate RR = 1 non-binding futility check uses 20000 reps per k and test statistic.
 if (use_precomputed) cat("Using precomputed outputs:", precomputed_file, "\n")
-#> Using precomputed outputs: /home/runner/work/_temp/Library/gsDesignNB/extdata/ssr_sim_vignette_outputs.rds
+#> Using precomputed outputs: /home/runner/work/_temp/Library/gsDesignNB/extdata/ssr_sim_vignette_outputs_score.rds
 cat(
-  "Type I (RR=1, non-binding) per-alpha cache: inst/extdata/ssr_type1_null_alpha025.rds,",
-  "ssr_type1_null_alpha020.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.\n"
+  "Type I (RR=1, non-binding) per-test cache: inst/extdata/ssr_type1_null_alpha025_wald.rds,",
+  "ssr_type1_null_alpha025_score.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.\n"
 )
-#> Type I (RR=1, non-binding) per-alpha cache: inst/extdata/ssr_type1_null_alpha025.rds, ssr_type1_null_alpha020.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.
+#> Type I (RR=1, non-binding) per-test cache: inst/extdata/ssr_type1_null_alpha025_wald.rds, ssr_type1_null_alpha025_score.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.
 cat(
   "Production Type I reps only (keep precomputed power grid):",
   "GSDESIGNNB_PRODUCTION_TYPE1=true\n"
@@ -464,6 +511,7 @@ non-positive, timing falls back to unblinded information from
 (tracked as fallback counts in the results table).
 
 ``` r
+
 make_enroll_rate <- function(accrual_eff) {
   data.frame(rate = accrual_eff, duration = n_max / accrual_eff)
 }
@@ -503,11 +551,13 @@ run_scenario <- function(sc_idx) {
     analysis_lag_months = analysis_lag_months,
     event_gap = event_gap_val,
     ignore_futility = FALSE,
+    test_type = analysis_test_type,
     metadata = list(
       lambda1_true = sc$lambda1_true,
       k_true = sc$k_true,
       accrual_true = sc$accrual_true,
       accrual_eff = sc$accrual_eff,
+      analysis_test = analysis_test_type,
       rr_true = sc$rr_true
     ),
     seed = 1000 + sc_idx
@@ -516,7 +566,7 @@ run_scenario <- function(sc_idx) {
   sim_res$trial_results
 }
 
-run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n) {
+run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n, test_type_x) {
   null_all <- vector("list", length(null_k_scenarios))
 
   for (i in seq_along(null_k_scenarios)) {
@@ -535,7 +585,8 @@ run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n) {
       analysis_lag_months = analysis_lag_months,
       event_gap = event_gap_val,
       ignore_futility = TRUE,
-      metadata = list(k_true = k_null),
+      test_type = test_type_x,
+      metadata = list(k_true = k_null, analysis_test = test_type_x),
       seed = 5000 + i
     )
     null_all[[i]] <- sim_res$trial_results
@@ -544,7 +595,7 @@ run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n) {
   null_all <- Filter(Negate(is.null), null_all)
   if (length(null_all) == 0) {
     return(data.table(
-      k_true = numeric(0), strategy = character(0),
+      k_true = numeric(0), analysis_test = character(0), strategy = character(0),
       n_sims = integer(0), type1_error = numeric(0),
       cross_ia1 = numeric(0), cross_ia2 = numeric(0), cross_final = numeric(0),
       mean_n = numeric(0), adapted_rate = numeric(0)
@@ -560,12 +611,18 @@ run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n) {
     "k_true", "strategy", "n_sims", "type1_error",
     "cross_ia1", "cross_ia2", "cross_final", "mean_n", "adapted_rate"
   )]
+  sm$analysis_test <- test_type_x
+  sm[, c(
+    "k_true", "analysis_test", "strategy", "n_sims", "type1_error",
+    "cross_ia1", "cross_ia2", "cross_final", "mean_n", "adapted_rate"
+  )]
 }
 ```
 
 ## Running simulations
 
 ``` r
+
 precomputed_outputs <- NULL
 if (use_precomputed) {
   precomputed_outputs <- readRDS(precomputed_file)
@@ -608,69 +665,65 @@ cat("Simulation mode:", sim_mode, "\n")
 cat("Workers:", workers, "\n")
 #> Workers: 11
 cat("Rows:", nrow(all_results), "\n")
-#> Rows: 13500
+#> Rows: 1717200
 if (!is.null(sim_runtime_seconds) && is.finite(sim_runtime_seconds)) {
   cat(sprintf("Simulation wall time: %.2f minutes (%.1f seconds)\n",
               sim_runtime_seconds / 60, sim_runtime_seconds))
 }
-#> Simulation wall time: 5.65 minutes (339.1 seconds)
+#> Simulation wall time: 281.73 minutes (16904.1 seconds)
 
-# RR = 1.0 non-binding futility check (Type I), for nominal alpha = 0.025 and 0.02 designs.
-# Power simulations elsewhere use alpha_plan (0.025) only.
-# Results cache: inst/extdata/ssr_type1_null_alpha025.rds and ssr_type1_null_alpha020.rds
+# RR = 1.0 non-binding futility check (Type I), comparing Wald and score tests
+# under the same nominal alpha = 0.025 design. Power simulations use the score
+# test selected by analysis_test_type.
+# Results cache: inst/extdata/ssr_type1_null_alpha025_wald.rds and
+# ssr_type1_null_alpha025_score.rds
 # Re-run after changing sim logic or rep count: Sys.setenv(GSDESIGNNB_FORCE_TYPE1_SIM = "true")
 null_nonbinding_n <- if (use_production_type1) n_sims_production_type1 else n_sims_initial
 null_k_scenarios <- c(k_plan, 1.0)
 
-type1_designs <- list(
+type1_tests <- list(
   list(
-    key = "alpha025",
-    label = "0.025",
+    key = "alpha025_wald",
+    label = "Wald",
+    test_type = "wald",
     gs_plan = gs_plan,
-    n_planned = n_planned,
-    target_info = target_info,
-    planned_timing = planned_timing,
-    gs_inflation = gs_inflation,
     alpha_plan = alpha_plan
   ),
   list(
-    key = "alpha020",
-    label = "0.02",
-    gs_plan = gs_plan_type1_sens,
-    n_planned = n_planned_type1_sens,
-    target_info = target_info_type1_sens,
-    planned_timing = planned_timing_type1_sens,
-    gs_inflation = gs_inflation_type1_sens,
-    alpha_plan = alpha_plan_type1_sens
+    key = "alpha025_score",
+    label = "Score",
+    test_type = "score",
+    gs_plan = gs_plan,
+    alpha_plan = alpha_plan
   )
 )
 
-null_nonbinding_by_alpha <- list()
-null_nonbinding_runtime_by_alpha <- list()
-null_nonbinding_mode_by_alpha <- list()
+null_nonbinding_by_test <- list()
+null_nonbinding_runtime_by_test <- list()
+null_nonbinding_mode_by_test <- list()
 
 bundle_type1_ok <- isTRUE(use_precomputed) &&
-  is.list(precomputed_outputs$null_nonbinding_by_alpha) &&
-  all(c("0.025", "0.02") %in% names(precomputed_outputs$null_nonbinding_by_alpha))
+  is.list(precomputed_outputs$null_nonbinding_by_test) &&
+  all(c("Wald", "Score") %in% names(precomputed_outputs$null_nonbinding_by_test))
 
 if (bundle_type1_ok) {
-  null_nonbinding_by_alpha[["0.025"]] <-
-    as.data.table(precomputed_outputs$null_nonbinding_by_alpha[["0.025"]])
-  null_nonbinding_by_alpha[["0.02"]] <-
-    as.data.table(precomputed_outputs$null_nonbinding_by_alpha[["0.02"]])
-  br <- precomputed_outputs$null_nonbinding_runtime_by_alpha
+  null_nonbinding_by_test[["Wald"]] <-
+    as.data.table(precomputed_outputs$null_nonbinding_by_test[["Wald"]])
+  null_nonbinding_by_test[["Score"]] <-
+    as.data.table(precomputed_outputs$null_nonbinding_by_test[["Score"]])
+  br <- precomputed_outputs$null_nonbinding_runtime_by_test
   if (!is.null(br)) {
-    null_nonbinding_runtime_by_alpha <- as.list(br)
+    null_nonbinding_runtime_by_test <- as.list(br)
   } else {
-    null_nonbinding_runtime_by_alpha <- list(
-      "0.025" = precomputed_outputs$null_nonbinding_runtime_seconds,
-      "0.02" = NA_real_
+    null_nonbinding_runtime_by_test <- list(
+      "Wald" = precomputed_outputs$null_nonbinding_runtime_seconds,
+      "Score" = NA_real_
     )
   }
-  null_nonbinding_mode_by_alpha <- list("0.025" = "Precomputed bundle", "0.02" = "Precomputed bundle")
+  null_nonbinding_mode_by_test <- list("Wald" = "Precomputed bundle", "Score" = "Precomputed bundle")
 } else {
   dir.create(type1_cache_dir, recursive = TRUE, showWarnings = FALSE)
-  for (td in type1_designs) {
+  for (td in type1_tests) {
     cache_path <- file.path(type1_cache_dir, paste0("ssr_type1_null_", td$key, ".rds"))
     loaded <- FALSE
     if (!force_type1_sim && file.exists(cache_path)) {
@@ -679,35 +732,27 @@ if (bundle_type1_ok) {
         as.integer(cr$null_nonbinding_n) == as.integer(null_nonbinding_n)
       )
       if (same_n) {
-        null_nonbinding_by_alpha[[td$label]] <- as.data.table(cr$summary)
-        null_nonbinding_runtime_by_alpha[[td$label]] <- cr$runtime_seconds
-        null_nonbinding_mode_by_alpha[[td$label]] <- "Cached RDS"
+        null_nonbinding_by_test[[td$label]] <- as.data.table(cr$summary)
+        null_nonbinding_runtime_by_test[[td$label]] <- cr$runtime_seconds
+        null_nonbinding_mode_by_test[[td$label]] <- "Cached RDS"
         loaded <- TRUE
       }
     }
-    if (!loaded && td$key == "alpha025" && isTRUE(use_precomputed) &&
-        !is.null(precomputed_outputs$null_nonbinding_summary)) {
-      null_nonbinding_by_alpha[[td$label]] <-
-        as.data.table(precomputed_outputs$null_nonbinding_summary)
-      null_nonbinding_runtime_by_alpha[[td$label]] <-
-        precomputed_outputs$null_nonbinding_runtime_seconds
-      null_nonbinding_mode_by_alpha[[td$label]] <- "Precomputed bundle (legacy)"
-      loaded <- TRUE
-    }
     if (!loaded) {
-      cat("Running Type I (non-binding) sims: design alpha =", td$label, "\n")
+      cat("Running Type I (non-binding) sims:", td$label, "test, alpha =", td$alpha_plan, "\n")
       t0 <- Sys.time()
-      sm <- run_null_type1_sims(td$gs_plan, td$alpha_plan, null_nonbinding_n)
+      sm <- run_null_type1_sims(td$gs_plan, td$alpha_plan, null_nonbinding_n, td$test_type)
       rt <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
-      null_nonbinding_by_alpha[[td$label]] <- sm
-      null_nonbinding_runtime_by_alpha[[td$label]] <- rt
-      null_nonbinding_mode_by_alpha[[td$label]] <- "Fresh simulation"
+      null_nonbinding_by_test[[td$label]] <- sm
+      null_nonbinding_runtime_by_test[[td$label]] <- rt
+      null_nonbinding_mode_by_test[[td$label]] <- "Fresh simulation"
       saveRDS(
         list(
           summary = as.data.frame(sm),
           runtime_seconds = rt,
           null_nonbinding_n = null_nonbinding_n,
           alpha_design = td$alpha_plan,
+          test_type = td$test_type,
           generated_at = as.character(Sys.time())
         ),
         cache_path
@@ -717,15 +762,15 @@ if (bundle_type1_ok) {
   }
 }
 
-null_nonbinding_summary <- null_nonbinding_by_alpha[["0.025"]]
-null_nonbinding_runtime_seconds <- null_nonbinding_runtime_by_alpha[["0.025"]]
+null_nonbinding_summary <- null_nonbinding_by_test[[analysis_test_label]]
+null_nonbinding_runtime_seconds <- null_nonbinding_runtime_by_test[[analysis_test_label]]
 null_nonbinding_mode <- paste0(
-  "0.025: ", null_nonbinding_mode_by_alpha[["0.025"]],
-  " | 0.02: ", null_nonbinding_mode_by_alpha[["0.02"]]
+  "Wald: ", null_nonbinding_mode_by_test[["Wald"]],
+  " | Score: ", null_nonbinding_mode_by_test[["Score"]]
 )
 
 cat("RR=1 non-binding Type I modes:", null_nonbinding_mode, "\n")
-#> RR=1 non-binding Type I modes: 0.025: Precomputed bundle | 0.02: Precomputed bundle
+#> RR=1 non-binding Type I modes: Wald: Precomputed bundle | Score: Precomputed bundle
 cat("RR=1 non-binding replications per k:", null_nonbinding_n, "\n")
 #> RR=1 non-binding replications per k: 50
 cat("k scenarios:", paste(null_k_scenarios, collapse = ", "), "\n")
@@ -735,6 +780,7 @@ cat("k scenarios:", paste(null_k_scenarios, collapse = ", "), "\n")
 ## Results
 
 ``` r
+
 dt <- as.data.table(all_results)
 summary_dt <- summarize_ssr_sim(
   dt,
@@ -744,8 +790,9 @@ summary_dt <- summarize_ssr_sim(
 ```
 
 ``` r
+
 plot_data <- dt[, .(
-  lambda1_true, k_true, accrual_true, rr_true, strategy,
+  lambda1_true, k_true, accrual_true, rr_true, analysis_test, strategy,
   reject, futility, reject_stage, futility_stage,
   n_adapted, adapted,
   participants_with_events_stop, events_observed_stop,
@@ -769,12 +816,13 @@ saveRDS(
     sim_runtime_seconds = sim_runtime_seconds,
     workers = workers,
     null_nonbinding_summary = as.data.frame(null_nonbinding_summary),
-    null_nonbinding_by_alpha = lapply(null_nonbinding_by_alpha, as.data.frame),
+    null_nonbinding_by_test = lapply(null_nonbinding_by_test, as.data.frame),
     null_nonbinding_n = null_nonbinding_n,
     null_nonbinding_runtime_seconds = null_nonbinding_runtime_seconds,
-    null_nonbinding_runtime_by_alpha = null_nonbinding_runtime_by_alpha,
+    null_nonbinding_runtime_by_test = null_nonbinding_runtime_by_test,
     generated_at = as.character(Sys.time()),
     settings = list(
+      analysis_test_type = analysis_test_type,
       n_sims_initial = n_sims_initial,
       n_sims_production_power = n_sims_production_power,
       n_sims_production_type1 = n_sims_production_type1,
@@ -790,13 +838,17 @@ cat("Saved precomputed vignette outputs to:", save_precomputed_path, "\n")
 ```
 
 ``` r
+
+scenario_rep_counts <- unique(summary_dt[, .(
+  lambda1_true, k_true, accrual_true, rr_true, n_sims
+)])
 runtime_df <- data.frame(
   Metric = c("Simulation mode", "Workers", "Scenarios", "Replicates", "Rows", "Wall time (minutes)"),
   Value = c(
     sim_mode,
     as.character(workers),
-    nrow(scenarios),
-    sum(scenarios$n_sims),
+    nrow(scenario_rep_counts),
+    sum(scenario_rep_counts$n_sims),
     nrow(all_results),
     if (!is.null(sim_runtime_seconds) && is.finite(sim_runtime_seconds))
       sprintf("%.2f", sim_runtime_seconds / 60) else "NA"
@@ -811,24 +863,25 @@ runtime_df |>
   )
 ```
 
-| Simulation Runtime                                                   |                            |
-|----------------------------------------------------------------------|----------------------------|
-| Use precomputed outputs to avoid rerunning on pkgdown/CI/CRAN builds |                            |
-| Metric                                                               | Value                      |
-| Simulation mode                                                      | Loaded precomputed outputs |
-| Workers                                                              | 11                         |
-| Scenarios                                                            | 90                         |
-| Replicates                                                           | 4500                       |
-| Rows                                                                 | 13500                      |
-| Wall time (minutes)                                                  | 5.65                       |
+| Simulation Runtime |  |
+|----|----|
+| Use precomputed outputs to avoid rerunning on pkgdown/CI/CRAN builds |  |
+| Metric | Value |
+| Simulation mode | Loaded precomputed outputs |
+| Workers | 11 |
+| Scenarios | 90 |
+| Replicates | 572400 |
+| Rows | 1717200 |
+| Wall time (minutes) | 281.73 |
 
 ``` r
-# Two designs: nominal one-sided alpha = 0.025 (main power sims) vs 0.02 (Type I sensitivity).
-for (alab in c("0.025", "0.02")) {
-  cat("\n\n### Type I error table: nominal design alpha = ", alab, "\n\n", sep = "")
-  null_df <- as.data.frame(null_nonbinding_by_alpha[[alab]])
+
+# Same nominal one-sided alpha = 0.025 design; compare Wald and score tests.
+for (test_label in c("Wald", "Score")) {
+  cat("\n\n### Type I error table: ", test_label, " test, alpha = 0.025\n\n", sep = "")
+  null_df <- as.data.frame(null_nonbinding_by_test[[test_label]])
   if (!"k_true" %in% names(null_df)) null_df$k_true <- NA_real_
-  rt_min <- null_nonbinding_runtime_by_alpha[[alab]]
+  rt_min <- null_nonbinding_runtime_by_test[[test_label]]
   rt_str <- if (is.finite(rt_min)) paste0(round(rt_min / 60, 2), " min") else "NA"
   null_display <- null_df |>
     dplyr::transmute(
@@ -845,10 +898,11 @@ for (alab in c("0.025", "0.02")) {
   tab <- null_display |>
     gt() |>
     tab_header(
-      title = "Type I Error Under RR = 1.0 (Non-binding Futility)",
+      title = paste0("Type I Error Under RR = 1.0: ", test_label, " Test"),
       subtitle = paste0(
+        "Nominal one-sided alpha: 0.025 | ",
         "Replications per k: ", null_nonbinding_n,
-        " | ", null_nonbinding_mode_by_alpha[[alab]],
+        " | ", null_nonbinding_mode_by_test[[test_label]],
         " | Runtime: ", rt_str
       )
     ) |>
@@ -861,25 +915,137 @@ for (alab in c("0.025", "0.02")) {
         "the planned N (planning k =", k_plan, ").",
         "Under the null, SSR may still increase N because",
         "nuisance parameter estimates can differ from planning values.",
-        "Each table uses the group-sequential design built at the stated nominal alpha;",
-        "power results elsewhere use alpha = 0.025 only."
+        "Both tables use the same group-sequential design built at nominal alpha = 0.025;",
+        "the only intended difference is the final/interim test statistic.",
+        "Power results elsewhere use the score test."
       )
     )
   print(tab)
 }
 ```
 
-### Type I error table: nominal design alpha = 0.025
+### Type I error table: Wald test, alpha = 0.025
 
 [TABLE]
 
-### Type I error table: nominal design alpha = 0.02
+### Type I error table: Score test, alpha = 0.025
 
 [TABLE]
+
+### Starting sample-size sensitivity
+
+The main SSR production cache is based on the score-sized fixed design,
+but in the primary planning example the Wald and score formulas round to
+the same starting sample size. To check whether the fixed-design power
+margin from Wald sizing carries through an adaptive SSR workflow, we add
+a targeted sensitivity in a low-event stress setting (\lambda_1 = 0.15,
+k = 0.5, RR = 0.7, no event gap). In that setting the Wald-sized group
+sequential design enrolls 472 participants at the final analysis,
+compared with 464 for the score-sized design. Both starting-size rules
+below still use the score test for interim and final analyses; only the
+starting design is changed.
+
+``` r
+
+sizing_sens_source_path <- file.path(
+  project_root, "inst", "extdata", "ssr_sizing_sensitivity.rds"
+)
+sizing_sens_file <- system.file(
+  "extdata", "ssr_sizing_sensitivity.rds", package = "gsDesignNB"
+)
+if (sizing_sens_file == "" && file.exists(sizing_sens_source_path)) {
+  sizing_sens_file <- sizing_sens_source_path
+}
+
+if (sizing_sens_file == "") {
+  cat(
+    "The supplemental SSR sizing-sensitivity cache is not available. ",
+    "Run `Rscript data-raw/generate_ssr_sizing_sensitivity.R` to regenerate it.\n"
+  )
+} else {
+  sizing_sens <- readRDS(sizing_sens_file)
+  sizing_sens_dt <- as.data.table(sizing_sens$summary)
+  sizing_sens_dt[, Metric := fifelse(
+    rr_true == 1,
+    "Type I error (RR = 1.0; non-binding futility)",
+    paste0("Power (RR = ", rr_true, ")")
+  )]
+  sizing_sens_dt[, `Starting design` := tools::toTitleCase(starting_sizing)]
+  sizing_sens_dt[, `Estimate` := rejection_rate]
+  sizing_sens_dt[, `SSR applied (%)` := pct_adapted]
+
+  sizing_sens_display <- sizing_sens_dt[
+    strategy %in% c("No adaptation", "Blinded SSR", "Unblinded SSR"),
+    .(
+      Metric,
+      `Starting design`,
+      Strategy = strategy,
+      `Fixed N` = fixed_n,
+      `GS N` = gs_n,
+      Estimate = round(Estimate, 4),
+      MCSE = round(mcse, 4),
+      `Mean N` = round(mean_n, 1),
+      `SSR applied (%)` = round(`SSR applied (%)`, 1)
+    )
+  ]
+  setorder(sizing_sens_display, Metric, `Starting design`, Strategy)
+
+  sizing_sens_display |>
+    gt(groupname_col = "Metric") |>
+    tab_header(
+      title = "Supplemental SSR Starting-Size Sensitivity",
+      subtitle = paste(
+        "Score final test; Wald-sized GS N =",
+        max(sizing_sens_display$`GS N`),
+        "vs score-sized GS N =",
+        min(sizing_sens_display$`GS N`)
+      )
+    ) |>
+    tab_footnote(
+      paste(
+        "This targeted sensitivity uses a lower-event stress setting and is",
+        "intended to check the direction of the starting-size recommendation,",
+        "not to replace the full SSR production grid."
+      )
+    )
+}
+```
+
+| Supplemental SSR Starting-Size Sensitivity |  |  |  |  |  |  |  |
+|----|----|----|----|----|----|----|----|
+| Score final test; Wald-sized GS N = 472 vs score-sized GS N = 464 |  |  |  |  |  |  |  |
+| Starting design | Strategy | Fixed N | GS N | Estimate | MCSE | Mean N | SSR applied (%) |
+| Power (RR = 0.7) |  |  |  |  |  |  |  |
+| Score | Blinded SSR | 384 | 464 | 0.9083 | 0.0053 | 466.9 | 10.5 |
+| Score | No adaptation | 384 | 464 | 0.8997 | 0.0055 | 461.3 | 0.0 |
+| Score | Unblinded SSR | 384 | 464 | 0.9110 | 0.0052 | 468.0 | 11.2 |
+| Wald | Blinded SSR | 390 | 472 | 0.9050 | 0.0054 | 474.7 | 10.5 |
+| Wald | No adaptation | 390 | 472 | 0.8977 | 0.0055 | 469.6 | 0.0 |
+| Wald | Unblinded SSR | 390 | 472 | 0.9067 | 0.0053 | 475.6 | 11.3 |
+| Type I error (RR = 1.0; non-binding futility) |  |  |  |  |  |  |  |
+| Score | Blinded SSR | 384 | 464 | 0.0266 | 0.0023 | 473.0 | 25.8 |
+| Score | No adaptation | 384 | 464 | 0.0260 | 0.0023 | 464.0 | 0.0 |
+| Score | Unblinded SSR | 384 | 464 | 0.0258 | 0.0022 | 490.3 | 51.6 |
+| Wald | Blinded SSR | 390 | 472 | 0.0252 | 0.0022 | 478.9 | 21.5 |
+| Wald | No adaptation | 390 | 472 | 0.0258 | 0.0022 | 472.0 | 0.0 |
+| Wald | Unblinded SSR | 390 | 472 | 0.0252 | 0.0022 | 494.5 | 48.1 |
+| This targeted sensitivity uses a lower-event stress setting and is intended to check the direction of the starting-size recommendation, not to replace the full SSR production grid. |  |  |  |  |  |  |  |
+
+In this stress setting, the score-test Type I estimates remain close to
+nominal for both starting-size rules: 0.0252–0.0258 with the Wald-sized
+start and 0.0258–0.0266 with the score-sized start, with MCSE about
+0.0022. At RR = 0.7, the power estimates are also similar across
+starting-size rules and within Monte Carlo uncertainty. The Wald-sized
+start increases the group sequential sample size from 464 to 472, but it
+does not produce a clear additional power advantage in this SSR setting.
+This supports the practical recommendation to simulate the specific SSR
+rule rather than assuming that a fixed-design sizing margin will
+automatically translate into adaptive-design power.
 
 ### Power by rate ratio and SSR strategy
 
 ``` r
+
 power_avg <- dt[rr_true < 1.0, .(
   power = mean(reject, na.rm = TRUE),
   mean_final_if = mean(if_final, na.rm = TRUE),
@@ -910,6 +1076,7 @@ ggplot(power_avg, aes(x = rr_true, y = power,
 ![](ssr-simulation-study_files/figure-html/power_curves-1.png)
 
 ``` r
+
 power_rr_plan <- summary_dt[
   rr_true == rr_plan &
     strategy %in% c("No adaptation", "Blinded SSR", "Unblinded SSR")
@@ -993,6 +1160,7 @@ The plots below use split (side-by-side) violin distributions for k =
 Panels use free y-scales.
 
 ``` r
+
 time_long <- dt[strategy == "No adaptation" & rr_true == rr_plan, .(
   lambda1_true, k_true, accrual_true,
   IA1 = ia1_time, IA2 = ia2_time, Final = final_time
@@ -1032,13 +1200,14 @@ ggplot(time_long,
   ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
-#> Warning: Removed 1093 rows containing non-finite outside the scale range
+#> Warning: Removed 73998 rows containing non-finite outside the scale range
 #> (`stat_ydensity()`).
 ```
 
 ![](ssr-simulation-study_files/figure-html/analysis_time_violin-1.png)
 
 ``` r
+
 if_long <- dt[strategy == "No adaptation" & rr_true == rr_plan, .(
   lambda1_true, k_true, accrual_true,
   IA1 = 100 * if_ia1, IA2 = 100 * if_ia2, Final = 100 * if_final
@@ -1077,7 +1246,7 @@ ggplot(if_long,
   ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
-#> Warning: Removed 1093 rows containing non-finite outside the scale range
+#> Warning: Removed 73998 rows containing non-finite outside the scale range
 #> (`stat_ydensity()`).
 ```
 
@@ -1088,32 +1257,48 @@ ggplot(if_long,
 ### Key findings
 
 1.  **Type I error.** Under the null (RR \geq 1.0), nominal one-sided
-    control is 2.5%. In **production** runs we use 20 000 replicates for
-    each main-grid scenario with RR = 1.0; at that count, Monte Carlo
-    error around 2.5% is only on the order of \pm 0.2 percentage points
-    (roughly 95%). In **most** nuisance/strategy combinations the
-    estimated Type I error **exceeds** that band—i.e., it is inflated
-    relative to what sampling fluctuation alone would typically explain.
-    (Default pkgdown/CRAN builds use far fewer replicates for speed;
-    rely on production output for quantitative Type I conclusions.) For
-    RR = 1.0, futility stopping is also evaluated with futility ignored
-    (non-binding supplement) in the dedicated tables above. A parallel
-    table uses a group-sequential design planned at **nominal \alpha =
-    0.02** to illustrate how a more conservative boundary calibration
-    affects simulated Type I error (power simulations still use \alpha =
-    0.025).
+    control is 2.5%. The dedicated non-binding Type I tables use 20 000
+    replicates per dispersion and test statistic. With the Wald
+    statistic, empirical Type I error ranges from about 2.8% to 3.1%,
+    indicating mild finite-sample inflation. With the score statistic
+    under the same \alpha = 0.025 group sequential design, empirical
+    Type I error ranges from about 2.1% to 2.3%. The score-test result
+    is conservative rather than inflated, so the simulation-based
+    recommendation is to use the score test directly and then check
+    power, rather than lowering alpha for a Wald analysis. This
+    distinction is more important in SSR than in a fixed design because
+    adaptation can add information; the score test controls how that
+    additional information is converted into rejection probability.
 
 2.  **Largest no-adaptation power deficit.** At planned RR = 0.7, the
-    largest deficit from the 90% target under no adaptation is
+    score-test production grid shows no-adaptation power ranging from
+    about 70% to 90%. The largest deficit from the 90% target is
     concentrated in scenarios with lower event rates and larger
     dispersion (see the “Power Shortfall Without Adaptation” table).
 
 3.  **IA2-only adaptation recovers power where information is low.** In
     lower event-rate / higher-dispersion scenarios, IA2 adaptation
     raises final information and materially improves power versus no
-    adaptation, while still preserving IA1-only monitoring (see “Power
-    by nuisance scenario” and “Final information at final analysis by
-    strategy”).
+    adaptation. Across the RR = 0.7 scenarios, blinded and unblinded SSR
+    both average about 89% power with the score test, versus about 81%
+    for no adaptation. The score test is intentionally conservative, so
+    final designs should still verify whether a small information margin
+    is needed to reach the desired power. Large adapted sample sizes in
+    high-dispersion scenarios reflect the nuisance-parameter update and
+    adaptation cap, not a failure of blinding. Compared with Wald
+    testing, the score-test analysis makes those adaptations look better
+    calibrated because the null rejection rate remains conservative
+    rather than inflated.
+
+4.  **Starting-size margins need SSR-specific confirmation.** The
+    supplemental low-event sensitivity compares Wald- and score-sized
+    starting designs under the same score final test. Although the
+    Wald-sized group sequential design starts with eight additional
+    participants, its power is not materially higher than the
+    score-sized design in this adaptive setting, and both starts have
+    score-test Type I estimates close to nominal. Thus the fixed-design
+    recommendation to consider Wald sizing as a power margin should be
+    checked within the planned SSR rule.
 
 ### Information-based interim timing
 
@@ -1165,13 +1350,15 @@ trials that required this fallback at each interim analysis.
 Production-scale runs use 3 600 replicates per scenario for RR \< 1
 (power), 20 000 for each scenario with RR = 1.0 (Type I), and 1 000 for
 RR \> 1 (interior null, lower priority for precision), plus 20 000
-replicates per k in the separate RR = 1 non-binding futility check;
-these are computationally intensive. Parallel execution via the `future`
-/ `future.apply` framework is essential. The simulation runtime table
-above reports the wall-clock time and number of workers used for the
-current build. For reference, a production run on a Mac Studio with an
-M4 chip using 11 of 12 available cores completed in approximately 2–3
-hours.
+replicates per k and per test statistic in the separate RR = 1
+non-binding futility check; these are computationally intensive.
+Parallel execution via the `future` / `future.apply` framework is
+essential. The simulation runtime table above reports the wall-clock
+time and number of workers used for the current build. For reference,
+the local 11-worker production cache was generated with checkpointed
+chunks and took an overnight run; resumed runs report only the
+wall-clock time since restart, not the cumulative time spent on
+previously cached chunks.
 
 ## References
 

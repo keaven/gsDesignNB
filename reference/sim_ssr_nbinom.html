@@ -17,7 +17,7 @@ fallback if the blinded fit is unavailable."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,6 +75,7 @@ fallback if the blinded fit is unavailable.</p>
 <span>  min_analysis_gap <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  ignore_futility <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  metadata <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  test_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"wald"</span>, <span class="st">"score"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -176,6 +177,11 @@ the trial.</p></dd>
 <dt id="arg-metadata">metadata<a class="anchor" aria-label="anchor" href="#arg-metadata"></a></dt>
 <dd><p>Optional named list or one-row data frame of scenario labels
 to repeat across the returned rows.</p></dd>
+
+
+<dt id="arg-test-type">test_type<a class="anchor" aria-label="anchor" href="#arg-test-type"></a></dt>
+<dd><p>Type of test statistic passed to <code><a href="mutze_test.html">mutze_test()</a></code>:
+<code>"wald"</code> (default) or <code>"score"</code>. See <code><a href="mutze_test.html">mutze_test()</a></code> for details.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
