@@ -28,11 +28,14 @@ abstract: |
   effective-rate approximation; in a 64-scenario simulation sweep, the correction reduces
   representative approximation error from about 8% to 1% and prevents 1--2.5 percentage points of
   underpowering when dispersion is moderate-to-high and gaps exceed 20 days. A second
-  methodological advance is a score-test workflow with a two-variance sample-size formula: the
-  Wald formula of Zhu--Lakkis uses the alternative variance for both Type I error and power,
-  whereas the score formula uses the null variance for the Type I component and the alternative
-  variance for the power component. A factorial null simulation shows mild finite-sample Type I
-  error inflation for the Wald test and conservative Type I behaviour for the score test. The
+  methodological advance is a score-test workflow with explicit comparison to the traditional
+  Wald/Zhu--Lakkis sample-size formula. The Wald formula uses the alternative variance for both
+  Type I error and power, whereas the score formula uses the null variance for the Type I
+  component and the alternative variance for the power component. A factorial null simulation
+  shows mild finite-sample Type I error inflation for the Wald test and conservative Type I
+  behaviour for the score test; in the displayed superiority scenarios, retaining Wald sizing
+  while using the score test provides a small practical power margin without losing Type I
+  protection. The
   package also implements a disciplined fallback from maximum likelihood to method-of-moments
   (MoM) nuisance-parameter estimation: when the NB ML fit is near-Poisson the software switches
   to a Poisson Wald or score test, but under extreme overdispersion or ML non-convergence it
@@ -40,7 +43,9 @@ abstract: |
   anti-conservative behaviour of a blind Poisson fallback. The package also supports calendar-time
   group sequential monitoring and both blinded and unblinded SSR. A 90-scenario SSR article
   illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
-  requires explicit Type I calibration with the planned final test statistic. The paper emphasizes
+  should be checked under the null with the planned final test statistic. In our examples, the
+  Wald test is mildly anti-conservative after SSR, whereas the score test preserves Type I error
+  more conservatively. The paper emphasizes
   both the statistical methodology and the software architecture that make these workflows
   reproducible.
 ---
@@ -276,12 +281,15 @@ planned alternative information scale.
 
 This distinction leads to a practical recommendation. The Zhu--Lakkis / Friede--Schmidli / Mutze
 formula should remain the baseline for a Wald primary analysis and for moderate-information designs
-where simulation confirms Type I error. Designs should move beyond it when the primary analysis is
-intended to be a score test, when the sample size is modest, when dispersion or event gaps are
-large, when the null margin differs from 1, or when adaptive/group sequential decisions make Type I
-calibration central. In those settings the analysis statistic, sample-size formula, and simulation
-engine should all use the same test type rather than relying on a Wald-sized design to protect a
-score or null-restricted analysis.
+where simulation confirms Type I error. When the sample size is modest, dispersion or event gaps
+are large, the null margin differs from 1, or adaptive/group sequential decisions make Type I
+calibration central, the more important move is often to use a score statistic for the analysis
+and operating-characteristic simulations. The two-variance score formula is useful as a
+test-aligned alternative and diagnostic, but it is not automatically the most powerful choice.
+For superiority designs like those studied below, the traditional Wald sample size paired with the
+score test can be a defensible practical default because it preserves Type I error and provides a
+small sample-size margin. Final designs should therefore compare Wald and score sizing under the
+planned score test rather than assuming one formula is uniformly preferable.
 
 In `sample_size_nbinom()`, the same information framework is used for superiority,
 non-inferiority, and super-superiority designs via the `rr0` argument, and the nuisance parameters
@@ -730,6 +738,7 @@ simulation summaries.
 | Wald versus score inference | Compare Wald and score tests under Wald- and score-sized designs | `score-vs-wald-simulation` | 27-scenario factorial grid; 20,000 null replicates and 3,500 power replicates per cell; Type I error, power, and null Z distributions |
 | SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
 | SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled production cache uses 3,600 replicates per RR $<1$ scenario and 1,000 replicates per RR $>1$ scenario |
+| SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study`; `data-raw/generate_ssr_sizing_sensitivity.R` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
 | Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
 
 : Simulation reporting map. The package articles are treated as executable supplementary material
@@ -746,10 +755,12 @@ assumptions. The empirical null results therefore isolate the effect of the test
 than the effect of sample size: Wald-test Type I error ranged from 0.0243 to 0.0317, with 13--15
 of 27 scenarios above nominal beyond Monte Carlo error depending on the sizing method; score-test
 Type I error ranged from 0.0200 to 0.0264, with no scenario above nominal beyond Monte Carlo error
-and several conservative cells. Under RR = 0.70, Wald-test power averaged about 0.904--0.907,
-whereas score-test power averaged about 0.893--0.895. These results support using the score test
-when Type I error preservation is the priority, while also showing that score-test designs should
-be simulated for power and may need a modest information margin.
+and several conservative cells. Under RR = 0.70, Wald-test power averaged about 0.904--0.907.
+Score-test power averaged 0.895 under Wald sizing and 0.893 under score sizing; 8--9 of 27
+score-test scenarios were below the 90% target beyond Monte Carlo error. These results support
+using the score test when Type I error preservation is the priority, while treating Wald sizing as
+a useful practical baseline or power margin for score-test superiority designs. Score-test designs
+should still be simulated for power and may need a modest information margin.
 
 **SSR Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
 RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$, comparing the
@@ -803,6 +814,19 @@ size in the displayed scenarios. The practical conclusion is therefore not that 
 uniformly more efficient, but that the masked and unmasked update rules should be compared under
 the trial-specific nuisance range, adaptation cap, and analysis statistic.
 
+**SSR starting-size sensitivity.** The fixed-design score-versus-Wald sweep suggests that the
+traditional Wald sample size can provide a small information margin when the planned analysis uses
+the score test. To check whether that margin carries into SSR, the SSR article adds a targeted
+low-event stress setting with $\lambda_1 = 0.15$, $k = 0.5$, RR = 0.7, no event gap, and the same
+score final test. The Wald-sized group sequential design has fixed-design $n = 390$ and final
+group sequential $n = 472$, compared with 384 and 464 for the score-sized design. With 5,000
+non-binding null replicates per starting-size rule, score-test Type I error remains close to
+nominal for both starts: 0.0252--0.0258 for the Wald-sized start and 0.0258--0.0266 for the
+score-sized start (MCSE about 0.0022). With 3,000 planned-effect replicates per starting-size rule,
+power is also similar: 0.898--0.907 for the Wald-sized start and 0.900--0.911 for the score-sized
+start (MCSE about 0.005). Thus Wald sizing should be viewed as a candidate margin to evaluate, not
+as a guaranteed SSR power improvement.
+
 # Discussion
 
 The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent-event
@@ -831,12 +855,15 @@ for a Wald primary analysis, because its variance factor is exactly the Wald alt
 used by that analysis. It should not, however, be presented as a universal guarantee of finite-sample
 Type I error control. When the design is lower-information, highly overdispersed, affected by event
 gaps, based on a non-unity null margin, or adaptively monitored, a score-test primary analysis is
-often the more defensible default. The corresponding best practice is to use the null variance
-$V_0$ for the alpha component, the planned alternative variance $V_1$ for the beta component, and
-the score statistic in the operating-characteristic simulations. Because the score test can be
-conservative, the final design should still be calibrated for both Type I error and power; increasing
-the target power or total information slightly may be preferable to reverting to an anti-conservative
-Wald test.
+often the more defensible default. The corresponding best practice is to simulate the score
+statistic directly and compare candidate sample-size rules under that statistic. The two-variance
+score formula uses the null variance $V_0$ for the alpha component and the planned alternative
+variance $V_1$ for the beta component, but in the superiority grid it was slightly smaller than
+Wald sizing and slightly less powerful for the score test. Thus Wald/Zhu--Lakkis sizing paired
+with the score test is a reasonable practical recommendation when it supplies a modest information
+margin. Because the score test can be conservative, the final design should still be calibrated for
+both Type I error and power; increasing the target power or total information slightly may be
+preferable to reverting to an anti-conservative Wald test.
 
 The SSR study likewise shows how the package's computational layer supports statistical design
 checks. The production score-test grid confirms that adverse nuisance-parameter misspecification
@@ -844,8 +871,15 @@ can be diagnosed and that SSR moves sample size in the expected direction, but i
 the final test statistic matters. The non-binding null simulations show that Wald analyses are
 mildly anti-conservative in this configuration, whereas score analyses are conservative at the
 same nominal one-sided alpha. The updated SSR article therefore compares Wald and score analyses
-directly rather than treating an ad hoc alpha reduction as the primary remedy. Blinded and
-unblinded nuisance updates had similar power and sample-size behavior in this configuration, so
+directly rather than treating an ad hoc alpha reduction as the primary remedy. The larger adapted
+sample sizes under high dispersion should be interpreted primarily as nuisance-parameter
+misspecification and adaptation-cap behavior, not as a benefit of the Wald test. The score test is
+important because it controls rejection after SSR has increased information; it does not remove the
+need to simulate how often the adaptation rule increases sample size. The targeted starting-size
+sensitivity reinforces that distinction: an eight-subject Wald starting-size margin did not yield a
+clear SSR power gain, so starting-size margins should be evaluated inside the planned adaptation
+rule. Blinded and unblinded
+nuisance updates had similar power and sample-size behavior in the score-test configuration, so
 their relative efficiency should be calibrated for the trial-specific adaptation rule. The ability
 to compare `bound_info` choices, ML versus
 method-of-moments information paths, and the new ML/MoM fallback behaviour inside the same

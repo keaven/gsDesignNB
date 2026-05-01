@@ -58,10 +58,11 @@ where $V_1 = (1/\mu_1 + k_1)(1 + 1/r) + (1/\mu_2 + k_2)/r$ is the alternative-hy
 variance, and $V_0 = (1/\mu_0 + k_0)(1 + 1/r)$ uses a pooled rate
 $\lambda_0 = (\lambda_1 + r \lambda_2) / (1 + r)$ under $H_0$.
 
-The score formula is matched to the score test's null-variance reference distribution.
-Depending on the planned alternative, null margin, follow-up distribution, and allocation ratio,
-it can be similar to, slightly smaller than, or larger than Wald sizing; verify both Type I error
-and power by simulation for the design setting.
+The score formula is matched to the score test's null-variance reference distribution, but it is
+not automatically more powerful. In the package superiority grid, Wald/Zhu--Lakkis sizing paired
+with the score test preserved Type I error and gave slightly higher score-test power than score
+sizing because it retained a small sample-size margin. Compare both sizing rules and verify Type I
+error and power by simulation for the design setting.
 
 ## Core workflow
 
@@ -175,13 +176,16 @@ that planning, simulation, and interim cutting are consistent.
 - `sim_ssr_nbinom()` supports strategies: `"No adaptation"`, `"Blinded SSR"`, `"Unblinded SSR"`.
 - `bound_info` controls which information scale drives boundaries: `"unblinded_ml"` (default),
   `"blinded_ml"`, `"unblinded_mom"`, `"blinded_mom"`.
-- For SSR studies, align `sample_size_nbinom(test_type = ...)`, `mutze_test(test_type = ...)`,
-  and `sim_ssr_nbinom(test_type = ...)`. The current production SSR study uses the score test for
-  power simulations and compares Wald vs score Type I error at the same nominal one-sided
-  $\alpha = 0.025$.
+- For SSR studies, treat the final test statistic as central. The current production SSR study uses
+  the score test for power simulations and compares Wald vs score Type I error at the same nominal
+  one-sided $\alpha = 0.025$.
 - In that non-binding Type I comparison, Wald is mildly anti-conservative (about 2.8%--3.1%) and
-  score is conservative (about 2.1%--2.3%). Prefer the score-test workflow when Type I calibration
-  is the priority, then check whether a modest information margin is needed for power.
+  score is conservative (about 2.1%--2.3%). Prefer the score final test when Type I calibration is
+  the priority, then check whether Wald sizing, a higher target power, or a modest information
+  margin is needed for power.
+- SSR adaptation is driven mainly by interim nuisance estimates and the adaptation cap; the score
+  test reduces anti-conservative rejection after adaptation rather than eliminating the need to
+  simulate adapted sample-size behavior.
 - Blinded SSR preserves masking. Unblinded SSR may be more sample-efficient, but the relative
   behavior is design-specific and should be compared under the trial's nuisance range, adaptation
   cap, and final test statistic.
@@ -239,6 +243,7 @@ If units are mixed, fix that first.
 | `non-inferiority-example` | Non-inferiority design |
 | `verification-simulation` | Simulation verification of sample size and test |
 | `score-vs-wald-simulation` | 2×2 comparison: Wald/score sizing × Wald/score test (interactive DT/plotly) |
+| `ai-skills` | Demonstrates how to use `SKILL.md` and `llms.txt` to guide package-native workflows |
 | `blinded-info-diagnostics` | Blinded information estimation diagnostics |
 | `blinded-info-diagnostics` | Edge cases for blinded information |
 | `verification-simulation` | Design-formula verification against simulation |

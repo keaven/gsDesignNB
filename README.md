@@ -23,7 +23,7 @@ workflows.
 ## Start Here
 
 - `sample-size-nbinom` for fixed-design planning
-- `score-vs-wald-simulation` for score-test sizing and Type I error guidance
+- `score-vs-wald-simulation` for Wald/score sizing and Type I error guidance
 - `simulation-example` and `seasonal-simulation` for recurrent-event data generation
 - `ssr-example` and `ssr-simulation-study` for negative binomial SSR workflows
 

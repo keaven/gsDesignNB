@@ -7,7 +7,10 @@
 #' Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
 #' and Mutze et al. (2019). When `test_type = "score"`, separate null
 #' and alternative variances are used (Farrington & Manning style),
-#' which gives better Type I error control for the score test.
+#' aligning the calculation with the null-variance scale of the score test.
+#' In practice, the final test statistic affects Type I error more than the
+#' small difference between Wald and score sizing, so score-test designs should
+#' be checked by simulation for both Type I error and power.
 #'
 #' @param lambda1 Event rate for group 1 (control), in events per unit time.
 #' @param lambda2 Event rate for group 2 (treatment), in events per unit time.
@@ -73,6 +76,11 @@
 #' \deqn{V_0 = \left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)}
 #' with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
 #' \eqn{\bar{t}_g} the average exposure for group \eqn{g}.
+#'
+#' In superiority settings, the traditional Wald/Zhu-Lakkis sample size may be
+#' slightly larger than score sizing and can provide a useful power margin when
+#' the final analysis uses the score test. Compare both sizing rules and verify
+#' the chosen design with simulation when finite-sample calibration matters.
 #'
 #' ## Average exposure
 #'

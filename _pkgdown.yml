@@ -105,6 +105,7 @@ articles:
       - seasonal-simulation
       - verification-simulation
       - score-vs-wald-simulation
+      - ai-skills
       - non-inferiority-example
       - ssr-example
       - ssr-simulation-study

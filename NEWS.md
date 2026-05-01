@@ -6,6 +6,18 @@
   vignette with recommendations for when the Zhu-Lakkis / Friede-Schmidli /
   Mutze Wald sample-size formula is appropriate and when to use score-test
   sizing with separate null and alternative variance factors.
+- Added an `ai-skills` vignette demonstrating how the package `SKILL.md` and
+  generated `llms.txt` can guide package-native score-test and simulation
+  workflows without replacing statistical review.
+- Refined score-test recommendations to distinguish the final analysis test
+  from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful
+  practical baseline and may provide a power margin when paired with the score
+  test in fixed-design superiority settings, while SSR designs should verify
+  any starting-size margin inside the planned adaptation rule.
+- Added a targeted SSR starting-size sensitivity cache comparing Wald- and
+  score-sized starting designs under the score final test in a low-event stress
+  setting. Both starts preserved near-nominal score-test Type I error, and the
+  larger Wald-sized start did not produce a clear SSR power advantage.
 - Documented the cached score-vs-Wald simulation results: the Wald test was
   mildly anti-conservative in several finite-sample scenarios, while the score
   test preserved Type I error more conservatively and should be paired with
@@ -30,7 +42,7 @@
   per dispersion/test-statistic cell for the non-binding Type I tables.
 - Updated the SSR simulation study to compare Wald and score tests at the same
   nominal one-sided alpha of 0.025, and aligned the SSR power simulations with
-  the score-test recommendation.
+  the score final-analysis recommendation.
 - Added a checkpointed production generator for the SSR score-test cache so the
   long-running power and Type I simulations can be resumed from saved chunks.
 - Updated the blinded-information diagnostics article to distinguish historical

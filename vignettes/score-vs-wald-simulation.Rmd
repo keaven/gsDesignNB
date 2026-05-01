@@ -27,7 +27,8 @@ has_plotly <- requireNamespace("plotly", quietly = TRUE)
 This vignette compares the Wald and score test implementations in `mutze_test()` across a
 factorial grid of negative binomial trial scenarios. It also gives practical recommendations for
 sample-size calculation when the usual Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula is
-adequate and when the score-test, two-variance calculation is preferable.
+adequate, when score-test sizing is a useful diagnostic, and when the score test itself is the
+more important change for Type I error control.
 
 The **Wald sizing** option in `sample_size_nbinom(test_type = "wald")` uses the alternative
 variance $V_1$ for both the Type I and power components. The **score sizing** option in
@@ -43,6 +44,9 @@ $$
 This distinction matters most when the planned final analysis uses a score statistic evaluated
 under the null, or when finite-sample Type I error control is more important than preserving the
 historical Wald analysis convention.
+In the superiority scenarios below, the Wald and score sample sizes are close; the traditional
+Wald sample size paired with the score test often provides a useful practical margin for power
+while preserving the score test's Type I error protection.
 
 The full $2 \times 2$ factorial comparison is:
 
@@ -419,14 +423,15 @@ datatable(
   `r round(max(null_long[test == "Score"]$rejection_rate), 4)`; no score-test cell is above
   nominal beyond Monte Carlo error, although several are conservatively below nominal.
 - Use the Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula when the planned primary analysis is
-  the Wald log-rate-ratio test and simulation verifies the intended Type I error and power for the
-  design scenario.
+  the Wald log-rate-ratio test. It is also a reasonable practical baseline when the planned primary
+  analysis is the score test, because in this superiority grid Wald sizing gives the score test a
+  small sample-size margin.
 - Move to the score-test workflow when Type I error preservation is the primary concern, especially
   for lower-information designs, high dispersion, event gaps, non-inferiority or super-superiority
-  margins, or adaptive/group sequential settings. In that workflow, size with
-  `sample_size_nbinom(test_type = "score")` and analyze or simulate with
+  margins, or adaptive/group sequential settings. In that workflow, analyze and simulate with
   `mutze_test(test_type = "score")`, `sim_gs_nbinom(test_type = "score")`, or
-  `sim_ssr_nbinom(test_type = "score")`.
+  `sim_ssr_nbinom(test_type = "score")`; compare Wald and score sizing rather than assuming the
+  two-variance score formula will automatically deliver nominal power.
 - Score-test power is slightly conservative in this grid. If the score test is the planned primary
-  analysis, verify power by simulation and consider a modest sample-size or target-power margin
-  before finalizing the protocol.
+  analysis, verify power by simulation and consider retaining Wald sizing, increasing the target
+  power, or adding a modest information margin before finalizing the protocol.

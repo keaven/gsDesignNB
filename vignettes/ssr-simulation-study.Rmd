@@ -43,11 +43,15 @@ recurrent event endpoints. We compare three strategies:
 3. **Unblinded SSR** -- nuisance parameters are re-estimated from
    treatment-specific interim data.
 
-For hypothesis testing, the main power simulations now use the
-`mutze_test()` score statistic. This aligns the SSR power grid with the
-score-test recommendation used elsewhere in the package documentation. The
-dedicated non-binding Type I tables compare Wald and score testing under the
-same one-sided $\alpha = 0.025$ group sequential design.
+For hypothesis testing, the main power simulations use the `mutze_test()`
+score statistic. This is particularly important in SSR: adaptation can
+increase information when nuisance parameters are worse than planned, and the
+final test must still preserve one-sided Type I error after that adaptation.
+The dedicated non-binding Type I tables therefore compare Wald and score
+testing under the same one-sided $\alpha = 0.025$ group sequential design.
+The sample-size update itself remains a nuisance-parameter recalculation that
+must be calibrated by simulation; the score test controls rejection after the
+adaptation, rather than making adaptation unnecessary.
 
 *Note:* Much of the simulation code in this vignette was generated with the
 assistance of a large language model (LLM) and then reviewed and refined
@@ -91,9 +95,32 @@ design_plan <- sample_size_nbinom(
   event_gap = event_gap_val,
   test_type = analysis_test_type
 )
+design_plan_wald_check <- sample_size_nbinom(
+  lambda1 = lambda1_plan, lambda2 = lambda2_plan,
+  dispersion = k_plan, power = power_plan, alpha = alpha_plan,
+  accrual_rate = accrual_rate_plan,
+  accrual_duration = accrual_dur_plan,
+  trial_duration = trial_dur_plan,
+  max_followup = max_followup,
+  event_gap = event_gap_val,
+  test_type = "wald"
+)
 cat("Fixed-design sample size:", design_plan$n_total, "\n")
+cat("Fixed-design sample size using Wald sizing:", design_plan_wald_check$n_total, "\n")
 cat("Primary analysis test:", analysis_test_type, "\n")
 ```
+
+This production cache uses the score-test sizing option for the fixed design.
+The separate score-vs-Wald simulation vignette shows that, for superiority
+designs, traditional Wald/Zhu--Lakkis sizing paired with the score test may be
+a useful practical margin for power. A protocol-level SSR design should
+therefore compare the score-sized and Wald-sized starting designs under the
+planned score final test before selecting the final sample-size target.
+For the primary SSR design in this article, the two formulas round to the same
+fixed-design sample size, so the long production cache is not duplicated under
+an alternative starting size. A focused starting-size sensitivity appears below
+for a lower-event stress setting where the rounded group sequential sample
+sizes differ.
 
 ### Group sequential design
 
@@ -136,7 +163,9 @@ design_note <- paste0(
 
 The dedicated non-binding Type I section below uses this same $\alpha = 0.025$
 group sequential design twice: once with the Wald statistic and once with the
-score statistic. The power simulations use the score statistic throughout.
+score statistic. The power simulations use the score statistic throughout, so
+the power results should be read as score-test power after SSR rather than as
+Wald-test power.
 
 The group sequential inflation factor is
 `r round(gs_inflation, 3)`, giving a planned sample size of
@@ -843,6 +872,94 @@ for (test_label in c("Wald", "Score")) {
 }
 ```
 
+### Starting sample-size sensitivity
+
+The main SSR production cache is based on the score-sized fixed design, but in
+the primary planning example the Wald and score formulas round to the same
+starting sample size. To check whether the fixed-design power margin from Wald
+sizing carries through an adaptive SSR workflow, we add a targeted sensitivity
+in a low-event stress setting
+($\lambda_1 = 0.15$, $k = 0.5$, RR = 0.7, no event gap). In that setting the
+Wald-sized group sequential design enrolls 472 participants at the final
+analysis, compared with 464 for the score-sized design. Both starting-size
+rules below still use the score test for interim and final analyses; only the
+starting design is changed.
+
+```{r ssr_sizing_sensitivity}
+sizing_sens_source_path <- file.path(
+  project_root, "inst", "extdata", "ssr_sizing_sensitivity.rds"
+)
+sizing_sens_file <- system.file(
+  "extdata", "ssr_sizing_sensitivity.rds", package = "gsDesignNB"
+)
+if (sizing_sens_file == "" && file.exists(sizing_sens_source_path)) {
+  sizing_sens_file <- sizing_sens_source_path
+}
+
+if (sizing_sens_file == "") {
+  cat(
+    "The supplemental SSR sizing-sensitivity cache is not available. ",
+    "Run `Rscript data-raw/generate_ssr_sizing_sensitivity.R` to regenerate it.\n"
+  )
+} else {
+  sizing_sens <- readRDS(sizing_sens_file)
+  sizing_sens_dt <- as.data.table(sizing_sens$summary)
+  sizing_sens_dt[, Metric := fifelse(
+    rr_true == 1,
+    "Type I error (RR = 1.0; non-binding futility)",
+    paste0("Power (RR = ", rr_true, ")")
+  )]
+  sizing_sens_dt[, `Starting design` := tools::toTitleCase(starting_sizing)]
+  sizing_sens_dt[, `Estimate` := rejection_rate]
+  sizing_sens_dt[, `SSR applied (%)` := pct_adapted]
+
+  sizing_sens_display <- sizing_sens_dt[
+    strategy %in% c("No adaptation", "Blinded SSR", "Unblinded SSR"),
+    .(
+      Metric,
+      `Starting design`,
+      Strategy = strategy,
+      `Fixed N` = fixed_n,
+      `GS N` = gs_n,
+      Estimate = round(Estimate, 4),
+      MCSE = round(mcse, 4),
+      `Mean N` = round(mean_n, 1),
+      `SSR applied (%)` = round(`SSR applied (%)`, 1)
+    )
+  ]
+  setorder(sizing_sens_display, Metric, `Starting design`, Strategy)
+
+  sizing_sens_display |>
+    gt(groupname_col = "Metric") |>
+    tab_header(
+      title = "Supplemental SSR Starting-Size Sensitivity",
+      subtitle = paste(
+        "Score final test; Wald-sized GS N =",
+        max(sizing_sens_display$`GS N`),
+        "vs score-sized GS N =",
+        min(sizing_sens_display$`GS N`)
+      )
+    ) |>
+    tab_footnote(
+      paste(
+        "This targeted sensitivity uses a lower-event stress setting and is",
+        "intended to check the direction of the starting-size recommendation,",
+        "not to replace the full SSR production grid."
+      )
+    )
+}
+```
+
+In this stress setting, the score-test Type I estimates remain close to nominal
+for both starting-size rules: 0.0252--0.0258 with the Wald-sized start and
+0.0258--0.0266 with the score-sized start, with MCSE about 0.0022. At RR = 0.7,
+the power estimates are also similar across starting-size rules and within
+Monte Carlo uncertainty. The Wald-sized start increases the group sequential
+sample size from 464 to 472, but it does not produce a clear additional power
+advantage in this SSR setting. This supports the practical recommendation to
+simulate the specific SSR rule rather than assuming that a fixed-design sizing
+margin will automatically translate into adaptive-design power.
+
 ### Power by rate ratio and SSR strategy
 
 ```{r power_curves, fig.width=10, fig.height=6}
@@ -1187,6 +1304,9 @@ ggplot(if_long,
    The score-test result is conservative rather than inflated, so the
    simulation-based recommendation is to use the score test directly and then
    check power, rather than lowering alpha for a Wald analysis.
+   This distinction is more important in SSR than in a fixed design because
+   adaptation can add information; the score test controls how that additional
+   information is converted into rejection probability.
 
 2. **Largest no-adaptation power deficit.** At planned RR = 0.7, the score-test
    production grid shows no-adaptation power ranging from about 70% to 90%.
@@ -1201,6 +1321,20 @@ ggplot(if_long,
    with the score test, versus about 81% for no adaptation. The score test is
    intentionally conservative, so final designs should still verify whether a
    small information margin is needed to reach the desired power.
+   Large adapted sample sizes in high-dispersion scenarios reflect the
+   nuisance-parameter update and adaptation cap, not a failure of blinding.
+   Compared with Wald testing, the score-test analysis makes those adaptations
+   look better calibrated because the null rejection rate remains conservative
+   rather than inflated.
+
+4. **Starting-size margins need SSR-specific confirmation.** The supplemental
+   low-event sensitivity compares Wald- and score-sized starting designs under
+   the same score final test. Although the Wald-sized group sequential design
+   starts with eight additional participants, its power is not materially higher
+   than the score-sized design in this adaptive setting, and both starts have
+   score-test Type I estimates close to nominal. Thus the fixed-design
+   recommendation to consider Wald sizing as a power margin should be checked
+   within the planned SSR rule.
 
 ### Information-based interim timing
 

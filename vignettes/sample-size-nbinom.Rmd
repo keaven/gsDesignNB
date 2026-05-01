@@ -130,8 +130,10 @@ $$
 
 where $V_1$ is the alternative variance factor above and $V_0$ is the corresponding null variance factor under the constrained null model.
 This aligns the design calculation with a score statistic evaluated under $H_0$.
-It is most useful when finite-sample Type I error control is the dominant objective, for example in lower-information designs, high-dispersion settings, event-gap settings, non-inferiority or super-superiority hypotheses, or adaptive/group sequential designs that will use a score statistic at analysis.
-If the planned analysis remains the Wald log-rate-ratio test, the Zhu--Lakkis Wald formula remains the directly matched calculation; either choice should be verified by simulation for the design scenario.
+It is most useful as a diagnostic and alternative sizing rule when finite-sample Type I error control is the dominant objective, for example in lower-information designs, high-dispersion settings, event-gap settings, non-inferiority or super-superiority hypotheses, or adaptive/group sequential designs that will use a score statistic at analysis.
+The simulation grid in `vignette("score-vs-wald-simulation")` shows that the final test statistic can matter more than the small difference between Wald and score sample sizes: in the displayed superiority scenarios, the traditional Zhu--Lakkis Wald sample size paired with the score test preserved Type I error and gave slightly higher score-test power than score sizing.
+Thus, if the planned analysis remains the Wald log-rate-ratio test, the Zhu--Lakkis Wald formula is the directly matched calculation.
+If the planned analysis is the score test, the practical default is to compare Wald and score sizing, often retaining Wald sizing as a modest sample-size margin, and then verify both Type I error and power by simulation.
 
 ### Relationship between Zhu-Lakkis, Friede-Schmidli, and Mutze et al.
 
