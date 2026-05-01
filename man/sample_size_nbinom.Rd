@@ -18,6 +18,7 @@ sample_size_nbinom(
   trial_duration,
   dropout_rate = 0,
   max_followup = NULL,
+  test_type = c("wald", "score"),
   event_gap = NULL
 )
 }
@@ -57,11 +58,26 @@ Must be the same length as \code{accrual_rate}.}
 \code{trial_duration} is less than the sum of \code{accrual_duration}, accrual
 is truncated at \code{trial_duration}.}
 
-\item{dropout_rate}{Dropout hazard rate. Default is 0. Can be a vector of
-length 2 for group-specific dropout (control, treatment).}
+\item{dropout_rate}{Dropout hazard rate. Can be:
+\itemize{
+\item A scalar (common constant rate for both groups). Default is 0.
+\item A vector of length 2 (group-specific constant rates: control,
+treatment).
+\item A data frame with columns \code{rate} and \code{duration} (and optionally
+\code{treatment}) defining piecewise constant dropout hazards. When a
+\code{treatment} column is present, use 1 for control and 2 for treatment.
+Without a \code{treatment} column, the same piecewise schedule applies to
+both groups. The last \code{duration} may be \code{Inf} to extend the final rate
+indefinitely.
+}}
 
 \item{max_followup}{Maximum follow-up time for any patient. Default is
 \code{NULL} (infinite). Can be a vector of length 2 for group-specific caps.}
+
+\item{test_type}{Type of test for which to size the study:
+\code{"wald"} (default) uses a single variance under the alternative;
+\code{"score"} uses separate null and alternative variances
+(\eqn{z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1}}).}
 
 \item{event_gap}{Gap duration after each event during which no new events
 are counted (e.g., a recovery period). Default is \code{NULL} (no gap).
@@ -90,6 +106,8 @@ length 2 for control and treatment).}
 \item{total_events}{Total expected number of events.}
 \item{variance}{Variance of the log rate ratio
 \eqn{\mathrm{Var}(\hat\theta)}.}
+\item{variance_null}{Null variance of the log rate ratio used for
+score-test sizing, on the same final-analysis scale as \code{variance}.}
 \item{accrual_rate}{Accrual rate(s) used (possibly scaled to achieve
 target power).}
 \item{accrual_duration}{Accrual duration(s) used.}
@@ -97,29 +115,53 @@ target power).}
 }
 \description{
 Computes the sample size (or power) for comparing two treatment groups
-assuming negative binomial distributed event counts. The test is based on
-the Wald statistic for the log rate ratio, corresponding to Method 3 of
-Zhu & Lakkis (2014). The same underlying variance formula is used by
-Friede & Schmidli (2010) and Mutze et al. (2019).
+assuming negative binomial distributed event counts. When
+\code{test_type = "wald"} (default), the formula uses a single variance
+evaluated under the alternative, corresponding to Method 3 of
+Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
+and Mutze et al. (2019). When \code{test_type = "score"}, separate null
+and alternative variances are used (Farrington & Manning style),
+aligning the calculation with the null-variance scale of the score test.
+In practice, the final test statistic affects Type I error more than the
+small difference between Wald and score sizing, so score-test designs should
+be checked by simulation for both Type I error and power.
 }
 \details{
 \subsection{Sample size formula}{
 
-The sample size for group 1 is:
-\deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 \tilde{V}}{(\theta - \theta_0)^2}}
+\strong{Wald test} (\code{test_type = "wald"}):
+\deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 V_1}{(\theta - \theta_0)^2}}
+
+\strong{Score test} (\code{test_type = "score"}):
+\deqn{n_1 = \frac{(z_{\alpha/s} \sqrt{V_0} + z_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}}
+
 where \eqn{\theta = \log(\lambda_2/\lambda_1)},
 \eqn{\theta_0 = \log(\mathrm{rr}_0)}, and:
-\deqn{\tilde{V} = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+\deqn{V_1 = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+is the variance under \eqn{H_1}. Under \eqn{H_0} (pooled rate
+\eqn{\lambda_0 = (\lambda_1 + r \lambda_2 \mathrm{rr}_0) / (1 + r)}):
+\deqn{V_0 = \left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)}
 with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
 \eqn{\bar{t}_g} the average exposure for group \eqn{g}.
+
+In superiority settings, the traditional Wald/Zhu-Lakkis sample size may be
+slightly larger than score sizing and can provide a useful power margin when
+the final analysis uses the score test. Compare both sizing rules and verify
+the chosen design with simulation when finite-sample calibration matters.
 }
 
 \subsection{Average exposure}{
 
 The average exposure \eqn{\bar{t}_g} accounts for piecewise accrual,
-exponential dropout, and maximum follow-up truncation. When dropout rate
-\eqn{\delta > 0}, the expected exposure for a patient with potential
-follow-up \eqn{u} is \eqn{m(u) = (1 - e^{-\delta u})/\delta}.
+piecewise exponential dropout, and maximum follow-up truncation. With
+piecewise constant dropout hazards \eqn{\delta_1, \delta_2, \ldots}
+over successive intervals, the survival function is
+\eqn{S(t) = \exp(-\sum_j \delta_j \ell_j)} where \eqn{\ell_j} is the
+time spent in interval \eqn{j}. The expected exposure for a patient with
+potential follow-up \eqn{u} is \eqn{m(u) = \int_0^u S(t)\,dt}, computed
+as a sum of exponential integrals over each piece. For a single constant
+rate \eqn{\delta > 0} this simplifies to
+\eqn{m(u) = (1 - e^{-\delta u})/\delta}.
 The overall average is a weighted mean across accrual segments.
 }
 

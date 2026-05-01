@@ -26,11 +26,11 @@ format:
 | Motivation & "three gaps" | ~4 | Why NB planning can misstate information |
 | Expected events & timing | ~5 | NB model + information timing |
 | GSD, simulation, SSR | ~7 | gsDesign backend, NB workflows, Jensen sweep |
-| AI in development | ~3 | Tooling, contributions, lessons learned |
+| Software verification | ~3 | Reproducible workflows, validation, development provenance |
 | Conclusions & wrap-up | ~3 | Takeaways, software map |
 
 :::: {.notes}
-**~0:30** — Set expectations: NB recurrent-event methods + implementation story + AI workflow, not a new asymptotic theorem.
+**~0:30** — Set expectations: NB recurrent-event methods plus a software workflow and verification story, not a new asymptotic theorem.
 ::::
 
 ---
@@ -164,6 +164,20 @@ Interim times solve **feasibility inequalities**:
 
 :::: {.notes}
 **~1:45** — Emphasize the default model first; the piecewise algebra is supporting timing infrastructure, not the primary patient-level event model.
+::::
+
+---
+
+## Dropout, MAR, and MI scope {.smaller}
+
+- **Dropout in gsDesignNB:** handled as exposure truncation; partial follow-up stays in the analysis through counted events and observed time at risk.
+- **Planning and SSR:** `sample_size_nbinom()` accounts for planned dropout / maximum follow-up; SSR uses observed interim exposure, then recalculates total $N$ under the planned dropout assumptions.
+- **Under MAR / ignorable censoring:** observed-data NB likelihood with an exposure offset gives valid rate-ratio estimates and model-based variances; **MI is not required** simply because follow-up is censored.
+- **Under MNAR:** MI is a sensitivity-analysis tool; Keene et al. (2014) give a recurrent-event controlled-imputation template using reference-based assumptions.
+- If protocol event gaps matter, MNAR MI should impute **event times** when possible, then re-apply the counting rule.
+
+:::: {.notes}
+**~1:00** — This answers the missing-data question directly: MAR is an observed-data likelihood problem, not automatically an imputation problem. MNAR is where explicit sensitivity assumptions enter.
 ::::
 
 ---
@@ -315,6 +329,20 @@ $$
 
 ---
 
+## Simulation reporting strategy {.smaller}
+
+- **Paper:** concise operating-characteristic tables, key patterns, and Monte Carlo standard errors.
+- **Package supplement:** executable pkgdown articles with code, grids, replicate counts, and fuller output.
+- **Fixed-design checks:** `verification-simulation`, `sample-size-nbinom`, and `simulation-example`.
+- **SSR checks:** `ssr-simulation-study` plus `blinded-info-diagnostics` for ML / MoM and fallback behaviour.
+- Report decisions on the **same scale** used by monitoring: information, rejection, futility, adapted $N$, and fallback labels, not raw event totals alone.
+
+:::: {.notes}
+**~1:00** — This is the publication strategy: keep the deck and paper tight, but make the package articles the auditable supplement.
+::::
+
+---
+
 ## Software map {.smaller}
 
 | Task | Primary entry point | Backend / note |
@@ -351,55 +379,40 @@ $$
 
 - **What it is:** Wald test for treatment effect on **recurrent event counts** with exposure offset — **negative binomial** log-linear model (Mutze et al. 2019-style inference), implemented as **`mutze_test()`** in **gsDesignNB** and used as the default unblinded interim model in **`sim_gs_nbinom()`**.
 - **Variance:** under `MASS::glm.nb`, $\mathrm{Var}(\text{count}) \approx \mu + \mu^2/\theta$; **large** shape $\theta$ means **near-Poisson**, while **tiny** $\theta$ means unstable overdispersion fit.
-- **`poisson_threshold`** $\kappa$ (default **1000**): after fitting NB, if $\theta \notin [1/\kappa, \kappa]$, fall back to **Poisson** Wald with no extra-Poisson term.
-- **Tuning $\kappa$:** **lower** $\kappa$ makes the Poisson fallback happen **sooner**; **raise** $\kappa$ to keep NB unless $\theta$ is more extreme; always **sensitivity-check** the choice.
-- **Method of moments:** **`sim_gs_nbinom()`** also computes **MoM**-based nuisance parameters and **blinded / unblinded information** alongside **ML** — compare the two paths in simulation before fixing SSR or monitoring rules; **`mutze_test()`** does not auto-switch to MoM.
+- **Near-Poisson fallback:** if $\theta > 50$ (default `poisson_threshold`), the NB fit is treated as practically Poisson and the Poisson Wald test is used.
+- **MoM fallback:** if $\theta < 1/20$ (default `mom_threshold`) or NB ML fails with overdispersion, `mutze_test()` re-estimates rates and dispersion by method of moments and uses NB Fisher information.
+- **Diagnostics:** simulation outputs record ML and MoM information paths plus a `fallback` label, so monitoring and SSR rules can be stress-tested before they are fixed.
 
 :::: {.notes}
-**~1:15** — MoM is an **additional** diagnostic path in simulation output, not a drop-in replacement for the Wald test unless you change the analysis spec.
+**~1:15** — The key correction from earlier drafts: extreme overdispersion no longer collapses to a Poisson variance. The fallback is two-sided: Poisson for near-Poisson, MoM NB for unstable overdispersion.
 ::::
 
 ---
 
-## Use of AI: tooling and workflow
+## Software verification workflow
 
-- **gsDesignNB** developed through repeated cycles of AI prompt and response.
-- **Environment:** VS Code with GitHub Copilot and Cursor (multi-window interface).
-  - Claude Code available internally: lower learning curve?
-- **Models:** Gemini 3.1, Claude Opus 4.6, GPT-5.4x currently in use.
-- **Hardware:** Power Mac with M4 Pro was key to simulation speed (11 parallel cores, 
-64-scenario sweep with 3500 trials/scenario in ~2 hours).
-- **AI skills** under development; summer intern project.
+- **Single statistical core:** fixed design, GS monitoring, SSR, simulation, Shiny, and vignettes use the same package APIs.
+- **Executable documentation:** examples and vignettes serve as replication material for the manuscript calculations.
+- **Simulation checks:** fixed-design power, event-gap correction, seasonal rates, ML / MoM information paths, and SSR operating characteristics are checked by Monte Carlo.
+- **Supplementary material:** pkgdown articles carry the full scenario grids and rendered simulation outputs.
+- **Regression checks:** package tests guard API behaviour and numerical drift during refactoring.
+- **Development provenance:** AI-assisted coding and drafting can accelerate iteration, but only validated APIs, tests, and simulation evidence belong in the scientific claim.
 
 :::: {.notes}
-**~1:00** — Tooling overview. VS Code + Copilot/Cursor is the main workflow; multiple models used over the course of development.
+**~1:15** — For a software-journal framing, the important object is not which tool wrote a line of code; it is whether the statistical core is reproducible, testable, and consistently used by every interface.
 ::::
 
 ---
 
-## Use of AI: what AI contributed
+## Development lessons
 
-- **Code generation:** simulation engines, data cutting functions, GSD interface.
-- **Preliminary Shiny interface:** for simulation.
-- **Mathematical derivation:** Jensen's correction identified and derived through interactive dialogue analyzing simulation discrepancies — AI performed Monte Carlo verification and Taylor expansion.
-- **Documentation:** vignettes, roxygen2, notation consistency — AI drafting, statistician reviewing.
-- **Debugging:** subtle bugs identified through systematic diagnosis (e.g., `toInteger()` overwriting enrollment, positional argument mismatches in SSR, **gsDesign** collapsing futility bounds).
-- **Simulation studies:** 13-scenario SSR study and 64-scenario Jensen sweep designed collaboratively, coded and refined by AI.
+- AI-assisted development is useful for breadth: simulation engines, data-cutting helpers, vignettes, and diagnostic scripts can be iterated quickly.
+- Statistical review remains the bottleneck: assumptions, fallback rules, variance formulas, and interpretation must be checked by domain experts.
+- Documentation should name limitations plainly: MAR dropout is handled by observed exposure; MNAR imputation requires additional assumptions and data structure.
+- Software-paper emphasis: package interfaces, validation artifacts, and reproducible operating characteristics should carry the argument.
 
 :::: {.notes}
-**~1:30** — Walk through the five contribution areas. Emphasize the Jensen derivation as a case where AI reasoning led to a real methodological insight, not just code.
-::::
-
----
-
-## Use of AI: lessons learned
-
-- AI accelerates statistical software development but requires **expert oversight** for methodological correctness and interpretation.
-- Statistician's role shifts toward **design decisions**, **mathematical validation**, and **interpretation**; AI handles implementation, debugging, and large-scale computation.
-- AI was key to the productivity needed to complete this scope of research.
-
-:::: {.notes}
-**~1:00** — The punch line: AI is a productivity multiplier, not a replacement for statistical expertise.
+**~1:00** — Keep this as provenance and practice, not as the main result. The main result is a validated package workflow.
 ::::
 
 ---
@@ -410,8 +423,10 @@ $$
 - **Default model + target:** simple exponential within-subject rates plus gamma frailty give the NB model, and information depends on exposure, rates, and dispersion rather than raw events alone.
 - **Sample size details matter:** event-gap correction was needed so simulation-based power agreed with the analytical NB planning formula; a 64-scenario sweep confirms 1--2 pp of underpowering from the naive formula when $k \geq 0.5$ and gaps exceed 20 days.
 - **SSR findings:** blinded SSR tended to ask for more sample size; unblinded SSR was more sample-efficient when acceptable.
+- **Reporting:** cite package articles as executable supplementary material for the full simulation grids and code.
 - **Interim defaults matter:** stress-test **`mutze_test()`**, **`poisson_threshold`**, and **ML vs MoM** information paths before locking monitoring rules.
 - **Type I calibration:** in the vignette sensitivity runs, building the design at a slightly smaller nominal alpha helped.
+- **Missing data:** MAR censoring does not require MI for the observed-exposure NB likelihood; MNAR dropout belongs in sensitivity analyses.
 
 :::: {.notes}
 **~1:30** — Six bullets recap the deck; emphasize the NB statistical story and the practical SSR takeaways.
@@ -424,7 +439,7 @@ $$
 - Anchor monitoring to **NB information**, not raw event counts alone.
 - If a protocol gap changes counted events, include the **event-gap correction** in planning and verify against simulation; the correction adds 0--40 subjects (0--8%) but prevents 1--2 pp of power loss when $k \geq 0.5$.
 - For SSR, compare **blinded** and **unblinded** rules and check whether a slightly smaller nominal alpha improves calibration.
-- AI was key to productivity needed to complete this research.
+- For MNAR dropout sensitivity, improve the simulation data structure first: preserve censoring reason and planned remaining follow-up, then impute post-dropout events under explicit delta assumptions.
 
 :::: {.notes}
 **~1:00** — Final applied slide before references.
@@ -439,6 +454,9 @@ $$
 - Schneider, Schmidli & Friede (2013). Blinded SSR for recurrent event data with time trends. *Statistics in Medicine*.
 - Mutze et al. (2019). Group sequential designs for negative binomial outcomes. *Statistical Methods in Medical Research*.
 - Jennison & Turnbull (2000). *Group Sequential Methods with Applications to Clinical Trials*.
+- Rubin (1976). Inference and missing data. *Biometrika*.
+- National Research Council (2010). *The Prevention and Treatment of Missing Data in Clinical Trials*.
+- Keene, Roger, Hartley & Kenward (2014). Missing data sensitivity analysis for recurrent event data using controlled imputation. *Pharmaceutical Statistics*.
 - `gsDesignNB` sample-size and SSR vignettes for worked formulas and simulation results.
 
 :::: {.notes}

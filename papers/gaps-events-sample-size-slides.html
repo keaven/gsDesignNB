@@ -442,7 +442,7 @@
   <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Keaven M. Anderson, Hongtao Zhang, Andrea Maes">
-  <meta name="dcterms.date" content="2026-04-13">
+  <meta name="dcterms.date" content="2026-04-28">
   <title>Negative Binomial Group Sequential Designs</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1002,7 +1002,7 @@ Keaven M. Anderson, Hongtao Zhang, Andrea Maes
     </div>
 </div>
 
-  <p class="date">2026-04-13</p>
+  <p class="date">2026-04-28</p>
 </section>
 <section id="talk-plan" class="slide level2 smaller">
 <h2>Talk plan</h2>
@@ -1042,9 +1042,9 @@ Keaven M. Anderson, Hongtao Zhang, Andrea Maes
 <td>gsDesign backend, NB workflows, Jensen sweep</td>
 </tr>
 <tr class="odd">
-<td>AI in development</td>
+<td>Software verification</td>
 <td>~3</td>
-<td>Tooling, contributions, lessons learned</td>
+<td>Reproducible workflows, validation, development provenance</td>
 </tr>
 <tr class="even">
 <td>Conclusions &amp; wrap-up</td>
@@ -1054,7 +1054,7 @@ Keaven M. Anderson, Hongtao Zhang, Andrea Maes
 </tbody>
 </table>
 <aside class="notes">
-<p><strong>~0:30</strong> — Set expectations: NB recurrent-event methods + implementation story + AI workflow, not a new asymptotic theorem.</p>
+<p><strong>~0:30</strong> — Set expectations: NB recurrent-event methods plus a software workflow and verification story, not a new asymptotic theorem.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1219,7 +1219,7 @@ display:block!important;
 <li><strong>Information threshold:</strong> smallest trial time <span class="math inline">\(t\)</span> with expected (or observed) information <span class="math inline">\(\ge \mathscr{I}_i\)</span>, <strong>subject to</strong> the floors</li>
 </ul>
 <p><strong>Take the max</strong> of applicable floors, then lift further if information requires it — the same backend timing logic applies once the information path is specified.</p>
-<p>**Maximum per patient follow-up (e.g., 1 year) can cap trial duration.</p>
+<p><strong>Maximum per patient follow-up</strong> (e.g., 1 year) can cap trial duration.</p>
 <aside class="notes">
 <p><strong>~2:00</strong> — <span class="math inline">\(\tau_i\)</span> = calendar time of look <span class="math inline">\(i\)</span>. If you schedule looks at fixed event fractions or other crude event proxies <strong>without</strong> <span class="math inline">\(\Delta_i\)</span>, the <strong>information path</strong> and spending time axis are wrong whenever enrollment continues during mandatory gaps.</p>
 <style type="text/css">
@@ -1246,6 +1246,29 @@ display:block!important;
 </ul>
 <aside class="notes">
 <p><strong>~1:45</strong> — Emphasize the default model first; the piecewise algebra is supporting timing infrastructure, not the primary patient-level event model.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
+<section id="dropout-mar-and-mi-scope" class="slide level2 smaller">
+<h2>Dropout, MAR, and MI scope</h2>
+<ul>
+<li><strong>Dropout in gsDesignNB:</strong> handled as exposure truncation; partial follow-up stays in the analysis through counted events and observed time at risk.</li>
+<li><strong>Planning and SSR:</strong> <code>sample_size_nbinom()</code> accounts for planned dropout / maximum follow-up; SSR uses observed interim exposure, then recalculates total <span class="math inline">\(N\)</span> under the planned dropout assumptions.</li>
+<li><strong>Under MAR / ignorable censoring:</strong> observed-data NB likelihood with an exposure offset gives valid rate-ratio estimates and model-based variances; <strong>MI is not required</strong> simply because follow-up is censored.</li>
+<li><strong>Under MNAR:</strong> MI is a sensitivity-analysis tool; Keene et al. (2014) give a recurrent-event controlled-imputation template using reference-based assumptions.</li>
+<li>If protocol event gaps matter, MNAR MI should impute <strong>event times</strong> when possible, then re-apply the counting rule.</li>
+</ul>
+<aside class="notes">
+<p><strong>~1:00</strong> — This answers the missing-data question directly: MAR is an observed-data likelihood problem, not automatically an imputation problem. MNAR is where explicit sensitivity assumptions enter.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1591,6 +1614,29 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
+<section id="simulation-reporting-strategy" class="slide level2 smaller">
+<h2>Simulation reporting strategy</h2>
+<ul>
+<li><strong>Paper:</strong> concise operating-characteristic tables, key patterns, and Monte Carlo standard errors.</li>
+<li><strong>Package supplement:</strong> executable pkgdown articles with code, grids, replicate counts, and fuller output.</li>
+<li><strong>Fixed-design checks:</strong> <code>verification-simulation</code>, <code>sample-size-nbinom</code>, and <code>simulation-example</code>.</li>
+<li><strong>SSR checks:</strong> <code>ssr-simulation-study</code> plus <code>blinded-info-diagnostics</code> for ML / MoM and fallback behaviour.</li>
+<li>Report decisions on the <strong>same scale</strong> used by monitoring: information, rejection, futility, adapted <span class="math inline">\(N\)</span>, and fallback labels, not raw event totals alone.</li>
+</ul>
+<aside class="notes">
+<p><strong>~1:00</strong> — This is the publication strategy: keep the deck and paper tight, but make the package articles the auditable supplement.</p>
+<style type="text/css">
+span.MJX_Assistive_MathML {
+position:absolute!important;
+clip: rect(1px, 1px, 1px, 1px);
+padding: 1px 0 0 0!important;
+border: 0!important;
+height: 1px!important;
+width: 1px!important;
+overflow: hidden!important;
+display:block!important;
+}</style></aside>
+</section>
 <section id="software-map" class="slide level2 smaller">
 <h2>Software map</h2>
 <table class="caption-top">
@@ -1683,12 +1729,12 @@ display:block!important;
 <ul>
 <li><strong>What it is:</strong> Wald test for treatment effect on <strong>recurrent event counts</strong> with exposure offset — <strong>negative binomial</strong> log-linear model (Mutze et al. 2019-style inference), implemented as <strong><code>mutze_test()</code></strong> in <strong>gsDesignNB</strong> and used as the default unblinded interim model in <strong><code>sim_gs_nbinom()</code></strong>.</li>
 <li><strong>Variance:</strong> under <code>MASS::glm.nb</code>, <span class="math inline">\(\mathrm{Var}(\text{count}) \approx \mu + \mu^2/\theta\)</span>; <strong>large</strong> shape <span class="math inline">\(\theta\)</span> means <strong>near-Poisson</strong>, while <strong>tiny</strong> <span class="math inline">\(\theta\)</span> means unstable overdispersion fit.</li>
-<li><strong><code>poisson_threshold</code></strong> <span class="math inline">\(\kappa\)</span> (default <strong>1000</strong>): after fitting NB, if <span class="math inline">\(\theta \notin [1/\kappa, \kappa]\)</span>, fall back to <strong>Poisson</strong> Wald with no extra-Poisson term.</li>
-<li><strong>Tuning <span class="math inline">\(\kappa\)</span>:</strong> <strong>lower</strong> <span class="math inline">\(\kappa\)</span> makes the Poisson fallback happen <strong>sooner</strong>; <strong>raise</strong> <span class="math inline">\(\kappa\)</span> to keep NB unless <span class="math inline">\(\theta\)</span> is more extreme; always <strong>sensitivity-check</strong> the choice.</li>
-<li><strong>Method of moments:</strong> <strong><code>sim_gs_nbinom()</code></strong> also computes <strong>MoM</strong>-based nuisance parameters and <strong>blinded / unblinded information</strong> alongside <strong>ML</strong> — compare the two paths in simulation before fixing SSR or monitoring rules; <strong><code>mutze_test()</code></strong> does not auto-switch to MoM.</li>
+<li><strong>Near-Poisson fallback:</strong> if <span class="math inline">\(\theta &gt; 50\)</span> (default <code>poisson_threshold</code>), the NB fit is treated as practically Poisson and the Poisson Wald test is used.</li>
+<li><strong>MoM fallback:</strong> if <span class="math inline">\(\theta &lt; 1/20\)</span> (default <code>mom_threshold</code>) or NB ML fails with overdispersion, <code>mutze_test()</code> re-estimates rates and dispersion by method of moments and uses NB Fisher information.</li>
+<li><strong>Diagnostics:</strong> simulation outputs record ML and MoM information paths plus a <code>fallback</code> label, so monitoring and SSR rules can be stress-tested before they are fixed.</li>
 </ul>
 <aside class="notes">
-<p><strong>~1:15</strong> — MoM is an <strong>additional</strong> diagnostic path in simulation output, not a drop-in replacement for the Wald test unless you change the analysis spec.</p>
+<p><strong>~1:15</strong> — The key correction from earlier drafts: extreme overdispersion no longer collapses to a Poisson variance. The fallback is two-sided: Poisson for near-Poisson, MoM NB for unstable overdispersion.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1701,20 +1747,18 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="use-of-ai-tooling-and-workflow" class="slide level2">
-<h2>Use of AI: tooling and workflow</h2>
+<section id="software-verification-workflow" class="slide level2">
+<h2>Software verification workflow</h2>
 <ul>
-<li><strong>gsDesignNB</strong> developed through repeated cycles of AI prompt and response.</li>
-<li><strong>Environment:</strong> VS Code with GitHub Copilot and Cursor (multi-window interface).
-<ul>
-<li>Claude Code available internally: lower learning curve?</li>
-</ul></li>
-<li><strong>Models:</strong> Gemini 3.1, Claude Opus 4.6, GPT-5.4x currently in use.</li>
-<li><strong>Hardware:</strong> Power Mac with M4 Pro was key to simulation speed (11 parallel cores, 64-scenario sweep with 3500 trials/scenario in ~2 hours).</li>
-<li><strong>AI skills</strong> under development; summer intern project.</li>
+<li><strong>Single statistical core:</strong> fixed design, GS monitoring, SSR, simulation, Shiny, and vignettes use the same package APIs.</li>
+<li><strong>Executable documentation:</strong> examples and vignettes serve as replication material for the manuscript calculations.</li>
+<li><strong>Simulation checks:</strong> fixed-design power, event-gap correction, seasonal rates, ML / MoM information paths, and SSR operating characteristics are checked by Monte Carlo.</li>
+<li><strong>Supplementary material:</strong> pkgdown articles carry the full scenario grids and rendered simulation outputs.</li>
+<li><strong>Regression checks:</strong> package tests guard API behaviour and numerical drift during refactoring.</li>
+<li><strong>Development provenance:</strong> AI-assisted coding and drafting can accelerate iteration, but only validated APIs, tests, and simulation evidence belong in the scientific claim.</li>
 </ul>
 <aside class="notes">
-<p><strong>~1:00</strong> — Tooling overview. VS Code + Copilot/Cursor is the main workflow; multiple models used over the course of development.</p>
+<p><strong>~1:15</strong> — For a software-journal framing, the important object is not which tool wrote a line of code; it is whether the statistical core is reproducible, testable, and consistently used by every interface.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1727,39 +1771,16 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="use-of-ai-what-ai-contributed" class="slide level2">
-<h2>Use of AI: what AI contributed</h2>
+<section id="development-lessons" class="slide level2">
+<h2>Development lessons</h2>
 <ul>
-<li><strong>Code generation:</strong> simulation engines, data cutting functions, GSD interface.</li>
-<li><strong>Preliminary Shiny interface:</strong> for simulation.</li>
-<li><strong>Mathematical derivation:</strong> Jensen’s correction identified and derived through interactive dialogue analyzing simulation discrepancies — AI performed Monte Carlo verification and Taylor expansion.</li>
-<li><strong>Documentation:</strong> vignettes, roxygen2, notation consistency — AI drafting, statistician reviewing.</li>
-<li><strong>Debugging:</strong> subtle bugs identified through systematic diagnosis (e.g., <code>toInteger()</code> overwriting enrollment, positional argument mismatches in SSR, <strong>gsDesign</strong> collapsing futility bounds).</li>
-<li><strong>Simulation studies:</strong> 13-scenario SSR study and 64-scenario Jensen sweep designed collaboratively, coded and refined by AI.</li>
+<li>AI-assisted development is useful for breadth: simulation engines, data-cutting helpers, vignettes, and diagnostic scripts can be iterated quickly.</li>
+<li>Statistical review remains the bottleneck: assumptions, fallback rules, variance formulas, and interpretation must be checked by domain experts.</li>
+<li>Documentation should name limitations plainly: MAR dropout is handled by observed exposure; MNAR imputation requires additional assumptions and data structure.</li>
+<li>Software-paper emphasis: package interfaces, validation artifacts, and reproducible operating characteristics should carry the argument.</li>
 </ul>
 <aside class="notes">
-<p><strong>~1:30</strong> — Walk through the five contribution areas. Emphasize the Jensen derivation as a case where AI reasoning led to a real methodological insight, not just code.</p>
-<style type="text/css">
-span.MJX_Assistive_MathML {
-position:absolute!important;
-clip: rect(1px, 1px, 1px, 1px);
-padding: 1px 0 0 0!important;
-border: 0!important;
-height: 1px!important;
-width: 1px!important;
-overflow: hidden!important;
-display:block!important;
-}</style></aside>
-</section>
-<section id="use-of-ai-lessons-learned" class="slide level2">
-<h2>Use of AI: lessons learned</h2>
-<ul>
-<li>AI accelerates statistical software development but requires <strong>expert oversight</strong> for methodological correctness and interpretation.</li>
-<li>Statistician’s role shifts toward <strong>design decisions</strong>, <strong>mathematical validation</strong>, and <strong>interpretation</strong>; AI handles implementation, debugging, and large-scale computation.</li>
-<li>AI was key to the productivity needed to complete this scope of research.</li>
-</ul>
-<aside class="notes">
-<p><strong>~1:00</strong> — The punch line: AI is a productivity multiplier, not a replacement for statistical expertise.</p>
+<p><strong>~1:00</strong> — Keep this as provenance and practice, not as the main result. The main result is a validated package workflow.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1779,8 +1800,10 @@ display:block!important;
 <li><strong>Default model + target:</strong> simple exponential within-subject rates plus gamma frailty give the NB model, and information depends on exposure, rates, and dispersion rather than raw events alone.</li>
 <li><strong>Sample size details matter:</strong> event-gap correction was needed so simulation-based power agreed with the analytical NB planning formula; a 64-scenario sweep confirms 1–2 pp of underpowering from the naive formula when <span class="math inline">\(k \geq 0.5\)</span> and gaps exceed 20 days.</li>
 <li><strong>SSR findings:</strong> blinded SSR tended to ask for more sample size; unblinded SSR was more sample-efficient when acceptable.</li>
+<li><strong>Reporting:</strong> cite package articles as executable supplementary material for the full simulation grids and code.</li>
 <li><strong>Interim defaults matter:</strong> stress-test <strong><code>mutze_test()</code></strong>, <strong><code>poisson_threshold</code></strong>, and <strong>ML vs MoM</strong> information paths before locking monitoring rules.</li>
 <li><strong>Type I calibration:</strong> in the vignette sensitivity runs, building the design at a slightly smaller nominal alpha helped.</li>
+<li><strong>Missing data:</strong> MAR censoring does not require MI for the observed-exposure NB likelihood; MNAR dropout belongs in sensitivity analyses.</li>
 </ul>
 <aside class="notes">
 <p><strong>~1:30</strong> — Six bullets recap the deck; emphasize the NB statistical story and the practical SSR takeaways.</p>
@@ -1802,7 +1825,7 @@ display:block!important;
 <li>Anchor monitoring to <strong>NB information</strong>, not raw event counts alone.</li>
 <li>If a protocol gap changes counted events, include the <strong>event-gap correction</strong> in planning and verify against simulation; the correction adds 0–40 subjects (0–8%) but prevents 1–2 pp of power loss when <span class="math inline">\(k \geq 0.5\)</span>.</li>
 <li>For SSR, compare <strong>blinded</strong> and <strong>unblinded</strong> rules and check whether a slightly smaller nominal alpha improves calibration.</li>
-<li>AI was key to productivity needed to complete this research.</li>
+<li>For MNAR dropout sensitivity, improve the simulation data structure first: preserve censoring reason and planned remaining follow-up, then impute post-dropout events under explicit delta assumptions.</li>
 </ul>
 <aside class="notes">
 <p><strong>~1:00</strong> — Final applied slide before references.</p>
@@ -1826,6 +1849,9 @@ display:block!important;
 <li>Schneider, Schmidli &amp; Friede (2013). Blinded SSR for recurrent event data with time trends. <em>Statistics in Medicine</em>.</li>
 <li>Mutze et al. (2019). Group sequential designs for negative binomial outcomes. <em>Statistical Methods in Medical Research</em>.</li>
 <li>Jennison &amp; Turnbull (2000). <em>Group Sequential Methods with Applications to Clinical Trials</em>.</li>
+<li>Rubin (1976). Inference and missing data. <em>Biometrika</em>.</li>
+<li>National Research Council (2010). <em>The Prevention and Treatment of Missing Data in Clinical Trials</em>.</li>
+<li>Keene, Roger, Hartley &amp; Kenward (2014). Missing data sensitivity analysis for recurrent event data using controlled imputation. <em>Pharmaceutical Statistics</em>.</li>
 <li><code>gsDesignNB</code> sample-size and SSR vignettes for worked formulas and simulation results.</li>
 </ul>
 <aside class="notes">

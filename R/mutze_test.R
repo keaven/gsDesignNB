@@ -1,53 +1,53 @@
-#' Wald test for treatment effect using negative binomial model (Mutze et al.)
+#' Wald or score test for treatment effect using negative binomial model
 #'
 #' Fits a negative binomial (or Poisson) log-rate model to the aggregated
-#' subject-level data produced by [cut_data_by_date()]. The method matches the
-#' Wald test described by Mutze et al. (2019) for comparing treatment arms with
-#' recurrent event outcomes. When the maximum likelihood negative binomial fit
+#' subject-level data produced by [cut_data_by_date()]. With
+#' `test_type = "wald"` (default), the method matches the
+#' Wald test described by Mutze et al. (2019). With `test_type = "score"`,
+#' the function fits only the null (no treatment effect) model and computes
+#' the score statistic, which evaluates all quantities under \eqn{H_0} and
+#' avoids the finite-sample anti-conservatism of the Wald test.
+#'
+#' When the maximum likelihood negative binomial fit
 #' is unreliable, the test automatically switches to one of two statistically
-#' sensible fallbacks: a Poisson Wald test when the data are essentially
+#' sensible fallbacks: a Poisson test when the data are essentially
 #' Poisson, or a method-of-moments (MoM) variance estimate plugged into the
 #' same negative binomial information formula when the data are extremely
-#' overdispersed or the ML fit fails to converge. The latter avoids the
-#' anti-conservative behaviour of a blind Poisson fallback under genuine
-#' overdispersion.
+#' overdispersed or the ML fit fails to converge.
 #'
 #' @param data A data frame with at least the columns `treatment`, `events`, and
 #'   `tte` (follow-up time). Typically output from [cut_data_by_date()].
 #' @param method Type of model to fit: "nb" (default) uses a negative binomial
 #'   GLM via [MASS::glm.nb()], "poisson" fits a Poisson GLM.
+#' @param test_type Type of test statistic: `"wald"` (default) or `"score"`.
+#'   The Wald test estimates the treatment effect under the alternative and
+#'   divides by its standard error. The score test fits only the null model
+#'   and evaluates the derivative of the log-likelihood at \eqn{\theta = 0},
+#'   avoiding estimation under the alternative. The score test typically has
+#'   better finite-sample Type I error control and is faster because it only
+#'   fits a one-parameter null model.
 #' @param conf_level Confidence level for the rate ratio interval. Default 0.95.
 #' @param sided Number of sides for the test: 1 (default) or 2.
 #' @param poisson_threshold Upper threshold (in units of `fit$theta`, the
 #'   `MASS::glm.nb()` shape parameter \eqn{\theta_{\text{NB}} = 1/k}) above
-#'   which the data are treated as essentially Poisson and the function falls
-#'   back to a Poisson Wald test. Default is 50, corresponding to
-#'   \eqn{\hat{k} < 0.02}, by which point NB and Poisson Wald standard errors
-#'   are numerically indistinguishable at typical trial sample sizes.
+#'   which the data are treated as essentially Poisson. Default is 50,
+#'   corresponding to \eqn{\hat{k} < 0.02}.
 #' @param mom_threshold Lower threshold on `fit$theta` below which the NB ML
-#'   fit is considered unreliable (extreme overdispersion). When triggered, or
-#'   when `glm.nb()` fails to converge, the function falls back to a
-#'   method-of-moments NB Wald test: rates and dispersion are re-estimated via
-#'   [estimate_nb_mom()] and the Wald variance is computed from the Fisher
-#'   information formula \eqn{\mathcal{I} = 1/(1/W_1 + 1/W_2)} with
-#'   \eqn{W_g = \sum_i \mu_{g,i}/(1 + \hat{k}\mu_{g,i})}. Default is 20,
-#'   corresponding to \eqn{\hat{k} > 20}. This avoids the anti-conservative
-#'   variance of a Poisson fallback when the data are truly overdispersed.
+#'   fit is considered unreliable (extreme overdispersion). Default is 20,
+#'   corresponding to \eqn{\hat{k} > 20}.
 #'
-#' @return An object of class `mutze_test` containing the fitted model summary with elements:
+#' @return An object of class `mutze_test` containing:
 #'   * `method`: A string indicating the test method used.
-#'   * `estimate`: log rate ratio (experimental vs control).
+#'   * `estimate`: log rate ratio (experimental vs control). For
+#'     `test_type = "score"`, this is a plug-in estimate.
 #'   * `se`: standard error for the log rate ratio.
-#'   * `z`: Wald statistic.
+#'   * `z`: test statistic (Wald or score).
 #'   * `p_value`: one-sided or two-sided p-value.
 #'   * `rate_ratio`: estimated rate ratio and its confidence interval.
-#'   * `dispersion`: estimated dispersion. For consistency this is reported on
-#'     the `MASS::glm.nb()` scale (\eqn{\theta_{\text{NB}} = 1/k}), regardless
-#'     of whether ML, Poisson fallback, or MoM fallback was used. `Inf`
-#'     indicates Poisson (\eqn{k=0}).
+#'   * `dispersion`: estimated dispersion on the \eqn{\theta = 1/k} scale.
 #'   * `group_summary`: observed subjects/events/exposure per treatment.
-#'   * `fallback`: character label describing which fit path was used
-#'     (`"ml"`, `"poisson"`, or `"mom"`).
+#'   * `fallback`: character label (`"ml"`, `"poisson"`, or `"mom"`).
+#'   * `test_type`: character label (`"wald"` or `"score"`).
 #'
 #' @importFrom stats pnorm poisson qnorm
 #' @importFrom utils tail
@@ -64,9 +64,12 @@
 #' sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 40)
 #' cut <- cut_data_by_date(sim, cut_date = 1.5)
 #' mutze_test(cut)
-mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95, sided = 1,
+#' mutze_test(cut, test_type = "score")
+mutze_test <- function(data, method = c("nb", "poisson"), test_type = c("wald", "score"),
+                       conf_level = 0.95, sided = 1,
                        poisson_threshold = 50, mom_threshold = 20) {
   method <- match.arg(method)
+  test_type <- match.arg(test_type)
   df <- as.data.frame(data)
   required <- c("treatment", "events", "tte")
   if (!all(required %in% names(df))) {
@@ -84,6 +87,13 @@ mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95, sid
   }
   if (poisson_threshold <= 0 || mom_threshold <= 0) {
     stop("poisson_threshold and mom_threshold must be positive.", call. = FALSE)
+  }
+
+  # Dispatch to score test if requested
+  if (test_type == "score") {
+    return(.mutze_score_test(df, method = method, conf_level = conf_level,
+                            sided = sided, poisson_threshold = poisson_threshold,
+                            mom_threshold = mom_threshold))
   }
 
   fallback <- NA_character_
@@ -184,6 +194,7 @@ mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95, sid
     conf_level = conf_level,
     dispersion = dispersion,
     fallback = fallback,
+    test_type = "wald",
     model = fit,
     group_summary = group_summary
   )
@@ -227,6 +238,163 @@ mutze_test <- function(data, method = c("nb", "poisson"), conf_level = 0.95, sid
     k = k_hat,
     fit_info = list(method = "mom", lambda1 = lam1, lambda2 = lam2, dispersion_k = k_hat)
   )
+}
+
+# Score test implementation.
+# Fits only the null model (no treatment effect) and computes the score
+# statistic U / sqrt(I_0) where U is the score for the treatment coefficient
+# evaluated at the restricted MLE and I_0 is the corresponding Fisher
+# information.
+#' @noRd
+.mutze_score_test <- function(df, method, conf_level, sided,
+                              poisson_threshold, mom_threshold) {
+  lev <- levels(df$treatment)
+  is_trt <- df$treatment == lev[2]  # treatment indicator (second level)
+
+  fallback <- NA_character_
+  dispersion <- NA_real_
+  method_label <- NA_character_
+  fit0 <- NULL
+  k_hat <- 0
+  lambda0 <- NA_real_
+
+  if (method == "nb") {
+    # Fit null NB model (intercept + offset only)
+    fit0 <- tryCatch(
+      suppressWarnings(MASS::glm.nb(events ~ 1 + offset(log(tte)), data = df)),
+      error = function(e) NULL
+    )
+    ml_ok <- !is.null(fit0) && isTRUE(fit0$converged) && !is.na(fit0$theta) &&
+      is.finite(fit0$theta) && fit0$theta > 0
+
+    near_poisson <- ml_ok && fit0$theta > poisson_threshold
+    extreme_overdisp <- ml_ok && fit0$theta < 1 / mom_threshold
+
+    if (ml_ok && !near_poisson && !extreme_overdisp) {
+      k_hat <- 1 / fit0$theta
+      lambda0 <- exp(coef(fit0)[1])
+      dispersion <- fit0$theta
+      method_label <- "Negative binomial score"
+      fallback <- "ml"
+    } else if (near_poisson || (!ml_ok && !.mom_prefers_overdispersion(df))) {
+      # Poisson score test
+      fit0 <- stats::glm(events ~ 1 + offset(log(tte)), data = df, family = poisson())
+      k_hat <- 0
+      lambda0 <- exp(coef(fit0)[1])
+      dispersion <- Inf
+      method_label <- if (isTRUE(near_poisson)) {
+        "Poisson score (fallback, near-Poisson ML)"
+      } else {
+        "Poisson score (fallback, ML non-convergent, MoM k=0)"
+      }
+      fallback <- "poisson"
+    } else {
+      # MoM fallback: use pooled MoM estimates under null
+      mom <- tryCatch(estimate_nb_mom(df), error = function(e) NULL)
+      if (is.null(mom) || is.na(mom$dispersion)) {
+        stop("Method-of-moments estimation failed under null model.", call. = FALSE)
+      }
+      k_hat <- max(0, as.numeric(mom$dispersion))
+      lambda0 <- sum(df$events) / sum(df$tte)
+      dispersion <- if (k_hat > 0) 1 / k_hat else Inf
+      method_label <- if (ml_ok && extreme_overdisp) {
+        "Negative binomial score (MoM fallback, extreme overdispersion)"
+      } else {
+        "Negative binomial score (MoM fallback, ML non-convergent)"
+      }
+      fallback <- "mom"
+    }
+  } else {
+    # Forced Poisson
+    fit0 <- stats::glm(events ~ 1 + offset(log(tte)), data = df, family = poisson())
+    k_hat <- 0
+    lambda0 <- exp(coef(fit0)[1])
+    dispersion <- Inf
+    method_label <- "Poisson score"
+    fallback <- "poisson"
+  }
+
+  # Compute score statistic under H0
+  # Edge case: if total events = 0, lambda0 = 0, mu0 = 0, U = 0, I0 = 0.
+  # No events means no evidence, so z = 0.
+  total_events <- sum(df$events)
+  if (total_events == 0 || !is.finite(lambda0) || lambda0 <= 0) {
+    z <- 0
+    se <- Inf
+    pval <- if (sided == 1) 0.5 else 1
+    est <- 0
+    rr <- 1
+  } else {
+    mu0 <- lambda0 * df$tte
+    score_vec <- (df$events - mu0) / (1 + k_hat * mu0)
+    U <- sum(score_vec[is_trt])
+
+    # Fisher information under H0 for the treatment coefficient
+    w1 <- sum(mu0[!is_trt] / (1 + k_hat * mu0[!is_trt]))
+    w2 <- sum(mu0[is_trt] / (1 + k_hat * mu0[is_trt]))
+    if (!is.finite(w1) || !is.finite(w2) || w1 <= 0 || w2 <= 0) {
+      stop("Fisher information under null is non-positive.", call. = FALSE)
+    }
+    I0 <- w1 * w2 / (w1 + w2)
+    z <- U / sqrt(I0)
+    se <- 1 / sqrt(I0)
+
+    if (sided == 1) {
+      pval <- stats::pnorm(z)
+    } else {
+      pval <- 2 * stats::pnorm(-abs(z))
+    }
+
+    # Plug-in point estimate (crude log rate ratio)
+    # If one group has 0 events, est = +/-Inf (legitimate: infinite evidence
+    # for direction, though the score z remains finite).
+    y1 <- sum(df$events[!is_trt])
+    t1 <- sum(df$tte[!is_trt])
+    y2 <- sum(df$events[is_trt])
+    t2 <- sum(df$tte[is_trt])
+    rate1 <- y1 / t1
+    rate2 <- y2 / t2
+    if (rate1 > 0 && rate2 > 0) {
+      est <- log(rate2) - log(rate1)
+    } else if (rate1 == 0 && rate2 == 0) {
+      est <- 0
+    } else if (rate2 == 0) {
+      est <- -Inf
+    } else {
+      est <- Inf
+    }
+    rr <- exp(est)
+  }
+
+  alpha <- 1 - conf_level
+  crit <- stats::qnorm(1 - alpha / 2)
+  ci_log <- est + c(-1, 1) * crit * se
+  rr_ci <- exp(ci_log)
+
+  group_summary <- data.table::as.data.table(df)[
+    , .(subjects = .N, events = sum(events), exposure = sum(tte)),
+    by = treatment
+  ]
+  group_summary <- as.data.frame(group_summary)
+
+  res <- list(
+    method = method_label,
+    estimate = est,
+    se = se,
+    z = z,
+    p_value = pval,
+    sided = sided,
+    rate_ratio = rr,
+    conf_int = rr_ci,
+    conf_level = conf_level,
+    dispersion = dispersion,
+    fallback = fallback,
+    test_type = "score",
+    model = fit0,
+    group_summary = group_summary
+  )
+  class(res) <- "mutze_test"
+  res
 }
 
 # Check whether the data look overdispersed under a MoM pilot.

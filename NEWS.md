@@ -1,4 +1,71 @@
-# gsDesignNB 0.3.1 (development)
+# gsDesignNB 0.3.2 (development)
+
+## Score-test sizing and inference guidance
+
+- Expanded the paper, sample-size vignette, and score-vs-Wald simulation
+  vignette with recommendations for when the Zhu-Lakkis / Friede-Schmidli /
+  Mutze Wald sample-size formula is appropriate and when to use score-test
+  sizing with separate null and alternative variance factors.
+- Added an `ai-skills` vignette demonstrating how the package `SKILL.md` and
+  generated `llms.txt` can guide package-native score-test and simulation
+  workflows without replacing statistical review.
+- Refined score-test recommendations to distinguish the final analysis test
+  from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful
+  practical baseline and may provide a power margin when paired with the score
+  test in fixed-design superiority settings, while SSR designs should verify
+  any starting-size margin inside the planned adaptation rule.
+- Added a targeted SSR starting-size sensitivity cache comparing Wald- and
+  score-sized starting designs under the score final test in a low-event stress
+  setting. Both starts preserved near-nominal score-test Type I error, and the
+  larger Wald-sized start did not produce a clear SSR power advantage.
+- Documented the cached score-vs-Wald simulation results: the Wald test was
+  mildly anti-conservative in several finite-sample scenarios, while the score
+  test preserved Type I error more conservatively and should be paired with
+  simulation-based power checks.
+- Corrected the reported `variance_null` field from `sample_size_nbinom()` so
+  it is on the same final-analysis scale as `variance`; the score sample-size
+  calculation itself was already using the null variance factor correctly.
+
+## Group sequential simulation vignette
+
+- Corrected the group sequential simulation vignette and cached results so that
+  simulations use the rounded final group sequential sample size, monthly
+  dropout hazard, and helper functions for boundary checking and summary.
+- `toInteger.gsNB()` now preserves calendar-time enrollment quantities at
+  interim analyses and recomputes expected events, exposures, and information
+  after rounding the final sample size.
+- `summarize_gs_sim()` now reports optional sample-size and exposure summaries
+  when available and uses finite trimmed means for information estimates.
+- Updated SSR simulation reporting in the manuscript and SSR simulation article
+  to use the production score-test cache: 3,600 replicates per power scenario,
+  20,000 per RR = 1 main-grid scenario, 1,000 per RR > 1 scenario, and 20,000
+  per dispersion/test-statistic cell for the non-binding Type I tables.
+- Updated the SSR simulation study to compare Wald and score tests at the same
+  nominal one-sided alpha of 0.025, and aligned the SSR power simulations with
+  the score final-analysis recommendation.
+- Added a checkpointed production generator for the SSR score-test cache so the
+  long-running power and Type I simulations can be resumed from saved chunks.
+- Updated the blinded-information diagnostics article to distinguish historical
+  raw ML pathologies from the current MoM fallback behavior.
+
+## Missing data and imputation documentation
+
+- Added documentation clarifying that the primary recurrent-event analysis is an
+  observed-exposure negative binomial likelihood analysis. Under ignorable
+  censoring / MAR assumptions, partially followed subjects contribute their
+  observed events and exposure, and multiple imputation is not required simply
+  because follow-up is censored.
+- Expanded MNAR sensitivity-analysis guidance for recurrent-event endpoints,
+  including the need to preserve censoring reason and planned remaining follow-up
+  before post-dropout outcomes can be imputed.
+- Added Keene, Roger, Hartley, and Kenward (2014) as the recurrent-event
+  controlled-imputation reference for de facto / reference-based sensitivity
+  analyses, and aligned the manuscript, slides, and simulation vignette around
+  that framing.
+- Updated the paper and slide materials to cite package articles as executable
+  supplementary material for the fuller simulation grids and reporting.
+
+# gsDesignNB 0.3.1
 
 ## Robust NB fallback: method-of-moments replaces Poisson under genuine overdispersion
 

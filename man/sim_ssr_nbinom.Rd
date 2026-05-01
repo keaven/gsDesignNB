@@ -24,6 +24,7 @@ sim_ssr_nbinom(
   min_analysis_gap = 0.5,
   ignore_futility = FALSE,
   metadata = NULL,
+  test_type = c("wald", "score"),
   seed = TRUE
 )
 }
@@ -84,6 +85,9 @@ the trial.}
 
 \item{metadata}{Optional named list or one-row data frame of scenario labels
 to repeat across the returned rows.}
+
+\item{test_type}{Type of test statistic passed to \code{\link[=mutze_test]{mutze_test()}}:
+\code{"wald"} (default) or \code{"score"}. See \code{\link[=mutze_test]{mutze_test()}} for details.}
 
 \item{seed}{Random-seed control passed to \code{future.apply::future_lapply()}.
 Follows the same conventions as \code{\link[=sim_gs_nbinom]{sim_gs_nbinom()}}.}

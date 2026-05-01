@@ -15,3 +15,5 @@
 ^Meta$
 ^RELEASE\.md$
 ^create-release-tag\.sh$
+^\.positai$
+^\.claude$

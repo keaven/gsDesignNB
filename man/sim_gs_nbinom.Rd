@@ -16,6 +16,7 @@ sim_gs_nbinom(
   design = NULL,
   data_cut = cut_data_by_date,
   cuts = NULL,
+  test_type = c("wald", "score"),
   seed = TRUE
 )
 }
@@ -49,6 +50,9 @@ The function must accept \code{sim_data}, \code{cut_date}, and \code{event_gap} 
 should be a list of arguments for \code{\link[=get_cut_date]{get_cut_date()}} (e.g., \code{planned_calendar},
 \code{target_events}, \code{target_info}). If provided, \code{analysis_times} is ignored
 (or used as a fallback if \code{planned_calendar} is missing in a cut).}
+
+\item{test_type}{Type of test statistic passed to \code{\link[=mutze_test]{mutze_test()}}:
+\code{"wald"} (default) or \code{"score"}. See \code{\link[=mutze_test]{mutze_test()}} for details.}
 
 \item{seed}{Random seed for reproducible simulations. Controls the
 \code{future.seed} argument of \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}:

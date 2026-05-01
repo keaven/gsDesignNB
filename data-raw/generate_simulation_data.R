@@ -74,7 +74,11 @@ nsim <- 3600
 # Helper: analyze a cut dataset and return summary
 analyze_cut <- function(cut_dt) {
   cut_dt_dt <- data.table::as.data.table(cut_dt)
-  res <- mutze_test(cut_dt, method = "nb", sided = 1)
+
+  # Wald test (default)
+  res_wald <- mutze_test(cut_dt, method = "nb", test_type = "wald", sided = 1)
+  # Score test
+  res_score <- mutze_test(cut_dt, method = "nb", test_type = "score", sided = 1)
 
   exposure_obs <- cut_dt_dt[, .(
     exposure_at_risk = mean(tte),
@@ -82,20 +86,29 @@ analyze_cut <- function(cut_dt) {
   ), by = treatment]
 
   list(
-    p_value = res$p_value,
-    z = res$z,
-    estimate = res$estimate,
-    se = res$se,
-    method_used = res$method,
-    dispersion = res$dispersion,
+    # Wald results
+    p_value = res_wald$p_value,
+    z = res_wald$z,
+    estimate = res_wald$estimate,
+    se = res_wald$se,
+    method_used = res_wald$method,
+    dispersion = res_wald$dispersion,
+    # Score results
+    p_value_score = res_score$p_value,
+    z_score = res_score$z,
+    estimate_score = res_score$estimate,
+    se_score = res_score$se,
+    method_used_score = res_score$method,
+    dispersion_score = res_score$dispersion,
+    # Shared summaries
     exposure_at_risk_control = exposure_obs[treatment == "Control", exposure_at_risk],
     exposure_at_risk_experimental = exposure_obs[treatment == "Experimental", exposure_at_risk],
     exposure_total_control = exposure_obs[treatment == "Control", exposure_total],
     exposure_total_experimental = exposure_obs[treatment == "Experimental", exposure_total],
-    events_control = res$group_summary[res$group_summary$treatment == "Control", "events"],
-    events_experimental = res$group_summary[res$group_summary$treatment == "Experimental", "events"],
-    n_control = res$group_summary[res$group_summary$treatment == "Control", "subjects"],
-    n_experimental = res$group_summary[res$group_summary$treatment == "Experimental", "subjects"]
+    events_control = res_wald$group_summary[res_wald$group_summary$treatment == "Control", "events"],
+    events_experimental = res_wald$group_summary[res_wald$group_summary$treatment == "Experimental", "events"],
+    n_control = res_wald$group_summary[res_wald$group_summary$treatment == "Control", "subjects"],
+    n_experimental = res_wald$group_summary[res_wald$group_summary$treatment == "Experimental", "subjects"]
   )
 }
 
@@ -194,3 +207,77 @@ saveRDS(list(
 cat("Simulation completed. Results saved to", output_path, "\n")
 cat("  results (n=", n_full, "):", nrow(results_full), "rows\n")
 cat("  results_naive (n=", n_naive, "):", nrow(results_naive), "rows\n")
+
+# -------------------------------------------------------------------
+# 5. Null Simulation (Type I Error)
+# -------------------------------------------------------------------
+# Simulate under RR = 1 to evaluate Type I error for Wald vs score test.
+cat("\nStarting null simulation for Type I error evaluation...\n")
+
+nsim_null <- 3600
+
+analyze_cut_null <- function(cut_dt) {
+  res_wald <- mutze_test(cut_dt, method = "nb", test_type = "wald", sided = 1)
+  res_score <- mutze_test(cut_dt, method = "nb", test_type = "score", sided = 1)
+  list(
+    p_value_wald = res_wald$p_value,
+    z_wald = res_wald$z,
+    p_value_score = res_score$p_value,
+    z_score = res_score$z
+  )
+}
+
+run_one_null <- function(i) {
+  tryCatch({
+    enroll_rate_df <- data.frame(rate = accrual_rate, duration = accrual_duration)
+    fail_rate_null <- data.frame(
+      treatment = c("Control", "Experimental"),
+      rate = c(lambda1, lambda1),  # RR = 1
+      dispersion = c(dispersion, dispersion)
+    )
+    dropout_rate_df <- data.frame(
+      treatment = c("Control", "Experimental"),
+      rate = c(dropout_rate, dropout_rate),
+      duration = c(100, 100)
+    )
+    sim_data <- nb_sim(
+      enroll_rate = enroll_rate_df,
+      fail_rate = fail_rate_null,
+      dropout_rate = dropout_rate_df,
+      max_followup = max_followup,
+      n = NULL,
+      event_gap = event_gap
+    )
+    cut_full <- cut_data_by_date(sim_data, cut_date = trial_duration, event_gap = event_gap)
+    analyze_cut_null(cut_full)
+  }, error = function(e) {
+    structure(list(error = conditionMessage(e)), class = "try-error")
+  })
+}
+
+null_list <- lapply(seq_len(nsim_null), function(i) {
+  if (i %% 500 == 0) cat("  Completed", i, "/", nsim_null, "\n")
+  run_one_null(i)
+})
+
+ok_null <- sapply(null_list, function(x) !inherits(x, "try-error"))
+null_list <- null_list[ok_null]
+if (sum(!ok_null) > 0) {
+  warning(sum(!ok_null), " null simulations failed.")
+}
+
+results_null <- rbindlist(lapply(null_list, as.data.frame), fill = TRUE)
+
+null_output_path <- file.path("inst", "extdata", "null_simulation_results.rds")
+saveRDS(list(
+  results_null = results_null,
+  n_sims = nrow(results_null),
+  n_total = n_full,
+  alpha = alpha,
+  lambda_null = lambda1,
+  dispersion = dispersion
+), file = null_output_path)
+
+cat("Null simulation completed.", nrow(results_null), "replicates saved to", null_output_path, "\n")
+cat("  Wald Type I error: ", mean(results_null$p_value_wald < alpha, na.rm = TRUE), "\n")
+cat("  Score Type I error:", mean(results_null$p_value_score < alpha, na.rm = TRUE), "\n")

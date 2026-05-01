@@ -18,15 +18,18 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-This vignette examines two problematic datasets where the blinded information calculation produced extreme values. 
-Understanding these edge cases helps inform potential improvements to the `calculate_blinded_info()` function.
+This vignette examines two diagnostic datasets where direct maximum-likelihood
+blinded information estimation produced extreme values during development.
+Understanding these edge cases explains why the current implementation records
+estimator fallback paths and uses method-of-moments (MoM) estimates when the
+pooled negative binomial fit is unreliable.
 
 We examine two scenarios:
 
-1. **Near-zero blinded information**: Cases where `blinded_info` is essentially 0 despite reasonable `unblinded_info`
-2. **Extreme high blinded information**: Cases where `blinded_info` is astronomically large (10^38)
+1. **Near-zero blinded information**: Cases where direct pooled ML estimation can drive `blinded_info` close to 0 despite reasonable `unblinded_info`
+2. **Historical extreme high blinded information**: A case where the raw pooled ML fit produced an astronomical information estimate before the MoM fallback was added
 
-Both scenarios arise from instability in the negative binomial model fitting on blinded (pooled) data.
+Both scenarios arise from instability in negative binomial model fitting on blinded (pooled) data.
 
 ```{r load-packages, message=FALSE}
 library(gsDesignNB)
@@ -201,10 +204,14 @@ The MoM estimator produces a much more reasonable dispersion estimate compared t
 
 ## Dataset 2: Extreme High Blinded Information
 
-This dataset was identified from simulation 630 in the group-sequential simulation, where `blinded_info = 1.84 × 10^38` — an astronomically large value indicating numerical overflow.
+This dataset was originally identified from a group-sequential simulation where
+the direct pooled ML calculation produced `blinded_info = 1.84 × 10^38`, an
+astronomically large value indicating numerical overflow. The current
+`calculate_blinded_info()` implementation falls back to MoM for this dataset,
+so the helper output below should be finite.
 
 ```{r load-data-2}
-# Load the extreme high dataset (reproduced from simulation 630)
+# Load the historical extreme-high dataset
 data_path_2 <- system.file("extdata", "extreme_high_dataset.rds", package = "gsDesignNB")
 if (data_path_2 == "") {
   data_path_2 <- file.path("..", "inst", "extdata", "extreme_high_dataset.rds")
@@ -317,7 +324,8 @@ cat("  Lambda (Rate):", round(mom_res_2$lambda, 4), "\n")
 cat("  Dispersion (k):", mom_res_2$dispersion, "\n")
 ```
 
-In this case, the MoM estimator likely returns a positive dispersion (or 0 if underdispersed), avoiding the numerical instability of the infinite theta from the MLE.
+In this case, the MoM estimator returns a finite dispersion estimate, avoiding
+the numerical instability of the infinite-theta ML path.
 
 ### Why the Mutze Test Falls Back to Poisson
 
@@ -325,16 +333,18 @@ Note that `mutze_test` reports `dispersion = Inf` and uses the "Poisson Wald (fa
 
 ## Summary of Issues
 
-| Issue | Blinded Info | Cause | Dispersion (blinded) |
-|-------|-------------|-------|---------------------|
-| Near-zero | 0.02 | Extremely large dispersion estimate | 4454 |
-| Near-infinite | 1.84×10^38 | Extremely small dispersion estimate | ~0 |
+| Issue | Current helper behavior | Historical / raw ML cause |
+|-------|-------------------------|---------------------------|
+| Near-zero | ML path can still produce very small blinded information; compare against unblinded and MoM paths | Extremely large pooled dispersion estimate |
+| Historical near-infinite | Current helper uses MoM fallback and returns finite information | Non-convergent or boundary pooled ML fit with effectively zero dispersion |
 
-Both issues arise from instability in `glm.nb` when fitting to pooled (blinded) data. The pooling can create artificial variance patterns that don't represent the true data-generating process.
+Both issues arise from instability in `glm.nb` when fitting to pooled
+(blinded) data. The pooling can create artificial variance patterns that do
+not represent the true data-generating process.
 
 ## Recommendations
 
-1. **Bound the dispersion estimate**: Cap `dispersion_blinded` to a reasonable range (e.g., 0.01 to 100)
+1. **Inspect extreme ML paths**: Compare ML and MoM information estimates when pooled ML produces boundary-like dispersion estimates.
 
 2. **Use assumed dispersion**: Consider using the planned/assumed dispersion from the design rather than estimating from blinded data
 
@@ -342,7 +352,7 @@ Both issues arise from instability in `glm.nb` when fitting to pooled (blinded) 
 
 4. **Fallback to unblinded**: When blinded estimation produces extreme values, fall back to the unblinded information
 
-5. **Use Method of Moments (MoM)**: The analysis above demonstrates that a simple Method of Moments estimator is far more robust than `glm.nb` for blinded parameter estimation in these edge cases. It provides reasonable dispersion estimates even when the blinded MLE fails or returns boundary values.
+5. **Use Method of Moments (MoM)**: The analysis above demonstrates that a simple Method of Moments estimator is more robust than `glm.nb` for blinded parameter estimation in these edge cases. It provides reasonable dispersion estimates when the blinded MLE fails or returns boundary-like values.
 
 ```{r session-info}
 sessionInfo()

@@ -1,5 +1,5 @@
 Package: gsDesignNB
-Version: 0.3.0
+Version: 0.3.2
 Title: Sample Size and Simulation for Negative Binomial Outcomes
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
@@ -15,10 +15,10 @@ Description: Provides tools for planning and simulating recurrent event trials
     fixed designs with variable accrual, dropout, maximum follow-up, and event
     gaps, including methods of Zhu and Lakkis (2014) <doi:10.1002/sim.5947> and
     Friede and Schmidli (2010) <doi:10.3414/ME09-02-0060> as well as
-    an extension to account for gaps between events. Supports group
+    extensions for score-test sizing and gaps between events. Supports group
     sequential monitoring by building on the 'gsDesign' package.
     Includes recurrent-event simulation utilities (including seasonal rates),
-    interim data truncation, Wald-based inference for rate ratios,
+    interim data truncation, Wald and score-test inference for rate ratios,
     and blinded or unblinded information estimation and sample size
     re-estimation.
 License: GPL (>= 3)
@@ -50,7 +50,9 @@ Suggests:
     doFuture,
     future,
     future.apply,
-    gridExtra
+    gridExtra,
+    plotly,
+    crosstalk
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

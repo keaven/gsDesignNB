@@ -25,7 +25,7 @@ nb_ss <- sample_size_nbinom(
 cat("  n_total =", nb_ss$n_total, "\n")
 
 cat("\nStep 2: Create GS design...\n")
-gs_nb <- gsNBCalendar(
+gs_nb_calendar <- gsNBCalendar(
   x = nb_ss, k = 3, test.type = 4,
   analysis_times = analysis_times,
   sfu = sfLinear, # Linear spending function for upper bound
@@ -35,11 +35,12 @@ gs_nb <- gsNBCalendar(
   usTime = c(.1, .18, 1), # Upper spending timing
   lsTime = NULL, # Spending based on information
 
-) |> gsDesignNB::toInteger()
+)
+gs_nb <- gsDesignNB::toInteger(gs_nb_calendar)
 cat("  n per arm:", gs_nb$n1[gs_nb$k], "\n")
 cat("  IF:", gs_nb$timing, "\n")
 cat("  alpha-spending:L ", cumsum(gs_nb$upper$spend), "\n")
-n_target <- ceiling(nb_ss$n_total)
+n_target <- ceiling(utils::tail(gs_nb$n_total, 1))
 enroll_rate <- data.frame(rate = n_target / 12, duration = 12)
 fail_rate <- data.frame(
   treatment = c("Control", "Experimental"),
@@ -48,7 +49,7 @@ fail_rate <- data.frame(
 )
 dropout_rate <- data.frame(
   treatment = c("Control", "Experimental"),
-  rate = c(-log(0.95), -log(0.95)),
+  rate = c(dropout_rate_val, dropout_rate_val),
   duration = c(100, 100)
 )
 
@@ -63,12 +64,13 @@ sim_res <- sim_gs_nbinom(
   event_gap = event_gap_val,
   cuts = lapply(analysis_times, function(x) list(planned_calendar = x)),
   design = gs_nb,
-  n_target = n_target
+  n_target = n_target,
+  seed = 54321
 )
 cat("  Simulations complete.\n")
 
 cat("\nStep 4: Checking bounds...\n")
-results <- check_gs_bound(sim_res, gs_nb, info_scale = "blinded")
+results <- check_gs_bound(sim_res, gs_nb, info_col = "info_unblinded_ml")
 cat("  Bounds checked.\n")
 
 summary_gs <- summarize_gs_sim(results)
@@ -76,34 +78,7 @@ cat("\nStep 5: Overall Summary\n")
 cat("  Power:", round(summary_gs$power * 100, 1), "%\n")
 cat("  Futility:", round(summary_gs$futility * 100, 1), "%\n")
 
-# Compute summary statistics at each analysis
-dt <- as.data.table(results)
-
-# Use trimmed mean for blinded_info to avoid extreme outliers
-trimmed_mean <- function(x, trim = 0.01) {
-  x <- x[is.finite(x) & !is.na(x)]
-  if (length(x) == 0) return(NA_real_)
-  mean(x, trim = trim)
-}
-
-analysis_summary <- dt[, .(
-  n_enrolled = mean(n_enrolled, na.rm = TRUE),
-  n_ctrl = mean(n_ctrl, na.rm = TRUE),
-  n_exp = mean(n_exp, na.rm = TRUE),
-  exposure_at_risk_ctrl = mean(exposure_at_risk_ctrl, na.rm = TRUE),
-  exposure_at_risk_exp = mean(exposure_at_risk_exp, na.rm = TRUE),
-  exposure_total_ctrl = mean(exposure_total_ctrl, na.rm = TRUE),
-  exposure_total_exp = mean(exposure_total_exp, na.rm = TRUE),
-  events_ctrl = mean(events_ctrl, na.rm = TRUE),
-  events_exp = mean(events_exp, na.rm = TRUE),
-  events_total = mean(events_total, na.rm = TRUE),
-  blinded_info = trimmed_mean(blinded_info, trim = 0.01),
-  unblinded_info = trimmed_mean(unblinded_info, trim = 0.01),
-  z_stat_mean = mean(z_stat, na.rm = TRUE),
-  z_stat_sd = sd(z_stat, na.rm = TRUE),
-  cross_upper = mean(cross_upper, na.rm = TRUE),
-  cross_lower = mean(cross_lower, na.rm = TRUE)
-), by = analysis]
+analysis_summary <- as.data.table(summary_gs$analysis_summary)
 
 cat("\n=== Summary by Analysis ===\n")
 print(analysis_summary)
@@ -111,6 +86,7 @@ print(analysis_summary)
 # Save data for vignette
 save_list <- list(
   nb_ss = nb_ss,
+  gs_nb_calendar = gs_nb_calendar,
   gs_nb = gs_nb,
   sim_res = sim_res,
   results = results,

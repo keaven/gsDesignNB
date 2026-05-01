@@ -78,3 +78,28 @@ test_that("summarize_gs_sim handles no crossings", {
   expect_equal(result$power, 0.0)
   expect_equal(result$futility, 0.0)
 })
+
+test_that("summarize_gs_sim summarizes optional columns and robust information", {
+  sim_df <- data.frame(
+    sim = c(1, 1, 2, 2),
+    analysis = c(1, 2, 1, 2),
+    z_stat = c(0.5, 1.0, 0.6, 1.1),
+    blinded_info = c(40, 80, Inf, 80),
+    unblinded_info = c(42, 82, 42, 82),
+    n_enrolled = c(30, 60, 32, 62),
+    n_ctrl = c(15, 30, 16, 31),
+    n_exp = c(15, 30, 16, 31),
+    exposure_total_ctrl = c(100, 200, 110, 210),
+    exposure_total_exp = c(99, 199, 109, 209),
+    events_total = c(10, 20, 11, 21),
+    cross_upper = c(FALSE, FALSE, FALSE, FALSE),
+    cross_lower = c(FALSE, FALSE, FALSE, FALSE)
+  )
+
+  result <- summarize_gs_sim(sim_df, info_trim = 0)
+
+  expect_true("n_ctrl" %in% names(result$analysis_summary))
+  expect_true("exposure_total_ctrl" %in% names(result$analysis_summary))
+  expect_equal(result$analysis_summary$n_ctrl, c(15.5, 30.5))
+  expect_equal(result$analysis_summary$info_blinded, c(40, 80))
+})

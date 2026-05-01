@@ -1,0 +1,229 @@
+---
+title: "Using the gsDesignNB AI skill"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the gsDesignNB AI skill}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(gsDesignNB)
+```
+
+## Purpose
+
+`gsDesignNB` includes two AI-facing documentation files:
+
+- [`SKILL.md`](../SKILL.md), a concise workflow guide for assistants or humans
+  using the package for negative binomial recurrent-event trial design.
+- [`llms.txt`](../llms.txt), a generated pkgdown index that helps language
+  models find the package documentation, articles, and reference pages.
+
+This vignette demonstrates how the skill is intended to be used. The skill does
+not replace the package documentation, the manuscript, or statistical review.
+Instead, it keeps recurring workflows on track: use package-native functions,
+align time units, carry event-gap assumptions consistently, and match
+sample-size calculations to the planned final test statistic.
+
+## Example task
+
+Suppose the task is:
+
+> Plan a recurrent-event superiority trial with monthly rates, a 28-day
+> inter-event gap, staggered enrollment, dropout, and a final score test.
+
+The skill points to the following package-native workflow:
+
+1. Compute fixed-design sample size with `sample_size_nbinom()`.
+2. Use the score test when Type I error calibration is the priority, especially
+   for adaptive or group sequential designs.
+3. Carry `event_gap` through planning, simulation, and data cutting.
+4. Use `gsNBCalendar()` for calendar-time group sequential monitoring.
+5. Use `mutze_test(test_type = "score")` for the planned final test.
+
+## Time-scale setup
+
+The most common preventable error in this package is mixing time units. Here all
+rates and durations use months. The event gap is 28 days converted to months.
+
+```{r}
+event_gap_months <- 28 / 30.4375
+
+design_args <- list(
+  lambda1 = 0.08,
+  lambda2 = 0.056,
+  dispersion = 0.6,
+  power = 0.80,
+  alpha = 0.025,
+  sided = 1,
+  accrual_rate = 10,
+  accrual_duration = 18,
+  trial_duration = 30,
+  dropout_rate = 0.01,
+  max_followup = 12,
+  event_gap = event_gap_months
+)
+```
+
+## Wald versus score sizing
+
+The skill's current recommendation is to compare Wald and score sizing, then
+choose the final sample size using simulation evidence. The two calculations
+use different variance references:
+
+- Wald sizing uses the alternative variance for both the Type I and power
+  components.
+- Score sizing uses a null variance for the Type I component and an alternative
+  variance for the power component.
+
+```{r}
+wald_design <- do.call(
+  sample_size_nbinom,
+  c(design_args, list(test_type = "wald"))
+)
+
+score_design <- do.call(
+  sample_size_nbinom,
+  c(design_args, list(test_type = "score"))
+)
+
+design_comparison <- data.frame(
+  test_type = c(wald_design$test_type, score_design$test_type),
+  n_total = c(wald_design$n_total, score_design$n_total),
+  n1 = c(wald_design$n1, score_design$n1),
+  n2 = c(wald_design$n2, score_design$n2),
+  total_events = round(c(wald_design$total_events, score_design$total_events), 1),
+  variance_alt = round(c(wald_design$variance, score_design$variance), 4),
+  variance_null = round(c(wald_design$variance_null, score_design$variance_null), 4)
+)
+
+design_comparison
+```
+
+In this scenario, score sizing is slightly smaller than Wald sizing. That is
+not a general rule, but it illustrates why the sizing rule and the analysis
+test should not be conflated. In the package simulation grid, the traditional
+Wald/Zhu--Lakkis sample size paired with the score test preserved Type I error
+and provided a small practical power margin. The skill therefore reminds the
+analyst to compare sizing rules, choose the final test deliberately, and verify
+operating characteristics by simulation for the actual design setting.
+
+## Calendar-time group sequential design
+
+The same fixed-design result can be passed to `gsNBCalendar()` to construct a
+calendar-time group sequential design. Here the Wald-sized fixed design is used
+as a practical baseline sample size, while the planned analysis and simulation
+use the score test for Type I error control.
+
+```{r}
+gs_design <- gsNBCalendar(
+  wald_design,
+  k = 3,
+  test.type = 4,
+  analysis_times = c(18, 24, 30)
+)
+
+data.frame(
+  analysis = seq_along(gs_design$n.I),
+  calendar_month = c(18, 24, 30),
+  planned_information = round(gs_design$n.I, 2),
+  information_fraction = round(gs_design$timing, 3)
+)
+```
+
+## Simulate, cut, and test a small data set
+
+For a quick executable demonstration, simulate a small trial, cut it at
+12 months, and run the score test. This is intentionally tiny; production
+operating-characteristic work should use `sim_gs_nbinom()` or
+`sim_ssr_nbinom()` with many replicates and saved seeds.
+
+```{r}
+set.seed(2026)
+
+enroll_rate <- data.frame(rate = 30 / 6, duration = 6)
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(design_args$lambda1, design_args$lambda2),
+  dispersion = c(design_args$dispersion, design_args$dispersion)
+)
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(design_args$dropout_rate, design_args$dropout_rate),
+  duration = c(100, 100)
+)
+
+sim_data <- nb_sim(
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = design_args$max_followup,
+  n = 60,
+  event_gap = design_args$event_gap
+)
+
+cut_data <- cut_data_by_date(
+  sim_data,
+  cut_date = 12,
+  event_gap = design_args$event_gap
+)
+
+head(cut_data)
+```
+
+```{r}
+score_test <- mutze_test(cut_data, test_type = "score", sided = 1)
+score_test
+```
+
+## Production workflow reminder
+
+The small example above is useful for checking assumptions and object shapes.
+For design claims, the skill directs the user to the simulation routines and
+summary helpers:
+
+```{r, eval=FALSE}
+sim_results <- sim_gs_nbinom(
+  n_sims = 10000,
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = design_args$max_followup,
+  event_gap = design_args$event_gap,
+  design = gs_design,
+  analysis_times = c(18, 24, 30),
+  test_type = "score",
+  seed = TRUE
+)
+
+bounded <- check_gs_bound(sim_results, gs_design)
+summarize_gs_sim(bounded)
+```
+
+For sample size re-estimation studies, use `sim_ssr_nbinom()` and
+`summarize_ssr_sim()`. The score final test is especially important in SSR
+because adaptation can increase information under nuisance misspecification;
+the score test helps preserve Type I error where a Wald analysis may be mildly
+anti-conservative. The adapted sample size itself should still be checked by
+simulation rather than assumed from the formula alone.
+
+## What this skill is and is not
+
+The skill is a workflow aid. It is useful for:
+
+- choosing package-native functions rather than reimplementing logic;
+- preserving time-scale, event-gap, and test-statistic consistency;
+- finding the right vignette or reference page quickly;
+- reminding users when simulations are needed to support recommendations.
+
+It is not a substitute for protocol-level statistical judgment. Clinical trial
+designs still require review of assumptions, estimands, missing-data handling,
+operating characteristics, and regulatory context.

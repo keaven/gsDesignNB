@@ -426,7 +426,11 @@ summary.gsNB <- function(object, ...) {
 
   dropout_str <- ""
   if (!is.null(inputs$dropout_rate)) {
-    if (length(inputs$dropout_rate) == 1) {
+    if (is.data.frame(inputs$dropout_rate)) {
+      if (any(inputs$dropout_rate$rate > 0)) {
+        dropout_str <- ", piecewise dropout"
+      }
+    } else if (length(inputs$dropout_rate) == 1) {
       if (inputs$dropout_rate > 0) {
         dropout_str <- sprintf(", dropout rate %.4f", inputs$dropout_rate)
       }
@@ -582,15 +586,14 @@ toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
 #'   integer.
 #'
 #' @details
-#' This function rounds sample sizes at each analysis to integers while maintaining
-#' the randomization ratio and ensuring monotonically increasing sample sizes across
-#' analyses. Only the final analysis sample size is rounded to an integer;
-#' interim sample sizes remain as expected (non-integer) values based on
-#' the information fraction.
+#' This function rounds the final sample size while maintaining the
+#' randomization ratio. When calendar analysis times are available, interim
+#' sample sizes remain expected enrollment counts at those calendar times after
+#' rescaling the accrual rate to the rounded final sample size.
 #'
 #' When `analysis_times` were provided to [gsNBCalendar()],
-#' the statistical information (`n.I`) is recomputed at each analysis
-#' time based on the new sample size and expected exposures.
+#' expected events, exposure, and statistical information (`n.I`) are recomputed
+#' at each analysis time based on the new sample size and expected exposures.
 #'
 #' @export
 toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = TRUE, ...) {
@@ -599,11 +602,6 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
 
   k <- x$k
 
-  # Only round the final sample size to an integer
-  # Interim sample sizes remain as expected values (non-integer)
-  n_total_new <- x$n_total
-
-  # Round final analysis sample size
   group_size <- 1
   if (is.numeric(ratio) && ratio > 0) {
     if (ratio >= 1 && abs(ratio - round(ratio)) < 1e-8) {
@@ -613,67 +611,85 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     }
   }
 
+  # Round final analysis sample size.
   if (roundUpFinal) {
-    n_total_new[k] <- ceiling(x$n_total[k] / group_size) * group_size
+    n_total_final <- ceiling(x$n_total[k] / group_size) * group_size
   } else {
-    n_total_new[k] <- round(x$n_total[k] / group_size) * group_size
+    n_total_final <- round(x$n_total[k] / group_size) * group_size
   }
 
-  # Recalculate interim sample sizes based on timing and new final sample size
-  for (i in seq_len(k - 1)) {
-    n_total_new[i] <- x$timing[i] * n_total_new[k]
-  }
-
-  # Calculate per-group sample sizes
-  result$n_total <- n_total_new
-  result$n1 <- n_total_new / (1 + ratio)
-  result$n2 <- n_total_new * ratio / (1 + ratio)
-
-  # Update n.I (statistical information) at each analysis
-
-  # If analysis_times (T) are available, compute information at each time
-  # accounting for enrollment and exposure
   if (!is.null(x$T)) {
-    # Get design parameters from nb_design
     nb <- x$nb_design
-    lambda1 <- nb$inputs$lambda1
-    lambda2 <- nb$inputs$lambda2
-    dispersion <- nb$inputs$dispersion
-    max_followup <- nb$inputs$max_followup
-    if (is.null(max_followup)) max_followup <- Inf
 
-    # Compute accrual rate based on new final sample size
-    # accrual_rate = n_total_final / accrual_duration
     accrual_duration <- nb$accrual_duration
-    new_accrual_rate <- n_total_new[k] / accrual_duration
+    new_accrual_rate <- n_total_final / accrual_duration
 
-    # Compute information at each analysis time
+    n_total_new <- numeric(k)
     info_at_analyses <- numeric(k)
+    events_at_analyses <- numeric(k)
+    events1_at_analyses <- numeric(k)
+    events2_at_analyses <- numeric(k)
+    exposure_at_analyses <- numeric(k)
+    exposure_at_risk1_at_analyses <- numeric(k)
+    exposure_at_risk2_at_analyses <- numeric(k)
+    variance_at_analyses <- numeric(k)
+
     for (i in seq_len(k)) {
-      info_at_analyses[i] <- compute_info_at_time(
-        analysis_time = x$T[i],
+      res_i <- sample_size_nbinom(
+        lambda1 = nb$inputs$lambda1,
+        lambda2 = nb$inputs$lambda2,
+        rr0 = nb$inputs$rr0,
+        dispersion = nb$inputs$dispersion,
+        power = NULL,
+        alpha = nb$inputs$alpha,
+        sided = nb$inputs$sided,
+        ratio = ratio,
         accrual_rate = new_accrual_rate,
         accrual_duration = accrual_duration,
-        lambda1 = lambda1,
-        lambda2 = lambda2,
-        dispersion = dispersion,
-        ratio = ratio,
+        trial_duration = x$T[i],
         dropout_rate = nb$inputs$dropout_rate,
-        event_gap = nb$inputs$event_gap,
-        max_followup = max_followup
+        max_followup = nb$inputs$max_followup,
+        event_gap = nb$inputs$event_gap
       )
+
+      n_total_new[i] <- res_i$n_total
+      info_at_analyses[i] <- 1 / res_i$variance
+      events_at_analyses[i] <- res_i$total_events
+      events1_at_analyses[i] <- res_i$events_n1
+      events2_at_analyses[i] <- res_i$events_n2
+      exposure_at_analyses[i] <- res_i$exposure[1]
+      exposure_at_risk1_at_analyses[i] <- res_i$exposure_at_risk_n1
+      exposure_at_risk2_at_analyses[i] <- res_i$exposure_at_risk_n2
+      variance_at_analyses[i] <- res_i$variance
     }
+
+    result$n_total <- n_total_new
+    result$n1 <- n_total_new / (1 + ratio)
+    result$n2 <- n_total_new * ratio / (1 + ratio)
+    result$events <- events_at_analyses
+    result$events1 <- events1_at_analyses
+    result$events2 <- events2_at_analyses
+    result$exposure <- exposure_at_analyses
+    result$exposure_at_risk1 <- exposure_at_risk1_at_analyses
+    result$exposure_at_risk2 <- exposure_at_risk2_at_analyses
+    result$variance <- variance_at_analyses
     result$n.I <- info_at_analyses
-
-    # Update n.fix to be the final analysis information
     result$n.fix <- info_at_analyses[k]
-
-    # Update timing based on new information fractions
     result$timing <- info_at_analyses / info_at_analyses[k]
   } else {
     # If no calendar times, just scale n.I by the sample size increase
     # This assumes information is proportional to sample size (approx true)
-    scaling_factor <- n_total_new[k] / x$n_total[k]
+    n_total_new <- x$n_total
+    n_total_new[k] <- n_total_final
+    for (i in seq_len(k - 1)) {
+      n_total_new[i] <- x$timing[i] * n_total_new[k]
+    }
+
+    result$n_total <- n_total_new
+    result$n1 <- n_total_new / (1 + ratio)
+    result$n2 <- n_total_new * ratio / (1 + ratio)
+
+    scaling_factor <- n_total_final / x$n_total[k]
     result$n.I <- x$n.I * scaling_factor
     result$n.fix <- result$n.I[k]
   }

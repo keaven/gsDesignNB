@@ -1,10 +1,16 @@
 #' Sample size calculation for negative binomial outcomes
 #'
 #' Computes the sample size (or power) for comparing two treatment groups
-#' assuming negative binomial distributed event counts. The test is based on
-#' the Wald statistic for the log rate ratio, corresponding to Method 3 of
-#' Zhu & Lakkis (2014). The same underlying variance formula is used by
-#' Friede & Schmidli (2010) and Mutze et al. (2019).
+#' assuming negative binomial distributed event counts. When
+#' `test_type = "wald"` (default), the formula uses a single variance
+#' evaluated under the alternative, corresponding to Method 3 of
+#' Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
+#' and Mutze et al. (2019). When `test_type = "score"`, separate null
+#' and alternative variances are used (Farrington & Manning style),
+#' aligning the calculation with the null-variance scale of the score test.
+#' In practice, the final test statistic affects Type I error more than the
+#' small difference between Wald and score sizing, so score-test designs should
+#' be checked by simulation for both Type I error and power.
 #'
 #' @param lambda1 Event rate for group 1 (control), in events per unit time.
 #' @param lambda2 Event rate for group 2 (treatment), in events per unit time.
@@ -30,10 +36,24 @@
 #' @param trial_duration Total planned duration of the trial. If
 #'   `trial_duration` is less than the sum of `accrual_duration`, accrual
 #'   is truncated at `trial_duration`.
-#' @param dropout_rate Dropout hazard rate. Default is 0. Can be a vector of
-#'   length 2 for group-specific dropout (control, treatment).
+#' @param dropout_rate Dropout hazard rate. Can be:
+#'   \itemize{
+#'     \item A scalar (common constant rate for both groups). Default is 0.
+#'     \item A vector of length 2 (group-specific constant rates: control,
+#'       treatment).
+#'     \item A data frame with columns `rate` and `duration` (and optionally
+#'       `treatment`) defining piecewise constant dropout hazards. When a
+#'       `treatment` column is present, use 1 for control and 2 for treatment.
+#'       Without a `treatment` column, the same piecewise schedule applies to
+#'       both groups. The last `duration` may be `Inf` to extend the final rate
+#'       indefinitely.
+#'   }
 #' @param max_followup Maximum follow-up time for any patient. Default is
 #'   `NULL` (infinite). Can be a vector of length 2 for group-specific caps.
+#' @param test_type Type of test for which to size the study:
+#'   `"wald"` (default) uses a single variance under the alternative;
+#'   `"score"` uses separate null and alternative variances
+#'   (\eqn{z_\alpha \sqrt{V_0} + z_\beta \sqrt{V_1}}).
 #' @param event_gap Gap duration after each event during which no new events
 #'   are counted (e.g., a recovery period). Default is `NULL` (no gap).
 #'   When specified, the effective rate is reduced to
@@ -42,20 +62,38 @@
 #' @details
 #' ## Sample size formula
 #'
-#' The sample size for group 1 is:
-#' \deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 \tilde{V}}{(\theta - \theta_0)^2}}
+#' **Wald test** (`test_type = "wald"`):
+#' \deqn{n_1 = \frac{(z_{\alpha/s} + z_\beta)^2 V_1}{(\theta - \theta_0)^2}}
+#'
+#' **Score test** (`test_type = "score"`):
+#' \deqn{n_1 = \frac{(z_{\alpha/s} \sqrt{V_0} + z_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}}
+#'
 #' where \eqn{\theta = \log(\lambda_2/\lambda_1)},
 #' \eqn{\theta_0 = \log(\mathrm{rr}_0)}, and:
-#' \deqn{\tilde{V} = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+#' \deqn{V_1 = \left(\frac{1}{\mu_1} + k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)}
+#' is the variance under \eqn{H_1}. Under \eqn{H_0} (pooled rate
+#' \eqn{\lambda_0 = (\lambda_1 + r \lambda_2 \mathrm{rr}_0) / (1 + r)}):
+#' \deqn{V_0 = \left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)}
 #' with \eqn{\mu_g = \lambda_g \bar{t}_g} the expected event count and
 #' \eqn{\bar{t}_g} the average exposure for group \eqn{g}.
+#'
+#' In superiority settings, the traditional Wald/Zhu-Lakkis sample size may be
+#' slightly larger than score sizing and can provide a useful power margin when
+#' the final analysis uses the score test. Compare both sizing rules and verify
+#' the chosen design with simulation when finite-sample calibration matters.
 #'
 #' ## Average exposure
 #'
 #' The average exposure \eqn{\bar{t}_g} accounts for piecewise accrual,
-#' exponential dropout, and maximum follow-up truncation. When dropout rate
-#' \eqn{\delta > 0}, the expected exposure for a patient with potential
-#' follow-up \eqn{u} is \eqn{m(u) = (1 - e^{-\delta u})/\delta}.
+#' piecewise exponential dropout, and maximum follow-up truncation. With
+#' piecewise constant dropout hazards \eqn{\delta_1, \delta_2, \ldots}
+#' over successive intervals, the survival function is
+#' \eqn{S(t) = \exp(-\sum_j \delta_j \ell_j)} where \eqn{\ell_j} is the
+#' time spent in interval \eqn{j}. The expected exposure for a patient with
+#' potential follow-up \eqn{u} is \eqn{m(u) = \int_0^u S(t)\,dt}, computed
+#' as a sum of exponential integrals over each piece. For a single constant
+#' rate \eqn{\delta > 0} this simplifies to
+#' \eqn{m(u) = (1 - e^{-\delta u})/\delta}.
 #' The overall average is a weighted mean across accrual segments.
 #'
 #' ## Variance inflation
@@ -102,6 +140,8 @@
 #'   \item{total_events}{Total expected number of events.}
 #'   \item{variance}{Variance of the log rate ratio
 #'     \eqn{\mathrm{Var}(\hat\theta)}.}
+#'   \item{variance_null}{Null variance of the log rate ratio used for
+#'     score-test sizing, on the same final-analysis scale as `variance`.}
 #'   \item{accrual_rate}{Accrual rate(s) used (possibly scaled to achieve
 #'     target power).}
 #'   \item{accrual_duration}{Accrual duration(s) used.}
@@ -162,8 +202,10 @@ sample_size_nbinom <- function(
   alpha = 0.025, sided = 1, ratio = 1, rr0 = 1,
   accrual_rate, accrual_duration,
   trial_duration, dropout_rate = 0,
-  max_followup = NULL, event_gap = NULL
+  max_followup = NULL, test_type = c("wald", "score"),
+  event_gap = NULL
 ) {
+  test_type <- match.arg(test_type)
   if (lambda1 <= 0 || lambda2 <= 0) {
     stop("Rates lambda1 and lambda2 must be positive.")
   }
@@ -185,13 +227,44 @@ sample_size_nbinom <- function(
   if (alpha <= 0 || alpha >= 1) {
     stop("Alpha must be between 0 and 1.")
   }
-  if (any(dropout_rate < 0)) {
-    stop("Dropout rate must be non-negative.")
-  }
-  if (length(dropout_rate) == 1) {
-    dropout_rate <- rep(dropout_rate, 2)
-  } else if (length(dropout_rate) != 2) {
-    stop("Dropout rate must be a scalar or a vector of length 2.")
+  # Normalize dropout_rate to internal piecewise specification:
+  # a list of 2 data.frames (one per group), each with 'rate' and 'duration'.
+  if (is.data.frame(dropout_rate)) {
+    if (!all(c("rate", "duration") %in% names(dropout_rate))) {
+      stop("dropout_rate data frame must have 'rate' and 'duration' columns.")
+    }
+    if (any(dropout_rate$rate < 0)) {
+      stop("Dropout rates must be non-negative.")
+    }
+    dropout_spec <- list()
+    for (g in 1:2) {
+      if ("treatment" %in% names(dropout_rate)) {
+        sub <- dropout_rate[dropout_rate$treatment == g, , drop = FALSE]
+        if (nrow(sub) == 0) {
+          sub <- dropout_rate[is.na(dropout_rate$treatment), , drop = FALSE]
+        }
+      } else {
+        sub <- dropout_rate
+      }
+      if (nrow(sub) == 0) {
+        dropout_spec[[g]] <- data.frame(rate = 0, duration = Inf)
+      } else {
+        dropout_spec[[g]] <- data.frame(rate = sub$rate, duration = sub$duration)
+      }
+    }
+  } else {
+    if (any(dropout_rate < 0)) {
+      stop("Dropout rate must be non-negative.")
+    }
+    if (length(dropout_rate) == 1) {
+      dropout_rate <- rep(dropout_rate, 2)
+    } else if (length(dropout_rate) != 2) {
+      stop("Dropout rate must be a scalar, a vector of length 2, or a data frame.")
+    }
+    dropout_spec <- list(
+      data.frame(rate = dropout_rate[1], duration = Inf),
+      data.frame(rate = dropout_rate[2], duration = Inf)
+    )
   }
 
   if (!is.null(max_followup)) {
@@ -239,6 +312,7 @@ sample_size_nbinom <- function(
     trial_duration = trial_duration,
     dropout_rate = dropout_rate,
     max_followup = max_followup,
+    test_type = test_type,
     event_gap = event_gap
   )
 
@@ -252,47 +326,128 @@ sample_size_nbinom <- function(
     mode <- "solve_power"
   }
 
-  # Helper function for average exposure over [u_min, u_max] given dropout_rate
-  avg_exp_func <- function(u_min, u_max, dropout_rate) {
-    if (u_min >= u_max) {
-      return(0)
-    } # Should not happen in valid segment
-    if (dropout_rate == 0) {
-      return((u_min + u_max) / 2)
-    } else {
-      term1 <- 1 / dropout_rate
-      term2 <- (exp(-dropout_rate * u_min) - exp(-dropout_rate * u_max)) / (dropout_rate^2 * (u_max - u_min))
-      return(term1 - term2)
-    }
+  # --- Piecewise exponential dropout helpers ---
+  # Building-block integrals.
+  # I1(delta, L) = integral_0^L exp(-delta*s) ds
+  .I1 <- function(delta, L) {
+    if (L <= 0) return(0)
+    if (delta == 0) return(L)
+    (1 - exp(-delta * L)) / delta
+  }
+  # I2(delta, L) = integral_0^L s * exp(-delta*s) ds
+  .I2 <- function(delta, L) {
+    if (L <= 0) return(0)
+    if (delta == 0) return(L^2 / 2)
+    (1 - exp(-delta * L) * (1 + delta * L)) / delta^2
+  }
+  # J1(delta, sa, sb) = integral_{sa}^{sb} I1(delta, s) ds
+  .J1 <- function(delta, sa, sb) {
+    if (sb <= sa) return(0)
+    if (delta == 0) return((sb^2 - sa^2) / 2)
+    (sb - sa) / delta - (exp(-delta * sa) - exp(-delta * sb)) / delta^2
+  }
+  # J2(delta, sa, sb) = integral_{sa}^{sb} I2(delta, s) ds
+  .J2 <- function(delta, sa, sb) {
+    if (sb <= sa) return(0)
+    if (delta == 0) return((sb^3 - sa^3) / 6)
+    ((sb - sa) - exp(-delta * sa) * (2 / delta + sa) +
+      exp(-delta * sb) * (2 / delta + sb)) / delta^2
   }
 
-  # Helper function for average squared exposure over [u_min, u_max] given dropout_rate
-  avg_exp_sq_func <- function(u_min, u_max, dropout_rate) {
-    if (u_min >= u_max) {
-      return(0)
+  # Expected exposure m1(u) = integral_0^u S(t) dt
+  pw_m1 <- function(u, dr_spec) {
+    if (u <= 0) return(0)
+    rates <- dr_spec$rate
+    durations <- dr_spec$duration
+    cum_start <- 0
+    S_curr <- 1
+    m1 <- 0
+    for (j in seq_along(rates)) {
+      piece_end <- cum_start + durations[j]
+      L <- min(u, piece_end) - cum_start
+      if (L <= 0) break
+      m1 <- m1 + S_curr * .I1(rates[j], L)
+      if (u <= piece_end) break
+      S_curr <- S_curr * exp(-rates[j] * durations[j])
+      cum_start <- piece_end
     }
-    if (dropout_rate == 0) {
-      return((u_max^3 - u_min^3) / (3 * (u_max - u_min)))
-    } else {
-      # Indefinite integral G(u) of M2(u)
-      # M2(u) = 2/d^2 * (1 - exp(-du)(1+du))
-      # G(u) = 2u/d^2 + 2/d^2 * exp(-du) * (2/d + u)
-      d <- dropout_rate
-      G <- function(u) {
-        (2 * u) / d^2 + (2 / d^2) * exp(-d * u) * (2 / d + u)
+    m1
+  }
+
+  # E[min(T,u)^2] = 2 * integral_0^u t * S(t) dt
+  pw_m2 <- function(u, dr_spec) {
+    if (u <= 0) return(0)
+    rates <- dr_spec$rate
+    durations <- dr_spec$duration
+    cum_start <- 0
+    S_curr <- 1
+    m2 <- 0
+    for (j in seq_along(rates)) {
+      piece_end <- cum_start + durations[j]
+      L <- min(u, piece_end) - cum_start
+      if (L <= 0) break
+      m2 <- m2 + 2 * S_curr * (cum_start * .I1(rates[j], L) + .I2(rates[j], L))
+      if (u <= piece_end) break
+      S_curr <- S_curr * exp(-rates[j] * durations[j])
+      cum_start <- piece_end
+    }
+    m2
+  }
+
+  # Average of m1(u) over u uniformly distributed in [u_min, u_max]
+  pw_avg_m1 <- function(u_min, u_max, dr_spec) {
+    if (u_min >= u_max) return(0)
+    rates <- dr_spec$rate
+    durations <- dr_spec$duration
+    cum_start <- 0
+    S_curr <- 1
+    m1_at_bp <- 0
+    total <- 0
+    for (j in seq_along(rates)) {
+      piece_end <- cum_start + durations[j]
+      a <- max(u_min, cum_start)
+      b <- min(u_max, piece_end)
+      if (a < b) {
+        sa <- a - cum_start
+        sb <- b - cum_start
+        total <- total + m1_at_bp * (b - a) + S_curr * .J1(rates[j], sa, sb)
       }
-      return((G(u_max) - G(u_min)) / (u_max - u_min))
+      if (u_max <= piece_end) break
+      m1_at_bp <- m1_at_bp + S_curr * .I1(rates[j], durations[j])
+      S_curr <- S_curr * exp(-rates[j] * durations[j])
+      cum_start <- piece_end
     }
+    total / (u_max - u_min)
   }
 
-  # Helper for M2(u) at a single point (for truncated case)
-  m2_func <- function(u, dropout_rate) {
-    if (dropout_rate == 0) {
-      return(u^2)
-    } else {
-      d <- dropout_rate
-      return((2 / d^2) * (1 - exp(-d * u) * (1 + d * u)))
+  # Average of m2(u) over u uniformly distributed in [u_min, u_max]
+  pw_avg_m2 <- function(u_min, u_max, dr_spec) {
+    if (u_min >= u_max) return(0)
+    rates <- dr_spec$rate
+    durations <- dr_spec$duration
+    cum_start <- 0
+    S_curr <- 1
+    m1_at_bp <- 0
+    m2_at_bp <- 0
+    total <- 0
+    for (j in seq_along(rates)) {
+      piece_end <- cum_start + durations[j]
+      a <- max(u_min, cum_start)
+      b <- min(u_max, piece_end)
+      if (a < b) {
+        sa <- a - cum_start
+        sb <- b - cum_start
+        total <- total + m2_at_bp * (b - a) +
+          2 * S_curr * (cum_start * .J1(rates[j], sa, sb) + .J2(rates[j], sa, sb))
+      }
+      if (u_max <= piece_end) break
+      L_j <- durations[j]
+      m1_at_bp <- m1_at_bp + S_curr * .I1(rates[j], L_j)
+      m2_at_bp <- m2_at_bp + 2 * S_curr * (cum_start * .I1(rates[j], L_j) + .I2(rates[j], L_j))
+      S_curr <- S_curr * exp(-rates[j] * L_j)
+      cum_start <- piece_end
     }
+    total / (u_max - u_min)
   }
 
   # Calculate average exposure
@@ -322,45 +477,30 @@ sample_size_nbinom <- function(
 
       # Calculate for each group (1 and 2)
       for (g in 1:2) {
-        dr <- dropout_rate[g]
+        dr_spec <- dropout_spec[[g]]
         mf <- max_followup[g]
 
         avg_followup <- 0
         avg_followup_sq <- 0
 
         if (is.infinite(mf) || u_max <= mf) {
-          # Case 1: No truncation by max_followup (or negligible)
-          avg_followup <- avg_exp_func(u_min, u_max, dr)
-          avg_followup_sq <- avg_exp_sq_func(u_min, u_max, dr)
+          # Case 1: No truncation by max_followup
+          avg_followup <- pw_avg_m1(u_min, u_max, dr_spec)
+          avg_followup_sq <- pw_avg_m2(u_min, u_max, dr_spec)
         } else if (u_min >= mf) {
           # Case 2: All truncated by max_followup
-          # Effectively fixed exposure of max_followup
-          if (dr == 0) {
-            avg_followup <- mf
-            avg_followup_sq <- mf^2
-          } else {
-            avg_followup <- (1 - exp(-dr * mf)) / dr
-            avg_followup_sq <- m2_func(mf, dr)
-          }
+          avg_followup <- pw_m1(mf, dr_spec)
+          avg_followup_sq <- pw_m2(mf, dr_spec)
         } else {
-          # Case 3: Split
+          # Case 3: Split at max_followup
           len_truncated <- u_max - mf
           len_not_truncated <- mf - u_min
 
-          # Avg for truncated part
-          if (dr == 0) {
-            avg_1 <- mf
-            avg_sq_1 <- mf^2
-          } else {
-            avg_1 <- (1 - exp(-dr * mf)) / dr
-            avg_sq_1 <- m2_func(mf, dr)
-          }
+          avg_1 <- pw_m1(mf, dr_spec)
+          avg_sq_1 <- pw_m2(mf, dr_spec)
+          avg_2 <- pw_avg_m1(u_min, mf, dr_spec)
+          avg_sq_2 <- pw_avg_m2(u_min, mf, dr_spec)
 
-          # Avg for not truncated part
-          avg_2 <- avg_exp_func(u_min, mf, dr)
-          avg_sq_2 <- avg_exp_sq_func(u_min, mf, dr)
-
-          # Weighted average
           avg_followup <- (len_truncated * avg_1 + len_not_truncated * avg_2) / d
           avg_followup_sq <- (len_truncated * avg_sq_1 + len_not_truncated * avg_sq_2) / d
         }
@@ -444,10 +584,24 @@ sample_size_nbinom <- function(
   n_total_c <- 0
   computed_accrual_rate <- NULL
 
+  # Variance under H1 (alternative)
+  V1 <- (1 / mu1 + k1) + (1 / ratio) * (1 / mu2 + k2)
+
+  # Variance under H0 (null) — used only for score test
+  # Pooled rate under H0: weighted average assuming equal exposure
+  lambda0_eff <- (lambda1_eff + ratio * lambda2_eff * rr0) / (1 + ratio)
+  mu0 <- lambda0_eff * exposure_calendar[1]  # use control exposure as reference
+  k0 <- mean(dispersion) * mean(Q_inflation)  # pooled dispersion
+  V0 <- (1 / mu0 + k0) * (1 + 1 / ratio)
+
   if (mode == "solve_n") {
     z_beta <- qnorm(power)
 
-    num <- (z_alpha + z_beta)^2 * ((1 / mu1 + k1) + (1 / ratio) * (1 / mu2 + k2))
+    if (test_type == "score") {
+      num <- (z_alpha * sqrt(V0) + z_beta * sqrt(V1))^2
+    } else {
+      num <- (z_alpha + z_beta)^2 * V1
+    }
     den <- (log(lambda1 * rr0 / lambda2))^2
     n1 <- num / den
     n2 <- n1 * ratio
@@ -468,9 +622,13 @@ sample_size_nbinom <- function(
     n1_c <- n_total_c / (1 + ratio)
     n2_c <- n_total_c * ratio / (1 + ratio)
 
-    # z_beta = sqrt( n1 * (log(mu1/mu2))^2 / V ) - z_alpha
-    V <- (1 / mu1 + k1) + (1 / ratio) * (1 / mu2 + k2)
-    z_beta <- sqrt(n1_c * (log(lambda1 * rr0 / lambda2))^2 / V) - z_alpha
+    theta <- log(lambda1 * rr0 / lambda2)
+    if (test_type == "score") {
+      # Solve: z_alpha * sqrt(V0) + z_beta * sqrt(V1) = |theta| * sqrt(n1)
+      z_beta <- (abs(theta) * sqrt(n1_c) - z_alpha * sqrt(V0)) / sqrt(V1)
+    } else {
+      z_beta <- sqrt(n1_c * theta^2 / V1) - z_alpha
+    }
 
     power <- pnorm(z_beta)
   }
@@ -491,6 +649,7 @@ sample_size_nbinom <- function(
       alpha = alpha,
       sided = sided,
       power = power,
+      test_type = test_type,
       exposure = exposure_calendar,
       exposure_at_risk_n1 = exposure1_at_risk,
       exposure_at_risk_n2 = exposure2_at_risk,
@@ -498,6 +657,8 @@ sample_size_nbinom <- function(
       events_n2 = events_n2,
       total_events = total_events,
       variance = variance,
+      # V0 already includes the allocation ratio term, so divide only by n1.
+      variance_null = V0 / n1_c,
       accrual_rate = computed_accrual_rate,
       accrual_duration = accrual_duration
     )
@@ -577,11 +738,26 @@ print.sample_size_nbinom_result <- function(x, ...) {
     cat(sprintf("Event gap: %.2f\n", x$inputs$event_gap))
   }
 
-  if (!is.null(x$inputs$dropout_rate) && any(x$inputs$dropout_rate > 0)) {
-    if (x$inputs$dropout_rate[1] == x$inputs$dropout_rate[2]) {
-      cat(sprintf("Dropout rate: %.4f\n", x$inputs$dropout_rate[1]))
-    } else {
-      cat(sprintf("Dropout rate: %.4f (n1), %.4f (n2)\n", x$inputs$dropout_rate[1], x$inputs$dropout_rate[2]))
+  if (!is.null(x$inputs$dropout_rate)) {
+    dr <- x$inputs$dropout_rate
+    if (is.data.frame(dr)) {
+      cat("Dropout rate: piecewise\n")
+      if ("treatment" %in% names(dr)) {
+        for (g in unique(dr$treatment)) {
+          sub <- dr[dr$treatment == g, ]
+          pieces <- paste0(sprintf("%.4f (%.1f)", sub$rate, sub$duration), collapse = ", ")
+          cat(sprintf("  Group %s: %s\n", g, pieces))
+        }
+      } else {
+        pieces <- paste0(sprintf("%.4f (%.1f)", dr$rate, dr$duration), collapse = ", ")
+        cat(sprintf("  Both groups: %s\n", pieces))
+      }
+    } else if (any(dr > 0)) {
+      if (dr[1] == dr[2]) {
+        cat(sprintf("Dropout rate: %.4f\n", dr[1]))
+      } else {
+        cat(sprintf("Dropout rate: %.4f (n1), %.4f (n2)\n", dr[1], dr[2]))
+      }
     }
   }
 
