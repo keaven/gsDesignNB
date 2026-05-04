@@ -34,6 +34,8 @@
 - `toInteger.gsNB()` now preserves calendar-time enrollment quantities at
   interim analyses and recomputes expected events, exposures, and information
   after rounding the final sample size.
+- `toInteger.gsNB()` now preserves the shape of piecewise accrual schedules
+  when rescaling calendar-time designs after final sample-size rounding.
 - `summarize_gs_sim()` now reports optional sample-size and exposure summaries
   when available and uses finite trimmed means for information estimates.
 - Updated SSR simulation reporting in the manuscript and SSR simulation article
@@ -64,6 +66,13 @@
   that framing.
 - Updated the paper and slide materials to cite package articles as executable
   supplementary material for the fuller simulation grids and reporting.
+
+## Manuscript
+
+- Converted the paper to the Quarto Journal of Statistical Software template,
+  added a semi-real recurrent-event group sequential design example with tables
+  and a figure, added formal R package citations, and simplified the Jensen
+  correction grid table so the formula-heavy entries no longer break the PDF.
 
 # gsDesignNB 0.3.1
 

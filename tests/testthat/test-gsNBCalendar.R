@@ -174,6 +174,48 @@ test_that("toInteger.gsNB preserves calendar enrollment at interim analyses", {
   expect_true(all(diff(gs_int$n.I) > 0))
 })
 
+test_that("toInteger.gsNB preserves piecewise accrual shape", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.35, dispersion = 0.5, power = 0.9,
+    accrual_rate = c(12, 24), accrual_duration = c(6, 6),
+    trial_duration = 24, dropout_rate = 0.10 / 12,
+    max_followup = 12, event_gap = 20 / 30.4375,
+    test_type = "score"
+  )
+  analysis_times <- c(9, 14, 24)
+  gs_design <- gsNBCalendar(nb_ss, k = 3, analysis_times = analysis_times)
+
+  gs_int <- toInteger(gs_design)
+
+  information_scale <- gs_design$n.I[gs_design$k] / (1 / nb_ss$variance)
+  rounding_scale <- gs_int$n_total[gs_int$k] / gs_design$n_total[gs_design$k]
+  expected_n <- vapply(
+    analysis_times,
+    function(t) {
+      sample_size_nbinom(
+        lambda1 = nb_ss$inputs$lambda1,
+        lambda2 = nb_ss$inputs$lambda2,
+        rr0 = nb_ss$inputs$rr0,
+        dispersion = nb_ss$inputs$dispersion,
+        power = NULL,
+        alpha = nb_ss$inputs$alpha,
+        sided = nb_ss$inputs$sided,
+        ratio = nb_ss$inputs$ratio,
+        accrual_rate = nb_ss$accrual_rate * information_scale * rounding_scale,
+        accrual_duration = nb_ss$accrual_duration,
+        trial_duration = t,
+        dropout_rate = nb_ss$inputs$dropout_rate,
+        max_followup = nb_ss$inputs$max_followup,
+        event_gap = nb_ss$inputs$event_gap
+      )$n_total
+    },
+    numeric(1)
+  )
+
+  expect_equal(gs_int$n_total, expected_n, tolerance = 1e-8)
+  expect_lt(gs_int$n_total[gs_int$k], 1.05 * gs_design$n_total[gs_design$k])
+})
+
 test_that("toInteger.gsDesign dispatches correctly", {
   gs <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 2)
   gs_int <- toInteger(gs)

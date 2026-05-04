@@ -1,17 +1,37 @@
 ---
 title: "gsDesignNB: Group Sequential Design and Sample Size Re-estimation for Negative Binomial Recurrent Event Trials"
+title-plain: "gsDesignNB: Group Sequential Design and Sample Size Re-estimation for Negative Binomial Recurrent Event Trials"
+short-title: "gsDesignNB"
+author:
+  - name: Keaven Anderson
+    affiliation:
+      name: Merck & Co., Inc., Rahway, NJ, USA
+    email: keaven_anderson@merck.com
+  - name: Hongtao Zhang
+    affiliation:
+      name: Merck & Co., Inc., Rahway, NJ, USA
+  - name: Andrea Maes
+    affiliation:
+      name: Merck & Co., Inc., Rahway, NJ, USA
+keywords:
+  - negative binomial
+  - recurrent events
+  - group sequential design
+  - sample size re-estimation
+  - R
 format:
-  pdf:
+  quarto-journals/jss-pdf:
     number-sections: true
-    documentclass: article
-    geometry:
-      - margin=1in
-    fontsize: 11pt
-    linkcolor: blue
-    urlcolor: blue
-    citecolor: blue
+    keep-tex: true
+    journal:
+      type: article
+  html:
+    number-sections: true
+    toc: true
 bibliography: references.bib
-csl: https://www.zotero.org/styles/american-statistical-association
+execute:
+  warning: false
+  message: false
 abstract: |
   We present the R package **gsDesignNB** for planning, monitoring, and adapting clinical trials
   with recurrent event endpoints analyzed using negative binomial models. The package links fixed
@@ -49,6 +69,13 @@ abstract: |
   both the statistical methodology and the software architecture that make these workflows
   reproducible.
 ---
+
+```{r setup, include=FALSE}
+library(gsDesignNB)
+library(gsDesign)
+library(ggplot2)
+library(knitr)
+```
 
 # Introduction
 
@@ -130,6 +157,121 @@ The package also re-exports the common **gsDesign** spending functions so that u
 namespace when they move from fixed design planning to spending-function specification. Internally,
 the simulation engines rely on **data.table** for aggregation and on reproducible parallel random
 number streams for larger Monte Carlo studies.
+
+## Worked design example
+
+To make the workflow concrete, consider a semi-real recurrent-event superiority trial inspired by
+exacerbation studies. The control-arm event rate is 0.5 events/month, the target rate ratio is 0.70,
+the dispersion is $k = 0.5$, maximum follow-up is 12 months, annual dropout is 10%, and the
+endpoint counts only events separated by at least 20 days. Accrual is piecewise, with 12
+participants/month for the first 6 months and 24 participants/month for the next 6 months. The
+planned analysis uses the score test with one-sided $\alpha = 0.025$ and 90% power.
+
+```{r worked-design}
+ex_fixed <- sample_size_nbinom(
+  lambda1 = 0.5,
+  lambda2 = 0.35,
+  dispersion = 0.5,
+  power = 0.90,
+  alpha = 0.025,
+  accrual_rate = c(12, 24),
+  accrual_duration = c(6, 6),
+  trial_duration = 24,
+  dropout_rate = 0.10 / 12,
+  max_followup = 12,
+  event_gap = 20 / 30.4375,
+  test_type = "score"
+)
+
+ex_gs <- ex_fixed |>
+  gsNBCalendar(
+    k = 3,
+    test.type = 4,
+    alpha = 0.025,
+    sfu = sfHSD,
+    sfupar = -2,
+    sfl = sfCauchy,
+    sflpar = c(0.4, 0.75, 0.56, 0.63),
+    analysis_times = c(9, 14, 24)
+  ) |>
+  gsDesignNB::toInteger()
+```
+
+```{r worked-design-summary, echo=FALSE}
+ex_design_summary <- data.frame(
+  Quantity = c(
+    "Fixed-design sample size",
+    "Group sequential final sample size",
+    "Target information",
+    "Expected final counted events",
+    "Average final exposure",
+    "Score-test sizing"
+  ),
+  Value = c(
+    round(ex_fixed$n_total),
+    round(ex_gs$n_total[ex_gs$k]),
+    round(ex_gs$n.I[ex_gs$k], 1),
+    round(ex_gs$events[ex_gs$k], 1),
+    round(ex_gs$exposure[ex_gs$k], 1),
+    ex_fixed$test_type
+  )
+)
+
+knitr::kable(
+  ex_design_summary,
+  caption = "Summary of the semi-real recurrent-event design example."
+)
+```
+
+The fixed design requires `r round(ex_fixed$n_total)` participants. After calendar-time group
+sequential monitoring and integer rounding, the final maximum sample size is
+`r round(ex_gs$n_total[ex_gs$k])`. The same object stores the expected information, exposure, and
+event totals at each analysis. These quantities are the inputs used by the simulation engines, so
+the operating-characteristic calculations inherit the same calendar and recurrent-event assumptions.
+
+```{r worked-boundary-table, echo=FALSE}
+ex_boundaries <- data.frame(
+  Look = c("IA 1", "IA 2", "Final"),
+  Month = ex_gs$T,
+  `Information fraction` = round(ex_gs$timing, 3),
+  `Cumulative N` = round(ex_gs$n_total),
+  `Expected events` = round(ex_gs$events, 1),
+  `Upper Z` = round(ex_gs$upper$bound, 3),
+  `Lower Z` = round(ex_gs$lower$bound, 3),
+  check.names = FALSE
+)
+
+knitr::kable(
+  ex_boundaries,
+  caption = "Calendar-time group sequential looks for the design example."
+)
+```
+
+```{r worked-design-figure, echo=FALSE, fig.cap="Information fraction and cumulative sample size for the design example."}
+ex_plot_data <- data.frame(
+  Look = factor(c("IA 1", "IA 2", "Final"), levels = c("IA 1", "IA 2", "Final")),
+  Month = ex_gs$T,
+  Information = ex_gs$timing,
+  N = ex_gs$n_total
+)
+
+ggplot(ex_plot_data, aes(x = Month, y = Information)) +
+  geom_line(linewidth = 0.8, color = "#1f78b4") +
+  geom_point(size = 2.5, color = "#1f78b4") +
+  geom_text(aes(label = paste0("N=", round(N))), vjust = -0.8, size = 3) +
+  scale_y_continuous(
+    limits = c(0, 1.05),
+    breaks = seq(0, 1, by = 0.25),
+    labels = scales::percent
+  ) +
+  labs(x = "Calendar month", y = "Information fraction") +
+  theme_minimal(base_size = 11)
+```
+
+The worked example is intentionally small enough to render as part of the manuscript, but it is
+not a toy calculation: it uses piecewise accrual, dropout, maximum follow-up, an event gap, score
+sizing, calendar-time monitoring, non-binding futility, and integer rounding. The longer vignettes
+reuse the same objects for simulation and SSR operating-characteristic studies.
 
 ## Timing, information, and three notions of gaps
 
@@ -368,9 +510,9 @@ rate $\lambda_1$, the dispersion $k$, and the event gap $\gamma$.
 
 | Parameter | Values | Clinical rationale |
 |:----------|:-------|:-------------------|
-| $\lambda_1$ (events/month) | 0.3, 0.5, 1.0, 2.0 | Heart failure hospitalizations ($\sim$0.3) through COPD exacerbations ($\sim$0.5) to MS relapses ($\sim$1--2) |
-| $k$ (dispersion) | 0.1, 0.3, 0.5, 1.0 | Near-Poisson (0.1) to substantial patient heterogeneity (1.0); published NB trials typically report $k \in [0.3, 1.0]$ |
-| Gap (days) | 10, 20, 30, 45 | Short recovery (migraine) to extended gap (steroid taper in COPD exacerbations) |
+| Control rate | 0.3, 0.5, 1.0, 2.0 events/month | Low to high recurrent-event burden |
+| Dispersion | 0.1, 0.3, 0.5, 1.0 | Near-Poisson to substantial patient heterogeneity |
+| Event gap | 10, 20, 30, 45 days | Short to extended counting windows |
 
 : Broad sweep parameter grid for Jensen correction impact study. {#tbl-sweep-grid}
 
@@ -935,7 +1077,10 @@ for sensitivity analyses.
 The **gsDesignNB** package is available on GitHub at
 <https://github.com/keaven/gsDesignNB> with documentation at
 <https://keaven.github.io/gsDesignNB/>. The package requires R $\geq$ 4.1.0 and depends primarily
-on **gsDesign**, **data.table**, **simtrial**, and **MASS**.
+on R [@R-base], **gsDesignNB** [@R-gsDesignNB], **gsDesign** [@R-gsDesign],
+**data.table** [@R-data.table], **simtrial** [@R-simtrial], and **MASS** [@MASS].
+Figures and rendered package documentation use **ggplot2** [@ggplot2], **scales** [@R-scales],
+**knitr** [@R-knitr], **rmarkdown** [@R-rmarkdown], and **pkgdown** [@R-pkgdown].
 
 The source distribution includes vignettes for fixed-design NB sample size calculation, calendar-time
 GS simulation, end-to-end SSR, the larger SSR simulation study, blinded-information diagnostics,

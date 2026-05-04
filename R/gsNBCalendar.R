@@ -622,7 +622,10 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
     nb <- x$nb_design
 
     accrual_duration <- nb$accrual_duration
-    new_accrual_rate <- n_total_final / accrual_duration
+    info_fixed <- 1 / nb$variance
+    information_scale <- x$n.I[k] / info_fixed
+    rounding_scale <- n_total_final / x$n_total[k]
+    new_accrual_rate <- nb$accrual_rate * information_scale * rounding_scale
 
     n_total_new <- numeric(k)
     info_at_analyses <- numeric(k)
