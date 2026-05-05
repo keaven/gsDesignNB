@@ -77,7 +77,7 @@ library(ggplot2)
 library(knitr)
 ```
 
-# Introduction
+## Introduction
 
 Recurrent event endpoints are common in clinical trials for conditions such as multiple sclerosis
 relapses, COPD exacerbations, and heart failure hospitalizations. When every patient has the same
@@ -129,9 +129,9 @@ first describes that workflow, including the different notions of "gaps" that ar
 recurrent-event trials, and then presents the methodological and simulation results that motivated
 the software design.
 
-# Package overview and workflow
+## Package overview and workflow
 
-## Scope and relation to gsDesign
+### Scope and relation to gsDesign
 
 `sample_size_nbinom()` is the fixed-design entry point. It returns a
 `sample_size_nbinom_result` object containing the planning assumptions, expected exposure, expected
@@ -158,7 +158,7 @@ namespace when they move from fixed design planning to spending-function specifi
 the simulation engines rely on **data.table** for aggregation and on reproducible parallel random
 number streams for larger Monte Carlo studies.
 
-## Worked design example
+### Worked design example
 
 To make the workflow concrete, consider a semi-real recurrent-event superiority trial inspired by
 exacerbation studies. The control-arm event rate is 0.5 events/month, the target rate ratio is 0.70,
@@ -273,7 +273,7 @@ not a toy calculation: it uses piecewise accrual, dropout, maximum follow-up, an
 sizing, calendar-time monitoring, non-binding futility, and integer rounding. The longer vignettes
 reuse the same objects for simulation and SSR operating-characteristic studies.
 
-## Timing, information, and three notions of gaps
+### Timing, information, and three notions of gaps
 
 The package documentation uses the word "gap" in three different senses, and distinguishing them is
 important for both the methods and the software.
@@ -291,7 +291,7 @@ effective event rate, counted events, and at-risk exposure stay aligned. By cont
 analysis constraints are handled through `analysis_times` in `gsNBCalendar()` or through the search
 criteria in `get_cut_date()`.
 
-## Primary and secondary workflows
+### Primary and secondary workflows
 
 For most users, the package workflow is:
 
@@ -310,7 +310,7 @@ looks, non-inferiority and super-superiority designs, blinded-information diagno
 interactive Shiny front end to the SSR engine. These are enumerated with their corresponding
 vignettes in Section 6.3.
 
-## Dropout, MAR, and imputation scope
+### Dropout, MAR, and imputation scope
 
 Dropout is represented in **gsDesignNB** as exposure truncation. At the planning stage,
 `sample_size_nbinom()` accounts for piecewise exponential dropout and maximum follow-up through the expected
@@ -347,9 +347,9 @@ analyzed with the same NB Wald estimand, with variance estimation checked as par
 analysis. When `event_gap` is part of the estimand, imputing event times rather than only total counts
 would be preferable so that the protocol counting rule can be re-applied consistently.
 
-# Sample size methodology
+## Sample size methodology
 
-## Negative binomial model
+### Negative binomial model
 
 For subject $i$ in treatment arm $g$ with exposure time $t_i$, the event count $Y_i$ follows a
 negative binomial distribution with mean $\mu_i = \lambda_g t_i$ and variance
@@ -361,7 +361,7 @@ so $E[\Lambda_i] = \lambda_g$ and $\text{Var}(\Lambda_i) = k\lambda_g^2$, and, c
 $\Lambda_i$, the event count is $\text{Poisson}(\Lambda_i t_i)$. In `MASS::glm.nb()` terminology
 the shape parameter $\theta_{\text{NB}} = 1/k$.
 
-## Wald and score-test sample size formulas
+### Wald and score-test sample size formulas
 
 The treatment effect is the log rate ratio $\theta = \log(\lambda_2/\lambda_1)$, estimated via
 maximum likelihood under a negative binomial GLM with log link and exposure offset. The design
@@ -437,7 +437,7 @@ In `sample_size_nbinom()`, the same information framework is used for superiorit
 non-inferiority, and super-superiority designs via the `rr0` argument, and the nuisance parameters
 may be specified either as common scalars or as arm-specific vectors.
 
-## Jensen's inequality correction for event gaps
+### Jensen's inequality correction for event gaps
 
 In trials with a mandatory gap of duration $\gamma$ after each counted event (e.g., a recovery
 period or a protocol-defined "new-event" window), the effective counted-event rate for a subject
@@ -499,7 +499,7 @@ from the at-risk set used for information calculations.
 
 : Power comparison: Jensen-corrected vs naive formula (10,000 replicates each). {#tbl-power-comparison}
 
-### Broader parameter sweep
+#### Broader parameter sweep
 
 The four scenarios in @tbl-power-comparison fix $\lambda_1 = 0.4$ and vary only $k$ and the gap
 duration. To characterize *when* the correction matters across a wider range of clinically
@@ -592,9 +592,9 @@ in therapeutic areas with substantial patient heterogeneity ($k \geq 0.5$) and p
 event gaps exceeding 20 days, such as COPD exacerbation studies with 28-day new-event windows
 or heart failure trials with extended hospitalization-free windows.
 
-# Group sequential design, monitoring, and sample size re-estimation
+## Group sequential design, monitoring, and sample size re-estimation
 
-## Calendar-time design construction
+### Calendar-time design construction
 
 The `gsNBCalendar()` function creates a group sequential design from a
 `sample_size_nbinom_result` by evaluating the planned design at user-specified calendar analysis
@@ -624,7 +624,7 @@ event-count, completer, and information targets. This is the package's bridge be
 information-time group sequential design and the calendar rules encountered in real monitoring
 charters.
 
-## Interim data cuts and information estimates
+### Interim data cuts and information estimates
 
 The function `cut_data_by_date()` converts subject-level recurrent-event histories into an interim
 analysis data set with one row per randomized subject, containing counted events, time at risk, and
@@ -641,7 +641,7 @@ negative binomial fit of @friede2010blinded, then splits the pooled rate accordi
 rate ratio. `estimate_nb_mom()` supplies method-of-moments estimates that are useful when maximum
 likelihood fits become unstable in sparse or highly overdispersed interim data.
 
-## Wald and score inference with a two-sided ML/MoM fallback rule
+### Wald and score inference with a two-sided ML/MoM fallback rule
 
 For unblinded interim analyses, `mutze_test()` fits the negative binomial log-linear model with an
 offset for exposure and returns either a Wald statistic for the treatment effect
@@ -692,7 +692,7 @@ columns are diagnostics rather than competing estimands; in well-behaved data th
 while in sparse or unstable interim data the MoM columns remain finite when the ML columns
 degenerate.
 
-## Blinded and unblinded SSR
+### Blinded and unblinded SSR
 
 At interim analyses, nuisance parameters ($k$ and the underlying event rates) can be re-estimated
 to update the required sample size. `blinded_ssr()` uses the pooled model of @friede2010blinded,
@@ -722,9 +722,9 @@ Monte Carlo studies: they use `data.table` for repeated aggregation, support rep
 execution, and return both trial-level and analysis-level summaries so that design calibration can
 be checked after the fact.
 
-# Reproducible workflows
+## Reproducible workflows
 
-## Example 1: fixed design to calendar-time GS simulation
+### Example 1: fixed design to calendar-time GS simulation
 
 The first workflow shows the main path from fixed-design planning to a calendar-time GS simulation.
 The full executable version appears in the group-sequential simulation vignette; the code here is a
@@ -793,7 +793,7 @@ the target information, `gsNBCalendar()` maps that information to calendar looks
 `sim_gs_nbinom()` generates trial histories consistent with the planning assumptions, and
 `check_gs_bound()` applies the group sequential boundaries on the selected information scale.
 
-## Example 2: information-based SSR
+### Example 2: information-based SSR
 
 The second workflow shows how the same design object can be used in an adaptive simulation with
 blinded and unblinded sample size re-estimation.
@@ -825,7 +825,7 @@ tables are stored at production scale. The essential software idea is already vi
 compact example: one `gsNB` planning object can drive both non-adaptive and adaptive
 operating-characteristic evaluations.
 
-## Additional workflows
+### Additional workflows
 
 The package includes further worked examples that round out the software contribution.
 
@@ -840,9 +840,9 @@ The package includes further worked examples that round out the software contrib
 These workflows are documented in the package vignettes so that the manuscript examples can remain
 brief while the installed package still serves as the full replication resource.
 
-# Simulation study
+## Simulation study
 
-## Design
+### Design
 
 The manuscript reports selected operating characteristics, while the package articles serve as
 executable supplementary material. This keeps the paper readable in a software-journal format but
@@ -886,7 +886,7 @@ simulation summaries.
 : Simulation reporting map. The package articles are treated as executable supplementary material
 for the condensed results reported in the manuscript. {#tbl-simulation-reporting}
 
-## Results
+### Results
 
 **Wald versus score calibration.** The `score-vs-wald-simulation` article evaluates 27 base
 scenarios varying $\lambda_1 \in \{0.15, 0.40, 1.00\}$, $k \in \{0.2, 0.5, 1.0\}$, and event
@@ -969,7 +969,7 @@ power is also similar: 0.898--0.907 for the Wald-sized start and 0.900--0.911 fo
 start (MCSE about 0.005). Thus Wald sizing should be viewed as a candidate margin to evaluate, not
 as a guaranteed SSR power improvement.
 
-# Discussion
+## Discussion
 
 The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent-event
 trials with NB outcomes. Its statistical contributions are the alignment of fixed-design planning,
@@ -1072,7 +1072,7 @@ the behaviour is controlled by two thresholds, `poisson_threshold` (default $50$
 $\hat{k} < 0.02$) and `mom_threshold` (default $20$, i.e., $\hat{k} > 20$); both are user-tunable
 for sensitivity analyses.
 
-# Reproducibility and software availability
+## Reproducibility and software availability
 
 The **gsDesignNB** package is available on GitHub at
 <https://github.com/keaven/gsDesignNB> with documentation at
@@ -1093,4 +1093,4 @@ core software interface while the installed package retains more extensive execu
 local exploratory use, the package also provides `run_ssr_shiny()` as an interactive front end to the
 SSR engine and `preview_pkgdown_site()` for documentation preview.
 
-# References {.unnumbered}
+## References {.unnumbered}
