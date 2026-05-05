@@ -94,8 +94,8 @@ needed to detect a clinically meaningful treatment effect.
 
 The negative binomial (NB) model addresses this by adding a single dispersion parameter $k$
 that captures the excess variation. Published NB fits from pivotal or large trials confirm that
-$k>0$ is the rule rather than the exception: estimates commonly fall in the $0.3$–$1.5$ range
-across disease areas where recurrent events are the primary endpoint, including COPD
+$k>0$ is the rule rather than the exception: reported estimates range from approximately $0.3$
+to $1.5$ in disease areas including COPD
 exacerbations [@wedzicha2016flame; @lipson2018impact], heart failure hospitalizations
 [@mcmurray2014paradigm], and multiple sclerosis relapses [@hauser2017ocrelizumab]. Even moderate
 dispersion materially reduces the Fisher information for the log rate that each subject
@@ -358,19 +358,9 @@ Missing not at random (MNAR) dropout is different. If the post-dropout event pro
 unobserved future outcomes or unmeasured deterioration, the observed-exposure likelihood no longer
 identifies the same full-follow-up estimand without additional assumptions. In that setting MI is
 best treated as a sensitivity-analysis framework rather than as a default primary analysis
-[@nrc2010missing]. For recurrent events, the controlled-imputation approach of
-@keene2014missing is a useful template: it uses a negative multinomial formulation, compatible with
-the Gamma--Poisson view of NB counts, to impute missing post-withdrawal recurrent events under
-reference-based assumptions such as borrowing the control-arm event behaviour for active-arm
-dropouts. This targets de facto sensitivity estimands rather than replacing the MAR primary analysis.
-
-A useful future extension would therefore preserve the censoring reason and planned follow-up horizon
-in the simulated data, then impute post-dropout counts or event times from an NB recurrent-event
-model with treatment, exposure, prior event history, dropout reason, and prespecified
-reference-based or delta-adjusted assumptions for informative dropout. Each imputed data set would be
-analyzed with the same NB Wald estimand, with variance estimation checked as part of the sensitivity
-analysis. When `event_gap` is part of the estimand, imputing event times rather than only total counts
-would be preferable so that the protocol counting rule can be re-applied consistently.
+[@nrc2010missing; @keene2014missing]. A natural future extension would add MNAR sensitivity
+analysis by imputing post-dropout events under reference-based assumptions compatible with the
+Gamma--Poisson model; this is not currently implemented.
 
 ## Sample size methodology
 
@@ -409,7 +399,8 @@ n_1 = \frac{(z_\alpha + z_\beta)^2}{(\theta - \theta_0)^2}
 \right]
 $$
 
-where $\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, and $k_g$ may be
+where $\theta_0 = \log(\texttt{rr0})$ is the null log rate ratio ($\theta_0 = 0$ for superiority),
+$\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, and $k_g$ may be
 inflated by a variance correction factor $Q_g = E[t_g^2]/(E[t_g])^2$ to account for variable
 follow-up [@zhu2014sample]. Accordingly, two analyses with similar event totals can carry
 different information if follow-up or dispersion differs.
@@ -429,7 +420,7 @@ two-variance calculation in the spirit of restricted-null score-test sample sizi
 
 $$
 n_1 =
-\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+\frac{(z_\alpha\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
      {(\theta - \theta_0)^2},
 $$
 
@@ -879,8 +870,6 @@ The package includes further worked examples that round out the software contrib
 | Non-inferiority and super-superiority | `sample_size_nbinom(rr0 = ...)` | Alternative null hypotheses in the same design framework |
 | Blinded-information diagnostics | `calculate_blinded_info()`, `estimate_nb_mom()` | Stability checks for sparse or unstable interims |
 | Verification studies | `nb_sim()`, `mutze_test()`, `sim_gs_nbinom()` | Simulation-based agreement checks for design formulas |
-| AI-assisted design | `SKILL.md`, `ai-skills` vignette | Structured workflow guide for AI coding assistants |
-
 These workflows are documented in the package vignettes so that the manuscript examples can remain
 brief while the installed package still serves as the full replication resource.
 
@@ -1096,13 +1085,10 @@ simulation engine is a practical advantage of the package design: because each i
 fallback label actually used, simulation summaries can verify that adaptive decisions were driven
 by well-posed estimators rather than degenerate ML fits.
 
-The package's current missing-data position is deliberately narrower than a full causal estimand
-framework. Dropout and administrative censoring are handled as exposure truncation under ignorable
-censoring, which is the setting in which observed-data NB likelihood inference is appropriate and MI
-is not required. MNAR sensitivity analyses would need additional data structure -- in particular,
-explicit censoring reason, planned remaining follow-up, and assumptions about post-dropout event
-rates -- before MI can be implemented transparently. This is a natural extension of the simulator
-and data-cutting layer, but it should not be conflated with the primary MAR analysis.
+The package handles dropout and administrative censoring as exposure truncation under
+ignorable censoring (MAR), which is the setting in which observed-data NB likelihood inference
+is appropriate without MI. MNAR sensitivity analysis is a natural future extension of the
+simulator and data-cutting layer but is not currently implemented.
 
 From a software perspective, **gsDesignNB** is complementary to both **gsDesign** and
 **gscounts**. The general-purpose **gsDesign** package provides mature spending-function and
@@ -1120,24 +1106,6 @@ time-varying setting; completer-based cuts capture another operational monitorin
 non-inferiority, blinded-diagnostics, and verification vignettes show that the same core objects
 support multiple design questions. In that sense, the package is not only a collection of isolated
 functions but a coherent interface for recurrent-event trial planning and evaluation.
-
-**A two-sided ML/MoM fallback rule.** A further methodological feature delivered in the current
-release replaces the previously permissive single-sided Poisson fallback with a two-sided rule.
-Near-Poisson data ($\hat{k} < 0.02$) still fall back to the corresponding Poisson Wald or score
-test, where the Poisson variance is statistically correct. Under extreme overdispersion
-($\hat{k} > 20$) or ML non-convergence, however, the package now falls back to a
-method-of-moments re-estimation of $(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ via
-`estimate_nb_mom()` and plugs those values into the observed Fisher information formula that the
-package uses everywhere else, rather than a Poisson test. This matters because under genuine
-overdispersion the Poisson variance understates the true variance by a factor of $(1 + k\mu)^{-1}$ per
-subject, which is exactly the regime where a robust fallback is most needed. The MoM path requires
-no ML convergence, always returns a nonnegative $\hat{k}$, and preserves the NB variance structure.
-The rule is applied uniformly in `mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()`,
-each of which now reports a `fallback` label (`"ml"`, `"mom"`, or `"poisson"`) in its return value
-so that simulation engines can audit which estimator was used at each interim. In `mutze_test()`
-the behaviour is controlled by two thresholds, `poisson_threshold` (default $50$, i.e.,
-$\hat{k} < 0.02$) and `mom_threshold` (default $20$, i.e., $\hat{k} > 20$); both are user-tunable
-for sensitivity analyses.
 
 ## Reproducibility and software availability
 
