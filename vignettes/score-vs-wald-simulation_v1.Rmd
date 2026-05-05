@@ -1,0 +1,285 @@
+---
+title: "Score vs Wald test: multi-scenario comparison"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Score vs Wald test: multi-scenario comparison}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(gsDesignNB)
+library(data.table)
+library(ggplot2)
+library(gt)
+```
+
+## Introduction
+
+This vignette compares the Wald and score test implementations in `mutze_test()` across a
+factorial grid of negative binomial trial scenarios. We vary the control event rate
+($\lambda_1$), overdispersion ($k$), and minimum inter-event gap to assess:
+
+- **Type I error control** under $H_0: RR = 1$
+- **Power** under $H_1: RR = 0.70$
+- **Z-score distributions** to check asymptotic normality
+
+Results are pre-computed by `data-raw/generate_score_sweep.R` and loaded here.
+
+## Load pre-computed results
+
+```{r}
+results_file <- system.file("extdata", "score_sweep_results.rds",
+                            package = "gsDesignNB")
+if (results_file == "" && file.exists("../inst/extdata/score_sweep_results.rds")) {
+  results_file <- "../inst/extdata/score_sweep_results.rds"
+}
+res <- readRDS(results_file)
+config <- res$config
+scenarios <- res$scenarios
+```
+
+```{r}
+cat(sprintf(
+  "Scenarios: %d | Power sims: %s | Null sims: %s | RR: %.2f | alpha: %.3f\n",
+  nrow(scenarios),
+  format(config$n_sims_power, big.mark = ","),
+  format(config$n_sims_null, big.mark = ","),
+  config$rr_power,
+  config$alpha
+))
+```
+
+### Scenario grid
+
+```{r}
+scenarios |>
+  as.data.table() |>
+  _[, .(lambda1, k, gap_days, n_total)] |>
+  gt() |>
+  tab_header(title = "Scenario grid with computed sample sizes") |>
+  cols_label(
+    lambda1 = "Control rate",
+    k = "Dispersion (k)",
+    gap_days = "Event gap (days)",
+    n_total = "Total N"
+  ) |>
+  fmt_number(columns = lambda1, decimals = 2) |>
+  fmt_number(columns = n_total, decimals = 0)
+```
+
+## Type I error comparison
+
+```{r}
+null_dt <- as.data.table(res$null_summary)
+null_long <- melt(
+  null_dt,
+  id.vars = c("lambda1", "k", "gap_days", "n_total"),
+  measure.vars = c("rate_wald", "rate_score"),
+  variable.name = "test",
+  value.name = "rejection_rate"
+)
+null_long[, test := fifelse(test == "rate_wald", "Wald", "Score")]
+
+# Add SE
+se_long <- melt(
+  null_dt,
+  id.vars = c("lambda1", "k", "gap_days"),
+  measure.vars = c("se_wald", "se_score"),
+  variable.name = "test",
+  value.name = "se"
+)
+se_long[, test := fifelse(test == "se_wald", "Wald", "Score")]
+null_long <- merge(null_long, se_long,
+                   by = c("lambda1", "k", "gap_days", "test"))
+```
+
+```{r}
+null_long |>
+  _[, .(lambda1, k, gap_days, n_total, test, rejection_rate, se)] |>
+  gt() |>
+  tab_header(
+    title = "Type I error rate by scenario",
+    subtitle = sprintf("Nominal alpha = %.3f, %s null sims per scenario",
+                        config$alpha, format(config$n_sims_null, big.mark = ","))
+  ) |>
+  cols_label(
+    lambda1 = "Control rate",
+    k = "Dispersion",
+    gap_days = "Gap (days)",
+    n_total = "N",
+    test = "Test",
+    rejection_rate = "Type I error",
+    se = "SE"
+  ) |>
+  fmt_number(columns = c(rejection_rate, se), decimals = 4) |>
+  fmt_number(columns = lambda1, decimals = 2)
+```
+
+```{r, fig.width=7, fig.height=5}
+ggplot(null_long, aes(x = interaction(lambda1, k, sep = " / "),
+                      y = rejection_rate, color = test, shape = test)) +
+
+  geom_point(size = 3, position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = rejection_rate - 1.96 * se,
+                     ymax = rejection_rate + 1.96 * se),
+                width = 0.15, position = position_dodge(width = 0.3)) +
+  geom_hline(yintercept = config$alpha, linetype = "dashed", color = "grey40") +
+  facet_wrap(~ paste0("Gap = ", gap_days, "d")) +
+  labs(
+    title = "Type I error: Wald vs Score test",
+    x = expression(lambda[1] ~ "/" ~ k),
+    y = "Rejection rate",
+    color = "Test", shape = "Test"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Power comparison
+
+```{r}
+power_dt <- as.data.table(res$power_summary)
+power_long <- melt(
+  power_dt,
+  id.vars = c("lambda1", "k", "gap_days", "n_total"),
+  measure.vars = c("rate_wald", "rate_score"),
+  variable.name = "test",
+  value.name = "power"
+)
+power_long[, test := fifelse(test == "rate_wald", "Wald", "Score")]
+
+se_power <- melt(
+  power_dt,
+  id.vars = c("lambda1", "k", "gap_days"),
+  measure.vars = c("se_wald", "se_score"),
+  variable.name = "test",
+  value.name = "se"
+)
+se_power[, test := fifelse(test == "se_wald", "Wald", "Score")]
+power_long <- merge(power_long, se_power,
+                    by = c("lambda1", "k", "gap_days", "test"))
+```
+
+```{r}
+power_long |>
+  _[, .(lambda1, k, gap_days, n_total, test, power, se)] |>
+  gt() |>
+  tab_header(
+    title = "Power by scenario",
+    subtitle = sprintf("RR = %.2f, %s power sims per scenario",
+                        config$rr_power, format(config$n_sims_power, big.mark = ","))
+  ) |>
+  cols_label(
+    lambda1 = "Control rate",
+    k = "Dispersion",
+    gap_days = "Gap (days)",
+    n_total = "N",
+    test = "Test",
+    power = "Power",
+    se = "SE"
+  ) |>
+  fmt_number(columns = c(power, se), decimals = 4) |>
+  fmt_number(columns = lambda1, decimals = 2)
+```
+
+```{r, fig.width=7, fig.height=5}
+ggplot(power_long, aes(x = interaction(lambda1, k, sep = " / "),
+                       y = power, color = test, shape = test)) +
+  geom_point(size = 3, position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = power - 1.96 * se,
+                     ymax = power + 1.96 * se),
+                width = 0.15, position = position_dodge(width = 0.3)) +
+  geom_hline(yintercept = config$power_target, linetype = "dashed", color = "grey40") +
+  facet_wrap(~ paste0("Gap = ", gap_days, "d")) +
+  labs(
+    title = "Power: Wald vs Score test",
+    subtitle = sprintf("Target = %.0f%%, RR = %.2f",
+                        100 * config$power_target, config$rr_power),
+    x = expression(lambda[1] ~ "/" ~ k),
+    y = "Power",
+    color = "Test", shape = "Test"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Z-score density comparison (null simulations)
+
+Under $H_0$, the Z-statistics should follow $N(0, 1)$ if the asymptotic approximation holds.
+
+```{r, fig.width=8, fig.height=6}
+z_null <- as.data.table(res$z_sample_null)
+sc_info <- data.table(
+  scenario_id = seq_len(nrow(scenarios)),
+  scenarios[, c("lambda1", "k", "gap_days")]
+)
+z_null <- merge(z_null, sc_info, by = "scenario_id")
+z_null[, label := sprintf("l1=%.2f k=%.1f gap=%dd", lambda1, k, gap_days)]
+
+z_null_long <- melt(
+  z_null,
+  id.vars = c("scenario_id", "label"),
+  measure.vars = c("z_wald", "z_score"),
+  variable.name = "test",
+  value.name = "z"
+)
+z_null_long[, test := fifelse(test == "z_wald", "Wald", "Score")]
+z_null_long <- z_null_long[is.finite(z)]
+
+ggplot(z_null_long, aes(x = z, color = test)) +
+  geom_density(linewidth = 0.6) +
+  stat_function(fun = dnorm, color = "black", linetype = "dashed", linewidth = 0.4) +
+  facet_wrap(~ label, scales = "free_y") +
+  labs(
+    title = "Null Z-score densities: Wald vs Score",
+    subtitle = "Dashed line = N(0,1) reference",
+    x = "Z-statistic", y = "Density",
+    color = "Test"
+  ) +
+  theme_minimal() +
+  coord_cartesian(xlim = c(-4, 4))
+```
+
+## Fallback method frequency
+
+When the negative binomial MLE fails to converge or yields non-overdispersed estimates,
+`mutze_test()` falls back to Poisson or method-of-moments estimation.
+
+```{r}
+null_fb <- as.data.table(res$null_summary)
+fb_cols <- c("lambda1", "k", "gap_days",
+             "pct_fallback_poisson_wald", "pct_fallback_mom_wald",
+             "pct_fallback_poisson_score", "pct_fallback_mom_score")
+null_fb[, ..fb_cols] |>
+  gt() |>
+  tab_header(title = "Fallback method frequency (%, null sims)") |>
+  cols_label(
+    lambda1 = "Control rate",
+    k = "Dispersion",
+    gap_days = "Gap (days)",
+    pct_fallback_poisson_wald = "Poisson (Wald)",
+    pct_fallback_mom_wald = "MoM (Wald)",
+    pct_fallback_poisson_score = "Poisson (Score)",
+    pct_fallback_mom_score = "MoM (Score)"
+  ) |>
+  fmt_number(columns = starts_with("pct_"), decimals = 1) |>
+  fmt_number(columns = lambda1, decimals = 2)
+```
+
+## Summary
+
+- Both Wald and score tests control Type I error near the nominal $\alpha = `r config$alpha`$
+  across all scenarios examined.
+- Power is similar between the two tests, as expected for well-powered designs.
+- The score test tends to be slightly more conservative (lower Type I error) in
+  scenarios with smaller sample sizes or lower event rates.
+- Z-score distributions under the null closely follow $N(0,1)$, confirming the
+  validity of the asymptotic approximation for the sample sizes used.

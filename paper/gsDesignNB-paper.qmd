@@ -10,15 +10,19 @@ author:
   - name: Hongtao Zhang
     affiliation:
       name: Merck & Co., Inc., Rahway, NJ, USA
+  - name: Nan Xiao
+    affiliation:
+      name: Genentech, Inc., South San Francisco, CA, USA
   - name: Andrea Maes
     affiliation:
       name: Merck & Co., Inc., Rahway, NJ, USA
 keywords:
-  - negative binomial
-  - recurrent events
   - group sequential design
+  - R package
+  - recurrent events
+  - overdispersion
+  - negative binomial distribution
   - sample size re-estimation
-  - R
 format:
   quarto-journals/jss-pdf:
     number-sections: true
@@ -60,11 +64,11 @@ abstract: |
   (MoM) nuisance-parameter estimation: when the NB ML fit is near-Poisson the software switches
   to a Poisson Wald or score test, but under extreme overdispersion or ML non-convergence it
   switches to a MoM-based NB test using the observed Fisher information formula, avoiding the
-  anti-conservative behaviour of a blind Poisson fallback. The package also supports calendar-time
+  Type I error inflation of a blind Poisson fallback. The package also supports calendar-time
   group sequential monitoring and both blinded and unblinded SSR. A 90-scenario SSR article
   illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
   should be checked under the null with the planned final test statistic. In our examples, the
-  Wald test is mildly anti-conservative after SSR, whereas the score test preserves Type I error
+  Wald test exhibits mild Type I error inflation after SSR, whereas the score test preserves Type I error
   more conservatively. The paper emphasizes
   both the statistical methodology and the software architecture that make these workflows
   reproducible.
@@ -85,7 +89,7 @@ underlying event rate, a Poisson model suffices: the variance equals the mean, a
 accrues linearly with exposure. Real patient populations, however, exhibit substantial
 between-patient heterogeneity in event rates. Sicker patients contribute many events while most
 contribute few, inflating the observed variance well beyond the Poisson mean. Ignoring this
-overdispersion leads to anticonservative tests and overstated power, understating the sample size
+overdispersion leads to inflated Type I error and overstated power, understating the sample size
 needed to detect a clinically meaningful treatment effect.
 
 The negative binomial (NB) model addresses this by adding a single dispersion parameter $k$
@@ -166,33 +170,38 @@ the dispersion is $k = 0.5$, maximum follow-up is 12 months, annual dropout is 1
 endpoint counts only events separated by at least 20 days. Accrual is piecewise, with 12
 participants/month for the first 6 months and 24 participants/month for the next 6 months. The
 planned analysis uses the score test with one-sided $\alpha = 0.025$ and 90% power.
+The futility boundary uses a Cauchy spending function
+[@anderson2010fitting] with parameters specifying that 56% and 63% of total futility
+spending occur by information fractions 0.4 and 0.75, respectively; this yields spending
+that increases relatively quickly between information fractions 0 and 0.2, flattens
+between 0.2 and 0.85, and then rises again from 0.85 to 1.
 
 ```{r worked-design}
 ex_fixed <- sample_size_nbinom(
-  lambda1 = 0.5,
-  lambda2 = 0.35,
-  dispersion = 0.5,
-  power = 0.90,
-  alpha = 0.025,
-  accrual_rate = c(12, 24),
-  accrual_duration = c(6, 6),
-  trial_duration = 24,
-  dropout_rate = 0.10 / 12,
-  max_followup = 12,
-  event_gap = 20 / 30.4375,
-  test_type = "score"
+  lambda1 = 0.5,              # control event rate (events/month)
+  lambda2 = 0.35,             # experimental event rate (RR = 0.70)
+  dispersion = 0.5,           # NB overdispersion parameter k
+  power = 0.90,               # target power
+  alpha = 0.025,              # one-sided Type I error
+  accrual_rate = c(12, 24),   # relative enrollment rates (ramp-up)
+  accrual_duration = c(6, 6), # duration of each accrual period (months)
+  trial_duration = 24,        # total study duration (months)
+  dropout_rate = 0.10 / 12,   # monthly dropout rate (10% annual)
+  max_followup = 12,          # maximum per-subject follow-up (months)
+  event_gap = 20 / 30.4375,   # 20-day minimum gap between counted events
+  test_type = "score"         # score-test sizing
 )
 
 ex_gs <- ex_fixed |>
   gsNBCalendar(
-    k = 3,
-    test.type = 4,
-    alpha = 0.025,
-    sfu = sfHSD,
-    sfupar = -2,
-    sfl = sfCauchy,
-    sflpar = c(0.4, 0.75, 0.56, 0.63),
-    analysis_times = c(9, 14, 24)
+    k = 3,                                  # 3 analyses (2 interim + final)
+    test.type = 4,                          # non-binding futility bound
+    alpha = 0.025,                          # one-sided alpha
+    sfu = sfHSD,                            # efficacy: Hwang-Shih-DeCani
+    sfupar = -2,                            # HSD gamma parameter
+    sfl = sfCauchy,                         # futility: Cauchy spending
+    sflpar = c(0.4, 0.75, 0.56, 0.63),      # 56%/63% spending at IF 0.4/0.75
+    analysis_times = c(9, 14, 24)           # calendar months for each look
   ) |>
   gsDesignNB::toInteger()
 ```
@@ -255,17 +264,25 @@ ex_plot_data <- data.frame(
   N = ex_gs$n_total
 )
 
+if_breaks <- c(0, ex_gs$timing)
+if_labels <- c("0", format(round(ex_gs$timing, 2), nsmall = 2))
+
 ggplot(ex_plot_data, aes(x = Month, y = Information)) +
   geom_line(linewidth = 0.8, color = "#1f78b4") +
   geom_point(size = 2.5, color = "#1f78b4") +
   geom_text(aes(label = paste0("N=", round(N))), vjust = -0.8, size = 3) +
+  scale_x_continuous(breaks = ex_gs$T) +
   scale_y_continuous(
     limits = c(0, 1.05),
-    breaks = seq(0, 1, by = 0.25),
-    labels = scales::percent
+    breaks = if_breaks,
+    labels = if_labels
   ) +
   labs(x = "Calendar month", y = "Information fraction") +
-  theme_minimal(base_size = 11)
+  theme_minimal(base_size = 11) +
+  theme(
+    panel.grid.major = element_line(color = "grey85"),
+    panel.grid.minor = element_blank()
+  )
 ```
 
 The worked example is intentionally small enough to render as part of the manuscript, but it is
@@ -273,23 +290,29 @@ not a toy calculation: it uses piecewise accrual, dropout, maximum follow-up, an
 sizing, calendar-time monitoring, non-binding futility, and integer rounding. The longer vignettes
 reuse the same objects for simulation and SSR operating-characteristic studies.
 
-### Timing, information, and three notions of gaps
+### Calendar timing, enrollment, and event gaps
 
-The package documentation uses the word "gap" in three different senses, and distinguishing them is
-important for both the methods and the software.
+Interim and final analyses are specified as calendar times (months from first enrollment) via the
+`analysis_times` argument to `gsNBCalendar()`. This is computationally simpler than solving for
+the calendar dates at which target information fractions are reached, and in practice it is
+straightforward to adjust calendar times to approximate desired information fractions. At the
+simulation stage, `sim_gs_nbinom()` and `sim_ssr_nbinom()` can combine multiple requirements
+(e.g., both a minimum calendar time and a minimum information fraction) to trigger each analysis.
 
-| Concept | Scale | Role in the package |
-|:--------|:------|:--------------------|
-| Analysis gap $\Delta_i$ | Trial calendar | Minimum time between database locks or interim looks |
-| Timing heterogeneity | Accrual, dropout, and follow-up | Determines how exposure and information accumulate over calendar time |
-| Event gap $g$ | Patient time | Defines which recurrent events count and how much post-event time is removed from the at-risk set |
+The `accrual_rate` and `accrual_duration` arguments together describe the *relative* enrollment
+pattern over time. For example, `accrual_rate = c(12, 24)` with `accrual_duration = c(6, 6)`
+specifies a 12-month enrollment period in which the rate doubles after the first 6 months.
+When sizing the trial, `sample_size_nbinom()` multiplies all values in `accrual_rate` 
+by a common constant so that
+the total sample size achieves the targeted power; thus `accrual_rate` defines the enrollment
+*shape*, not the absolute number of subjects per month.
 
-The first two affect *when* an analysis can occur. The third affects *which* events contribute to
-the endpoint and how much at-risk exposure remains after each counted event. In **gsDesignNB**, the
-same `event_gap` argument is carried through planning, simulation, and interim data cutting, so the
-effective event rate, counted events, and at-risk exposure stay aligned. By contrast, calendar-time
-analysis constraints are handled through `analysis_times` in `gsNBCalendar()` or through the search
-criteria in `get_cut_date()`.
+Some recurrent-event protocols only count events separated by a minimum patient-level gap
+(e.g., a 20-day recovery window). The `event_gap` argument captures this: it reduces the
+effective event rate and removes immediate post-event time from the at-risk 
+exposure in both the planning
+formulas and the simulation data-cutting functions, keeping the counted events and exposure
+aligned throughout the workflow.
 
 ### Primary and secondary workflows
 
@@ -316,9 +339,11 @@ Dropout is represented in **gsDesignNB** as exposure truncation. At the planning
 `sample_size_nbinom()` accounts for piecewise exponential dropout and maximum follow-up through the expected
 exposure $\bar{t}_g$ in each treatment arm; at interim analyses, data-cutting functions retain each
 subject's observed counted events and observed time at risk, including partial follow-up before
-dropout or the analysis cut. Thus the default analysis is not a complete-case analysis that discards
-subjects who discontinue early. It is an observed-exposure likelihood analysis for recurrent-event
-counts.
+dropout or the analysis cut. Thus every randomized subject contributes to the analysis
+regardless of whether they complete follow-up: each subject's counted events and observed
+time at risk enter the negative binomial likelihood through the log-exposure offset, making
+this an observed-exposure likelihood analysis rather than a complete-case analysis that
+discards early discontinuers.
 
 Under an ignorable missing-data process -- missing at random (MAR) together with distinct parameters
 for the observation and outcome processes -- direct likelihood inference can use the observed data
@@ -432,6 +457,8 @@ For superiority designs like those studied below, the traditional Wald sample si
 score test can be a defensible practical default because it preserves Type I error and provides a
 small sample-size margin. Final designs should therefore compare Wald and score sizing under the
 planned score test rather than assuming one formula is uniformly preferable.
+In practice, this comparison is best made through simulation, as illustrated in the group
+sequential example below.
 
 In `sample_size_nbinom()`, the same information framework is used for superiority,
 non-inferiority, and super-superiority designs via the `rr0` argument, and the nuisance parameters
@@ -504,7 +531,9 @@ from the at-risk set used for information calculations.
 The four scenarios in @tbl-power-comparison fix $\lambda_1 = 0.4$ and vary only $k$ and the gap
 duration. To characterize *when* the correction matters across a wider range of clinically
 relevant settings, we conducted a broader simulation sweep over three axes: the control event
-rate $\lambda_1$, the dispersion $k$, and the event gap $\gamma$.
+rate $\lambda_1$, the dispersion $k$, and the event gap $\gamma$. All scenarios target a single
+rate ratio $\lambda_2/\lambda_1 = 0.7$ (30% reduction); the sweep therefore isolates the impact
+of the correction on power at a fixed effect size.
 
 **Parameter grid.** The sweep covers $4 \times 4 \times 4 = 64$ scenarios defined by:
 
@@ -532,7 +561,7 @@ $$
 recurrent event trials. Heart failure hospitalization trials such as PARADIGM-HF report control
 rates of approximately 0.3 events/month with dispersion near 0.5 [@mcmurray2014paradigm].
 COPD exacerbation trials (e.g., FLAME, IMPACT) report rates around 0.5--0.8/month with
-$k \in [0.5, 1.0]$ and commonly define a new exacerbation as requiring $\geq$28 symptom-free days
+$k \in [0.5, 1.0]$ and commonly define a new exacerbation as requiring $\geq 28$ symptom-free days
 [@wedzicha2016flame; @lipson2018impact]. Multiple sclerosis relapse trials observe rates of
 1--2/year with moderate-to-high overdispersion [@hauser2017ocrelizumab]. At one extreme
 ($\lambda_1 = 0.3$, $k = 0.1$, gap = 10 days), the theoretical correction factor is below 0.1%
@@ -578,10 +607,11 @@ Three patterns emerge:
     (3--8% of total $n$).
 
 2.  **High event rates do not amplify the power gap as much as high dispersion.** At $k = 0.3$,
-    even $\lambda_1 = 2.0$ with a 45-day gap shows only $\sim$0.6 pp of underpowering.
+    even $\lambda_1 = 2.0$ with a 45-day gap shows only ${\sim}0.6$ pp of underpowering.
     Conversely, at $k = 1.0$, $\lambda_1 = 0.5$ with a 30-day gap shows
     2.1 pp --- the largest gap in the sweep. This is because the correction factor
-    $k\lambda\gamma/(1+\lambda\gamma)^2$ saturates in $\lambda$ but grows linearly in $k$.
+    $k\lambda\gamma/(1+\lambda\gamma)^2$ is bounded in $\lambda$ (it approaches $k/\gamma$ for
+    large $\lambda$) but grows linearly in $k$.
 
 3.  **The correction is negligible when either $k$ or $\gamma$ is small.** All scenarios with
     $k = 0.1$ show $\Delta n \leq 4$ and $\Delta\text{Power} < 0.8$ pp. Similarly, all 10-day
@@ -591,6 +621,11 @@ These findings provide practical guidance: the Jensen correction is most valuabl
 in therapeutic areas with substantial patient heterogeneity ($k \geq 0.5$) and protocol-defined
 event gaps exceeding 20 days, such as COPD exacerbation studies with 28-day new-event windows
 or heart failure trials with extended hospitalization-free windows.
+The correction addresses only the planning formula; it does not resolve the Wald test's tendency
+toward Type I error inflation in finite samples. When event gaps are present, the Jensen-corrected
+sample size should therefore be paired with the score test for the final analysis, which controls
+Type I error across the scenarios studied below. Power under this combination should be confirmed
+by simulation.
 
 ## Group sequential design, monitoring, and sample size re-estimation
 
@@ -604,8 +639,11 @@ the `n.I` slot inherited from `gsDesign`. The resulting `gsNB` object therefore 
 `gsDesign` object for spending functions and boundary summaries while retaining the NB-specific
 quantities needed for simulation and interpretation.
 
-This calendar-time emphasis matters because recurrent-event trials are often governed by operational
-rules rather than by exact information fractions. If $C_i$ denotes a calendar floor for look $i$,
+This calendar-time emphasis matters because timing of analyses in trials is often primarily
+governed by operational issues, and thus we have chosen this approach to analysis timing. This also
+makes computation faster since there is no root-finding for when analyses are expected. Finally,
+calendar times are easily adjusted if the information fractions derived from this approach are
+thought inappropriate. If $C_i$ denotes a calendar floor for look $i$,
 $\Delta_i$ a minimum gap after the prior look, and $\mathcal{I}_i$ the target information for that
 look, the analysis time can be expressed schematically as
 
@@ -676,7 +714,7 @@ $$
 
 The methodological point of the second branch is straightforward. Under genuine overdispersion
 ($k \gg 0$), a Poisson fallback underestimates $\text{Var}(\hat\theta)$ by a factor of
-$(1 + k\mu)^{-1}$ per subject, producing anti-conservative tests exactly when the NB model is most
+$(1 + k\mu)^{-1}$ per subject, inflating Type I error exactly when the NB model is most
 needed. MoM does not require ML convergence, always returns a nonnegative $\hat{k}$, and, plugged
 into the NB information formula, yields a variance estimate with the correct overdispersion
 structure. The same two-branch rule is used in `calculate_blinded_info()` (pooled blinded
@@ -686,7 +724,7 @@ functions now returns a `fallback` field (`"ml"`, `"mom"`, or `"poisson"`) so th
 engines and diagnostic tables can record which estimator was used at each interim.
 
 The simulation engines also expose blinded and unblinded information columns under both ML and
-MoM estimation (`info_*_ml`, `info_*_mom`) so that users can stress-test whether a design's
+MoM estimation (e.g., `info_blinded_ml`, `info_unblinded_mom`) so that users can stress-test whether a design's
 monitoring behaviour is sensitive to the nuisance-parameter estimation method. These alternative
 columns are diagnostics rather than competing estimands; in well-behaved data they agree closely,
 while in sparse or unstable interim data the MoM columns remain finite when the ML columns
@@ -707,6 +745,11 @@ and events. The recalculated total sample size is then obtained by calling `samp
 with the planned accrual, dropout, maximum follow-up, and event-gap assumptions. The resulting SSR
 therefore adjusts for the loss of information expected from dropout under the specified ignorable
 censoring model; it is not an MNAR sensitivity procedure.
+
+To prevent extreme sample-size inflation in unfavourable scenarios, `sim_ssr_nbinom()` caps the
+adapted enrollment at `n_max`, which defaults to 150% of the planned total and is always at least
+the planned sample size. This cap is applied after the GS inflation factor so that it bounds the
+operational commitment while still allowing meaningful upward adaptation.
 
 `sim_ssr_nbinom()` wraps these choices into a full adaptive simulation engine. It supports "No
 adaptation", "Blinded SSR", and "Unblinded SSR" strategies; searches for interim looks using
@@ -836,6 +879,7 @@ The package includes further worked examples that round out the software contrib
 | Non-inferiority and super-superiority | `sample_size_nbinom(rr0 = ...)` | Alternative null hypotheses in the same design framework |
 | Blinded-information diagnostics | `calculate_blinded_info()`, `estimate_nb_mom()` | Stability checks for sparse or unstable interims |
 | Verification studies | `nb_sim()`, `mutze_test()`, `sim_gs_nbinom()` | Simulation-based agreement checks for design formulas |
+| AI-assisted design | `SKILL.md`, `ai-skills` vignette | Structured workflow guide for AI coding assistants |
 
 These workflows are documented in the package vignettes so that the manuscript examples can remain
 brief while the installed package still serves as the full replication resource.
@@ -880,7 +924,7 @@ simulation summaries.
 | Wald versus score inference | Compare Wald and score tests under Wald- and score-sized designs | `score-vs-wald-simulation` | 27-scenario factorial grid; 20,000 null replicates and 3,500 power replicates per cell; Type I error, power, and null Z distributions |
 | SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
 | SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled production cache uses 3,600 replicates per RR $<1$ scenario and 1,000 replicates per RR $>1$ scenario |
-| SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study`; `data-raw/generate_ssr_sizing_sensitivity.R` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
+| SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
 | Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
 
 : Simulation reporting map. The package articles are treated as executable supplementary material
@@ -907,8 +951,8 @@ should still be simulated for power and may need a modest information margin.
 **SSR Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
 RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$, comparing the
 Wald statistic with the score statistic under the same group sequential design. With $20{,}000$
-replicates per cell the Monte Carlo standard error is about $0.001$. The Wald statistic is mildly
-anti-conservative, with empirical Type I error ranging from 0.0279 to 0.0312. The score statistic
+replicates per cell the Monte Carlo standard error is about $0.001$. The Wald statistic exhibits
+mild Type I error inflation, with empirical rejection rates ranging from 0.0279 to 0.0312. The score statistic
 is conservative in the same design, with empirical Type I error ranging from 0.0214 to 0.0232.
 Thus the preferred remedy is to align the analysis and simulation engine with the score test and
 then verify power, rather than to lower alpha for a Wald analysis.
@@ -943,7 +987,13 @@ the full nuisance range.
 **Diminishing returns at smaller effects.** For RR = 0.85 (true effect smaller than planned), the
 planned design is inherently underpowered; SSR compensates for nuisance-parameter misspecification
 but cannot overcome the effect-size mismatch. In the production score-test cache, no-adaptation
-power averaged 0.242, while blinded and unblinded SSR averaged about 0.296 and 0.297. For RR = 1.1
+power averaged 0.242, while blinded and unblinded SSR averaged about 0.296 and 0.297.
+However, futility stopping provides substantial cost savings: approximately 46% of trials stopped
+for futility (38% at the first interim, 8% at the second), reducing the average sample size from
+the planned 312 to about 291 without adaptation or about 345 with SSR. Under the null
+(RR = 1.0), futility stopping was even more effective, with 87% of trials stopped early and
+average sample size reduced to about 268--285 depending on strategy.
+For RR = 1.1
 (treatment worse than control), all three strategies had maximum rejection rates of 0.005 across
 the scenario grid, confirming that SSR does not artificially inflate one-sided rejections in the
 wrong direction.
@@ -955,6 +1005,23 @@ both strategies adapt frequently when $k = 1.0$, and unblinded SSR has slightly 
 size in the displayed scenarios. The practical conclusion is therefore not that one approach is
 uniformly more efficient, but that the masked and unmasked update rules should be compared under
 the trial-specific nuisance range, adaptation cap, and analysis statistic.
+
+A potential concern with blinded SSR is unnecessary sample-size inflation when the true treatment
+effect is larger than planned, because the pooled nuisance estimates may overstate the required
+information. However, early efficacy stopping largely neutralizes this risk. At RR = 0.6 (a larger
+effect than the planned RR = 0.7), 94% of trials crossed an efficacy boundary at an interim
+analysis, SSR was triggered in fewer than 5% of trials, and the median sample size was
+identical to the no-adaptation design; mean sample size increased by only about 11 subjects
+(312 vs.\ 323). Even at the planned RR = 0.7, early efficacy stopping at 67% of trials limits
+the average inflation from SSR to about 43 subjects.
+At higher dispersion ($k = 1.0$), where blinded SSR is triggered more often, the pattern holds:
+at RR = 0.6, SSR was applied in about 9% of trials, but early efficacy stopping still occurred
+in 91%, keeping the median sample size at 312 and the mean at 334 compared with 312 without
+adaptation. The additional enrollment mostly occurred in the 5% of trials that reached the 95th
+percentile ($n = 564$), which are precisely the trials where nuisance misspecification would
+otherwise have caused the design to lose power. At the planned RR = 0.7 with $k = 1.0$, SSR was
+applied in 35% of trials and mean sample size rose to 393; however, power increased from 0.733
+without adaptation to 0.889, confirming that the inflation is productive rather than wasteful.
 
 **SSR starting-size sensitivity.** The fixed-design score-versus-Wald sweep suggests that the
 traditional Wald sample size can provide a small information margin when the planned analysis uses
@@ -1005,13 +1072,13 @@ Wald sizing and slightly less powerful for the score test. Thus Wald/Zhu--Lakkis
 with the score test is a reasonable practical recommendation when it supplies a modest information
 margin. Because the score test can be conservative, the final design should still be calibrated for
 both Type I error and power; increasing the target power or total information slightly may be
-preferable to reverting to an anti-conservative Wald test.
+preferable to reverting to a Wald test with inflated Type I error.
 
 The SSR study likewise shows how the package's computational layer supports statistical design
 checks. The production score-test grid confirms that adverse nuisance-parameter misspecification
 can be diagnosed and that SSR moves sample size in the expected direction, but it also shows why
-the final test statistic matters. The non-binding null simulations show that Wald analyses are
-mildly anti-conservative in this configuration, whereas score analyses are conservative at the
+the final test statistic matters. The non-binding null simulations show that Wald analyses
+exhibit mild Type I error inflation in this configuration, whereas score analyses are conservative at the
 same nominal one-sided alpha. The updated SSR article therefore compares Wald and score analyses
 directly rather than treating an ad hoc alpha reduction as the primary remedy. The larger adapted
 sample sizes under high dispersion should be interpreted primarily as nuisance-parameter
@@ -1062,7 +1129,7 @@ test, where the Poisson variance is statistically correct. Under extreme overdis
 method-of-moments re-estimation of $(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ via
 `estimate_nb_mom()` and plugs those values into the observed Fisher information formula that the
 package uses everywhere else, rather than a Poisson test. This matters because under genuine
-overdispersion the Poisson variance is anti-conservative by a factor of $(1 + k\mu)^{-1}$ per
+overdispersion the Poisson variance understates the true variance by a factor of $(1 + k\mu)^{-1}$ per
 subject, which is exactly the regime where a robust fallback is most needed. The MoM path requires
 no ML convergence, always returns a nonnegative $\hat{k}$, and preserves the NB variance structure.
 The rule is applied uniformly in `mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()`,

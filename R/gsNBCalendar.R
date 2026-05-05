@@ -404,11 +404,11 @@ summary.gsNB <- function(object, ...) {
   )
 
   # Format exposure text
-  exposure_text <- sprintf("average exposure %.2f", nb$exposure)
+  exposure_text <- sprintf("average exposure %.2f", nb$exposure[1])
   if (!is.null(inputs$event_gap) && inputs$event_gap > 0 && !is.null(nb$exposure_at_risk_n1)) {
     exposure_text <- sprintf(
       "average exposure (calendar) %.2f, (at-risk n1=%.2f, n2=%.2f)",
-      nb$exposure, nb$exposure_at_risk_n1, nb$exposure_at_risk_n2
+      nb$exposure[1], nb$exposure_at_risk_n1, nb$exposure_at_risk_n2
     )
   }
 
@@ -443,19 +443,19 @@ summary.gsNB <- function(object, ...) {
 
   # Spending function descriptions
   upper_spend <- if (!is.null(object$upper$name)) {
-    paste0(
-      "Upper spending: ", object$upper$name,
-      if (!is.null(object$upper$parname)) paste0(" (", object$upper$parname, " = ", object$upper$param, ")") else ""
-    )
+    param_str <- if (!is.null(object$upper$parname)) {
+      paste0(" (", paste(object$upper$parname, "=", round(object$upper$param, 2), collapse = ", "), ")")
+    } else ""
+    paste0("Upper spending: ", object$upper$name, param_str)
   } else {
     "Upper spending: Custom"
   }
 
   lower_spend <- if (!is.null(object$lower$name)) {
-    paste0(
-      "Lower spending: ", object$lower$name,
-      if (!is.null(object$lower$parname)) paste0(" (", object$lower$parname, " = ", object$lower$param, ")") else ""
-    )
+    param_str <- if (!is.null(object$lower$parname)) {
+      paste0(" (", paste(object$lower$parname, "=", round(object$lower$param, 2), collapse = ", "), ")")
+    } else ""
+    paste0("Lower spending: ", object$lower$name, param_str)
   } else {
     "Lower spending: Custom"
   }
@@ -463,10 +463,10 @@ summary.gsNB <- function(object, ...) {
   harm_spend <- ""
   if (object$test.type %in% c(7, 8) && !is.null(object$harm)) {
     harm_spend <- if (!is.null(object$harm$name)) {
-      paste0(
-        "\nHarm spending: ", object$harm$name,
-        if (!is.null(object$harm$parname)) paste0(" (", object$harm$parname, " = ", object$harm$param, ")") else ""
-      )
+      param_str <- if (!is.null(object$harm$parname)) {
+        paste0(" (", paste(object$harm$parname, "=", round(object$harm$param, 2), collapse = ", "), ")")
+      } else ""
+      paste0("\nHarm spending: ", object$harm$name, param_str)
     } else {
       "\nHarm spending: Custom"
     }
@@ -494,7 +494,7 @@ summary.gsNB <- function(object, ...) {
     inputs$lambda1,
     inputs$lambda2,
     risk_ratio,
-    inputs$dispersion,
+    inputs$dispersion[1],
     sum(inputs$accrual_duration),
     inputs$trial_duration,
     max_followup_str,
@@ -749,4 +749,163 @@ toInteger.gsNB <- function(x, ratio = x$nb_design$inputs$ratio, roundUpFinal = T
   result$testLower <- gs_updated$testLower
 
   return(result)
+}
+
+
+#' Update group sequential bounds with observed information
+#'
+#' Given a planned `gsNB` (or `gsDesign`) object and observed statistical
+#' information at one or more analyses, recompute the group sequential
+#' boundaries and return an updated design object together with a
+#' [gsDesign::gsBoundSummary()]-style table.
+#'
+#' The observed information determines the covariance structure of the test
+#' statistics (via the information fraction `timing`), while `spending_time`
+#' controls how much of the error-spending budget has been used.
+#' When `spending_time` is `NULL` (the default), spending is driven by the
+#' observed information fraction.  Supplying an explicit `spending_time` is
+#' useful when the monitoring charter specifies calendar-driven spending that
+#' differs from the observed information fraction.
+#'
+#' @param design A `gsNB` or `gsDesign` object produced by
+#'   [gsNBCalendar()] (or [gsDesign::gsDesign()]).
+#' @param observed_info Numeric vector of observed statistical information at
+#'   each analysis conducted so far.
+#'   Its length must be between 1 and `design$k`.
+#'   If shorter than `design$k`, information at future analyses is projected
+#'   from the planned design.
+#' @param spending_time Optional numeric vector the same length as
+#'   `observed_info` giving the spending time (between 0 and 1) for each
+#'   analysis.  When `NULL`, spending time equals the information fraction.
+#'   If shorter than `design$k`, future spending times are taken from the
+#'   planned design.
+#'
+#' @return A list with components:
+#'   \describe{
+#'     \item{design}{The updated `gsDesign` object with recalculated
+#'       boundaries.}
+#'     \item{bounds}{A data frame from [gsDesign::gsBoundSummary()]
+#'       showing Z-boundaries, nominal p-values, approximate treatment effects
+#'       at the boundary, and cumulative crossing probabilities at each
+#'       analysis.}
+#'     \item{info}{A data frame with one row per analysis containing the
+#'       information fraction (`IF`), spending time (`spending_time`),
+#'       upper and lower Z-boundaries, and cumulative upper and lower
+#'       spending.}
+#'   }
+#'
+#' @export
+#'
+#' @examples
+#' library(gsDesign)
+#' nb_ss <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' gs <- gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 18, 24))
+#'
+#' # After observing information at the first interim
+#' upd <- update_gsNB(gs, observed_info = gs$n.I[1] * 0.95)
+#' upd$bounds
+#' upd$info
+update_gsNB <- function(design, observed_info, spending_time = NULL) {
+  # --- input validation -------------------------------------------------------
+  if (!inherits(design, "gsDesign")) {
+    stop("`design` must be a gsDesign or gsNB object.", call. = FALSE)
+  }
+  n_obs <- length(observed_info)
+  if (n_obs < 1 || n_obs > design$k) {
+    stop(
+      sprintf(
+        "`observed_info` must have between 1 and %d elements (design$k).",
+        design$k
+      ),
+      call. = FALSE
+    )
+  }
+  if (!is.null(spending_time)) {
+    if (length(spending_time) != n_obs) {
+      stop(
+        "`spending_time` must be the same length as `observed_info`.",
+        call. = FALSE
+      )
+    }
+    if (any(spending_time <= 0 | spending_time > 1)) {
+      stop("`spending_time` values must be in (0, 1].", call. = FALSE)
+    }
+  }
+
+  # --- build timing vectors ---------------------------------------------------
+  max_info <- design$n.fix
+
+  # Information fractions: observed for conducted analyses, planned for future
+
+  timing <- design$timing
+  timing[seq_len(n_obs)] <- observed_info / max_info
+
+  # If the last observation is the final analysis, set to 1
+  if (n_obs == design$k) timing[n_obs] <- max(timing[n_obs], 1)
+
+  # Enforce monotonicity
+  for (i in seq_along(timing)[-1]) {
+    if (timing[i] <= timing[i - 1]) {
+      timing[i] <- timing[i - 1] + 1e-4
+    }
+  }
+
+  # Spending time
+  us_time <- design$usTime
+  ls_time <- design$lsTime
+  if (!is.null(spending_time)) {
+    if (is.null(us_time)) us_time <- design$timing
+    if (is.null(ls_time)) ls_time <- design$timing
+    us_time[seq_len(n_obs)] <- spending_time
+    ls_time[seq_len(n_obs)] <- spending_time
+  }
+
+  # --- rebuild design ---------------------------------------------------------
+  gs_args <- list(
+    k         = design$k,
+    test.type = design$test.type,
+    alpha     = design$alpha,
+    beta      = design$beta,
+    astar     = design$astar,
+    delta     = design$delta,
+    sfu       = design$upper$sf,
+    sfupar    = design$upper$param,
+    sfl       = design$lower$sf,
+    sflpar    = design$lower$param,
+    tol       = design$tol,
+    r         = design$r,
+    n.fix     = max_info,
+    timing    = timing,
+    usTime    = us_time,
+    lsTime    = ls_time
+  )
+  if (design$test.type %in% c(7, 8) && !is.null(design$harm)) {
+    gs_args$sfharm     <- design$harm$sf
+    gs_args$sfharmparam <- design$harm$param
+  }
+
+  updated <- do.call(gsDesign::gsDesign, gs_args)
+
+  # --- summary table ----------------------------------------------------------
+  bounds <- gsDesign::gsBoundSummary(updated)
+
+  # --- compact info table -----------------------------------------------------
+  eff_spend <- cumsum(updated$upper$spend)
+  fut_spend <- cumsum(updated$lower$spend)
+  st <- if (!is.null(us_time)) us_time else timing
+
+  info_df <- data.frame(
+    Analysis      = seq_len(design$k),
+    IF            = round(timing, 4),
+    spending_time = round(st, 4),
+    upper_bound   = round(updated$upper$bound, 4),
+    lower_bound   = round(updated$lower$bound, 4),
+    cum_upper_spend = round(eff_spend, 6),
+    cum_lower_spend = round(fut_spend, 6)
+  )
+
+  list(design = updated, bounds = bounds, info = info_df)
 }
