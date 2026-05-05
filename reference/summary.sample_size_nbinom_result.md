@@ -1,4 +1,4 @@
-# Summary for sample_size_nbinom_result objects
+# Summary for sample_size_nbinom_result Objects
 
 Provides a textual summary of the sample size calculation for negative
 binomial outcomes, similar to the summary for gsNB objects.

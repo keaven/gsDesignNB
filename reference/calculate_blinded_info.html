@@ -11,7 +11,7 @@ assuming the planned allocation ratio and treatment effect."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,6 @@ assuming the planned allocation ratio and treatment effect."></head><body>
     <li><a class="dropdown-item" href="../articles/simulation-example.html">Simulation of recurrent events</a></li>
     <li><a class="dropdown-item" href="../articles/verification-simulation.html">Verification of sample size calculation via simulation</a></li>
   </ul></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/keaven/gsDesignNB/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -42,7 +41,7 @@ assuming the planned allocation ratio and treatment effect."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculate blinded statistical information</h1>
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.3/R/calculate_blinded_info.R" class="external-link"><code>R/calculate_blinded_info.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.1/R/calculate_blinded_info.R" class="external-link"><code>R/calculate_blinded_info.R</code></a></small>
       <div class="d-none name"><code>calculate_blinded_info.Rd</code></div>
     </div>
 
@@ -109,36 +108,6 @@ If provided, planning rates are adjusted as lambda / (1 + lambda * gap).</p></dd
 
 </dl></div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">interim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span>, tte <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">1.0</span>, <span class="fl">1.2</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">calculate_blinded_info</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">interim</span>,</span></span>
-<span class="r-in"><span>  ratio <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>  lambda1_planning <span class="op">=</span> <span class="fl">0.5</span>,</span></span>
-<span class="r-in"><span>  lambda2_planning <span class="op">=</span> <span class="fl">0.3</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $blinded_info</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1.640583 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $dispersion_blinded</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.617394e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda_blinded</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1.794874 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda1_adjusted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    2.243592 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda2_adjusted</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    1.346155 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

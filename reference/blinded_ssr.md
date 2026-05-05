@@ -93,6 +93,10 @@ blinded_ssr(
 
 A list containing:
 
+- n_total_unadjusted:
+
+  Original planned total sample size (based on planning parameters).
+
 - n_total_blinded:
 
   Re-estimated total sample size using blinded estimates.
@@ -129,50 +133,3 @@ Schneider, S., Schmidli, H., & Friede, T. (2013). Blinded sample size
 re-estimation for recurrent event data with time trends. *Statistics in
 Medicine*, 32(30), 5448–5457.
 [doi:10.1002/sim.5977](https://doi.org/10.1002/sim.5977)
-
-## Examples
-
-``` r
-interim <- data.frame(events = c(1, 2, 1, 3), tte = c(0.8, 1.0, 1.2, 0.9))
-blinded_ssr(
-  interim,
-  ratio = 1,
-  lambda1_planning = 0.5,
-  lambda2_planning = 0.3,
-  power = 0.8,
-  alpha = 0.025,
-  accrual_rate = 10,
-  accrual_duration = 12,
-  trial_duration = 18
-)
-#> $n_total_blinded
-#> (Intercept) 
-#>           6 
-#> 
-#> $dispersion_blinded
-#> [1] 1.617394e-05
-#> 
-#> $lambda_blinded
-#> (Intercept) 
-#>    1.794874 
-#> 
-#> $lambda1_adjusted
-#> (Intercept) 
-#>    2.243592 
-#> 
-#> $lambda2_adjusted
-#> (Intercept) 
-#>    1.346155 
-#> 
-#> $info_fraction
-#> (Intercept) 
-#>  0.05454262 
-#> 
-#> $blinded_info
-#> (Intercept) 
-#>    1.640583 
-#> 
-#> $target_info
-#> [1] 30.07893
-#> 
-```

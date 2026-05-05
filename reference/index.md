@@ -8,11 +8,11 @@ outcomes.
 - [`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md)
   : Sample size calculation for negative binomial distribution
 - [`print(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.sample_size_nbinom_result.md)
-  : Print method for sample_size_nbinom_result objects
+  : Print Method for sample_size_nbinom_result Objects
 - [`summary(`*`<sample_size_nbinom_result>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.sample_size_nbinom_result.md)
-  : Summary for sample_size_nbinom_result objects
+  : Summary for sample_size_nbinom_result Objects
 - [`print(`*`<sample_size_nbinom_summary>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.sample_size_nbinom_summary.md)
-  : Print method for sample_size_nbinom_summary objects
+  : Print Method for sample_size_nbinom_summary Objects
 
 ## Group sequential design
 
@@ -21,11 +21,11 @@ Functions for extending fixed designs to group sequential designs.
 - [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
   : Group sequential design for negative binomial outcomes
 - [`toInteger()`](https://keaven.github.io/gsDesignNB/reference/toInteger.md)
-  : Convert group sequential design to integer sample sizes
+  : Convert Group Sequential Design to Integer Sample Sizes
 - [`summary(`*`<gsNB>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.gsNB.md)
-  : Summary for gsNB objects
+  : Summary for gsNB Objects
 - [`print(`*`<gsNBsummary>`*`)`](https://keaven.github.io/gsDesignNB/reference/print.gsNBsummary.md)
-  : Print method for gsNBsummary objects
+  : Print Method for gsNBsummary Objects
 
 ## Simulation
 
@@ -35,13 +35,6 @@ Tools for simulating trial data.
   : Simulate recurrent events with fixed follow-up
 - [`nb_sim_seasonal()`](https://keaven.github.io/gsDesignNB/reference/nb_sim_seasonal.md)
   : Simulate recurrent events with seasonal rates
-- [`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
-  : Simulate group sequential clinical trial for negative binomial
-  outcomes
-- [`check_gs_bound()`](https://keaven.github.io/gsDesignNB/reference/check_gs_bound.md)
-  : Check group sequential bounds
-- [`summarize_gs_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_gs_sim.md)
-  : Summarize group sequential simulation results
 
 ## Analysis
 
@@ -62,11 +55,9 @@ re-estimation and interim analysis.
 - [`cut_date_for_completers()`](https://keaven.github.io/gsDesignNB/reference/cut_date_for_completers.md)
   : Find calendar date for target completer count
 - [`compute_info_at_time()`](https://keaven.github.io/gsDesignNB/reference/compute_info_at_time.md)
-  : Compute statistical information at analysis time
+  : Compute Statistical Information at Analysis Time
 - [`get_analysis_date()`](https://keaven.github.io/gsDesignNB/reference/get_analysis_date.md)
   : Find calendar date for target event count
-- [`get_cut_date()`](https://keaven.github.io/gsDesignNB/reference/get_cut_date.md)
-  : Determine analysis date based on criteria
 
 ## gsDesign re-exports
 

@@ -1,4 +1,4 @@
-# Convert group sequential design to integer sample sizes
+# Convert Group Sequential Design to Integer Sample Sizes
 
 Generic function to round sample sizes in a group sequential design to
 integers. This extends the

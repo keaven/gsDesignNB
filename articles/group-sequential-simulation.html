@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,6 @@
     <li><a class="dropdown-item" href="../articles/verification-simulation.html">Verification of sample size calculation via simulation</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -64,7 +63,7 @@
       <h1>Group sequential design and simulation</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.3/vignettes/group-sequential-simulation.Rmd" class="external-link"><code>vignettes/group-sequential-simulation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.1/vignettes/group-sequential-simulation.Rmd" class="external-link"><code>vignettes/group-sequential-simulation.Rmd</code></a></small>
       <div class="d-none name"><code>group-sequential-simulation.Rmd</code></div>
     </div>
 
@@ -171,9 +170,7 @@ with the <code><a href="https://keaven.github.io/gsDesign/reference/sfLinear.htm
 and 100% of the cumulative
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
 at the 3 planned analyses regardless of the observed statistical
-information at each analysis. The interim spending is intended to
-achieve a nominal p-value of 0.0025 (one-sided) at both interim
-analyses.</p>
+information at each analysis.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Analysis times (in months)</span></span>
 <span><span class="va">analysis_times</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">18</span>, <span class="fl">24</span><span class="op">)</span></span>
@@ -695,94 +692,94 @@ analyses.</p>
 </thead>
 <tbody class="gt_table_body">
 <tr>
-<td headers="Analysis" class="gt_row gt_left">IA 1: 44%</td>
+<td headers="Analysis" class="gt_row gt_left">IA 1: 35%</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
 <td headers="Efficacy" class="gt_row gt_right">2.8070</td>
-<td headers="Futility" class="gt_row gt_right">-0.8788</td>
+<td headers="Futility" class="gt_row gt_right">-1.1032</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Information: 28.96</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
 <td headers="Efficacy" class="gt_row gt_right">0.0025</td>
-<td headers="Futility" class="gt_row gt_right">0.8102</td>
+<td headers="Futility" class="gt_row gt_right">0.8650</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 10</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
 <td headers="Efficacy" class="gt_row gt_right">0.5931</td>
-<td headers="Futility" class="gt_row gt_right">1.1777</td>
+<td headers="Futility" class="gt_row gt_right">1.2279</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
 <td headers="Efficacy" class="gt_row gt_right">0.0025</td>
-<td headers="Futility" class="gt_row gt_right">0.1898</td>
+<td headers="Futility" class="gt_row gt_right">0.1350</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.67</td>
 <td headers="Efficacy" class="gt_row gt_right">0.2649</td>
-<td headers="Futility" class="gt_row gt_right">0.0011</td>
+<td headers="Futility" class="gt_row gt_right">0.0005</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">IA 2: 92%</td>
+<td headers="Analysis" class="gt_row gt_left">IA 2: 79%</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
-<td headers="Efficacy" class="gt_row gt_right">2.8107</td>
-<td headers="Futility" class="gt_row gt_right">1.5082</td>
+<td headers="Efficacy" class="gt_row gt_right">2.8191</td>
+<td headers="Futility" class="gt_row gt_right">1.1884</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">Information: 60.12</td>
+<td headers="Analysis" class="gt_row gt_left">Information: 65.47</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0025</td>
-<td headers="Futility" class="gt_row gt_right">0.0658</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0024</td>
+<td headers="Futility" class="gt_row gt_right">0.1173</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 18</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.6956</td>
-<td headers="Futility" class="gt_row gt_right">0.8230</td>
+<td headers="Efficacy" class="gt_row gt_right">0.7054</td>
+<td headers="Futility" class="gt_row gt_right">0.8632</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
 <td headers="Efficacy" class="gt_row gt_right">0.0045</td>
-<td headers="Futility" class="gt_row gt_right">0.9339</td>
+<td headers="Futility" class="gt_row gt_right">0.8826</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.67</td>
-<td headers="Efficacy" class="gt_row gt_right">0.6461</td>
-<td headers="Futility" class="gt_row gt_right">0.0515</td>
+<td headers="Efficacy" class="gt_row gt_right">0.6910</td>
+<td headers="Futility" class="gt_row gt_right">0.0186</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Final</td>
 <td headers="Value" class="gt_row gt_left">Z</td>
-<td headers="Efficacy" class="gt_row gt_right">1.9800</td>
-<td headers="Futility" class="gt_row gt_right">1.9800</td>
+<td headers="Efficacy" class="gt_row gt_right">1.9875</td>
+<td headers="Futility" class="gt_row gt_right">1.9875</td>
 </tr>
 <tr>
-<td headers="Analysis" class="gt_row gt_left">Information: 65.55</td>
+<td headers="Analysis" class="gt_row gt_left">Information: 82.89</td>
 <td headers="Value" class="gt_row gt_left">p (1-sided)</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0239</td>
-<td headers="Futility" class="gt_row gt_right">0.0239</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0234</td>
+<td headers="Futility" class="gt_row gt_right">0.0234</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left">Month: 24</td>
 <td headers="Value" class="gt_row gt_left">~RR at bound</td>
-<td headers="Efficacy" class="gt_row gt_right">0.7828</td>
-<td headers="Futility" class="gt_row gt_right">0.7828</td>
+<td headers="Efficacy" class="gt_row gt_right">0.8036</td>
+<td headers="Futility" class="gt_row gt_right">0.8036</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=1</td>
-<td headers="Efficacy" class="gt_row gt_right">0.0244</td>
-<td headers="Futility" class="gt_row gt_right">0.9756</td>
+<td headers="Efficacy" class="gt_row gt_right">0.0240</td>
+<td headers="Futility" class="gt_row gt_right">0.9760</td>
 </tr>
 <tr>
 <td headers="Analysis" class="gt_row gt_left"></td>
 <td headers="Value" class="gt_row gt_left">P(Cross) if RR=0.67</td>
-<td headers="Efficacy" class="gt_row gt_right">0.9013</td>
-<td headers="Futility" class="gt_row gt_right">0.0987</td>
+<td headers="Efficacy" class="gt_row gt_right">0.9524</td>
+<td headers="Futility" class="gt_row gt_right">0.0476</td>
 </tr>
 </tbody>
 </table>
@@ -832,29 +829,188 @@ sequential design assuming design parameters above are correct.</p>
 <div class="section level3">
 <h3 id="run-simulations">Run simulations<a class="anchor" aria-label="anchor" href="#run-simulations"></a>
 </h3>
-<p>We use <code><a href="../reference/sim_gs_nbinom.html">sim_gs_nbinom()</a></code> to generate data and perform
-interim analyses, and <code><a href="../reference/check_gs_bound.html">check_gs_bound()</a></code> to apply the group
-sequential boundaries.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Simulate</span></span>
-<span><span class="va">sim_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_gs_nbinom.html">sim_gs_nbinom</a></span><span class="op">(</span></span>
-<span>  n_sims <span class="op">=</span> <span class="va">n_sims</span>,</span>
-<span>  enroll_rate <span class="op">=</span> <span class="va">enroll_rate</span>,</span>
-<span>  fail_rate <span class="op">=</span> <span class="va">fail_rate</span>,</span>
-<span>  dropout_rate <span class="op">=</span> <span class="va">dropout_rate</span>,</span>
-<span>  max_followup <span class="op">=</span> <span class="va">max_followup</span>,</span>
-<span>  event_gap <span class="op">=</span> <span class="va">event_gap_val</span>,</span>
-<span>  cuts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">analysis_times</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>planned_calendar <span class="op">=</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  design <span class="op">=</span> <span class="va">gs_nb</span>,</span>
-<span>  n_target <span class="op">=</span> <span class="va">n_target</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Storage for results</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a></span><span class="op">(</span><span class="st">"list"</span>, <span class="va">n_sims</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Apply bounds</span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_gs_bound.html">check_gs_bound</a></span><span class="op">(</span></span>
-<span>  sim_results <span class="op">=</span> <span class="va">sim_res</span>,</span>
-<span>  design <span class="op">=</span> <span class="va">gs_nb</span>,</span>
-<span>  info_scale <span class="op">=</span> <span class="st">"blinded"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">sim</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_sims</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Simulate trial data</span></span>
+<span>  <span class="va">sim_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nb_sim.html">nb_sim</a></span><span class="op">(</span></span>
+<span>    enroll_rate <span class="op">=</span> <span class="va">enroll_rate</span>,</span>
+<span>    fail_rate <span class="op">=</span> <span class="va">fail_rate</span>,</span>
+<span>    dropout_rate <span class="op">=</span> <span class="va">dropout_rate</span>,</span>
+<span>    max_followup <span class="op">=</span> <span class="va">max_followup</span>,</span>
+<span>    n <span class="op">=</span> <span class="va">n_target</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Analyze at each interim</span></span>
+<span>  <span class="va">sim_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    sim <span class="op">=</span> <span class="va">sim</span>,</span>
+<span>    analysis <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>,</span>
+<span>    analysis_time <span class="op">=</span> <span class="va">analysis_times</span>,</span>
+<span>    n_enrolled <span class="op">=</span> <span class="cn">NA_integer_</span>,</span>
+<span>    events_ctrl <span class="op">=</span> <span class="cn">NA_integer_</span>,</span>
+<span>    events_exp <span class="op">=</span> <span class="cn">NA_integer_</span>,</span>
+<span>    events_total <span class="op">=</span> <span class="cn">NA_integer_</span>,</span>
+<span>    exposure_ctrl <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    exposure_exp <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    blinded_info <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    unblinded_info <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    z_stat <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    p_value <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    cross_upper <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>    cross_lower <span class="op">=</span> <span class="cn">NA</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">stopped</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">stopped</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="co"># Trial already stopped at earlier analysis</span></span>
+<span>      <span class="va">sim_results</span><span class="op">$</span><span class="va">cross_upper</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<span>      <span class="va">sim_results</span><span class="op">$</span><span class="va">cross_lower</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
+<span>      <span class="kw">next</span></span>
+<span>    <span class="op">}</span></span>
+<span></span>
+<span>    <span class="co"># Cut data at analysis time</span></span>
+<span>    <span class="va">cut_time</span> <span class="op">&lt;-</span> <span class="va">analysis_times</span><span class="op">[</span><span class="va">k</span><span class="op">]</span></span>
+<span>    <span class="va">cut_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cut_data_by_date.html">cut_data_by_date</a></span><span class="op">(</span><span class="va">sim_data</span>, cut_date <span class="op">=</span> <span class="va">cut_time</span>, event_gap <span class="op">=</span> <span class="va">event_gap_val</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="co"># Count enrolled subjects (those with enroll_time &lt;= cut_time)</span></span>
+<span>    <span class="va">enrolled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">sim_data</span><span class="op">$</span><span class="va">id</span><span class="op">[</span><span class="va">sim_data</span><span class="op">$</span><span class="va">enroll_time</span> <span class="op">&lt;=</span> <span class="va">cut_time</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="va">cut_data</span> <span class="op">&lt;-</span> <span class="va">cut_data</span><span class="op">[</span><span class="va">cut_data</span><span class="op">$</span><span class="va">id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">enrolled</span>, <span class="op">]</span></span>
+<span></span>
+<span>    <span class="co"># Summary by treatment</span></span>
+<span>    <span class="va">summary_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">cut_data</span><span class="op">)</span><span class="op">[</span></span>
+<span>      ,</span>
+<span>      <span class="fu">.</span><span class="op">(</span>n <span class="op">=</span> <span class="va">.N</span>, events <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">events</span><span class="op">)</span>, exposure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">tte</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>      by <span class="op">=</span> <span class="va">treatment</span></span>
+<span>    <span class="op">]</span></span>
+<span></span>
+<span>    <span class="va">ctrl_row</span> <span class="op">&lt;-</span> <span class="va">summary_dt</span><span class="op">[</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"Control"</span><span class="op">]</span></span>
+<span>    <span class="va">exp_row</span> <span class="op">&lt;-</span> <span class="va">summary_dt</span><span class="op">[</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"Experimental"</span><span class="op">]</span></span>
+<span></span>
+<span>    <span class="va">sim_results</span><span class="op">$</span><span class="va">n_enrolled</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cut_data</span><span class="op">)</span></span>
+<span>    <span class="va">sim_results</span><span class="op">$</span><span class="va">events_ctrl</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ctrl_row</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="va">ctrl_row</span><span class="op">$</span><span class="va">events</span> <span class="kw">else</span> <span class="fl">0</span></span>
+<span>    <span class="va">sim_results</span><span class="op">$</span><span class="va">events_exp</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">exp_row</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="va">exp_row</span><span class="op">$</span><span class="va">events</span> <span class="kw">else</span> <span class="fl">0</span></span>
+<span>    <span class="va">sim_results</span><span class="op">$</span><span class="va">events_total</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sim_results</span><span class="op">$</span><span class="va">events_ctrl</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">+</span> <span class="va">sim_results</span><span class="op">$</span><span class="va">events_exp</span><span class="op">[</span><span class="va">k</span><span class="op">]</span></span>
+<span>    <span class="va">sim_results</span><span class="op">$</span><span class="va">exposure_ctrl</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">ctrl_row</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="va">ctrl_row</span><span class="op">$</span><span class="va">exposure</span> <span class="kw">else</span> <span class="fl">0</span></span>
+<span>    <span class="va">sim_results</span><span class="op">$</span><span class="va">exposure_exp</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">exp_row</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="va">exp_row</span><span class="op">$</span><span class="va">exposure</span> <span class="kw">else</span> <span class="fl">0</span></span>
+<span></span>
+<span>    <span class="co"># Run Mütze test</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cut_data</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">4</span> <span class="op">&amp;&amp;</span> <span class="va">sim_results</span><span class="op">$</span><span class="va">events_total</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="va">test_result</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>        <span class="fu"><a href="../reference/mutze_test.html">mutze_test</a></span><span class="op">(</span><span class="va">cut_data</span><span class="op">)</span>,</span>
+<span>        error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="cn">NULL</span></span>
+<span>      <span class="op">)</span></span>
+<span></span>
+<span>      <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">test_result</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">sim_results</span><span class="op">$</span><span class="va">z_stat</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">test_result</span><span class="op">$</span><span class="va">z</span></span>
+<span>        <span class="va">sim_results</span><span class="op">$</span><span class="va">p_value</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">test_result</span><span class="op">$</span><span class="va">p_value</span></span>
+<span></span>
+<span>        <span class="co"># Calculate unblinded information using the variance from the GLM</span></span>
+<span>        <span class="va">sim_results</span><span class="op">$</span><span class="va">unblinded_info</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">test_result</span><span class="op">$</span><span class="va">se</span><span class="op">^</span><span class="fl">2</span></span>
+<span></span>
+<span>        <span class="co"># Calculate blinded information and update bounds</span></span>
+<span>        <span class="va">blinded_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_blinded_info.html">calculate_blinded_info</a></span><span class="op">(</span></span>
+<span>          <span class="va">cut_data</span>,</span>
+<span>          ratio <span class="op">=</span> <span class="va">nb_ss</span><span class="op">$</span><span class="va">inputs</span><span class="op">$</span><span class="va">ratio</span>,</span>
+<span>          lambda1_planning <span class="op">=</span> <span class="va">nb_ss</span><span class="op">$</span><span class="va">inputs</span><span class="op">$</span><span class="va">lambda1</span>,</span>
+<span>          lambda2_planning <span class="op">=</span> <span class="va">nb_ss</span><span class="op">$</span><span class="va">inputs</span><span class="op">$</span><span class="va">lambda2</span>,</span>
+<span>          event_gap <span class="op">=</span> <span class="va">event_gap_val</span></span>
+<span>        <span class="op">)</span></span>
+<span>        <span class="va">sim_results</span><span class="op">$</span><span class="va">blinded_info</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">blinded_est</span><span class="op">$</span><span class="va">blinded_info</span></span>
+<span></span>
+<span>        <span class="co"># Update design with observed information fraction</span></span>
+<span>        <span class="va">max_info</span> <span class="op">&lt;-</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">n.fix</span></span>
+<span>        <span class="co"># If observed info &gt;= max info, this must be the final analysis</span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="va">blinded_est</span><span class="op">$</span><span class="va">blinded_info</span> <span class="op">&gt;=</span> <span class="va">max_info</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="co"># Only if not already at the final analysis</span></span>
+<span>          <span class="kw">if</span> <span class="op">(</span><span class="va">k</span> <span class="op">&lt;</span> <span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="co"># Consider this the final analysis for this simulation</span></span>
+<span>            <span class="co"># We need to treat this as if k were the final analysis index</span></span>
+<span>            <span class="co"># But the loop structure expects k=3 to be final.</span></span>
+<span>            <span class="co"># Effectively, we have reached 100% info early.</span></span>
+<span>            <span class="va">frac</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>          <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>            <span class="va">frac</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>          <span class="op">}</span></span>
+<span>        <span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span><span class="va">k</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="va">frac</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>        <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>          <span class="va">frac</span> <span class="op">&lt;-</span> <span class="va">blinded_est</span><span class="op">$</span><span class="va">blinded_info</span> <span class="op">/</span> <span class="va">max_info</span></span>
+<span>        <span class="op">}</span></span>
+<span></span>
+<span>        <span class="co"># Current timing</span></span>
+<span>        <span class="va">current_timing</span> <span class="op">&lt;-</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">timing</span></span>
+<span>        <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">frac</span></span>
+<span></span>
+<span>        <span class="co"># Safety check for timing order</span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="va">k</span> <span class="op">&gt;</span> <span class="fl">1</span> <span class="op">&amp;&amp;</span> <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;=</span> <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.001</span></span>
+<span></span>
+<span>        <span class="co"># If we have reached full information early (frac &gt;= 1), adjust timing</span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="va">frac</span> <span class="op">&gt;=</span> <span class="fl">1</span> <span class="op">&amp;&amp;</span> <span class="va">k</span> <span class="op">&lt;</span> <span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="co"># Set current timing to 1</span></span>
+<span>          <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>          <span class="co"># Set subsequent timings to 1 as well (though they won't be reached ideally,</span></span>
+<span>          <span class="co"># gsDesign needs valid input)</span></span>
+<span>          <span class="va">current_timing</span><span class="op">[</span><span class="op">(</span><span class="va">k</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>          <span class="co"># Note: gsDesign might complain if timing is 1 at interim.</span></span>
+<span>          <span class="co"># Actually gsDesign requires timing to be increasing and &lt; 1 for interims usually.</span></span>
+<span>          <span class="co"># If information fraction &gt; 1, we should probably stop the trial.</span></span>
+<span>          <span class="va">stopped</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span>        <span class="op">}</span></span>
+<span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="va">k</span> <span class="op">&lt;</span> <span class="fl">3</span> <span class="op">&amp;&amp;</span> <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;=</span> <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="co"># Ensure strict monotonicity if not already at 1</span></span>
+<span>          <span class="kw">if</span> <span class="op">(</span><span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="va">current_timing</span><span class="op">[</span><span class="va">k</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">current_timing</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.001</span>, <span class="fl">0.999</span><span class="op">)</span></span>
+<span>          <span class="op">}</span></span>
+<span>        <span class="op">}</span></span>
+<span></span>
+<span>        <span class="co"># Recompute bounds</span></span>
+<span>        <span class="co"># We only recompute if we haven't exceeded information</span></span>
+<span>        <span class="kw">if</span> <span class="op">(</span><span class="va">frac</span> <span class="op">&lt;=</span> <span class="fl">1</span> <span class="op">||</span> <span class="va">k</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span>          <span class="va">temp_gs</span> <span class="op">&lt;-</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="fu"><a href="https://keaven.github.io/gsDesign/reference/gsDesign.html" class="external-link">gsDesign</a></span><span class="op">(</span></span>
+<span>            k <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>            test.type <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>            alpha <span class="op">=</span> <span class="fl">0.025</span>,</span>
+<span>            beta <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>            sfu <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign/reference/sfLinear.html" class="external-link">sfLinear</a></span>, sfupar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.5</span><span class="op">)</span>,</span>
+<span>            sfl <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">sfHSD</a></span>, sflpar <span class="op">=</span> <span class="op">-</span><span class="fl">8</span>,</span>
+<span>            usTime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.18</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>            timing <span class="op">=</span> <span class="va">current_timing</span>,</span>
+<span>            n.fix <span class="op">=</span> <span class="va">max_info</span></span>
+<span>          <span class="op">)</span></span>
+<span></span>
+<span>          <span class="va">upper_bound</span> <span class="op">&lt;-</span> <span class="va">temp_gs</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">bound</span><span class="op">[</span><span class="va">k</span><span class="op">]</span></span>
+<span>          <span class="va">lower_bound</span> <span class="op">&lt;-</span> <span class="va">temp_gs</span><span class="op">$</span><span class="va">lower</span><span class="op">$</span><span class="va">bound</span><span class="op">[</span><span class="va">k</span><span class="op">]</span></span>
+<span></span>
+<span>          <span class="co"># Check boundaries (one-sided: reject if z &lt; -upper bound for benefit)</span></span>
+<span>          <span class="co"># For rate ratio &lt; 1 (experimental better), log(RR) &lt; 0, so z &lt; 0</span></span>
+<span>          <span class="va">z_eff</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="va">test_result</span><span class="op">$</span><span class="va">z</span> <span class="co"># Flip sign for efficacy direction</span></span>
+<span></span>
+<span>          <span class="va">sim_results</span><span class="op">$</span><span class="va">cross_upper</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">z_eff</span> <span class="op">&gt;</span> <span class="va">upper_bound</span></span>
+<span>          <span class="va">sim_results</span><span class="op">$</span><span class="va">cross_lower</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">z_eff</span> <span class="op">&lt;</span> <span class="va">lower_bound</span></span>
+<span></span>
+<span>          <span class="kw">if</span> <span class="op">(</span><span class="va">sim_results</span><span class="op">$</span><span class="va">cross_upper</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">||</span> <span class="va">sim_results</span><span class="op">$</span><span class="va">cross_lower</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">)</span> <span class="op">{</span></span>
+<span>            <span class="va">stopped</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span>          <span class="op">}</span></span>
+<span>        <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>          <span class="co"># Information limit reached early</span></span>
+<span>          <span class="co"># We should check against final bound, but technically this is an overrun</span></span>
+<span>          <span class="co"># For simplicity here, we stop.</span></span>
+<span>          <span class="va">stopped</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span>        <span class="op">}</span></span>
+<span>      <span class="op">}</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="va">results</span><span class="op">[[</span><span class="va">sim</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">sim_results</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Combine all results</span></span>
+<span><span class="va">all_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">results</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -864,56 +1020,55 @@ sequential boundaries.</p>
 <h3 id="events-and-exposure-by-analysis">Events and exposure by analysis<a class="anchor" aria-label="anchor" href="#events-and-exposure-by-analysis"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Summarize results</span></span>
-<span><span class="va">summary_gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_gs_sim.html">summarize_gs_sim</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Summarize by analysis</span></span>
+<span><span class="va">summary_by_analysis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span><span class="op">[</span></span>
+<span>  ,</span>
+<span>  <span class="fu">.</span><span class="op">(</span></span>
+<span>    mean_enrolled <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">n_enrolled</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_events_total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">events_total</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_events_ctrl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">events_ctrl</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_events_exp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">events_exp</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_exposure_ctrl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">exposure_ctrl</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_exposure_exp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">exposure_exp</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">z_stat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    sd_z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">z_stat</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  by <span class="op">=</span> <span class="fu">.</span><span class="op">(</span><span class="va">analysis</span>, <span class="va">analysis_time</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">analysis_summary_tbl</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">summary_gs</span><span class="op">$</span><span class="va">analysis_summary</span><span class="op">)</span></span>
-<span><span class="va">analysis_summary_tbl</span><span class="op">[</span>, <span class="va">planned_info</span> <span class="op">:=</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">n.I</span><span class="op">[</span><span class="va">analysis</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/setcolorder.html" class="external-link">setcolorder</a></span><span class="op">(</span></span>
-<span>  <span class="va">analysis_summary_tbl</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"analysis"</span>,</span>
-<span>    <span class="st">"n_enrolled"</span>,</span>
-<span>    <span class="st">"events"</span>,</span>
-<span>    <span class="st">"planned_info"</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">analysis_summary_tbl</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"analysis"</span>, <span class="st">"n_enrolled"</span>, <span class="st">"events"</span>, <span class="st">"planned_info"</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">analysis_summary_tbl</span> <span class="op">|&gt;</span></span>
+<span><span class="va">summary_by_analysis</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Summary Statistics by Analysis"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
 <span>    analysis <span class="op">=</span> <span class="st">"Analysis"</span>,</span>
-<span>    n_enrolled <span class="op">=</span> <span class="st">"N Enrolled"</span>,</span>
-<span>    events <span class="op">=</span> <span class="st">"Total Events"</span>,</span>
-<span>    planned_info <span class="op">=</span> <span class="st">"Planned Info (Design)"</span>,</span>
-<span>    info_blinded <span class="op">=</span> <span class="st">"Mean Info (Blinded)"</span>,</span>
-<span>    info_unblinded <span class="op">=</span> <span class="st">"Mean Info (Unblinded)"</span>,</span>
-<span>    n_cross_upper <span class="op">=</span> <span class="st">"N Cross Upper"</span>,</span>
-<span>    n_cross_lower <span class="op">=</span> <span class="st">"N Cross Lower"</span>,</span>
-<span>    prob_cross_upper <span class="op">=</span> <span class="st">"Prob Cross Upper"</span>,</span>
-<span>    prob_cross_lower <span class="op">=</span> <span class="st">"Prob Cross Lower"</span></span>
+<span>    analysis_time <span class="op">=</span> <span class="st">"Time (months)"</span>,</span>
+<span>    mean_enrolled <span class="op">=</span> <span class="st">"N Enrolled"</span>,</span>
+<span>    mean_events_total <span class="op">=</span> <span class="st">"Total Events"</span>,</span>
+<span>    mean_events_ctrl <span class="op">=</span> <span class="st">"Ctrl Events"</span>,</span>
+<span>    mean_events_exp <span class="op">=</span> <span class="st">"Exp Events"</span>,</span>
+<span>    mean_exposure_ctrl <span class="op">=</span> <span class="st">"Ctrl Exposure"</span>,</span>
+<span>    mean_exposure_exp <span class="op">=</span> <span class="st">"Exp Exposure"</span>,</span>
+<span>    mean_z <span class="op">=</span> <span class="st">"Mean Z"</span>,</span>
+<span>    sd_z <span class="op">=</span> <span class="st">"SD Z"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>decimals <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">contains</a></span><span class="op">(</span><span class="st">"prob"</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<div id="gnxguptyse" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#gnxguptyse table {
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>decimals <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<div id="havvzvxvem" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#havvzvxvem table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#gnxguptyse thead, #gnxguptyse tbody, #gnxguptyse tfoot, #gnxguptyse tr, #gnxguptyse td, #gnxguptyse th {
+#havvzvxvem thead, #havvzvxvem tbody, #havvzvxvem tfoot, #havvzvxvem tr, #havvzvxvem td, #havvzvxvem th {
   border-style: none;
 }
 
-#gnxguptyse p {
+#havvzvxvem p {
   margin: 0;
   padding: 0;
 }
 
-#gnxguptyse .gt_table {
+#havvzvxvem .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -939,12 +1094,12 @@ sequential boundaries.</p>
   border-left-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_caption {
+#havvzvxvem .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#gnxguptyse .gt_title {
+#havvzvxvem .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -956,7 +1111,7 @@ sequential boundaries.</p>
   border-bottom-width: 0;
 }
 
-#gnxguptyse .gt_subtitle {
+#havvzvxvem .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -968,7 +1123,7 @@ sequential boundaries.</p>
   border-top-width: 0;
 }
 
-#gnxguptyse .gt_heading {
+#havvzvxvem .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -980,13 +1135,13 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_bottom_border {
+#havvzvxvem .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_col_headings {
+#havvzvxvem .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1001,7 +1156,7 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_col_heading {
+#havvzvxvem .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1021,7 +1176,7 @@ sequential boundaries.</p>
   overflow-x: hidden;
 }
 
-#gnxguptyse .gt_column_spanner_outer {
+#havvzvxvem .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1033,15 +1188,15 @@ sequential boundaries.</p>
   padding-right: 4px;
 }
 
-#gnxguptyse .gt_column_spanner_outer:first-child {
+#havvzvxvem .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#gnxguptyse .gt_column_spanner_outer:last-child {
+#havvzvxvem .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#gnxguptyse .gt_column_spanner {
+#havvzvxvem .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1053,11 +1208,11 @@ sequential boundaries.</p>
   width: 100%;
 }
 
-#gnxguptyse .gt_spanner_row {
+#havvzvxvem .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#gnxguptyse .gt_group_heading {
+#havvzvxvem .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1083,7 +1238,7 @@ sequential boundaries.</p>
   text-align: left;
 }
 
-#gnxguptyse .gt_empty_group_heading {
+#havvzvxvem .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1098,15 +1253,15 @@ sequential boundaries.</p>
   vertical-align: middle;
 }
 
-#gnxguptyse .gt_from_md > :first-child {
+#havvzvxvem .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#gnxguptyse .gt_from_md > :last-child {
+#havvzvxvem .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#gnxguptyse .gt_row {
+#havvzvxvem .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1125,7 +1280,7 @@ sequential boundaries.</p>
   overflow-x: hidden;
 }
 
-#gnxguptyse .gt_stub {
+#havvzvxvem .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1138,7 +1293,7 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#gnxguptyse .gt_stub_row_group {
+#havvzvxvem .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1152,15 +1307,15 @@ sequential boundaries.</p>
   vertical-align: top;
 }
 
-#gnxguptyse .gt_row_group_first td {
+#havvzvxvem .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#gnxguptyse .gt_row_group_first th {
+#havvzvxvem .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#gnxguptyse .gt_summary_row {
+#havvzvxvem .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1170,16 +1325,16 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#gnxguptyse .gt_first_summary_row {
+#havvzvxvem .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_first_summary_row.thick {
+#havvzvxvem .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#gnxguptyse .gt_last_summary_row {
+#havvzvxvem .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1189,7 +1344,7 @@ sequential boundaries.</p>
   border-bottom-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_grand_summary_row {
+#havvzvxvem .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1199,7 +1354,7 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#gnxguptyse .gt_first_grand_summary_row {
+#havvzvxvem .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1209,7 +1364,7 @@ sequential boundaries.</p>
   border-top-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_last_grand_summary_row_top {
+#havvzvxvem .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1219,11 +1374,11 @@ sequential boundaries.</p>
   border-bottom-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_striped {
+#havvzvxvem .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#gnxguptyse .gt_table_body {
+#havvzvxvem .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1232,7 +1387,7 @@ sequential boundaries.</p>
   border-bottom-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_footnotes {
+#havvzvxvem .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1246,7 +1401,7 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_footnote {
+#havvzvxvem .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1255,7 +1410,7 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#gnxguptyse .gt_sourcenotes {
+#havvzvxvem .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1269,7 +1424,7 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#gnxguptyse .gt_sourcenote {
+#havvzvxvem .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1277,184 +1432,194 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#gnxguptyse .gt_left {
+#havvzvxvem .gt_left {
   text-align: left;
 }
 
-#gnxguptyse .gt_center {
+#havvzvxvem .gt_center {
   text-align: center;
 }
 
-#gnxguptyse .gt_right {
+#havvzvxvem .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#gnxguptyse .gt_font_normal {
+#havvzvxvem .gt_font_normal {
   font-weight: normal;
 }
 
-#gnxguptyse .gt_font_bold {
+#havvzvxvem .gt_font_bold {
   font-weight: bold;
 }
 
-#gnxguptyse .gt_font_italic {
+#havvzvxvem .gt_font_italic {
   font-style: italic;
 }
 
-#gnxguptyse .gt_super {
+#havvzvxvem .gt_super {
   font-size: 65%;
 }
 
-#gnxguptyse .gt_footnote_marks {
+#havvzvxvem .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#gnxguptyse .gt_asterisk {
+#havvzvxvem .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#gnxguptyse .gt_indent_1 {
+#havvzvxvem .gt_indent_1 {
   text-indent: 5px;
 }
 
-#gnxguptyse .gt_indent_2 {
+#havvzvxvem .gt_indent_2 {
   text-indent: 10px;
 }
 
-#gnxguptyse .gt_indent_3 {
+#havvzvxvem .gt_indent_3 {
   text-indent: 15px;
 }
 
-#gnxguptyse .gt_indent_4 {
+#havvzvxvem .gt_indent_4 {
   text-indent: 20px;
 }
 
-#gnxguptyse .gt_indent_5 {
+#havvzvxvem .gt_indent_5 {
   text-indent: 25px;
 }
 
-#gnxguptyse .katex-display {
+#havvzvxvem .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#gnxguptyse div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#havvzvxvem div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
 <table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
 <thead>
 <tr class="gt_heading">
-<td colspan="11" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>Summary Statistics by Analysis</td>
+<td colspan="10" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>Summary Statistics by Analysis</td>
     </tr>
 <tr class="gt_col_headings">
 <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="analysis">Analysis</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_enrolled">N Enrolled</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="events">Total Events</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="planned_info">Planned Info (Design)</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="info_blinded">Mean Info (Blinded)</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="info_unblinded">Mean Info (Unblinded)</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_cross_upper">N Cross Upper</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_cross_lower">N Cross Lower</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prob_cross_upper">Prob Cross Upper</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prob_cross_lower">Prob Cross Lower</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="cum_prob_upper">cum_prob_upper</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="analysis_time">Time (months)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_enrolled">N Enrolled</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_events_total">Total Events</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_events_ctrl">Ctrl Events</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_events_exp">Exp Events</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_exposure_ctrl">Ctrl Exposure</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_exposure_exp">Exp Exposure</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_z">Mean Z</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="sd_z">SD Z</th>
     </tr>
 </thead>
 <tbody class="gt_table_body">
 <tr>
 <td headers="analysis" class="gt_row gt_right">1.00</td>
-<td headers="n_enrolled" class="gt_row gt_right">301.18</td>
-<td headers="events" class="gt_row gt_right">122.66</td>
-<td headers="planned_info" class="gt_row gt_right">28.96</td>
-<td headers="info_blinded" class="gt_row gt_right">22.67</td>
-<td headers="info_unblinded" class="gt_row gt_right">21.56</td>
-<td headers="n_cross_upper" class="gt_row gt_right">13.00</td>
-<td headers="n_cross_lower" class="gt_row gt_right">0.00</td>
-<td headers="prob_cross_upper" class="gt_row gt_right">0.260</td>
-<td headers="prob_cross_lower" class="gt_row gt_right">0.000</td>
-<td headers="cum_prob_upper" class="gt_row gt_right">0.260</td>
+<td headers="analysis_time" class="gt_row gt_right">10.00</td>
+<td headers="mean_enrolled" class="gt_row gt_right">303.06</td>
+<td headers="mean_events_total" class="gt_row gt_right">124.36</td>
+<td headers="mean_events_ctrl" class="gt_row gt_right">74.52</td>
+<td headers="mean_events_exp" class="gt_row gt_right">49.84</td>
+<td headers="mean_exposure_ctrl" class="gt_row gt_right">594.85</td>
+<td headers="mean_exposure_exp" class="gt_row gt_right">612.27</td>
+<td headers="mean_z" class="gt_row gt_right">−2.09</td>
+<td headers="sd_z" class="gt_row gt_right">1.08</td>
 </tr>
 <tr>
 <td headers="analysis" class="gt_row gt_right">2.00</td>
-<td headers="n_enrolled" class="gt_row gt_right">364.00</td>
-<td headers="events" class="gt_row gt_right">278.88</td>
-<td headers="planned_info" class="gt_row gt_right">60.12</td>
-<td headers="info_blinded" class="gt_row gt_right">48.10</td>
-<td headers="info_unblinded" class="gt_row gt_right">47.02</td>
-<td headers="n_cross_upper" class="gt_row gt_right">17.00</td>
-<td headers="n_cross_lower" class="gt_row gt_right">0.00</td>
-<td headers="prob_cross_upper" class="gt_row gt_right">0.340</td>
-<td headers="prob_cross_lower" class="gt_row gt_right">0.000</td>
-<td headers="cum_prob_upper" class="gt_row gt_right">0.600</td>
+<td headers="analysis_time" class="gt_row gt_right">18.00</td>
+<td headers="mean_enrolled" class="gt_row gt_right">364.00</td>
+<td headers="mean_events_total" class="gt_row gt_right">284.73</td>
+<td headers="mean_events_ctrl" class="gt_row gt_right">167.00</td>
+<td headers="mean_events_exp" class="gt_row gt_right">117.73</td>
+<td headers="mean_exposure_ctrl" class="gt_row gt_right">1,358.08</td>
+<td headers="mean_exposure_exp" class="gt_row gt_right">1,389.36</td>
+<td headers="mean_z" class="gt_row gt_right">−2.68</td>
+<td headers="sd_z" class="gt_row gt_right">1.01</td>
 </tr>
 <tr>
 <td headers="analysis" class="gt_row gt_right">3.00</td>
-<td headers="n_enrolled" class="gt_row gt_right">364.00</td>
-<td headers="events" class="gt_row gt_right">311.06</td>
-<td headers="planned_info" class="gt_row gt_right">65.55</td>
-<td headers="info_blinded" class="gt_row gt_right">51.92</td>
-<td headers="info_unblinded" class="gt_row gt_right">50.81</td>
-<td headers="n_cross_upper" class="gt_row gt_right">13.00</td>
-<td headers="n_cross_lower" class="gt_row gt_right">7.00</td>
-<td headers="prob_cross_upper" class="gt_row gt_right">0.260</td>
-<td headers="prob_cross_lower" class="gt_row gt_right">0.140</td>
-<td headers="cum_prob_upper" class="gt_row gt_right">0.860</td>
+<td headers="analysis_time" class="gt_row gt_right">24.00</td>
+<td headers="mean_enrolled" class="gt_row gt_right">364.00</td>
+<td headers="mean_events_total" class="gt_row gt_right">315.37</td>
+<td headers="mean_events_ctrl" class="gt_row gt_right">178.53</td>
+<td headers="mean_events_exp" class="gt_row gt_right">136.84</td>
+<td headers="mean_exposure_ctrl" class="gt_row gt_right">1,515.64</td>
+<td headers="mean_exposure_exp" class="gt_row gt_right">1,555.03</td>
+<td headers="mean_z" class="gt_row gt_right">−2.16</td>
+<td headers="sd_z" class="gt_row gt_right">0.60</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <div class="section level3">
-<h3 id="power-and-operating-characteristics">Power and Operating Characteristics<a class="anchor" aria-label="anchor" href="#power-and-operating-characteristics"></a>
+<h3 id="statistical-information">Statistical information<a class="anchor" aria-label="anchor" href="#statistical-information"></a>
 </h3>
+<p>The statistical information at each analysis is proportional to the
+precision of the treatment effect estimate. For negative binomial
+outcomes, this relates to the total exposure and event counts. We note
+that the asymptotic information approximation overstates the information
+at the each analysis. However, the power approximation still worked
+reasonably well. This evaluated in a larger simulation study in the
+vignette <code>verification-simulation.Rmd</code>.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Overall Power</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"=== Overall Operating Characteristics ==="</span><span class="op">)</span></span>
-<span><span class="co">#&gt; === Overall Operating Characteristics ===</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Number of simulations: %d"</span>, <span class="va">summary_gs</span><span class="op">$</span><span class="va">n_sim</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Number of simulations: 50</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Overall Power (P[reject H0]): %.1f%%"</span>, <span class="va">summary_gs</span><span class="op">$</span><span class="va">power</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Overall Power (P[reject H0]): 86.0%</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Futility Stopping Rate: %.1f%%"</span>, <span class="va">summary_gs</span><span class="op">$</span><span class="va">futility</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Futility Stopping Rate: 14.0%</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Design Power (target): %.1f%%"</span>, <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">beta</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Design Power (target): 90.0%</span></span>
+<code class="sourceCode R"><span><span class="co"># Summarize information (using blinded estimate from simulation)</span></span>
+<span><span class="va">info_by_analysis</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span><span class="op">[</span></span>
+<span>  ,</span>
+<span>  <span class="fu">.</span><span class="op">(</span></span>
+<span>    mean_blinded <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">blinded_info</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_unblinded <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">unblinded_info</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  by <span class="op">=</span> <span class="va">analysis</span></span>
+<span><span class="op">]</span></span>
 <span></span>
-<span><span class="co"># Cumulative Power Comparison</span></span>
-<span><span class="va">crossing_summary</span> <span class="op">&lt;-</span> <span class="va">summary_gs</span><span class="op">$</span><span class="va">analysis_summary</span></span>
-<span><span class="va">crossing_summary</span><span class="op">$</span><span class="va">design_cum_power</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="va">gs_nb</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">prob</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co"># Add planned information from design</span></span>
+<span><span class="va">info_by_analysis</span><span class="op">[</span>, <span class="va">planned_info</span> <span class="op">:=</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">n.I</span><span class="op">[</span><span class="va">analysis</span><span class="op">]</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">crossing_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"analysis"</span>, <span class="st">"cum_prob_upper"</span>, <span class="st">"design_cum_power"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span><span class="co"># Normalize to get observed information fractions (relative to planned max)</span></span>
+<span><span class="va">max_planned_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">gs_nb</span><span class="op">$</span><span class="va">n.I</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">info_by_analysis</span><span class="op">[</span>, <span class="va">observed_frac_blinded</span> <span class="op">:=</span> <span class="va">mean_blinded</span> <span class="op">/</span> <span class="va">max_planned_info</span><span class="op">]</span></span>
+<span><span class="va">info_by_analysis</span><span class="op">[</span>, <span class="va">observed_frac_unblinded</span> <span class="op">:=</span> <span class="va">mean_unblinded</span> <span class="op">/</span> <span class="va">max_planned_info</span><span class="op">]</span></span>
+<span><span class="va">info_by_analysis</span><span class="op">[</span>, <span class="va">planned_info_frac</span> <span class="op">:=</span> <span class="va">planned_info</span> <span class="op">/</span> <span class="va">max_planned_info</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">info_by_analysis</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Cumulative Power Comparison"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Information by Analysis"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
 <span>    analysis <span class="op">=</span> <span class="st">"Analysis"</span>,</span>
-<span>    cum_prob_upper <span class="op">=</span> <span class="st">"Cum Power (Sim)"</span>,</span>
-<span>    design_cum_power <span class="op">=</span> <span class="st">"Cum Power (Design)"</span></span>
+<span>    mean_blinded <span class="op">=</span> <span class="st">"Mean Info (Blinded)"</span>,</span>
+<span>    mean_unblinded <span class="op">=</span> <span class="st">"Mean Info (Unblinded)"</span>,</span>
+<span>    planned_info <span class="op">=</span> <span class="st">"Planned Info"</span>,</span>
+<span>    planned_info_frac <span class="op">=</span> <span class="st">"Planned Frac"</span>,</span>
+<span>    observed_frac_blinded <span class="op">=</span> <span class="st">"Obs Frac (Blind)"</span>,</span>
+<span>    observed_frac_unblinded <span class="op">=</span> <span class="st">"Obs Frac (Unblind)"</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>decimals <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<div id="bxmmslpzzf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#bxmmslpzzf table {
+<div id="pnkzascipb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#pnkzascipb table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#bxmmslpzzf thead, #bxmmslpzzf tbody, #bxmmslpzzf tfoot, #bxmmslpzzf tr, #bxmmslpzzf td, #bxmmslpzzf th {
+#pnkzascipb thead, #pnkzascipb tbody, #pnkzascipb tfoot, #pnkzascipb tr, #pnkzascipb td, #pnkzascipb th {
   border-style: none;
 }
 
-#bxmmslpzzf p {
+#pnkzascipb p {
   margin: 0;
   padding: 0;
 }
 
-#bxmmslpzzf .gt_table {
+#pnkzascipb .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1480,12 +1645,12 @@ sequential boundaries.</p>
   border-left-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_caption {
+#pnkzascipb .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#bxmmslpzzf .gt_title {
+#pnkzascipb .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1497,7 +1662,7 @@ sequential boundaries.</p>
   border-bottom-width: 0;
 }
 
-#bxmmslpzzf .gt_subtitle {
+#pnkzascipb .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1509,7 +1674,7 @@ sequential boundaries.</p>
   border-top-width: 0;
 }
 
-#bxmmslpzzf .gt_heading {
+#pnkzascipb .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1521,13 +1686,13 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_bottom_border {
+#pnkzascipb .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_col_headings {
+#pnkzascipb .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1542,7 +1707,7 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_col_heading {
+#pnkzascipb .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1562,7 +1727,7 @@ sequential boundaries.</p>
   overflow-x: hidden;
 }
 
-#bxmmslpzzf .gt_column_spanner_outer {
+#pnkzascipb .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1574,15 +1739,15 @@ sequential boundaries.</p>
   padding-right: 4px;
 }
 
-#bxmmslpzzf .gt_column_spanner_outer:first-child {
+#pnkzascipb .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#bxmmslpzzf .gt_column_spanner_outer:last-child {
+#pnkzascipb .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#bxmmslpzzf .gt_column_spanner {
+#pnkzascipb .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1594,11 +1759,11 @@ sequential boundaries.</p>
   width: 100%;
 }
 
-#bxmmslpzzf .gt_spanner_row {
+#pnkzascipb .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#bxmmslpzzf .gt_group_heading {
+#pnkzascipb .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1624,7 +1789,7 @@ sequential boundaries.</p>
   text-align: left;
 }
 
-#bxmmslpzzf .gt_empty_group_heading {
+#pnkzascipb .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1639,15 +1804,15 @@ sequential boundaries.</p>
   vertical-align: middle;
 }
 
-#bxmmslpzzf .gt_from_md > :first-child {
+#pnkzascipb .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#bxmmslpzzf .gt_from_md > :last-child {
+#pnkzascipb .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#bxmmslpzzf .gt_row {
+#pnkzascipb .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1666,7 +1831,7 @@ sequential boundaries.</p>
   overflow-x: hidden;
 }
 
-#bxmmslpzzf .gt_stub {
+#pnkzascipb .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1679,7 +1844,7 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#bxmmslpzzf .gt_stub_row_group {
+#pnkzascipb .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1693,15 +1858,15 @@ sequential boundaries.</p>
   vertical-align: top;
 }
 
-#bxmmslpzzf .gt_row_group_first td {
+#pnkzascipb .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#bxmmslpzzf .gt_row_group_first th {
+#pnkzascipb .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#bxmmslpzzf .gt_summary_row {
+#pnkzascipb .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1711,16 +1876,16 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#bxmmslpzzf .gt_first_summary_row {
+#pnkzascipb .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_first_summary_row.thick {
+#pnkzascipb .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#bxmmslpzzf .gt_last_summary_row {
+#pnkzascipb .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1730,7 +1895,7 @@ sequential boundaries.</p>
   border-bottom-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_grand_summary_row {
+#pnkzascipb .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1740,7 +1905,7 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#bxmmslpzzf .gt_first_grand_summary_row {
+#pnkzascipb .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1750,7 +1915,7 @@ sequential boundaries.</p>
   border-top-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_last_grand_summary_row_top {
+#pnkzascipb .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1760,11 +1925,11 @@ sequential boundaries.</p>
   border-bottom-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_striped {
+#pnkzascipb .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#bxmmslpzzf .gt_table_body {
+#pnkzascipb .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1773,7 +1938,7 @@ sequential boundaries.</p>
   border-bottom-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_footnotes {
+#pnkzascipb .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1787,7 +1952,7 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_footnote {
+#pnkzascipb .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1796,7 +1961,7 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#bxmmslpzzf .gt_sourcenotes {
+#pnkzascipb .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1810,7 +1975,7 @@ sequential boundaries.</p>
   border-right-color: #D3D3D3;
 }
 
-#bxmmslpzzf .gt_sourcenote {
+#pnkzascipb .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1818,117 +1983,685 @@ sequential boundaries.</p>
   padding-right: 5px;
 }
 
-#bxmmslpzzf .gt_left {
+#pnkzascipb .gt_left {
   text-align: left;
 }
 
-#bxmmslpzzf .gt_center {
+#pnkzascipb .gt_center {
   text-align: center;
 }
 
-#bxmmslpzzf .gt_right {
+#pnkzascipb .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#bxmmslpzzf .gt_font_normal {
+#pnkzascipb .gt_font_normal {
   font-weight: normal;
 }
 
-#bxmmslpzzf .gt_font_bold {
+#pnkzascipb .gt_font_bold {
   font-weight: bold;
 }
 
-#bxmmslpzzf .gt_font_italic {
+#pnkzascipb .gt_font_italic {
   font-style: italic;
 }
 
-#bxmmslpzzf .gt_super {
+#pnkzascipb .gt_super {
   font-size: 65%;
 }
 
-#bxmmslpzzf .gt_footnote_marks {
+#pnkzascipb .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#bxmmslpzzf .gt_asterisk {
+#pnkzascipb .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#bxmmslpzzf .gt_indent_1 {
+#pnkzascipb .gt_indent_1 {
   text-indent: 5px;
 }
 
-#bxmmslpzzf .gt_indent_2 {
+#pnkzascipb .gt_indent_2 {
   text-indent: 10px;
 }
 
-#bxmmslpzzf .gt_indent_3 {
+#pnkzascipb .gt_indent_3 {
   text-indent: 15px;
 }
 
-#bxmmslpzzf .gt_indent_4 {
+#pnkzascipb .gt_indent_4 {
   text-indent: 20px;
 }
 
-#bxmmslpzzf .gt_indent_5 {
+#pnkzascipb .gt_indent_5 {
   text-indent: 25px;
 }
 
-#bxmmslpzzf .katex-display {
+#pnkzascipb .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#bxmmslpzzf div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#pnkzascipb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
 <table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
 <thead>
 <tr class="gt_heading">
-<td colspan="3" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>Cumulative Power Comparison</td>
+<td colspan="7" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>Information by Analysis</td>
     </tr>
 <tr class="gt_col_headings">
 <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="analysis">Analysis</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="cum_prob_upper">Cum Power (Sim)</th>
-      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="design_cum_power">Cum Power (Design)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_blinded">Mean Info (Blinded)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="mean_unblinded">Mean Info (Unblinded)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="planned_info">Planned Info</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="observed_frac_blinded">Obs Frac (Blind)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="observed_frac_unblinded">Obs Frac (Unblind)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="planned_info_frac">Planned Frac</th>
     </tr>
 </thead>
 <tbody class="gt_table_body">
 <tr>
 <td headers="analysis" class="gt_row gt_right">1.000</td>
-<td headers="cum_prob_upper" class="gt_row gt_right">0.260</td>
-<td headers="design_cum_power" class="gt_row gt_right">0.265</td>
+<td headers="mean_blinded" class="gt_row gt_right">24.218</td>
+<td headers="mean_unblinded" class="gt_row gt_right">23.007</td>
+<td headers="planned_info" class="gt_row gt_right">28.958</td>
+<td headers="observed_frac_blinded" class="gt_row gt_right">0.292</td>
+<td headers="observed_frac_unblinded" class="gt_row gt_right">0.278</td>
+<td headers="planned_info_frac" class="gt_row gt_right">0.349</td>
 </tr>
 <tr>
 <td headers="analysis" class="gt_row gt_right">2.000</td>
-<td headers="cum_prob_upper" class="gt_row gt_right">0.600</td>
-<td headers="design_cum_power" class="gt_row gt_right">0.646</td>
+<td headers="mean_blinded" class="gt_row gt_right">50.715</td>
+<td headers="mean_unblinded" class="gt_row gt_right">49.732</td>
+<td headers="planned_info" class="gt_row gt_right">65.465</td>
+<td headers="observed_frac_blinded" class="gt_row gt_right">0.612</td>
+<td headers="observed_frac_unblinded" class="gt_row gt_right">0.600</td>
+<td headers="planned_info_frac" class="gt_row gt_right">0.790</td>
 </tr>
 <tr>
 <td headers="analysis" class="gt_row gt_right">3.000</td>
-<td headers="cum_prob_upper" class="gt_row gt_right">0.860</td>
-<td headers="design_cum_power" class="gt_row gt_right">0.901</td>
+<td headers="mean_blinded" class="gt_row gt_right">55.238</td>
+<td headers="mean_unblinded" class="gt_row gt_right">54.205</td>
+<td headers="planned_info" class="gt_row gt_right">82.887</td>
+<td headers="observed_frac_blinded" class="gt_row gt_right">0.666</td>
+<td headers="observed_frac_unblinded" class="gt_row gt_right">0.654</td>
+<td headers="planned_info_frac" class="gt_row gt_right">1.000</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <div class="section level3">
-<h3 id="visualization-of-z-statistics">Visualization of Z-statistics<a class="anchor" aria-label="anchor" href="#visualization-of-z-statistics"></a>
+<h3 id="boundary-crossings-and-power">Boundary crossings and power<a class="anchor" aria-label="anchor" href="#boundary-crossings-and-power"></a>
 </h3>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Calculate crossing probabilities</span></span>
+<span><span class="va">crossing_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span><span class="op">[</span></span>
+<span>  ,</span>
+<span>  <span class="fu">.</span><span class="op">(</span></span>
+<span>    n_cross_upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cross_upper</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    n_cross_lower <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cross_lower</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    n_continue <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="va">cross_upper</span> <span class="op">&amp;</span> <span class="op">!</span><span class="va">cross_lower</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  by <span class="op">=</span> <span class="va">analysis</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">crossing_summary</span><span class="op">[</span>, <span class="va">prob_cross_upper</span> <span class="op">:=</span> <span class="va">n_cross_upper</span> <span class="op">/</span> <span class="va">n_sims</span><span class="op">]</span></span>
+<span><span class="va">crossing_summary</span><span class="op">[</span>, <span class="va">prob_cross_lower</span> <span class="op">:=</span> <span class="va">n_cross_lower</span> <span class="op">/</span> <span class="va">n_sims</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Cumulative power (Sim)</span></span>
+<span><span class="va">crossing_summary</span><span class="op">[</span>, <span class="va">cum_prob_cross_upper</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="va">prob_cross_upper</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Cumulative power (Design)</span></span>
+<span><span class="co"># The design object gs_nb already contains power probabilities in the second column of upper$prob</span></span>
+<span><span class="va">crossing_summary</span><span class="op">[</span>, <span class="va">design_cum_power</span> <span class="op">:=</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="va">gs_nb</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">prob</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">[</span><span class="va">analysis</span><span class="op">]</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">crossing_summary</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">analysis</span>, <span class="va">n_cross_upper</span>, <span class="va">cum_prob_cross_upper</span>, <span class="va">design_cum_power</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Boundary Crossing and Power"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
+<span>    analysis <span class="op">=</span> <span class="st">"Analysis"</span>,</span>
+<span>    n_cross_upper <span class="op">=</span> <span class="st">"N Cross Upper"</span>,</span>
+<span>    cum_prob_cross_upper <span class="op">=</span> <span class="st">"Cum Power (Sim)"</span>,</span>
+<span>    design_cum_power <span class="op">=</span> <span class="st">"Cum Power (Design)"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">contains</a></span><span class="op">(</span><span class="st">"power"</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<div id="kguqzvojsv" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#kguqzvojsv table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#kguqzvojsv thead, #kguqzvojsv tbody, #kguqzvojsv tfoot, #kguqzvojsv tr, #kguqzvojsv td, #kguqzvojsv th {
+  border-style: none;
+}
+
+#kguqzvojsv p {
+  margin: 0;
+  padding: 0;
+}
+
+#kguqzvojsv .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#kguqzvojsv .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#kguqzvojsv .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#kguqzvojsv .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#kguqzvojsv .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#kguqzvojsv .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#kguqzvojsv .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#kguqzvojsv .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#kguqzvojsv .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#kguqzvojsv .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#kguqzvojsv .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#kguqzvojsv .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#kguqzvojsv .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#kguqzvojsv .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#kguqzvojsv .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kguqzvojsv .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#kguqzvojsv .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#kguqzvojsv .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#kguqzvojsv .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kguqzvojsv .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#kguqzvojsv .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kguqzvojsv .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#kguqzvojsv .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kguqzvojsv .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#kguqzvojsv .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#kguqzvojsv .gt_left {
+  text-align: left;
+}
+
+#kguqzvojsv .gt_center {
+  text-align: center;
+}
+
+#kguqzvojsv .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#kguqzvojsv .gt_font_normal {
+  font-weight: normal;
+}
+
+#kguqzvojsv .gt_font_bold {
+  font-weight: bold;
+}
+
+#kguqzvojsv .gt_font_italic {
+  font-style: italic;
+}
+
+#kguqzvojsv .gt_super {
+  font-size: 65%;
+}
+
+#kguqzvojsv .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#kguqzvojsv .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#kguqzvojsv .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#kguqzvojsv .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#kguqzvojsv .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#kguqzvojsv .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#kguqzvojsv .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#kguqzvojsv .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#kguqzvojsv div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="4" class="gt_heading gt_title gt_font_normal gt_bottom_border" style>Boundary Crossing and Power</td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="analysis">Analysis</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n_cross_upper">N Cross Upper</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="cum_prob_cross_upper">Cum Power (Sim)</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="design_cum_power">Cum Power (Design)</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr>
+<td headers="analysis" class="gt_row gt_right">1</td>
+<td headers="n_cross_upper" class="gt_row gt_right">13</td>
+<td headers="cum_prob_cross_upper" class="gt_row gt_right">0.26</td>
+<td headers="design_cum_power" class="gt_row gt_right">0.265</td>
+</tr>
+<tr>
+<td headers="analysis" class="gt_row gt_right">2</td>
+<td headers="n_cross_upper" class="gt_row gt_right">17</td>
+<td headers="cum_prob_cross_upper" class="gt_row gt_right">0.60</td>
+<td headers="design_cum_power" class="gt_row gt_right">0.691</td>
+</tr>
+<tr>
+<td headers="analysis" class="gt_row gt_right">3</td>
+<td headers="n_cross_upper" class="gt_row gt_right">13</td>
+<td headers="cum_prob_cross_upper" class="gt_row gt_right">0.86</td>
+<td headers="design_cum_power" class="gt_row gt_right">0.952</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level3">
+<h3 id="overall-power">Overall power<a class="anchor" aria-label="anchor" href="#overall-power"></a>
+</h3>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Determine if each simulation crossed the efficacy boundary at any analysis</span></span>
+<span><span class="va">efficacy_by_sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span><span class="op">[</span></span>
+<span>  ,</span>
+<span>  <span class="fu">.</span><span class="op">(</span>efficacy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">cross_upper</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  by <span class="op">=</span> <span class="va">sim</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">overall_power</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">efficacy_by_sim</span><span class="op">$</span><span class="va">efficacy</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Futility stopping</span></span>
+<span><span class="va">futility_by_sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html" class="external-link">as.data.table</a></span><span class="op">(</span><span class="va">all_results</span><span class="op">)</span><span class="op">[</span></span>
+<span>  ,</span>
+<span>  <span class="fu">.</span><span class="op">(</span>futility <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">cross_lower</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">cross_upper</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  by <span class="op">=</span> <span class="va">sim</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">overall_futility</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">futility_by_sim</span><span class="op">$</span><span class="va">futility</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"=== Overall Operating Characteristics ==="</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === Overall Operating Characteristics ===</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Number of simulations: %d"</span>, <span class="va">n_sims</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Number of simulations: 50</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Overall Power (P[reject H0]): %.1f%%"</span>, <span class="va">overall_power</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Overall Power (P[reject H0]): 86.0%</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Futility Stopping Rate: %.1f%%"</span>, <span class="va">overall_futility</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Futility Stopping Rate: 14.0%</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Design Power (target): %.1f%%"</span>, <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">beta</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Design Power (target): 90.0%</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="visualization-of-z-statistics">Visualization of Z-statistics<a class="anchor" aria-label="anchor" href="#visualization-of-z-statistics"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Prepare data for plotting</span></span>
-<span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="va">results</span></span>
+<span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="va">all_results</span></span>
 <span><span class="va">plot_data</span><span class="op">$</span><span class="va">z_flipped</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="va">plot_data</span><span class="op">$</span><span class="va">z_stat</span> <span class="co"># Flip for efficacy direction</span></span>
 <span></span>
 <span><span class="co"># Boundary data</span></span>
 <span><span class="va">bounds_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  analysis <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">gs_nb</span><span class="op">$</span><span class="va">k</span>,</span>
+<span>  analysis <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>,</span>
 <span>  upper <span class="op">=</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">upper</span><span class="op">$</span><span class="va">bound</span>,</span>
 <span>  lower <span class="op">=</span> <span class="va">gs_nb</span><span class="op">$</span><span class="va">lower</span><span class="op">$</span><span class="va">bound</span></span>
 <span><span class="op">)</span></span>
@@ -1956,7 +2689,11 @@ sequential boundaries.</p>
 <span>    y <span class="op">=</span> <span class="st">"Z-statistic (positive = favors experimental)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Removed 44 rows containing non-finite outside the scale range</span></span>
+<span><span class="co">#&gt; (`stat_ydensity()`).</span></span>
+<span><span class="co">#&gt; Warning: Removed 44 rows containing non-finite outside the scale range</span></span>
+<span><span class="co">#&gt; (`stat_boxplot()`).</span></span></code></pre></div>
 <p><img src="group-sequential-simulation_files/figure-html/plot-z-stats-1.png" class="r-plt" alt="Z-statistics across analyses with group sequential boundaries" width="672"></p>
 </div>
 </div>
