@@ -192,9 +192,11 @@ ex_fixed <- sample_size_nbinom(
   test_type = "score"         # score-test sizing
 )
 
+# Note: the gsDesign argument `k` below is the number of analyses (K),
+# not the NB dispersion parameter k used elsewhere in this paper.
 ex_gs <- ex_fixed |>
   gsNBCalendar(
-    k = 3,                                  # 3 analyses (2 interim + final)
+    k = 3,                                  # K = 3 analyses (2 interim + final)
     test.type = 4,                          # non-binding futility bound
     alpha = 0.025,                          # one-sided alpha
     sfu = sfHSD,                            # efficacy: Hwang-Shih-DeCani
@@ -622,9 +624,11 @@ by simulation.
 
 ### Calendar-time design construction
 
-The `gsNBCalendar()` function creates a group sequential design from a
+The `gsNBCalendar()` function creates a group sequential design with $K$ planned analyses from a
 `sample_size_nbinom_result` by evaluating the planned design at user-specified calendar analysis
-times. For each look it recomputes expected enrollment, exposure, events, and variance under the
+times. (The `gsDesign` argument `k` denotes the number of analyses $K$; it should not be confused
+with the NB dispersion parameter $k$ used elsewhere in this paper.)
+For each look it recomputes expected enrollment, exposure, events, and variance under the
 planned accrual and follow-up structure, then stores the corresponding statistical information in
 the `n.I` slot inherited from `gsDesign`. The resulting `gsNB` object therefore behaves like a
 `gsDesign` object for spending functions and boundary summaries while retaining the NB-specific
@@ -634,16 +638,16 @@ This calendar-time emphasis matters because timing of analyses in trials is ofte
 governed by operational issues, and thus we have chosen this approach to analysis timing. This also
 makes computation faster since there is no root-finding for when analyses are expected. Finally,
 calendar times are easily adjusted if the information fractions derived from this approach are
-thought inappropriate. If $C_i$ denotes a calendar floor for look $i$,
-$\Delta_i$ a minimum gap after the prior look, and $\mathcal{I}_i$ the target information for that
-look, the analysis time can be expressed schematically as
+thought inappropriate. If $C_j$ denotes a calendar floor for look $j$,
+$\delta_j$ a minimum separation from the prior look, and $\mathcal{I}_j$ the target information
+for that look, the analysis time for $j = 1, \ldots, K$ can be expressed schematically as
 
 $$
-\tau_i =
+\tau_j =
 \max\left\{
-  C_i,\;
-  \tau_{i-1} + \Delta_i,\;
-  \inf \left\{ t : \widehat{\mathcal{I}}(t) \geq \mathcal{I}_i \right\}
+  C_j,\;
+  \tau_{j-1} + \delta_j,\;
+  \inf \left\{ t : \widehat{\mathcal{I}}(t) \geq \mathcal{I}_j \right\}
 \right\}.
 $$
 
@@ -793,7 +797,7 @@ fixed_design <- sample_size_nbinom(
 
 gs_design <- gsNBCalendar(
   fixed_design,
-  k = 3,
+  k = 3,                    # K = 3 analyses
   test.type = 4,
   analysis_times = c(4, 8, 12)
 )
