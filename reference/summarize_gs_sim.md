@@ -6,7 +6,7 @@ sequential design based on simulation results.
 ## Usage
 
 ``` r
-summarize_gs_sim(x, info_trim = 0.01)
+summarize_gs_sim(x)
 ```
 
 ## Arguments
@@ -19,13 +19,6 @@ summarize_gs_sim(x, info_trim = 0.01)
   [`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
   if bounds are manually checked). Must contain columns `cross_upper`,
   `cross_lower`.
-
-- info_trim:
-
-  Proportion of observations trimmed from each tail when summarizing
-  information estimates. Defaults to `0.01` to reduce sensitivity to
-  occasional unstable fitted information estimates in small interim data
-  sets.
 
 ## Value
 
@@ -46,9 +39,7 @@ A list containing:
 
 - analysis_summary:
 
-  Data frame with per-analysis statistics (sample size, events,
-  information, crossings, and optional exposure columns when present in
-  `x`).
+  Data frame with per-analysis statistics (events, crossings)
 
 ## Examples
 

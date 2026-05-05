@@ -31,7 +31,7 @@ nb_sim(
   exponential failure rate for each treatment group. Optionally, a
   `dispersion` column can be provided to generate data from a negative
   binomial distribution. The dispersion parameter `k` is such that
-  \\\mathrm{Var}(Y) = \mu + k \mu^2\\.
+  \\Var(Y) = \mu + k \mu^2\\.
 
 - dropout_rate:
 
@@ -107,9 +107,9 @@ exposure time \\t\\, the model used here is a Gamma–Poisson mixture:
 \$\$\Lambda_i \sim \mathrm{Gamma}(\text{shape}=1/k,\\
 \text{scale}=k\lambda), \quad Y_i \mid \Lambda_i \sim
 \mathrm{Poisson}(\Lambda_i t).\$\$ Marginally, \\Y_i\\ follows a
-negative binomial distribution with \\\mathrm{E}\[Y_i\]=\mu=\lambda t\\
-and \\\mathrm{Var}(Y_i)=\mu + k\mu^2\\. This \\k\\ is the package
-dispersion parameter (and corresponds to \\1/\theta\\ in
+negative binomial distribution with \\E\[Y_i\]=\mu=\lambda t\\ and
+\\Var(Y_i)=\mu + k\mu^2\\. This \\k\\ is the package dispersion
+parameter (and corresponds to \\1/\theta\\ in
 [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html)
 terminology).
 

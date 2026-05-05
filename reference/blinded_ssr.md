@@ -15,7 +15,6 @@ blinded_ssr(
   ratio = 1,
   lambda1_planning,
   lambda2_planning,
-  rr0 = 1,
   power = 0.8,
   alpha = 0.025,
   method = "friede",
@@ -49,10 +48,6 @@ blinded_ssr(
 
   Planned event rate for the experimental group used in original
   calculation.
-
-- rr0:
-
-  Rate ratio under the null hypothesis (lambda2/lambda1). Default is 1.
 
 - power:
 
@@ -170,10 +165,12 @@ blinded_ssr(
 #>    1.346155 
 #> 
 #> $info_fraction
-#> [1] 0.05454259
+#> (Intercept) 
+#>  0.05454262 
 #> 
 #> $blinded_info
-#> [1] 1.640582
+#> (Intercept) 
+#>    1.640583 
 #> 
 #> $target_info
 #> [1] 30.07893

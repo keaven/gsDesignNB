@@ -6,13 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Seasonal event simulation • gsDesignNB</title>
-<!-- katex math (vendored under pkgdown/assets/katex/; copied to site root; KaTeX 0.16.11) --><link rel="stylesheet" href="../katex/katex.min.css">
-<script defer src="../katex/katex.min.js"></script><script defer src="../katex/auto-render.min.js" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<script src="../extra.js"></script><meta property="og:title" content="Seasonal event simulation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Seasonal event simulation">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,7 +30,17 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/completers-interim-example.html">Group sequential simulation with completers analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/group-sequential-simulation.html">Group sequential design and simulation</a></li>
+    <li><a class="dropdown-item" href="../articles/sample-size-nbinom.html">Sample size calculation for negative binomial outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/seasonal-simulation.html">Seasonal event simulation</a></li>
+    <li><a class="dropdown-item" href="../articles/simulation-example.html">Simulation of recurrent events</a></li>
+    <li><a class="dropdown-item" href="../articles/verification-simulation.html">Verification of sample size calculation via simulation</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -56,7 +64,7 @@
       <h1>Seasonal event simulation</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/seasonal-simulation.Rmd" class="external-link"><code>vignettes/seasonal-simulation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.3/vignettes/seasonal-simulation.Rmd" class="external-link"><code>vignettes/seasonal-simulation.Rmd</code></a></small>
       <div class="d-none name"><code>seasonal-simulation.Rmd</code></div>
     </div>
 
@@ -75,9 +83,9 @@ patterns, such as respiratory infections.</p>
 <p>We design a small trial with the following characteristics:</p>
 <ul>
 <li>
-<strong>Randomization start:</strong> January 1, 2024.</li>
+<strong>Randomization Start:</strong> January 1, 2024.</li>
 <li>
-<strong>Sample size:</strong> 20 subjects.</li>
+<strong>Sample Size:</strong> 20 subjects.</li>
 <li>
 <strong>Enrollment:</strong> 6 months duration.</li>
 <li>
@@ -193,13 +201,13 @@ specified.</p>
 <span><span class="va">analysis_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cut_data_by_date.html">cut_data_by_date</a></span><span class="op">(</span><span class="va">sim_data</span>, cut_date <span class="op">=</span> <span class="va">cut_date</span>, event_gap <span class="op">=</span> <span class="va">gap_days</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">analysis_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   id    treatment enroll_time season events        tte  tte_total</span></span>
-<span><span class="co">#&gt; 1  1      Control  0.02108643   Fall      0 0.08196441 0.08196441</span></span>
-<span><span class="co">#&gt; 2  1      Control  0.02108643 Spring      0 0.25188227 0.25188227</span></span>
-<span><span class="co">#&gt; 3  1      Control  0.02108643 Summer      0 0.25188227 0.25188227</span></span>
-<span><span class="co">#&gt; 4  1      Control  0.02108643 Winter      0 0.14318462 0.14318462</span></span>
-<span><span class="co">#&gt; 5  2 Experimental  0.03550169   Fall      0 0.08196441 0.08196441</span></span>
-<span><span class="co">#&gt; 6  2 Experimental  0.03550169 Spring      0 0.25188227 0.25188227</span></span></code></pre></div>
+<span><span class="co">#&gt;   id    treatment enroll_time season events        tte</span></span>
+<span><span class="co">#&gt; 1  1      Control  0.02108643   Fall      0 0.08196441</span></span>
+<span><span class="co">#&gt; 2  1      Control  0.02108643 Spring      0 0.25188227</span></span>
+<span><span class="co">#&gt; 3  1      Control  0.02108643 Summer      0 0.25188227</span></span>
+<span><span class="co">#&gt; 4  1      Control  0.02108643 Winter      0 0.14318462</span></span>
+<span><span class="co">#&gt; 5  2 Experimental  0.03550169   Fall      0 0.08196441</span></span>
+<span><span class="co">#&gt; 6  2 Experimental  0.03550169 Spring      0 0.25188227</span></span></code></pre></div>
 <p>The <code>analysis_data</code> is aggregated by subject and season.
 This allows for seasonal adjustments in the analysis if desired.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -320,7 +328,7 @@ inverse of this variance.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Keaven Anderson, Hongtao Zhang, Andrea Maes.</p>
+  <p>Developed by Keaven Anderson.</p>
 </div>
 
 <div class="pkgdown-footer-right">

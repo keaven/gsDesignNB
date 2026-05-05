@@ -14,31 +14,26 @@ negative binomial outcomes using
 [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
 and simulate the design to confirm design operating characteristics
 using
-[`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md),
-[`check_gs_bound()`](https://keaven.github.io/gsDesignNB/reference/check_gs_bound.md),
-and
-[`summarize_gs_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_gs_sim.md).
+[`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md).
 
 ## Trial design parameters
 
 We design a trial with the following characteristics:
 
 - **Enrollment:** 12 months with a constant rate
-- **Trial duration:** 24 months
+- **Trial Duration:** 24 months
 - **Analyses:**
   - Interim 1: 10 months
   - Interim 2: 18 months
   - Final: 24 months
-- **Event rates:**
+- **Event Rates:**
   - Control: 0.125 events per month (1.5 per year)
   - Experimental: 0.0833 events per month (1.0 per year; rate ratio =
     0.67)
 - **Dispersion:** 0.5
 - **Power:** 90% (beta = 0.1)
-- **Alpha:** 0.025 (one-sided)
-- **event gap:** 20 days
-- **dropout rate:** 5% at 1 year
-- **max followup:** 12 months
+- **Alpha:** 0.025 (one-sided) \# **event gap:** 20 days \# **dropout
+  rate:** 5% at 1 year \# **max followup:** 12 months
 
 ### Sample size calculation
 
@@ -63,7 +58,8 @@ nb_ss <- sample_size_nbinom(
   trial_duration = 24, # 24 months trial
   max_followup = 12, # 12 months of follow-up per patient
   dropout_rate = -log(0.95) / 12, # 5% dropout rate at 1 year
-  event_gap = event_gap_val
+  event_gap = event_gap_val,
+  method = "zhu" # Zhu and Lakkis sample size method
 )
 
 # Print key results
@@ -73,8 +69,9 @@ nb_ss
 #> Sample size for negative binomial outcome
 #> ==========================================
 #> 
-#> Sample size:     n1 = 185, n2 = 185, total = 370
-#> Expected events: 408.0 (n1: 241.2, n2: 166.8)
+#> Method:          zhu
+#> Sample size:     n1 = 182, n2 = 182, total = 364
+#> Expected events: 414.1 (n1: 245.9, n2: 168.2)
 #> Power: 90%, Alpha: 0.025 (1-sided)
 #> Rates: control = 0.1250, treatment = 0.0833 (RR = 0.6667)
 #> Dispersion: 0.5000, Avg exposure (calendar): 11.70
@@ -93,19 +90,19 @@ for the fixed design. The relative enrollment rates will be increased to
 increase the sample size as with standard group sequential design
 theory. We specify `usTime = c(0.1, 0.18, 1)` which along with the
 [`sfLinear()`](https://keaven.github.io/gsDesign/reference/sfLinear.html)
-spending function will spend 10%, 18% and 100% of the cumulative \alpha
-at the 3 planned analyses regardless of the observed statistical
-information at each analysis. The interim spending is intended to
-achieve a nominal p-value of approximately 0.0025 (one-sided) at each
-interim analysis.
+spending function will spend 10%, 18% and 100% of the cumulative
+$`\alpha`$ at the 3 planned analyses regardless of the observed
+statistical information at each analysis. The interim spending is
+intended to achieve a nominal p-value of 0.0025 (one-sided) at both
+interim analyses.
 
 ``` r
 
 # Analysis times (in months)
 analysis_times <- c(10, 18, 24)
 
-# Create group sequential design and round the final sample size
-gs_nb_calendar <- gsNBCalendar(
+# Create group sequential design with integer sample sizes
+gs_nb <- gsNBCalendar(
   x = nb_ss, # Input fixed design for negative binomial
   k = 3, # 3 analyses
   test.type = 4, # Two-sided asymmetric, non-binding futility
@@ -116,8 +113,7 @@ gs_nb_calendar <- gsNBCalendar(
   usTime = c(.1, .18, 1), # Upper spending timing
   lsTime = NULL, # Spending based on information
   analysis_times = analysis_times # Calendar times in months
-)
-gs_nb <- gsDesignNB::toInteger(gs_nb_calendar)
+) |> gsDesignNB::toInteger() # Round to integer sample size
 ```
 
 Textual group sequential design summary:
@@ -126,21 +122,21 @@ Textual group sequential design summary:
 
 summary(gs_nb)
 #> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent
+#> for negative binomial outcomes, 3 analyses, total sample size 370.0, 90 percent
 #> power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate
 #> 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial
-#> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,
-#> 0.0043), average exposure (calendar) 11.70, (at-risk n1=10.81, n2=11.09).
-#> Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5)
-#> Lower spending: Hwang-Shih-DeCani (gamma = -8)
+#> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rate 0.0043, average
+#> exposure (calendar) 11.70, (at-risk n1=10.81, n2=11.09). Randomization ratio
+#> 1:1. Upper spending: Piecewise linear (line points = 0.5) Lower spending:
+#> Hwang-Shih-DeCani (gamma = -8)
 #> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent
+#> for negative binomial outcomes, 3 analyses, total sample size 370.0, 90 percent
 #> power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate
 #> 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial
-#> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,
-#> 0.0043), average exposure (calendar) 11.70, (at-risk n1=10.81, n2=11.09).
-#> Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5)
-#> Lower spending: Hwang-Shih-DeCani (gamma = -8)
+#> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rate 0.0043, average
+#> exposure (calendar) 11.70, (at-risk n1=10.81, n2=11.09). Randomization ratio
+#> 1:1. Upper spending: Piecewise linear (line points = 0.5) Lower spending:
+#> Hwang-Shih-DeCani (gamma = -8)
 ```
 
 Tabular summary:
@@ -168,264 +164,181 @@ gs_nb |>
 
 | Group Sequential Design Bounds for Negative Binomial Outcome |  |  |  |
 |----|----|----|----|
-| N = 376, Expected events = 408 |  |  |  |
+| N = 370, Expected events = 414.1 |  |  |  |
 | Analysis | Value | Efficacy | Futility |
-| IA 1: 42% | Z | 2.8070 | -1.0128 |
-| Information: 27.03 | p (1-sided) | 0.0025 | 0.8444 |
-| Month: 10 | ~RR at bound | 0.5828 | 1.2151 |
-|  | P(Cross) if RR=1 | 0.0025 | 0.1556 |
-|  | P(Cross) if RR=0.67 | 0.2422 | 0.0009 |
-| IA 2: 91% | Z | 2.8158 | 1.4448 |
-| Information: 58.96 | p (1-sided) | 0.0024 | 0.0743 |
-| Month: 18 | ~RR at bound | 0.6930 | 0.8285 |
-|  | P(Cross) if RR=1 | 0.0045 | 0.9254 |
-|  | P(Cross) if RR=0.67 | 0.6340 | 0.0477 |
-| Final | Z | 1.9815 | 1.9796 |
-| Information: 64.98 | p (1-sided) | 0.0238 | 0.0239 |
-| Month: 24 | ~RR at bound | 0.7820 | 0.7822 |
-|  | P(Cross) if RR=1 | 0.0245 | 0.9754 |
-|  | P(Cross) if RR=0.67 | 0.8997 | 0.1000 |
+| IA 1: 44% | Z | 2.8070 | -0.8788 |
+| Information: 28.96 | p (1-sided) | 0.0025 | 0.8102 |
+| Month: 10 | ~RR at bound | 0.5931 | 1.1777 |
+|  | P(Cross) if RR=1 | 0.0025 | 0.1898 |
+|  | P(Cross) if RR=0.67 | 0.2649 | 0.0011 |
+| IA 2: 92% | Z | 2.8107 | 1.5082 |
+| Information: 60.12 | p (1-sided) | 0.0025 | 0.0658 |
+| Month: 18 | ~RR at bound | 0.6956 | 0.8230 |
+|  | P(Cross) if RR=1 | 0.0045 | 0.9339 |
+|  | P(Cross) if RR=0.67 | 0.6461 | 0.0515 |
+| Final | Z | 1.9800 | 1.9800 |
+| Information: 65.55 | p (1-sided) | 0.0239 | 0.0239 |
+| Month: 24 | ~RR at bound | 0.7828 | 0.7828 |
+|  | P(Cross) if RR=1 | 0.0244 | 0.9756 |
+|  | P(Cross) if RR=0.67 | 0.9013 | 0.0987 |
 
 ## Simulation study
 
-We simulated 3,600 trials to evaluate the operating characteristics of
-the group sequential design. This number of simulations was chosen to
-achieve a standard error for the power estimate of approximately 0.005
-when the true power is 90% (\sqrt{0.9 \times 0.1 / 3600} = 0.005). The
-simulation script is located in
-`data-raw/generate_gs_simulation_data.R`. The script uses the same
-helper workflow shown below:
+We now simulate 50 trials to evaluate the power of the group sequential
+design assuming design parameters above are correct.
+
+### Simulation setup
 
 ``` r
 
-sim_res <- sim_gs_nbinom(...)
-bounds_checked <- check_gs_bound(sim_res, gs_nb, info_col = "info_unblinded_ml")
-summary_gs <- summarize_gs_sim(bounds_checked)
+set.seed(42)
+n_sims <- 50
+
+# Enrollment rate (patients per month) to achieve target sample size
+n_target <- ceiling(nb_ss$n_total)
+enroll_rate_val <- n_target / 12 # All enrolled in 12 months
+
+# Define enrollment
+enroll_rate <- data.frame(
+  rate = enroll_rate_val,
+  duration = 12 # 12 months enrollment
+)
+
+# Define failure rates (with dispersion)
+fail_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(1.5 / 12, 1.0 / 12),
+  dispersion = c(0.5, 0.5)
+)
+
+# Dropout rate (5% at 1 year)
+dropout_rate_val <- -log(0.95)
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(dropout_rate_val, dropout_rate_val),
+  duration = c(100, 100) # Long duration
+)
+
+# Maximum follow-up (trial duration from enrollment start)
+max_followup <- 12 # 12 months to match design
 ```
 
-For this verification, `n_target` is the final group sequential sample
-size after integer rounding, and the dropout hazard is specified on the
-same monthly time scale as the event rates.
+### Run simulations
 
-### Load simulation results
+We use
+[`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
+to generate data and perform interim analyses, and
+[`check_gs_bound()`](https://keaven.github.io/gsDesignNB/reference/check_gs_bound.md)
+to apply the group sequential boundaries.
 
 ``` r
 
-# Load pre-computed simulation results
-results_file <- file.path("inst", "extdata", "gs_simulation_results.rds")
+# Simulate
+sim_res <- sim_gs_nbinom(
+  n_sims = n_sims,
+  enroll_rate = enroll_rate,
+  fail_rate = fail_rate,
+  dropout_rate = dropout_rate,
+  max_followup = max_followup,
+  event_gap = event_gap_val,
+  cuts = lapply(analysis_times, function(x) list(planned_calendar = x)),
+  design = gs_nb,
+  n_target = n_target
+)
 
-if (!file.exists(results_file) && file.exists("../inst/extdata/gs_simulation_results.rds")) {
-  results_file <- "../inst/extdata/gs_simulation_results.rds"
-}
-
-if (!file.exists(results_file)) {
-  results_file <- system.file("extdata", "gs_simulation_results.rds", package = "gsDesignNB")
-}
-
-if (results_file != "") {
-  sim_data <- readRDS(results_file)
-  results <- sim_data$results
-  summary_gs <- summarize_gs_sim(results)
-  analysis_summary <- data.table::as.data.table(summary_gs$analysis_summary)
-  required_summary_cols <- c(
-    "n_ctrl", "n_exp",
-    "exposure_total_ctrl", "exposure_total_exp",
-    "exposure_at_risk_ctrl", "exposure_at_risk_exp",
-    "events_ctrl", "events_exp"
-  )
-  if (!all(required_summary_cols %in% names(analysis_summary))) {
-    result_dt <- data.table::as.data.table(results)
-    result_means <- result_dt[, .(
-      n_ctrl = mean(n_ctrl, na.rm = TRUE),
-      n_exp = mean(n_exp, na.rm = TRUE),
-      exposure_total_ctrl = mean(exposure_total_ctrl, na.rm = TRUE),
-      exposure_total_exp = mean(exposure_total_exp, na.rm = TRUE),
-      exposure_at_risk_ctrl = mean(exposure_at_risk_ctrl, na.rm = TRUE),
-      exposure_at_risk_exp = mean(exposure_at_risk_exp, na.rm = TRUE),
-      events_ctrl = mean(events_ctrl, na.rm = TRUE),
-      events_exp = mean(events_exp, na.rm = TRUE)
-    ), by = analysis]
-    existing_result_mean_cols <- intersect(required_summary_cols, names(analysis_summary))
-    if (length(existing_result_mean_cols) > 0) {
-      analysis_summary[, (existing_result_mean_cols) := NULL]
-    }
-    analysis_summary <- merge(
-      analysis_summary,
-      result_means,
-      by = "analysis",
-      all.x = TRUE,
-      sort = FALSE
-    )
-  }
-  n_sims <- sim_data$n_sims
-  params <- sim_data$params
-} else {
-  # Fallback if data is not available (e.g. not installed yet)
-  warning("Simulation results not found. Skipping simulation analysis.")
-  results <- NULL
-  summary_gs <- NULL
-  analysis_summary <- NULL
-  n_sims <- 0
-}
+# Apply bounds
+results <- check_gs_bound(
+  sim_results = sim_res,
+  design = gs_nb,
+  info_scale = "blinded"
+)
 ```
 
 ## Simulation results summary
 
-### Summary of verification results
-
-We compare planning quantities from the group sequential design with
-simulation summaries from
-[`summarize_gs_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_gs_sim.md).
-The design object reports calendar enrollment at each planned analysis
-in `n_total`, and statistical information in `n.I`; keeping those scales
-distinct is important when comparing simulations with asymptotic design
-calculations.
-
-**Key distinction: Total Exposure vs Exposure at Risk**
-
-- **Total Exposure** (`exposure_total`): The calendar time a subject is
-  on study, from randomization to the analysis cut date (or censoring).
-  This is the same for both treatment arms by design.
-- **Exposure at Risk** (`exposure_at_risk`): The time during which a
-  subject can experience a *new* event. After each event, there is an
-  “event gap” period during which new events are not counted (e.g.,
-  representing recovery time or treatment effect). This differs by
-  treatment group because the group with more events loses more time to
-  gaps.
+### Events and exposure by analysis
 
 ``` r
 
-sim_summary <- data.table::copy(analysis_summary)
+# Summarize results
+summary_gs <- summarize_gs_sim(results)
 
-if (!"events" %in% names(sim_summary) && "events_total" %in% names(sim_summary)) {
-  sim_summary[, events := events_total]
-}
-if (!"info_blinded" %in% names(sim_summary) && "blinded_info" %in% names(sim_summary)) {
-  sim_summary[, info_blinded := blinded_info]
-}
-if (!"info_unblinded" %in% names(sim_summary) && "unblinded_info" %in% names(sim_summary)) {
-  sim_summary[, info_unblinded := unblinded_info]
-}
-
-planning_comparison <- data.frame(
-  Analysis = seq_len(gs_nb$k),
-  Month = params$analysis_times,
-  Planned_N = gs_nb$n_total,
-  Mean_N = sim_summary$n_enrolled,
-  Planned_Total_Exposure = gs_nb$n1 * gs_nb$exposure + gs_nb$n2 * gs_nb$exposure,
-  Mean_Total_Exposure = sim_summary$exposure_total_ctrl + sim_summary$exposure_total_exp,
-  Planned_At_Risk_Exposure =
-    gs_nb$n1 * gs_nb$exposure_at_risk1 + gs_nb$n2 * gs_nb$exposure_at_risk2,
-  Mean_At_Risk_Exposure =
-    sim_summary$exposure_at_risk_ctrl + sim_summary$exposure_at_risk_exp,
-  Planned_Events = gs_nb$events,
-  Mean_Events = sim_summary$events,
-  Planned_Info = gs_nb$n.I,
-  Mean_Unblinded_Info = sim_summary$info_unblinded
-)
-
-planning_comparison$Event_Diff <- planning_comparison$Mean_Events -
-  planning_comparison$Planned_Events
-planning_comparison$Info_Diff <- planning_comparison$Mean_Unblinded_Info -
-  planning_comparison$Planned_Info
-
-planning_comparison |>
-  gt() |>
-  tab_header(
-    title = "Design Planning Quantities vs Simulation Means",
-    subtitle = sprintf("Based on %d simulated trials", n_sims)
-  ) |>
-  cols_label(
-    Analysis = "Analysis",
-    Month = "Month",
-    Planned_N = "Planned N",
-    Mean_N = "Mean N",
-    Planned_Total_Exposure = "Planned total exposure",
-    Mean_Total_Exposure = "Mean total exposure",
-    Planned_At_Risk_Exposure = "Planned at-risk exposure",
-    Mean_At_Risk_Exposure = "Mean at-risk exposure",
-    Planned_Events = "Planned events",
-    Mean_Events = "Mean events",
-    Planned_Info = "Planned information",
-    Mean_Unblinded_Info = "Mean unblinded information",
-    Event_Diff = "Event diff.",
-    Info_Diff = "Information diff."
-  ) |>
-  fmt_number(
-    columns = c(
-      Planned_N, Mean_N,
-      Planned_Total_Exposure, Mean_Total_Exposure,
-      Planned_At_Risk_Exposure, Mean_At_Risk_Exposure,
-      Planned_Events, Mean_Events,
-      Planned_Info, Mean_Unblinded_Info,
-      Event_Diff, Info_Diff
-    ),
-    decimals = 1
+analysis_summary_tbl <- data.table::as.data.table(summary_gs$analysis_summary)
+analysis_summary_tbl[, planned_info := gs_nb$n.I[analysis]]
+data.table::setcolorder(
+  analysis_summary_tbl,
+  c(
+    "analysis",
+    "n_enrolled",
+    "events",
+    "planned_info",
+    setdiff(names(analysis_summary_tbl), c("analysis", "n_enrolled", "events", "planned_info"))
   )
-```
-
-| Design Planning Quantities vs Simulation Means |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| Based on 3600 simulated trials |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Analysis | Month | Planned N | Mean N | Planned total exposure | Mean total exposure | Planned at-risk exposure | Mean at-risk exposure | Planned events | Mean events | Planned information | Mean unblinded information | Event diff. | Information diff. |
-| 1 | 10 | 313.3 | 313.8 | 1,544.6 | 1,546.6 | 1,445.9 | 1,456.2 | 145.6 | 147.2 | 27.0 | 28.3 | 1.6 | 1.2 |
-| 2 | 18 | 376.0 | 376.0 | 3,857.8 | 3,855.3 | 3,611.3 | 3,622.9 | 363.6 | 365.3 | 59.0 | 60.8 | 1.7 | 1.8 |
-| 3 | 24 | 376.0 | 376.0 | 4,398.2 | 4,395.9 | 4,117.2 | 4,130.1 | 414.6 | 416.3 | 65.0 | 66.8 | 1.7 | 1.8 |
-
-### Overall operating characteristics
-
-``` r
-
-cat("=== Overall Operating Characteristics ===\n")
-#> === Overall Operating Characteristics ===
-cat(sprintf("Number of simulations: %d\n", n_sims))
-#> Number of simulations: 3600
-cat(sprintf("Overall Power (P[reject H0]): %.1f%% (SE: %.1f%%)\n", 
-            summary_gs$power * 100, 
-            sqrt(summary_gs$power * (1 - summary_gs$power) / n_sims) * 100))
-#> Overall Power (P[reject H0]): 89.9% (SE: 0.5%)
-cat(sprintf("Futility Stopping Rate: %.1f%%\n", summary_gs$futility * 100))
-#> Futility Stopping Rate: 10.1%
-cat(sprintf("Design Power (target): %.1f%%\n", (1 - gs_nb$beta) * 100))
-#> Design Power (target): 90.0%
-```
-
-### Power comparison by analysis
-
-``` r
-
-# Create comparison table
-crossing_summary <- data.frame(
-  Analysis = 1:3,
-  Analysis_Time = params$analysis_times,
-  Sim_Power = summary_gs$analysis_summary$prob_cross_upper,
-  Sim_Cum_Power = summary_gs$analysis_summary$cum_prob_upper,
-  Design_Cum_Power = cumsum(gs_nb$upper$prob[, 2])
 )
 
-crossing_summary |>
+analysis_summary_tbl |>
   gt() |>
-  tab_header(
-    title = "Power Comparison: Simulation vs Design",
-    subtitle = sprintf("Based on %d simulated trials", n_sims)
-  ) |>
+  tab_header(title = "Summary Statistics by Analysis") |>
   cols_label(
-    Analysis = "Analysis",
-    Analysis_Time = "Month",
-    Sim_Power = "Incremental Power (Sim)",
-    Sim_Cum_Power = "Cumulative Power (Sim)",
-    Design_Cum_Power = "Cumulative Power (Design)"
+    analysis = "Analysis",
+    n_enrolled = "N Enrolled",
+    events = "Total Events",
+    planned_info = "Planned Info (Design)",
+    info_blinded = "Mean Info (Blinded)",
+    info_unblinded = "Mean Info (Unblinded)",
+    n_cross_upper = "N Cross Upper",
+    n_cross_lower = "N Cross Lower",
+    prob_cross_upper = "Prob Cross Upper",
+    prob_cross_lower = "Prob Cross Lower"
   ) |>
-  fmt_percent(columns = c(Sim_Power, Sim_Cum_Power, Design_Cum_Power), decimals = 1)
+  fmt_number(decimals = 2) |>
+  fmt_number(columns = contains("prob"), decimals = 3)
 ```
 
-| Power Comparison: Simulation vs Design |  |  |  |  |
-|----|----|----|----|----|
-| Based on 3600 simulated trials |  |  |  |  |
-| Analysis | Month | Incremental Power (Sim) | Cumulative Power (Sim) | Cumulative Power (Design) |
-| 1 | 10 | 25.7% | 25.7% | 24.2% |
-| 2 | 18 | 40.1% | 65.7% | 63.4% |
-| 3 | 24 | 24.1% | 89.9% | 90.0% |
+| Summary Statistics by Analysis |  |  |  |  |  |  |  |  |  |  |
+|----|----|----|----|----|----|----|----|----|----|----|
+| Analysis | N Enrolled | Total Events | Planned Info (Design) | Mean Info (Blinded) | Mean Info (Unblinded) | N Cross Upper | N Cross Lower | Prob Cross Upper | Prob Cross Lower | cum_prob_upper |
+| 1.00 | 301.18 | 122.66 | 28.96 | 22.67 | 21.56 | 13.00 | 0.00 | 0.260 | 0.000 | 0.260 |
+| 2.00 | 364.00 | 278.88 | 60.12 | 48.10 | 47.02 | 17.00 | 0.00 | 0.340 | 0.000 | 0.600 |
+| 3.00 | 364.00 | 311.06 | 65.55 | 51.92 | 50.81 | 13.00 | 7.00 | 0.260 | 0.140 | 0.860 |
+
+### Power and Operating Characteristics
+
+``` r
+
+# Overall Power
+message("=== Overall Operating Characteristics ===")
+#> === Overall Operating Characteristics ===
+message(sprintf("Number of simulations: %d", summary_gs$n_sim))
+#> Number of simulations: 50
+message(sprintf("Overall Power (P[reject H0]): %.1f%%", summary_gs$power * 100))
+#> Overall Power (P[reject H0]): 86.0%
+message(sprintf("Futility Stopping Rate: %.1f%%", summary_gs$futility * 100))
+#> Futility Stopping Rate: 14.0%
+message(sprintf("Design Power (target): %.1f%%", (1 - gs_nb$beta) * 100))
+#> Design Power (target): 90.0%
+
+# Cumulative Power Comparison
+crossing_summary <- summary_gs$analysis_summary
+crossing_summary$design_cum_power <- cumsum(gs_nb$upper$prob[, 2])
+
+crossing_summary[, c("analysis", "cum_prob_upper", "design_cum_power")] |>
+  gt() |>
+  tab_header(title = "Cumulative Power Comparison") |>
+  cols_label(
+    analysis = "Analysis",
+    cum_prob_upper = "Cum Power (Sim)",
+    design_cum_power = "Cum Power (Design)"
+  ) |>
+  fmt_number(decimals = 3)
+```
+
+| Cumulative Power Comparison |                 |                    |
+|-----------------------------|-----------------|--------------------|
+| Analysis                    | Cum Power (Sim) | Cum Power (Design) |
+| 1.000                       | 0.260           | 0.265              |
+| 2.000                       | 0.600           | 0.646              |
+| 3.000                       | 0.860           | 0.901              |
 
 ### Visualization of Z-statistics
 
@@ -466,10 +379,6 @@ ggplot(plot_data, aes(x = factor(analysis), y = z_flipped)) +
   ) +
   theme_minimal() +
   ylim(c(-4, 6))
-#> Warning: Removed 22 rows containing non-finite outside the scale range
-#> (`stat_ydensity()`).
-#> Warning: Removed 22 rows containing non-finite outside the scale range
-#> (`stat_boxplot()`).
 ```
 
 ![Z-statistics across analyses with group sequential
@@ -487,16 +396,19 @@ designs with negative binomial outcomes:
     [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
     to add interim analyses
 3.  **Simulation** using
-    [`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
-    to generate trial data and perform analyses
-4.  **Boundary checking** using
-    [`check_gs_bound()`](https://keaven.github.io/gsDesignNB/reference/check_gs_bound.md)
-    to apply group sequential boundaries
+    [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
+    to generate trial data
+4.  **Analysis** using
+    [`cut_data_by_date()`](https://keaven.github.io/gsDesignNB/reference/cut_data_by_date.md)
+    and
+    [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
+    at each interim
+5.  **Boundary checking** against the group sequential bounds
 
-The `usTime = c(0.1, 0.18, 1)` specification provides conservative alpha
+The `usTime = c(0.1, 0.2, 1)` specification provides conservative alpha
 spending at early analyses, preserving most of the Type I error for
 later analyses when more information is available.
 
-With 3600 simulations, the standard error for the power estimate is
-approximately 0.5%. The observed power of 89.9% is close to the design
-target of 90%, validating the sample size calculation methodology.
+With only 50 simulations, the estimated power has substantial Monte
+Carlo error. For more precise estimates, increase `n_sims` to 1000 or
+more.

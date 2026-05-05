@@ -6,13 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Group sequential simulation with completers analysis • gsDesignNB</title>
-<!-- katex math (vendored under pkgdown/assets/katex/; copied to site root; KaTeX 0.16.11) --><link rel="stylesheet" href="../katex/katex.min.css">
-<script defer src="../katex/katex.min.js"></script><script defer src="../katex/auto-render.min.js" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<script src="../extra.js"></script><meta property="og:title" content="Group sequential simulation with completers analysis">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Group sequential simulation with completers analysis">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,7 +30,17 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/completers-interim-example.html">Group sequential simulation with completers analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/group-sequential-simulation.html">Group sequential design and simulation</a></li>
+    <li><a class="dropdown-item" href="../articles/sample-size-nbinom.html">Sample size calculation for negative binomial outcomes</a></li>
+    <li><a class="dropdown-item" href="../articles/seasonal-simulation.html">Seasonal event simulation</a></li>
+    <li><a class="dropdown-item" href="../articles/simulation-example.html">Simulation of recurrent events</a></li>
+    <li><a class="dropdown-item" href="../articles/verification-simulation.html">Verification of sample size calculation via simulation</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -56,7 +64,7 @@
       <h1>Group sequential simulation with completers analysis</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/completers-interim-example.Rmd" class="external-link"><code>vignettes/completers-interim-example.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.3/vignettes/completers-interim-example.Rmd" class="external-link"><code>vignettes/completers-interim-example.Rmd</code></a></small>
       <div class="d-none name"><code>completers-interim-example.Rmd</code></div>
     </div>
 
@@ -77,19 +85,19 @@ where an interim analysis is conducted based on a specific number of
 <p>We define a trial with the following parameters:</p>
 <ul>
 <li>
-<strong>Sample size:</strong> 200 patients.</li>
+<strong>Sample Size:</strong> 200 patients.</li>
 <li>
 <strong>Enrollment:</strong> Recruited over 12 months.</li>
 <li>
 <strong>Follow-up:</strong> 2 years maximum follow-up per
 patient.</li>
 <li>
-<strong>Interim analysis:</strong> Conducted when 40% of patients
+<strong>Interim Analysis:</strong> Conducted when 40% of patients
 (80 subjects) have completed their 2-year follow-up. The interim
 analysis includes all data available at that time (completers and
 partial follow-up).</li>
 <li>
-<strong>Final analysis:</strong> Conducted when all patients have
+<strong>Final Analysis:</strong> Conducted when all patients have
 completed follow-up (or dropped out). Includes all available data.</li>
 </ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -223,13 +231,13 @@ and final analyses.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Asymptotic Information (Interim): "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">info_asymp_interim</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Asymptotic Information (Interim): 15.27</span></span>
+<span><span class="co">#&gt; Asymptotic Information (Interim): 15.54</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Mean Simulated Information (Interim): "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">interim_info</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mean Simulated Information (Interim): 14.51</span></span>
+<span><span class="co">#&gt; Mean Simulated Information (Interim): 14.45</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Asymptotic Information (Final): "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">info_asymp_final</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Asymptotic Information (Final): 22.49</span></span>
+<span><span class="co">#&gt; Asymptotic Information (Final): 22.81</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Mean Simulated Information (Final): "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">final_info</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mean Simulated Information (Final): 17.34</span></span></code></pre></div>
+<span><span class="co">#&gt; Mean Simulated Information (Final): 17.29</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="results-summary">Results summary<a class="anchor" aria-label="anchor" href="#results-summary"></a>
@@ -238,20 +246,20 @@ and final analyses.</p>
 the interim and final analyses.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">results</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"interim_date"</span>, <span class="st">"interim_z"</span>, <span class="st">"interim_info"</span>, <span class="st">"final_date"</span>, <span class="st">"final_z"</span>, <span class="st">"final_info"</span>, <span class="st">"info_frac"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   interim_date     interim_z       interim_info     final_date   </span></span>
-<span><span class="co">#&gt;  Min.   :1.310   Min.   :-3.461   Min.   : 9.16   Min.   :1.877  </span></span>
-<span><span class="co">#&gt;  1st Qu.:1.387   1st Qu.:-2.192   1st Qu.:13.11   1st Qu.:1.950  </span></span>
-<span><span class="co">#&gt;  Median :1.406   Median :-1.333   Median :14.07   Median :1.983  </span></span>
-<span><span class="co">#&gt;  Mean   :1.416   Mean   :-1.357   Mean   :14.51   Mean   :1.992  </span></span>
-<span><span class="co">#&gt;  3rd Qu.:1.445   3rd Qu.:-0.620   3rd Qu.:15.65   3rd Qu.:2.029  </span></span>
-<span><span class="co">#&gt;  Max.   :1.544   Max.   : 1.303   Max.   :21.54   Max.   :2.173  </span></span>
-<span><span class="co">#&gt;     final_z         final_info      info_frac     </span></span>
-<span><span class="co">#&gt;  Min.   :-3.949   Min.   :10.71   Min.   :0.7194  </span></span>
-<span><span class="co">#&gt;  1st Qu.:-2.163   1st Qu.:15.95   1st Qu.:0.7932  </span></span>
-<span><span class="co">#&gt;  Median :-1.628   Median :17.03   Median :0.8296  </span></span>
-<span><span class="co">#&gt;  Mean   :-1.523   Mean   :17.34   Mean   :0.8373  </span></span>
-<span><span class="co">#&gt;  3rd Qu.:-0.904   3rd Qu.:19.06   3rd Qu.:0.8809  </span></span>
-<span><span class="co">#&gt;  Max.   : 1.397   Max.   :24.68   Max.   :0.9460</span></span></code></pre></div>
+<span><span class="co">#&gt;   interim_date     interim_z        interim_info     final_date   </span></span>
+<span><span class="co">#&gt;  Min.   :1.310   Min.   :-3.3950   Min.   : 9.10   Min.   :1.877  </span></span>
+<span><span class="co">#&gt;  1st Qu.:1.387   1st Qu.:-2.2002   1st Qu.:13.10   1st Qu.:1.950  </span></span>
+<span><span class="co">#&gt;  Median :1.406   Median :-1.3360   Median :14.05   Median :1.983  </span></span>
+<span><span class="co">#&gt;  Mean   :1.416   Mean   :-1.3850   Mean   :14.45   Mean   :1.992  </span></span>
+<span><span class="co">#&gt;  3rd Qu.:1.445   3rd Qu.:-0.8207   3rd Qu.:15.57   3rd Qu.:2.029  </span></span>
+<span><span class="co">#&gt;  Max.   :1.544   Max.   : 1.3095   Max.   :21.56   Max.   :2.173  </span></span>
+<span><span class="co">#&gt;     final_z          final_info      info_frac     </span></span>
+<span><span class="co">#&gt;  Min.   :-3.8041   Min.   :10.57   Min.   :0.7213  </span></span>
+<span><span class="co">#&gt;  1st Qu.:-2.1767   1st Qu.:15.76   1st Qu.:0.7930  </span></span>
+<span><span class="co">#&gt;  Median :-1.5857   Median :17.01   Median :0.8301  </span></span>
+<span><span class="co">#&gt;  Mean   :-1.5420   Mean   :17.29   Mean   :0.8361  </span></span>
+<span><span class="co">#&gt;  3rd Qu.:-0.8692   3rd Qu.:19.04   3rd Qu.:0.8703  </span></span>
+<span><span class="co">#&gt;  Max.   : 1.3956   Max.   :24.31   Max.   :0.9479</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a>
 </h3>
@@ -342,7 +350,7 @@ O’Brien-Fleming spending function for the upper bound.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Keaven Anderson, Hongtao Zhang, Andrea Maes.</p>
+  <p>Developed by Keaven Anderson.</p>
 </div>
 
 <div class="pkgdown-footer-right">

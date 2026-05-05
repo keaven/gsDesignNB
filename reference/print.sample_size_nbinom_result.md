@@ -34,6 +34,7 @@ print(x)
 #> Sample size for negative binomial outcome
 #> ==========================================
 #> 
+#> Method:          zhu
 #> Sample size:     n1 = 19, n2 = 19, total = 38
 #> Expected events: 212.8 (n1: 133.0, n2: 79.8)
 #> Power: 80%, Alpha: 0.025 (1-sided)

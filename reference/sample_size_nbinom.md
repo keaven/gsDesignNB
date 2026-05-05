@@ -1,16 +1,7 @@
-# Sample size calculation for negative binomial outcomes
+# Sample size calculation for negative binomial distribution
 
-Computes the sample size (or power) for comparing two treatment groups
-assuming negative binomial distributed event counts. When
-`test_type = "wald"` (default), the formula uses a single variance
-evaluated under the alternative, corresponding to Method 3 of Zhu &
-Lakkis (2014) and the formulas of Friede & Schmidli (2010) and Mutze et
-al. (2019). When `test_type = "score"`, separate null and alternative
-variances are used (Farrington & Manning style), aligning the
-calculation with the null-variance scale of the score test. In practice,
-the final test statistic affects Type I error more than the small
-difference between Wald and score sizing, so score-test designs should
-be checked by simulation for both Type I error and power.
+Computes the sample size for comparing two treatment groups assuming a
+negative binomial distribution for the outcome.
 
 ## Usage
 
@@ -23,14 +14,13 @@ sample_size_nbinom(
   alpha = 0.025,
   sided = 1,
   ratio = 1,
-  rr0 = 1,
   accrual_rate,
   accrual_duration,
   trial_duration,
   dropout_rate = 0,
   max_followup = NULL,
-  test_type = c("wald", "score"),
-  event_gap = NULL
+  event_gap = NULL,
+  method = "zhu"
 )
 ```
 
@@ -38,24 +28,22 @@ sample_size_nbinom(
 
 - lambda1:
 
-  Event rate for group 1 (control), in events per unit time.
+  Rate in group 1 (control).
 
 - lambda2:
 
-  Event rate for group 2 (treatment), in events per unit time.
+  Rate in group 2 (treatment).
 
 - dispersion:
 
-  Dispersion parameter \\k\\ such that \\\mathrm{Var}(Y) = \mu +
-  k\mu^2\\. Equivalent to `1/size` in
-  [`stats::rnbinom()`](https://rdrr.io/r/stats/NegBinomial.html). Can be
-  a scalar (common dispersion) or a vector of length 2 (group-specific:
-  control, treatment).
+  Dispersion parameter `k` such that \\Var(Y) = \mu + k \mu^2\\. Note
+  that this is equivalent to `1/size` in R's
+  [`stats::rnbinom()`](https://rdrr.io/r/stats/NegBinomial.html)
+  parameterization.
 
 - power:
 
-  Target power (\\1 - \beta\\). If `NULL`, power is computed for the
-  given accrual rates (no sample size scaling). Default is 0.9.
+  Power of the test (1 - beta). Default is 0.9.
 
 - alpha:
 
@@ -63,69 +51,44 @@ sample_size_nbinom(
 
 - sided:
 
-  Number of sides for the test: 1 (one-sided) or 2 (two-sided). Default
+  One-sided or two-sided test. 1 for one-sided, 2 for two-sided. Default
   is 1.
 
 - ratio:
 
-  Allocation ratio \\r = n_2/n_1\\. Default is 1 (equal allocation).
-
-- rr0:
-
-  Rate ratio under the null hypothesis (\\\lambda_2 / \lambda_1\\).
-  Default is 1 (superiority). For non-inferiority, use a value \> 1
-  (e.g., 1.1). For super-superiority, use a value \< 1 (e.g., 0.8).
+  Allocation ratio n2/n1. Default is 1.
 
 - accrual_rate:
 
-  Vector of accrual rates (patients per unit time) for each recruitment
-  segment.
+  Vector of accrual rates (patients per unit time).
 
 - accrual_duration:
 
-  Vector of durations for each accrual segment. Must be the same length
-  as `accrual_rate`.
+  Vector of durations for each accrual rate. Must be same length as
+  `accrual_rate`.
 
 - trial_duration:
 
-  Total planned duration of the trial. If `trial_duration` is less than
-  the sum of `accrual_duration`, accrual is truncated at
-  `trial_duration`.
+  Total planned duration of the trial.
 
 - dropout_rate:
 
-  Dropout hazard rate. Can be:
-
-  - A scalar (common constant rate for both groups). Default is 0.
-
-  - A vector of length 2 (group-specific constant rates: control,
-    treatment).
-
-  - A data frame with columns `rate` and `duration` (and optionally
-    `treatment`) defining piecewise constant dropout hazards. When a
-    `treatment` column is present, use 1 for control and 2 for
-    treatment. Without a `treatment` column, the same piecewise schedule
-    applies to both groups. The last `duration` may be `Inf` to extend
-    the final rate indefinitely.
+  Dropout rate (hazard rate). Default is 0.
 
 - max_followup:
 
-  Maximum follow-up time for any patient. Default is `NULL` (infinite).
-  Can be a vector of length 2 for group-specific caps.
-
-- test_type:
-
-  Type of test for which to size the study: `"wald"` (default) uses a
-  single variance under the alternative; `"score"` uses separate null
-  and alternative variances (\\z\_\alpha \sqrt{V_0} + z\_\beta
-  \sqrt{V_1}\\).
+  Maximum follow-up time for any patient. Default is NULL (infinite).
 
 - event_gap:
 
-  Gap duration after each event during which no new events are counted
-  (e.g., a recovery period). Default is `NULL` (no gap). When specified,
-  the effective rate is reduced to \\\lambda\_{\mathrm{eff}} = \lambda /
-  (1 + \lambda \cdot \mathrm{gap})\\.
+  Gap duration after each event during which no new events are counted.
+  Default is NULL (no gap). If provided, the effective event rate is
+  reduced.
+
+- method:
+
+  Method for sample size calculation. "zhu" for Zhu and Lakkis (2014),
+  or "friede" for Friede and Schmidli (2010) / Mütze et al. (2019).
 
 ## Value
 
@@ -138,128 +101,27 @@ containing:
 
 - n1:
 
-  Sample size for group 1 (control).
+  Sample size for group 1
 
 - n2:
 
-  Sample size for group 2 (treatment).
+  Sample size for group 2
 
 - n_total:
 
-  Total sample size (\\n_1 + n_2\\).
-
-- alpha:
-
-  Significance level used.
-
-- sided:
-
-  One-sided or two-sided test.
-
-- power:
-
-  Power of the test.
+  Total sample size
 
 - exposure:
 
-  Average calendar exposure \\\bar{t}\_g\\ (vector of length 2 for
-  control and treatment).
+  Average exposure time used in calculation (calendar time)
 
 - exposure_at_risk_n1:
 
-  Average at-risk exposure for group 1 (adjusted for event gap).
+  Average at-risk exposure time for group 1 (accounts for event gap)
 
 - exposure_at_risk_n2:
 
-  Average at-risk exposure for group 2 (adjusted for event gap).
-
-- events_n1:
-
-  Expected number of events in group 1.
-
-- events_n2:
-
-  Expected number of events in group 2.
-
-- total_events:
-
-  Total expected number of events.
-
-- variance:
-
-  Variance of the log rate ratio \\\mathrm{Var}(\hat\theta)\\.
-
-- variance_null:
-
-  Null variance of the log rate ratio used for score-test sizing, on the
-  same final-analysis scale as `variance`.
-
-- accrual_rate:
-
-  Accrual rate(s) used (possibly scaled to achieve target power).
-
-- accrual_duration:
-
-  Accrual duration(s) used.
-
-## Details
-
-### Sample size formula
-
-**Wald test** (`test_type = "wald"`): \$\$n_1 = \frac{(z\_{\alpha/s} +
-z\_\beta)^2 V_1}{(\theta - \theta_0)^2}\$\$
-
-**Score test** (`test_type = "score"`): \$\$n_1 = \frac{(z\_{\alpha/s}
-\sqrt{V_0} + z\_\beta \sqrt{V_1})^2}{(\theta - \theta_0)^2}\$\$
-
-where \\\theta = \log(\lambda_2/\lambda_1)\\, \\\theta_0 =
-\log(\mathrm{rr}\_0)\\, and: \$\$V_1 = \left(\frac{1}{\mu_1} +
-k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right)\$\$ is the
-variance under \\H_1\\. Under \\H_0\\ (pooled rate \\\lambda_0 =
-(\lambda_1 + r \lambda_2 \mathrm{rr}\_0) / (1 + r)\\): \$\$V_0 =
-\left(\frac{1}{\mu_0} + k_0\right)\left(1 + \frac{1}{r}\right)\$\$ with
-\\\mu_g = \lambda_g \bar{t}\_g\\ the expected event count and
-\\\bar{t}\_g\\ the average exposure for group \\g\\.
-
-In superiority settings, the traditional Wald/Zhu-Lakkis sample size may
-be slightly larger than score sizing and can provide a useful power
-margin when the final analysis uses the score test. Compare both sizing
-rules and verify the chosen design with simulation when finite-sample
-calibration matters.
-
-### Average exposure
-
-The average exposure \\\bar{t}\_g\\ accounts for piecewise accrual,
-piecewise exponential dropout, and maximum follow-up truncation. With
-piecewise constant dropout hazards \\\delta_1, \delta_2, \ldots\\ over
-successive intervals, the survival function is \\S(t) = \exp(-\sum_j
-\delta_j \ell_j)\\ where \\\ell_j\\ is the time spent in interval \\j\\.
-The expected exposure for a patient with potential follow-up \\u\\ is
-\\m(u) = \int_0^u S(t)\\dt\\, computed as a sum of exponential integrals
-over each piece. For a single constant rate \\\delta \> 0\\ this
-simplifies to \\m(u) = (1 - e^{-\delta u})/\delta\\. The overall average
-is a weighted mean across accrual segments.
-
-### Variance inflation
-
-When follow-up times are variable, the dispersion is inflated by a
-factor \\Q_g = \mathrm{E}\[t_g^2\] / (\mathrm{E}\[t_g\])^2 \ge 1\\ (Zhu
-& Lakkis, 2014) to account for the non-linear dependence of the NB
-variance on exposure.
-
-### Event gap correction (Jensen's inequality)
-
-When `event_gap` \> 0, the naive effective rate \\\lambda / (1 + \lambda
-g)\\ overestimates the true population-level effective rate because of
-subject-level heterogeneity (frailty). In the Gamma-Poisson mixture,
-each subject's rate \\\Lambda_i \sim \mathrm{Gamma}(1/k, k\lambda)\\ is
-random. Since \\f(x) = x/(1+xg)\\ is concave, Jensen's inequality gives
-\\\mathrm{E}\[f(\Lambda)\] \< f(\mathrm{E}\[\Lambda\])\\.
-
-A second-order Taylor correction is applied: \$\$\lambda\_{\mathrm{eff}}
-\approx \frac{\lambda}{1+\lambda g} \left(1 - \frac{k \lambda
-g}{(1+\lambda g)^2}\right)\$\$ This uses \\f''(\lambda) = -2g/(1+\lambda
-g)^3\\ and \\\mathrm{Var}(\Lambda) = k\lambda^2\\.
+  Average at-risk exposure time for group 2 (accounts for event gap)
 
 ## References
 
@@ -272,26 +134,21 @@ negative binomial counts in superiority and non-inferiority trials.
 *Methods of Information in Medicine*, 49(06), 618–624.
 [doi:10.3414/ME09-02-0060](https://doi.org/10.3414/ME09-02-0060)
 
-Mutze, T., Glimm, E., Schmidli, H., & Friede, T. (2019). Group
+Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019). Group
 sequential designs for negative binomial outcomes. *Statistical Methods
 in Medical Research*, 28(8), 2326–2347.
 [doi:10.1177/0962280218773115](https://doi.org/10.1177/0962280218773115)
 
 ## See also
 
-[`compute_info_at_time()`](https://keaven.github.io/gsDesignNB/reference/compute_info_at_time.md)
-for computing statistical information at a given analysis time;
-[`blinded_ssr()`](https://keaven.github.io/gsDesignNB/reference/blinded_ssr.md)
-for blinded sample size reestimation;
-[`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
-for group sequential designs;
 [`vignette("sample-size-nbinom", package = "gsDesignNB")`](https://keaven.github.io/gsDesignNB/articles/sample-size-nbinom.md)
-for detailed methodology.
+for a detailed explanation of the methodology.
 
 ## Examples
 
 ``` r
-# Basic sample size calculation
+# Calculate sample size for lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1
+# with fixed recruitment of 10/month for 20 months, 24 month trial duration
 x <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
@@ -299,39 +156,26 @@ x <- sample_size_nbinom(
 class(x)
 #> [1] "sample_size_nbinom_result" "list"                     
 summary(x)
-#> Fixed sample size design for negative binomial outcome, total sample size 38
-#> (n1=19, n2=19), 80 percent power, 2.5 percent (1-sided) Type I error. Control
-#> rate 0.5000, treatment rate 0.3000, risk ratio 0.6000, dispersion 0.1000.
-#> Accrual duration 20.0, trial duration 24.0, average exposure 14.00. Expected
-#> events 212.8. Randomization ratio 1:1.
+#> Fixed sample size design for negative binomial outcome (zhu method), total
+#> sample size 38 (n1=19, n2=19), 80 percent power, 2.5 percent (1-sided) Type I
+#> error. Control rate 0.5000, treatment rate 0.3000, risk ratio 0.6000,
+#> dispersion 0.1000. Accrual duration 20.0, trial duration 24.0, average exposure
+#> 14.00. Expected events 212.8. Randomization ratio 1:1.
 #> 
 
 # With piecewise accrual
+# 5 patients/month for 3 months, then 10 patients/month for 3 months
+# Trial ends at month 12.
 x2 <- sample_size_nbinom(
   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
   accrual_rate = c(5, 10), accrual_duration = c(3, 3),
   trial_duration = 12
 )
 summary(x2)
-#> Fixed sample size design for negative binomial outcome, total sample size 52
-#> (n1=26, n2=26), 80 percent power, 2.5 percent (1-sided) Type I error. Control
-#> rate 0.5000, treatment rate 0.3000, risk ratio 0.6000, dispersion 0.1000.
-#> Accrual duration 6.0, trial duration 12.0, average exposure 8.50. Expected
-#> events 176.8. Randomization ratio 1:1.
+#> Fixed sample size design for negative binomial outcome (zhu method), total
+#> sample size 52 (n1=26, n2=26), 80 percent power, 2.5 percent (1-sided) Type I
+#> error. Control rate 0.5000, treatment rate 0.3000, risk ratio 0.6000,
+#> dispersion 0.1000. Accrual duration 6.0, trial duration 12.0, average exposure
+#> 8.50. Expected events 176.8. Randomization ratio 1:1.
 #> 
-
-# Compute power for a fixed design (power = NULL)
-sample_size_nbinom(
-  lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = NULL,
-  accrual_rate = 10, accrual_duration = 20, trial_duration = 24
-)
-#> Sample size for negative binomial outcome
-#> ==========================================
-#> 
-#> Sample size:     n1 = 100, n2 = 100, total = 200
-#> Expected events: 1120.0 (n1: 700.0, n2: 420.0)
-#> Power: 100%, Alpha: 0.025 (1-sided)
-#> Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)
-#> Dispersion: 0.1000, Avg exposure (calendar): 14.00
-#> Accrual: 20.0, Trial duration: 24.0
 ```

@@ -14,9 +14,7 @@ cut_date_for_completers(data, target_completers)
 - data:
 
   A data frame of simulated data, typically from
-  [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md)
-  or
-  [`nb_sim_seasonal()`](https://keaven.github.io/gsDesignNB/reference/nb_sim_seasonal.md).
+  [`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md).
 
 - target_completers:
 

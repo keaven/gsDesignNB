@@ -1,33 +1,10 @@
 # gsDesignNB
 
-gsDesignNB provides design, simulation, and interim monitoring tools for
-recurrent-event trials analyzed with negative binomial rate models, with
-Poisson methods available as the limiting special case when dispersion
-is negligible.
-
-The package is NB-first: plan designs with
-[`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md),
-simulate recurrent-event data with
-[`nb_sim()`](https://keaven.github.io/gsDesignNB/reference/nb_sim.md) or
-[`nb_sim_seasonal()`](https://keaven.github.io/gsDesignNB/reference/nb_sim_seasonal.md),
-and evaluate group sequential monitoring or sample size re-estimation
-with
-[`sim_gs_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_gs_nbinom.md)
-and
-[`sim_ssr_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_ssr_nbinom.md).
-Planning and simulation can use either Wald or score-test inference for
-rate ratios. The `gsDesign` package supplies the underlying
-spending-function and boundary calculations used by those workflows.
-
-## Start Here
-
-- `sample-size-nbinom` for fixed-design planning
-- `score-vs-wald-simulation` for Wald/score sizing and Type I error
-  guidance
-- `simulation-example` and `seasonal-simulation` for recurrent-event
-  data generation
-- `ssr-example` and `ssr-simulation-study` for negative binomial SSR
-  workflows
+gsDesignNB provides fixed design and group sequential design simulation
+for recurrent event scenarios to be analyzed as a Poisson process or
+negative binomial model. For group sequential design, the package can be
+easily used with the gsDesign package. Key is the computation of
+statistical information at the time of analysis.
 
 ## Installation
 
@@ -44,23 +21,6 @@ Or install the development version from GitHub with:
 
 remotes::install_github("keaven/gsDesignNB")
 ```
-
-## Local pkgdown site
-
-After
-[`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html),
-prefer **not** using
-[`pkgdown::preview_site()`](https://pkgdown.r-lib.org/reference/preview_site.html)
-alone: it opens a `file://` URL, and browsers often load little or no
-CSS/JS for local files. From the package root, run:
-
-``` r
-
-gsDesignNB::preview_pkgdown_site()
-```
-
-That serves `docs/` at `http://127.0.0.1:8787` so the site matches
-GitHub Pages.
 
 ## Code style
 

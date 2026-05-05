@@ -6,12 +6,7 @@ information and checks if boundaries have been crossed.
 ## Usage
 
 ``` r
-check_gs_bound(
-  sim_results,
-  design,
-  info_scale = c("blinded", "unblinded"),
-  info_col = NULL
-)
+check_gs_bound(sim_results, design, info_scale = c("blinded", "unblinded"))
 ```
 
 ## Arguments
@@ -27,13 +22,8 @@ check_gs_bound(
 
 - info_scale:
 
-  Character. Legacy selector for `"blinded"` (default) or `"unblinded"`
-  information. Ignored when `info_col` is supplied.
-
-- info_col:
-
-  Optional explicit column name containing the information metric to use
-  for bounds, e.g. `"info_unblinded_ml"` or `"info_blinded_mom"`.
+  Character. "blinded" (default) or "unblinded" information to use for
+  bounds.
 
 ## Value
 
@@ -46,10 +36,6 @@ A data frame with added columns:
 - cross_lower:
 
   Logical, true if lower bound crossed (futility)
-
-- cross_harm:
-
-  Logical, true if harm bound crossed (test.type 7 or 8)
 
 ## Examples
 
@@ -68,20 +54,4 @@ check_gs_bound(sim_df, design)
 #> 2   1        2     NA          100            100       FALSE       FALSE
 #> 3   2        1   -0.2           50             50       FALSE       FALSE
 #> 4   2        2    2.2          100            100        TRUE       FALSE
-#>   cross_harm
-#> 1      FALSE
-#> 2      FALSE
-#> 3      FALSE
-#> 4      FALSE
-check_gs_bound(sim_df, design, info_col = "unblinded_info")
-#>   sim analysis z_stat blinded_info unblinded_info cross_upper cross_lower
-#> 1   1        1    2.5           50             50       FALSE       FALSE
-#> 2   1        2     NA          100            100       FALSE       FALSE
-#> 3   2        1   -0.2           50             50       FALSE       FALSE
-#> 4   2        2    2.2          100            100        TRUE       FALSE
-#>   cross_harm
-#> 1      FALSE
-#> 2      FALSE
-#> 3      FALSE
-#> 4      FALSE
 ```

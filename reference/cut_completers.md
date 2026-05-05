@@ -9,7 +9,7 @@ typically used with a date determined by
 ## Usage
 
 ``` r
-cut_completers(data, cut_date, event_gap = 0)
+cut_completers(data, cut_date, event_gap = 5/365.25)
 ```
 
 ## Arguments
@@ -26,9 +26,9 @@ cut_completers(data, cut_date, event_gap = 0)
 - event_gap:
 
   Gap duration after each event during which no new events are counted.
-  Can be a numeric value (default `0`) or a function returning a numeric
-  value. The time at risk is reduced by the sum of these gaps (truncated
-  by the cut date).
+  Can be a numeric value (default `5 / 365.25`) or a function returning
+  a numeric value. The time at risk is reduced by the sum of these gaps
+  (truncated by the cut date).
 
 ## Value
 
@@ -50,25 +50,25 @@ sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
 date_5 <- cut_date_for_completers(sim, 5)
 # Get analysis dataset for this cut date (includes partial follow-up)
 cut_completers(sim, date_5)
-#>    id    treatment enroll_time      tte tte_total events
-#> 1   1 Experimental  0.04940508 2.000000  2.000000      0
-#> 2   2 Experimental  0.06333562 1.262942  1.262942      0
-#> 3   3      Control  0.06753399 2.000000  2.000000      0
-#> 4   4      Control  0.10178320 2.000000  2.000000      2
-#> 5   5      Control  0.20960215 1.925256  1.925256      0
-#> 6   6 Experimental  0.22735665 2.000000  2.000000      0
-#> 7   7      Control  0.23706007 2.000000  2.000000      1
-#> 8   8 Experimental  0.24841513 1.988645  1.988645      2
-#> 9   9 Experimental  0.24890959 1.988150  1.988150      0
-#> 10 10 Experimental  0.26921564 1.967844  1.967844      1
-#> 11 11      Control  0.29635022 1.940710  1.940710      1
-#> 12 12      Control  0.33700966 1.900050  1.900050      3
-#> 13 13      Control  0.36424507 1.872815  1.872815      5
-#> 14 14      Control  0.40795392 1.829106  1.829106      0
-#> 15 15 Experimental  0.43395293 1.803107  1.803107      2
-#> 16 16 Experimental  0.43813914 1.798921  1.798921      2
-#> 17 17      Control  0.47884640 1.758214  1.758214      0
-#> 18 18      Control  0.47958931 1.757471  1.757471      1
-#> 19 19 Experimental  0.48774864 1.749311  1.749311      1
-#> 20 20 Experimental  0.49560514 1.741455  1.741455      0
+#>    id    treatment enroll_time      tte events
+#> 1   1 Experimental  0.04940508 2.000000      0
+#> 2   2 Experimental  0.06333562 1.262942      0
+#> 3   3      Control  0.06753399 2.000000      0
+#> 4   4      Control  0.10178320 1.972621      2
+#> 5   5      Control  0.20960215 1.925256      0
+#> 6   6 Experimental  0.22735665 2.000000      0
+#> 7   7      Control  0.23706007 1.986311      1
+#> 8   8 Experimental  0.24841513 1.961266      2
+#> 9   9 Experimental  0.24890959 1.988150      0
+#> 10 10 Experimental  0.26921564 1.954155      1
+#> 11 11      Control  0.29635022 1.927021      1
+#> 12 12      Control  0.33700966 1.858983      3
+#> 13 13      Control  0.36424507 1.804369      5
+#> 14 14      Control  0.40795392 1.829106      0
+#> 15 15 Experimental  0.43395293 1.776345      2
+#> 16 16 Experimental  0.43813914 1.771542      2
+#> 17 17      Control  0.47884640 1.758214      0
+#> 18 18      Control  0.47958931 1.743782      1
+#> 19 19 Experimental  0.48774864 1.735622      1
+#> 20 20 Experimental  0.49560514 1.741455      0
 ```
