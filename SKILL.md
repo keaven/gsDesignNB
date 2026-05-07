@@ -64,6 +64,102 @@ with the score test preserved Type I error and gave slightly higher score-test p
 sizing because it retained a small sample-size margin. Compare both sizing rules and verify Type I
 error and power by simulation for the design setting.
 
+## Natural-language sample size: extraction and prompting
+
+When the user provides a protocol excerpt, publication quote, or plain-language description of a
+trial design, follow this checklist to extract parameters, identify gaps, and compute the sample
+size without requiring the user to write code.
+
+### Step 1: Extract what is stated
+
+Parse the text for these quantities. Record each as "found" or "missing":
+
+| Parameter | What to look for | `sample_size_nbinom()` argument |
+|:----------|:-----------------|:-------------------------------|
+| Control event rate | "annual rate", "event rate", "exacerbation rate", etc. | `lambda1` |
+| Treatment effect | Rate ratio, hazard ratio, % reduction, or statement like "no difference" | `lambda2` (= `lambda1 × RR`) |
+| Dispersion | "overdispersion", "NB shape", "index parameter k", "theta" | `dispersion` |
+| Power | "80% power", "90% power", "> 95% power" | `power` |
+| Alpha | "significance level", "one-sided 0.025", "two-sided 0.05" | `alpha` |
+| Null hypothesis | "non-inferiority margin", "rule out X-fold increase", "superiority" | `rr0` (default 1.0 for superiority) |
+| Follow-up | "52-week treatment period", "12 months follow-up" | `max_followup` |
+| Dropout | "30% dropout", "15% discontinuation rate" | See dropout guidance below |
+| Event gap | "28 symptom-free days", "new event window" | `event_gap` |
+| Enrollment | Accrual rate, enrollment period, ramp-up | `accrual_rate`, `accrual_duration` |
+| Trial duration | Total study length | `trial_duration` |
+
+### Step 2: Prompt for essentials
+
+If any of the following are missing, **ask the user** before computing. These cannot be
+defaulted safely:
+
+1. **Control event rate and time unit** — "What is the assumed control-arm event rate, and in what
+   time unit (events per month, per year)?"
+2. **Treatment effect** — "What rate ratio or % reduction is assumed? Or is this a non-inferiority
+   design with no assumed difference?"
+3. **Dispersion** — "What NB dispersion parameter is assumed? (If unknown, common starting values
+   are 0.3–1.0 depending on disease area.)"
+4. **Power and alpha** — Usually stated; confirm if ambiguous (e.g., one-sided vs two-sided alpha).
+5. **Follow-up duration** — "How long is each patient followed (maximum)?"
+
+### Step 3: Apply sensible defaults for non-essentials
+
+These can be defaulted with a note to the user:
+
+- **Event gap:** If not mentioned, assume `event_gap = 0`. State: "No event gap specified;
+  assuming 0. If the protocol requires a minimum inter-event interval, provide the gap in days."
+- **Accrual rate and trial duration:** For a fixed-design sample size where every patient gets
+  the same maximum follow-up (subject to dropout), the accrual pattern does not affect the
+  per-subject information or total N. Supply placeholder values (e.g., `accrual_rate = 100`,
+  `accrual_duration = 1`, `trial_duration = max_followup + 1`). State: "Accrual pattern does
+  not affect the fixed-design N when all patients have the same max follow-up. Placeholder
+  values used. These become important for calendar-time group sequential designs."
+- **Test type:** Default to `test_type = "wald"` for replication of published designs (most
+  literature uses the Wald/Zhu--Lakkis formula). Offer to compare with score sizing.
+
+### Step 4: Handle dropout correctly
+
+Protocol language about dropout is often ambiguous. Apply these rules:
+
+1. **"X% dropout" or "X% discontinuation"** usually means cumulative incidence over the study
+   duration, **not** a rate per time unit. The most common approach in published protocols is to
+   compute N assuming full follow-up, then inflate by $1/(1 - X/100)$. Replicate this by setting
+   `dropout_rate = 0` and multiplying the result: `N_total <- ceiling(n_evaluable / (1 - X/100))`.
+
+2. **"X% annual dropout rate"** is still typically cumulative incidence (what fraction drop out in
+   one year), not a hazard. Convert to instantaneous rate: `dropout_rate = -log(1 - X/100) / T`
+   where $T$ is the time period in your chosen unit.
+
+3. **"Dropout + protocol violators"** (as in FLAME) inflates the sample but does not reduce
+   exposure in the same way as true dropout. Use the inflation-factor approach.
+
+4. When in doubt, **ask:** "Does the X% dropout figure represent cumulative incidence over the
+   study, or a per-unit-time hazard rate? Should it be applied as a sample-size inflation factor
+   or modeled through the exposure integral?"
+
+### Step 5: Watch for k parameterization
+
+The NB dispersion parameter has multiple conventions:
+
+- **gsDesignNB convention:** $k$ is the dispersion such that $\text{Var}(Y) = \mu + k\mu^2$.
+  Larger $k$ means more overdispersion. `MASS::glm.nb()` returns `theta = 1/k`.
+- **Some protocols** use $k$ or $\theta$ to mean the Gamma shape parameter $1/k_{\text{ours}}$.
+  If the stated value seems very large (e.g., $k = 50$) or very small for the disease area,
+  ask: "Is the dispersion parameter $k$ the overdispersion ($\text{Var} = \mu + k\mu^2$) or
+  the Gamma shape parameter ($1/k$)?"
+
+### Step 6: Compute and report
+
+After extraction and defaults, call `sample_size_nbinom()` and present:
+- The evaluable sample size (from the formula)
+- The inflated sample size (if dropout inflation is used)
+- A comparison table if the user wants Wald vs score
+- A note about any defaulted values
+
+If the user provided a published target N, show the comparison and note that exact replication
+may not be expected due to differences in the specific formula, parameterization, or variance
+correction used by the original authors.
+
 ## Core workflow
 
 ```
