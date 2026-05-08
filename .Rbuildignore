@@ -17,3 +17,4 @@
 ^create-release-tag\.sh$
 ^\.positai$
 ^\.claude$
+^llms\.txt$
