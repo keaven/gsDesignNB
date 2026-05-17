@@ -6,8 +6,8 @@
   vignette with recommendations for when the Zhu-Lakkis / Friede-Schmidli /
   Mutze Wald sample-size formula is appropriate and when to use score-test
   sizing with separate null and alternative variance factors.
-- Added an `ai-skills` vignette demonstrating how the package `SKILL.md`
-  can guide package-native score-test and simulation
+- Added an `ai-skills` vignette demonstrating how the agent skills under
+  `.agents/skills/` can guide package-native score-test and simulation
   workflows without replacing statistical review.
 - Refined score-test recommendations to distinguish the final analysis test
   from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful
