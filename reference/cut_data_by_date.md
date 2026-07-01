@@ -2,13 +2,21 @@
 
 Censors follow-up at a specified calendar time and aggregates events per
 subject. Returns one row per subject randomized before the cut date,
-with the total number of observed events and the truncated follow-up
-time (adjusted for any event gaps).
+with the total number of observed events and follow-up times.
 
 ## Usage
 
 ``` r
-cut_data_by_date(data, cut_date, event_gap = 5/365.25, ...)
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
+
+# Default S3 method
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
+
+# S3 method for class 'nb_sim_data'
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
+
+# S3 method for class 'nb_sim_seasonal'
+cut_data_by_date(data, cut_date, event_gap = 0, ...)
 ```
 
 ## Arguments
@@ -25,9 +33,9 @@ cut_data_by_date(data, cut_date, event_gap = 5/365.25, ...)
 - event_gap:
 
   Gap duration after each event during which no new events are counted.
-  Can be a numeric value (default `5 / 365.25`) or a function returning
-  a numeric value. The time at risk is reduced by the sum of these gaps
-  (truncated by the cut date).
+  Can be a numeric value (default `0`) or a function returning a numeric
+  value. The time at risk is reduced by the sum of these gaps (truncated
+  by the cut date).
 
 - ...:
 
@@ -36,8 +44,49 @@ cut_data_by_date(data, cut_date, event_gap = 5/365.25, ...)
 ## Value
 
 A data frame with one row per subject randomized prior to `cut_date`
-containing the truncated follow-up time (`tte`) and total number of
-observed events (`events`).
+containing:
+
+- id:
+
+  Subject identifier
+
+- treatment:
+
+  Treatment group
+
+- enroll_time:
+
+  Time of enrollment relative to trial start
+
+- tte:
+
+  Time at risk (total follow-up minus event gap periods)
+
+- tte_total:
+
+  Total follow-up time (calendar time, not adjusted for gaps)
+
+- events:
+
+  Number of observed events
+
+A data frame with one row per subject randomized prior to `cut_date`.
+This method stops with an error for unsupported classes.
+
+A data frame with one row per subject randomized prior to `cut_date`.
+Includes total events and follow-up time within the cut window.
+
+A data frame with one row per subject randomized prior to `cut_date`.
+Includes season and follow-up time within the cut window.
+
+## Methods (by class)
+
+- `cut_data_by_date(default)`: Default method.
+
+- `cut_data_by_date(nb_sim_data)`: Method for `nb_sim` data.
+
+- `cut_data_by_date(nb_sim_seasonal)`: Method for `nb_sim_seasonal`
+  data.
 
 ## Examples
 
@@ -50,25 +99,25 @@ dropout_rate <- data.frame(
 )
 sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
 cut_data_by_date(sim, cut_date = 1)
-#>    id    treatment enroll_time       tte events
-#> 1   1      Control  0.02287797 0.3399344      1
-#> 2   2 Experimental  0.03279845 0.9535123      1
-#> 3   3 Experimental  0.03964368 0.9466671      1
-#> 4   4      Control  0.09054028 0.3342787      1
-#> 5   5 Experimental  0.09165196 0.9083480      0
-#> 6   6      Control  0.13854364 0.8614564      0
-#> 7   7 Experimental  0.14631736 0.8536826      0
-#> 8   8      Control  0.18163569 0.8183643      0
-#> 9   9 Experimental  0.18628345 0.8137165      0
-#> 10 10 Experimental  0.18773699 0.7985738      1
-#> 11 11      Control  0.19327308 0.8067269      0
-#> 12 12      Control  0.19373652 0.8062635      0
-#> 13 13 Experimental  0.19677352 0.8032265      0
-#> 14 14 Experimental  0.26004958 0.7399504      0
-#> 15 15      Control  0.26358648 0.7364135      0
-#> 16 16      Control  0.28121348 0.7187865      0
-#> 17 17 Experimental  0.28548428 0.7145157      0
-#> 18 18      Control  0.28922751 0.2934168      1
-#> 19 19 Experimental  0.30002577 0.6999742      0
-#> 20 20      Control  0.31402891 0.6722818      1
+#>    id    treatment enroll_time       tte tte_total events
+#> 1   1      Control  0.02287797 0.3536237 0.3536237      1
+#> 2   2 Experimental  0.03279845 0.9672016 0.9672016      1
+#> 3   3 Experimental  0.03964368 0.9603563 0.9603563      1
+#> 4   4      Control  0.09054028 0.3479680 0.3479680      1
+#> 5   5 Experimental  0.09165196 0.9083480 0.9083480      0
+#> 6   6      Control  0.13854364 0.8614564 0.8614564      0
+#> 7   7 Experimental  0.14631736 0.8536826 0.8536826      0
+#> 8   8      Control  0.18163569 0.8183643 0.8183643      0
+#> 9   9 Experimental  0.18628345 0.8137165 0.8137165      0
+#> 10 10 Experimental  0.18773699 0.8122630 0.8122630      1
+#> 11 11      Control  0.19327308 0.8067269 0.8067269      0
+#> 12 12      Control  0.19373652 0.8062635 0.8062635      0
+#> 13 13 Experimental  0.19677352 0.8032265 0.8032265      0
+#> 14 14 Experimental  0.26004958 0.7399504 0.7399504      0
+#> 15 15      Control  0.26358648 0.7364135 0.7364135      0
+#> 16 16      Control  0.28121348 0.7187865 0.7187865      0
+#> 17 17 Experimental  0.28548428 0.7145157 0.7145157      0
+#> 18 18      Control  0.28922751 0.3071060 0.3071060      1
+#> 19 19 Experimental  0.30002577 0.6999742 0.6999742      0
+#> 20 20      Control  0.31402891 0.6859711 0.6859711      1
 ```

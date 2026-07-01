@@ -15,8 +15,8 @@ patterns, such as respiratory infections.
 
 We design a small trial with the following characteristics:
 
-- **Randomization Start:** January 1, 2024.
-- **Sample Size:** 20 subjects.
+- **Randomization start:** January 1, 2024.
+- **Sample size:** 20 subjects.
 - **Enrollment:** 6 months duration.
 - **Follow-up:** 1 year.
 - **Seasonality:** Higher event rates in Winter/Fall, lower in
@@ -135,13 +135,13 @@ gap_days <- 7 / 365.25
 analysis_data <- cut_data_by_date(sim_data, cut_date = cut_date, event_gap = gap_days)
 
 head(analysis_data)
-#>   id    treatment enroll_time season events        tte
-#> 1  1      Control  0.02108643   Fall      0 0.08196441
-#> 2  1      Control  0.02108643 Spring      0 0.25188227
-#> 3  1      Control  0.02108643 Summer      0 0.25188227
-#> 4  1      Control  0.02108643 Winter      0 0.14318462
-#> 5  2 Experimental  0.03550169   Fall      0 0.08196441
-#> 6  2 Experimental  0.03550169 Spring      0 0.25188227
+#>   id    treatment enroll_time season events        tte  tte_total
+#> 1  1      Control  0.02108643   Fall      0 0.08196441 0.08196441
+#> 2  1      Control  0.02108643 Spring      0 0.25188227 0.25188227
+#> 3  1      Control  0.02108643 Summer      0 0.25188227 0.25188227
+#> 4  1      Control  0.02108643 Winter      0 0.14318462 0.14318462
+#> 5  2 Experimental  0.03550169   Fall      0 0.08196441 0.08196441
+#> 6  2 Experimental  0.03550169 Spring      0 0.25188227 0.25188227
 ```
 
 The `analysis_data` is aggregated by subject and season. This allows for

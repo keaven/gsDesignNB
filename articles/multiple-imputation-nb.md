@@ -26,21 +26,21 @@ These mirror the SAS implementation using `PROC GLIMMIX` with
 
 ### Negative binomial count model
 
-For subject i at visit t, let Y\_{it} denote the count endpoint. The
-negative binomial (NB) model used throughout **gsDesignNB** is the
-Gamma–Poisson mixture:
+For subject \\i\\ at visit \\t\\, let \\Y\_{it}\\ denote the count
+endpoint. The negative binomial (NB) model used throughout
+**gsDesignNB** is the Gamma–Poisson mixture:
 
-\Lambda_i \sim \text{Gamma}\\\left(\frac{1}{k},\\ \mu_i k\right), \qquad
-Y\_{it} \mid \Lambda_i \sim \text{Poisson}(\Lambda_i).
+\\ \Lambda_i \sim \text{Gamma}\\\left(\frac{1}{k},\\ \mu_i k\right),
+\qquad Y\_{it} \mid \Lambda_i \sim \text{Poisson}(\Lambda_i). \\
 
-Marginally, Y\_{it} has mean \mu_i and variance \text{Var}(Y\_{it}) =
-\mu_i + k\\\mu_i^2, where k \geq 0 is the dispersion parameter. In the
-longitudinal GLMM, the mean is modelled as
+Marginally, \\Y\_{it}\\ has mean \\\mu_i\\ and variance
+\\\text{Var}(Y\_{it}) = \mu_i + k\\\mu_i^2\\, where \\k \geq 0\\ is the
+dispersion parameter. In the longitudinal GLMM, the mean is modelled as
 
-\log(\mu\_{it}) = \mathbf{x}\_{it}^{\top}\boldsymbol{\beta} + b_i,
+\\ \log(\mu\_{it}) = \mathbf{x}\_{it}^{\top}\boldsymbol{\beta} + b_i, \\
 
-where \mathbf{x}\_{it} contains fixed-effect covariates (treatment,
-visit, baseline, stratification factors) and b_i is a subject-level
+where \\\mathbf{x}\_{it}\\ contains fixed-effect covariates (treatment,
+visit, baseline, stratification factors) and \\b_i\\ is a subject-level
 random intercept. The model is fitted via \[glmmTMB::glmmTMB()\] with
 `family = nbinom2(link = "log")`.
 
@@ -49,21 +49,22 @@ random intercept. The model is fitted via \[glmmTMB::glmmTMB()\] with
 All three model-based strategies draw imputed counts from the same
 Gamma–Poisson compound:
 
-\lambda_i^{(m)} \sim \text{Gamma}\\\left(\frac{1}{k},\\ \hat\mu_i \cdot
-k\right), \qquad Y_i^{(m)} \mid \lambda_i^{(m)} \sim
-\text{Poisson}\\\left(\lambda_i^{(m)}\right).
+\\ \lambda_i^{(m)} \sim \text{Gamma}\\\left(\frac{1}{k},\\ \hat\mu_i
+\cdot k\right), \qquad Y_i^{(m)} \mid \lambda_i^{(m)} \sim
+\text{Poisson}\\\left(\lambda_i^{(m)}\right). \\
 
-The strategies differ only in how \hat\mu_i is determined:
+The strategies differ only in how \\\hat\mu_i\\ is determined:
 
-- **MAR**: \hat\mu_i = \hat\mu_i^{\text{BLUP}} — predicted mean
+- **MAR**: \\\hat\mu_i = \hat\mu_i^{\text{BLUP}}\\ — predicted mean
   including subject random effects.
-- **MNAR reference-based**: \hat\mu_i = \hat\mu_i^{\text{FE, ref}}
-  \times \dfrac{\hat\mu_i^{\text{BLUP}}}{\hat\mu_i^{\text{FE}}} —
+- **MNAR reference-based**: \\\hat\mu_i = \hat\mu_i^{\text{FE, ref}}
+  \times \dfrac{\hat\mu_i^{\text{BLUP}}}{\hat\mu_i^{\text{FE}}}\\ —
   counterfactual mean under the reference treatment, adjusted by each
-  subject’s estimated random effect. The ratio \hat\mu_i^{\text{BLUP}} /
-  \hat\mu_i^{\text{FE}} is the multiplicative random-effect “BLUP
+  subject’s estimated random effect. The ratio \\\hat\mu_i^{\text{BLUP}}
+  / \hat\mu_i^{\text{FE}}\\ is the multiplicative random-effect “BLUP
   multiplier” computed from the original treatment assignment.
-- **Composite**: Y_i^{(m)} = y\_{i,0} (baseline value), no model draw.
+- **Composite**: \\Y_i^{(m)} = y\_{i,0}\\ (baseline value), no model
+  draw.
 
 ### Bootstrap–MI combination
 
@@ -79,8 +80,8 @@ pooling estimates across the `n_imp` imputed datasets.
 ### Simulating longitudinal count data
 
 We simulate a 3-arm trial (placebo and two active doses) with 4
-post-baseline visits, negative binomial counts (dispersion k = 0.5), and
-a single binary stratification factor.
+post-baseline visits, negative binomial counts (dispersion \\k = 0.5\\),
+and a single binary stratification factor.
 
 ``` r
 
@@ -482,7 +483,7 @@ rules.
 ``` r
 
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -506,32 +507,32 @@ sessionInfo()
 #> [1] gsDesignNB_0.3.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6        TMB_1.9.21          xfun_0.57          
-#>  [4] bslib_0.10.0        ggplot2_4.0.3       htmlwidgets_1.6.4  
+#>  [1] gtable_0.3.6        TMB_1.9.21          xfun_0.59          
+#>  [4] bslib_0.11.0        ggplot2_4.0.3       htmlwidgets_1.6.4  
 #>  [7] lattice_0.22-9      numDeriv_2016.8-1.1 vctrs_0.7.3        
-#> [10] tools_4.6.0         Rdpack_2.6.6        generics_0.1.4     
-#> [13] parallel_4.6.0      sandwich_3.1-1      tibble_3.3.1       
-#> [16] pkgconfig_2.0.3     Matrix_1.7-5        data.table_1.18.2.1
+#> [10] tools_4.6.1         Rdpack_2.6.6        generics_0.1.4     
+#> [13] parallel_4.6.1      sandwich_3.1-1      tibble_3.3.1       
+#> [16] pkgconfig_2.0.3     Matrix_1.7-5        data.table_1.18.4  
 #> [19] RColorBrewer_1.1-3  S7_0.2.2            desc_1.4.3         
-#> [22] gt_1.3.0            lifecycle_1.0.5     doFuture_1.2.1     
-#> [25] compiler_4.6.0      farver_2.1.2        textshaping_1.0.5  
+#> [22] gt_1.3.0            lifecycle_1.0.5     doFuture_1.2.2     
+#> [25] compiler_4.6.1      farver_2.1.2        textshaping_1.0.5  
 #> [28] codetools_0.2-20    htmltools_0.5.9     sass_0.4.10        
 #> [31] yaml_2.3.12         pkgdown_2.2.0       pillar_1.11.1      
 #> [34] nloptr_2.2.1        gsDesign_3.9.0      jquerylib_0.1.4    
 #> [37] tidyr_1.3.2         MASS_7.3-65         cachem_1.1.0       
 #> [40] iterators_1.0.14    reformulas_0.4.4    foreach_1.5.2      
-#> [43] boot_1.3-32         parallelly_1.47.0   nlme_3.1-169       
-#> [46] r2rtf_1.3.0         tidyselect_1.2.1    digest_0.6.39      
-#> [49] mvtnorm_1.3-7       future_1.70.0       listenv_0.10.1     
-#> [52] dplyr_1.2.1         purrr_1.2.2         splines_4.6.0      
-#> [55] fastmap_1.2.0       grid_4.6.0          cli_3.6.6          
+#> [43] boot_1.3-32         parallelly_1.48.0   nlme_3.1-169       
+#> [46] r2rtf_1.3.1         tidyselect_1.2.1    digest_0.6.39      
+#> [49] mvtnorm_1.4-1       future_1.70.0       listenv_1.0.0      
+#> [52] dplyr_1.2.1         purrr_1.2.2         splines_4.6.1      
+#> [55] fastmap_1.2.0       grid_4.6.1          cli_3.6.6          
 #> [58] magrittr_2.0.5      survival_3.8-6      future.apply_1.20.2
 #> [61] scales_1.4.0        simtrial_1.0.2      rmarkdown_2.31     
 #> [64] globals_0.19.1      otel_0.2.0          lme4_2.0-1         
 #> [67] ragg_1.5.2          zoo_1.8-15          evaluate_1.0.5     
 #> [70] knitr_1.51          glmmTMB_1.1.14      rbibutils_2.4.1    
 #> [73] mgcv_1.9-4          rlang_1.2.0         Rcpp_1.1.1-1.1     
-#> [76] xtable_1.8-8        glue_1.8.1          xml2_1.5.2         
+#> [76] xtable_1.8-8        glue_1.8.1          xml2_1.6.0         
 #> [79] minqa_1.2.8         jsonlite_2.0.0      R6_2.6.1           
 #> [82] systemfonts_1.3.2   fs_2.1.0
 ```

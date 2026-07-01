@@ -6,13 +6,17 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>SSR simulation study • gsDesignNB</title>
-<!-- katex math (vendored under pkgdown/assets/katex/; copied to site root; KaTeX 0.16.11) --><link rel="stylesheet" href="../katex/katex.min.css">
-<script defer src="../katex/katex.min.js"></script><script defer src="../katex/auto-render.min.js" onload="renderMathInElement(document.body);"></script><script src="../katex-auto.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<script src="../extra.js"></script><meta property="og:title" content="SSR simulation study">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="SSR simulation study">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -98,8 +102,8 @@ important in SSR: adaptation can increase information when nuisance
 parameters are worse than planned, and the final test must still
 preserve one-sided Type I error after that adaptation. The dedicated
 non-binding Type I tables therefore compare Wald and score testing under
-the same one-sided <span class="math inline">\alpha = 0.025</span> group
-sequential design. The sample-size update itself remains a
+the same one-sided <span class="math inline">\(\alpha = 0.025\)</span>
+group sequential design. The sample-size update itself remains a
 nuisance-parameter recalculation that must be calibrated by simulation;
 the score test controls rejection after the adaptation, rather than
 making adaptation unnecessary.</p>
@@ -208,9 +212,9 @@ which is still based on upper boundary control.</p>
 <span>  <span class="st">", planned N="</span>, <span class="va">n_planned</span>,</span>
 <span>  <span class="st">", max follow-up="</span>, <span class="va">max_followup</span>, <span class="st">" mo"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The dedicated non-binding Type I section below uses this same <span class="math inline">\alpha = 0.025</span> group sequential design twice:
-once with the Wald statistic and once with the score statistic. The
-power simulations use the score statistic throughout, so the power
+<p>The dedicated non-binding Type I section below uses this same <span class="math inline">\(\alpha = 0.025\)</span> group sequential design
+twice: once with the Wald statistic and once with the score statistic.
+The power simulations use the score statistic throughout, so the power
 results should be read as score-test power after SSR rather than as
 Wald-test power.</p>
 <p>The group sequential inflation factor is 1.209, giving a planned
@@ -808,13 +812,12 @@ accrual rate of 26 patients per month.</p>
 <h3 id="group-sequential-sample-size-under-each-nuisance-scenario">Group sequential sample size under each nuisance scenario<a class="anchor" aria-label="anchor" href="#group-sequential-sample-size-under-each-nuisance-scenario"></a>
 </h3>
 <p>The figure below shows how the required group sequential sample size
-and monthly enrollment rate vary with the control rate <span class="math inline">\lambda_1</span> and dispersion <span class="math inline">k</span>. Since the sample size does not depend on
-the enrollment pace (accrual rate only scales enrollment duration), we
-show two lines – one per <span class="math inline">k</span> value – with
-<span class="math inline">\lambda_1</span> on the horizontal axis. The
-planned design assumptions (<span class="math inline">\lambda_1 =
-0.5</span>, <span class="math inline">k = 0.5</span>) are marked with a
-dashed line.</p>
+and monthly enrollment rate vary with the control rate <span class="math inline">\(\lambda_1\)</span> and dispersion <span class="math inline">\(k\)</span>. Since the sample size does not depend
+on the enrollment pace (accrual rate only scales enrollment duration),
+we show two lines – one per <span class="math inline">\(k\)</span> value
+– with <span class="math inline">\(\lambda_1\)</span> on the horizontal
+axis. The planned design assumptions (<span class="math inline">\(\lambda_1 = 0.5\)</span>, <span class="math inline">\(k = 0.5\)</span>) are marked with a dashed
+line.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lambda1_seq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">1.0</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="va">gs_n_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
@@ -884,13 +887,15 @@ dashed line.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="ssr-simulation-study_files/figure-html/gs_n_by_scenario-1.png" class="r-plt" alt="" width="864"></p>
-<p>Across the range of <span class="math inline">\lambda_1</span> and
-<span class="math inline">k</span> values considered, the required group
-sequential sample size ranges from 272 to 644. Higher dispersion (<span class="math inline">k = 1.0</span>) consistently requires more subjects
-than <span class="math inline">k = 0.5</span>, while higher control
-rates reduce the required N because each subject contributes more
-information. This wide range highlights why sample size re-estimation
-can be valuable when nuisance parameters are uncertain.</p>
+<p>Across the range of <span class="math inline">\(\lambda_1\)</span>
+and <span class="math inline">\(k\)</span> values considered, the
+required group sequential sample size ranges from 272 to 644. Higher
+dispersion (<span class="math inline">\(k = 1.0\)</span>) consistently
+requires more subjects than <span class="math inline">\(k =
+0.5\)</span>, while higher control rates reduce the required N because
+each subject contributes more information. This wide range highlights
+why sample size re-estimation can be valuable when nuisance parameters
+are uncertain.</p>
 </div>
 <div class="section level3">
 <h3 id="expected-information-fraction-at-planned-time-of-each-interim">Expected information fraction at planned time of each interim<a class="anchor" aria-label="anchor" href="#expected-information-fraction-at-planned-time-of-each-interim"></a>
@@ -1668,9 +1673,9 @@ adaptation.</li>
 using observed IF and spending.</li>
 <li>
 <strong>SSR at IA2 only</strong>: nuisance estimates for adaptation
-use an IA2 adaptation cutoff time at <span class="math inline">\min(\text{IA2 time},\; \text{predicted enrollment
+use an IA2 adaptation cutoff time at <span class="math inline">\(\min(\text{IA2 time},\; \text{predicted enrollment
 close} -
-2 \text{ months})</span>, enforcing at least 2 months of operational
+2 \text{ months})\)</span>, enforcing at least 2 months of operational
 lead-time. The enrollment-fraction cap is set in the scenario
 setup.</li>
 </ol>
@@ -3323,7 +3328,7 @@ design, but in the primary planning example the Wald and score formulas
 round to the same starting sample size. To check whether the
 fixed-design power margin from Wald sizing carries through an adaptive
 SSR workflow, we add a targeted sensitivity in a low-event stress
-setting (<span class="math inline">\lambda_1 = 0.15</span>, <span class="math inline">k = 0.5</span>, RR = 0.7, no event gap). In that
+setting (<span class="math inline">\(\lambda_1 = 0.15\)</span>, <span class="math inline">\(k = 0.5\)</span>, RR = 0.7, no event gap). In that
 setting the Wald-sized group sequential design enrolls 472 participants
 at the final analysis, compared with 464 for the score-sized design.
 Both starting-size rules below still use the score test for interim and
@@ -4163,9 +4168,8 @@ automatically translate into adaptive-design power.</p>
 <h3 id="calendar-and-information-at-each-analysis">Calendar and information at each analysis<a class="anchor" aria-label="anchor" href="#calendar-and-information-at-each-analysis"></a>
 </h3>
 <p>The plots below use split (side-by-side) violin distributions for
-<span class="math inline">k = 0.5</span> and <span class="math inline">k
-= 1.0</span>, with vertical panels for IA1, IA2, and Final analysis.
-Panels use free y-scales.</p>
+<span class="math inline">\(k = 0.5\)</span> and <span class="math inline">\(k = 1.0\)</span>, with vertical panels for IA1,
+IA2, and Final analysis. Panels use free y-scales.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">time_long</span> <span class="op">&lt;-</span> <span class="va">dt</span><span class="op">[</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"No adaptation"</span> <span class="op">&amp;</span> <span class="va">rr_true</span> <span class="op">==</span> <span class="va">rr_plan</span>, <span class="fu">.</span><span class="op">(</span></span>
 <span>  <span class="va">lambda1_true</span>, <span class="va">k_true</span>, <span class="va">accrual_true</span>,</span>
@@ -4260,11 +4264,11 @@ Panels use free y-scales.</p>
 <h3 id="key-findings">Key findings<a class="anchor" aria-label="anchor" href="#key-findings"></a>
 </h3>
 <ol style="list-style-type: decimal">
-<li><p><strong>Type I error.</strong> Under the null (RR <span class="math inline">\geq</span> 1.0), nominal one-sided control is 2.5%.
-The dedicated non-binding Type I tables use 20 000 replicates per
+<li><p><strong>Type I error.</strong> Under the null (RR <span class="math inline">\(\geq\)</span> 1.0), nominal one-sided control is
+2.5%. The dedicated non-binding Type I tables use 20 000 replicates per
 dispersion and test statistic. With the Wald statistic, empirical Type I
 error ranges from about 2.8% to 3.1%, indicating mild finite-sample
-inflation. With the score statistic under the same <span class="math inline">\alpha = 0.025</span> group sequential design,
+inflation. With the score statistic under the same <span class="math inline">\(\alpha = 0.025\)</span> group sequential design,
 empirical Type I error ranges from about 2.1% to 2.3%. The score-test
 result is conservative rather than inflated, so the simulation-based
 recommendation is to use the score test directly and then check power,
@@ -4318,13 +4322,15 @@ close.</p>
 <h3 id="futility-at-low-information">Futility at low information<a class="anchor" aria-label="anchor" href="#futility-at-low-information"></a>
 </h3>
 <p>Futility assessment is deferred when the observed information
-fraction is below 30%. The spending function approach uses <span class="math inline">\text{usTime} = \text{lsTime} =
-\min(t_{\text{planned}}, t_{\text{actual}})</span> to cap spending.</p>
+fraction is below 30%. The spending function approach uses <span class="math inline">\(\text{usTime} = \text{lsTime} =
+\min(t_{\text{planned}}, t_{\text{actual}})\)</span> to cap
+spending.</p>
 <p>IA1 includes efficacy/futility monitoring but does not permit SSR.
 SSR is attempted only at IA2. For operational feasibility, SSR uses an
-adaptation cutoff at <span class="math inline">\min(\text{IA2 time},\;
+adaptation cutoff at <span class="math inline">\(\min(\text{IA2 time},\;
 \text{predicted enrollment close} -
-2 \text{ months})</span>, with enrollment fraction at or below 100%.</p>
+2 \text{ months})\)</span>, with enrollment fraction at or below
+100%.</p>
 <p>When a trial stops early for futility, the reported final sample size
 includes subjects enrolled by the stop analysis date plus 2 months to
 reflect enrollment that continues during analysis/decision
@@ -4340,8 +4346,8 @@ blinded statistical information via
 <code><a href="../reference/calculate_blinded_info.html">calculate_blinded_info()</a></code>. If the blinded estimate is
 unavailable or non-positive (e.g., too few events for the NB model to
 converge), the simulation falls back to unblinded information from
-<code><a href="../reference/mutze_test.html">mutze_test()</a></code> (<span class="math inline">\mathcal{I} =
-1/\text{SE}^2</span>). If both methods fail, a hard-coded constant of
+<code><a href="../reference/mutze_test.html">mutze_test()</a></code> (<span class="math inline">\(\mathcal{I} =
+1/\text{SE}^2\)</span>). If both methods fail, a hard-coded constant of
 100 is used as a last-resort placeholder so that the search does not
 stall. The simulation results table reports the number of trials that
 required this fallback at each interim analysis.</p>
@@ -4349,11 +4355,11 @@ required this fallback at each interim analysis.</p>
 <div class="section level3">
 <h3 id="computational-considerations">Computational considerations<a class="anchor" aria-label="anchor" href="#computational-considerations"></a>
 </h3>
-<p>Production-scale runs use 3 600 replicates per scenario for RR <span class="math inline">&lt; 1</span> (power), 20 000 for each scenario with
-RR <span class="math inline">= 1.0</span> (Type I), and 1 000 for RR
-<span class="math inline">&gt; 1</span> (interior null, lower priority
-for precision), plus 20 000 replicates per <span class="math inline">k</span> and per test statistic in the separate RR =
-1 non-binding futility check; these are computationally intensive.
+<p>Production-scale runs use 3 600 replicates per scenario for RR <span class="math inline">\(&lt; 1\)</span> (power), 20 000 for each scenario
+with RR <span class="math inline">\(= 1.0\)</span> (Type I), and 1 000
+for RR <span class="math inline">\(&gt; 1\)</span> (interior null, lower
+priority for precision), plus 20 000 replicates per <span class="math inline">\(k\)</span> and per test statistic in the separate
+RR = 1 non-binding futility check; these are computationally intensive.
 Parallel execution via the <code>future</code> /
 <code>future.apply</code> framework is essential. The simulation runtime
 table above reports the wall-clock time and number of workers used for

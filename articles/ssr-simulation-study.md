@@ -32,7 +32,7 @@ score statistic. This is particularly important in SSR: adaptation can
 increase information when nuisance parameters are worse than planned,
 and the final test must still preserve one-sided Type I error after that
 adaptation. The dedicated non-binding Type I tables therefore compare
-Wald and score testing under the same one-sided \alpha = 0.025 group
+Wald and score testing under the same one-sided \\\alpha = 0.025\\ group
 sequential design. The sample-size update itself remains a
 nuisance-parameter recalculation that must be calibrated by simulation;
 the score test controls rejection after the adaptation, rather than
@@ -151,8 +151,8 @@ design_note <- paste0(
 )
 ```
 
-The dedicated non-binding Type I section below uses this same \alpha =
-0.025 group sequential design twice: once with the Wald statistic and
+The dedicated non-binding Type I section below uses this same \\\alpha =
+0.025\\ group sequential design twice: once with the Wald statistic and
 once with the score statistic. The power simulations use the score
 statistic throughout, so the power results should be read as score-test
 power after SSR rather than as Wald-test power.
@@ -210,12 +210,12 @@ gsBoundSummary(gs_plan,
 ### Group sequential sample size under each nuisance scenario
 
 The figure below shows how the required group sequential sample size and
-monthly enrollment rate vary with the control rate \lambda_1 and
-dispersion k. Since the sample size does not depend on the enrollment
-pace (accrual rate only scales enrollment duration), we show two lines –
-one per k value – with \lambda_1 on the horizontal axis. The planned
-design assumptions (\lambda_1 = 0.5, k = 0.5) are marked with a dashed
-line.
+monthly enrollment rate vary with the control rate \\\lambda_1\\ and
+dispersion \\k\\. Since the sample size does not depend on the
+enrollment pace (accrual rate only scales enrollment duration), we show
+two lines – one per \\k\\ value – with \\\lambda_1\\ on the horizontal
+axis. The planned design assumptions (\\\lambda_1 = 0.5\\, \\k = 0.5\\)
+are marked with a dashed line.
 
 ``` r
 
@@ -290,12 +290,13 @@ gridExtra::grid.arrange(plot_n, plot_rate, ncol = 2,
 
 ![](ssr-simulation-study_files/figure-html/gs_n_by_scenario-1.png)
 
-Across the range of \lambda_1 and k values considered, the required
-group sequential sample size ranges from 272 to 644. Higher dispersion
-(k = 1.0) consistently requires more subjects than k = 0.5, while higher
-control rates reduce the required N because each subject contributes
-more information. This wide range highlights why sample size
-re-estimation can be valuable when nuisance parameters are uncertain.
+Across the range of \\\lambda_1\\ and \\k\\ values considered, the
+required group sequential sample size ranges from 272 to 644. Higher
+dispersion (\\k = 1.0\\) consistently requires more subjects than \\k =
+0.5\\, while higher control rates reduce the required N because each
+subject contributes more information. This wide range highlights why
+sample size re-estimation can be valuable when nuisance parameters are
+uncertain.
 
 ### Expected information fraction at planned time of each interim
 
@@ -497,8 +498,8 @@ Interim analyses are information-based and use dynamic spending:
 2.  **IA2 (target ~76% IF)**: efficacy/futility evaluated using observed
     IF and spending.
 3.  **SSR at IA2 only**: nuisance estimates for adaptation use an IA2
-    adaptation cutoff time at \min(\text{IA2 time},\\ \text{predicted
-    enrollment close} - 2 \text{ months}), enforcing at least 2 months
+    adaptation cutoff time at \\\min(\text{IA2 time},\\ \text{predicted
+    enrollment close} - 2 \text{ months})\\, enforcing at least 2 months
     of operational lead-time. The enrollment-fraction cap is set in the
     scenario setup.
 
@@ -938,12 +939,12 @@ The main SSR production cache is based on the score-sized fixed design,
 but in the primary planning example the Wald and score formulas round to
 the same starting sample size. To check whether the fixed-design power
 margin from Wald sizing carries through an adaptive SSR workflow, we add
-a targeted sensitivity in a low-event stress setting (\lambda_1 = 0.15,
-k = 0.5, RR = 0.7, no event gap). In that setting the Wald-sized group
-sequential design enrolls 472 participants at the final analysis,
-compared with 464 for the score-sized design. Both starting-size rules
-below still use the score test for interim and final analyses; only the
-starting design is changed.
+a targeted sensitivity in a low-event stress setting (\\\lambda_1 =
+0.15\\, \\k = 0.5\\, RR = 0.7, no event gap). In that setting the
+Wald-sized group sequential design enrolls 472 participants at the final
+analysis, compared with 464 for the score-sized design. Both
+starting-size rules below still use the score test for interim and final
+analyses; only the starting design is changed.
 
 ``` r
 
@@ -1155,9 +1156,9 @@ ggplot(power_rr_plan,
 
 ### Calendar and information at each analysis
 
-The plots below use split (side-by-side) violin distributions for k =
-0.5 and k = 1.0, with vertical panels for IA1, IA2, and Final analysis.
-Panels use free y-scales.
+The plots below use split (side-by-side) violin distributions for \\k =
+0.5\\ and \\k = 1.0\\, with vertical panels for IA1, IA2, and Final
+analysis. Panels use free y-scales.
 
 ``` r
 
@@ -1256,19 +1257,20 @@ ggplot(if_long,
 
 ### Key findings
 
-1.  **Type I error.** Under the null (RR \geq 1.0), nominal one-sided
-    control is 2.5%. The dedicated non-binding Type I tables use 20 000
-    replicates per dispersion and test statistic. With the Wald
-    statistic, empirical Type I error ranges from about 2.8% to 3.1%,
-    indicating mild finite-sample inflation. With the score statistic
-    under the same \alpha = 0.025 group sequential design, empirical
-    Type I error ranges from about 2.1% to 2.3%. The score-test result
-    is conservative rather than inflated, so the simulation-based
-    recommendation is to use the score test directly and then check
-    power, rather than lowering alpha for a Wald analysis. This
-    distinction is more important in SSR than in a fixed design because
-    adaptation can add information; the score test controls how that
-    additional information is converted into rejection probability.
+1.  **Type I error.** Under the null (RR \\\geq\\ 1.0), nominal
+    one-sided control is 2.5%. The dedicated non-binding Type I tables
+    use 20 000 replicates per dispersion and test statistic. With the
+    Wald statistic, empirical Type I error ranges from about 2.8% to
+    3.1%, indicating mild finite-sample inflation. With the score
+    statistic under the same \\\alpha = 0.025\\ group sequential design,
+    empirical Type I error ranges from about 2.1% to 2.3%. The
+    score-test result is conservative rather than inflated, so the
+    simulation-based recommendation is to use the score test directly
+    and then check power, rather than lowering alpha for a Wald
+    analysis. This distinction is more important in SSR than in a fixed
+    design because adaptation can add information; the score test
+    controls how that additional information is converted into rejection
+    probability.
 
 2.  **Largest no-adaptation power deficit.** At planned RR = 0.7, the
     score-test production grid shows no-adaptation power ranging from
@@ -1314,14 +1316,15 @@ lead-time cutoff of at least 2 months before predicted enrollment close.
 ### Futility at low information
 
 Futility assessment is deferred when the observed information fraction
-is below 30%. The spending function approach uses \text{usTime} =
-\text{lsTime} = \min(t\_{\text{planned}}, t\_{\text{actual}}) to cap
+is below 30%. The spending function approach uses \\\text{usTime} =
+\text{lsTime} = \min(t\_{\text{planned}}, t\_{\text{actual}})\\ to cap
 spending.
 
 IA1 includes efficacy/futility monitoring but does not permit SSR. SSR
 is attempted only at IA2. For operational feasibility, SSR uses an
-adaptation cutoff at \min(\text{IA2 time},\\ \text{predicted enrollment
-close} - 2 \text{ months}), with enrollment fraction at or below 100%.
+adaptation cutoff at \\\min(\text{IA2 time},\\ \text{predicted
+enrollment close} - 2 \text{ months})\\, with enrollment fraction at or
+below 100%.
 
 When a trial stops early for futility, the reported final sample size
 includes subjects enrolled by the stop analysis date plus 2 months to
@@ -1340,17 +1343,17 @@ If the blinded estimate is unavailable or non-positive (e.g., too few
 events for the NB model to converge), the simulation falls back to
 unblinded information from
 [`mutze_test()`](https://keaven.github.io/gsDesignNB/reference/mutze_test.md)
-(\mathcal{I} = 1/\text{SE}^2). If both methods fail, a hard-coded
+(\\\mathcal{I} = 1/\text{SE}^2\\). If both methods fail, a hard-coded
 constant of 100 is used as a last-resort placeholder so that the search
 does not stall. The simulation results table reports the number of
 trials that required this fallback at each interim analysis.
 
 ### Computational considerations
 
-Production-scale runs use 3 600 replicates per scenario for RR \< 1
-(power), 20 000 for each scenario with RR = 1.0 (Type I), and 1 000 for
-RR \> 1 (interior null, lower priority for precision), plus 20 000
-replicates per k and per test statistic in the separate RR = 1
+Production-scale runs use 3 600 replicates per scenario for RR \\\< 1\\
+(power), 20 000 for each scenario with RR \\= 1.0\\ (Type I), and 1 000
+for RR \\\> 1\\ (interior null, lower priority for precision), plus 20
+000 replicates per \\k\\ and per test statistic in the separate RR = 1
 non-binding futility check; these are computationally intensive.
 Parallel execution via the `future` / `future.apply` framework is
 essential. The simulation runtime table above reports the wall-clock

@@ -6,9 +6,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Verification of sample size calculation via simulation • gsDesignNB</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Verification of sample size calculation via simulation">
 </head>
@@ -20,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,17 +36,8 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/completers-interim-example.html">Group sequential simulation with completers analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/group-sequential-simulation.html">Group sequential design and simulation</a></li>
-    <li><a class="dropdown-item" href="../articles/sample-size-nbinom.html">Sample size calculation for negative binomial outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/seasonal-simulation.html">Seasonal event simulation</a></li>
-    <li><a class="dropdown-item" href="../articles/simulation-example.html">Simulation of recurrent events</a></li>
-    <li><a class="dropdown-item" href="../articles/verification-simulation.html">Verification of sample size calculation via simulation</a></li>
-  </ul>
-</li>
+<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -63,7 +60,7 @@
       <h1>Verification of sample size calculation via simulation</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.1/vignettes/verification-simulation.Rmd" class="external-link"><code>vignettes/verification-simulation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/verification-simulation.Rmd" class="external-link"><code>vignettes/verification-simulation.Rmd</code></a></small>
       <div class="d-none name"><code>verification-simulation.Rmd</code></div>
     </div>
 
@@ -72,12 +69,13 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://keaven.github.io/gsDesignNB/">gsDesignNB</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://gt.rstudio.com" class="external-link">gt</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>This vignette verifies the accuracy of the
-<code>sample_size_nbinom</code> function by comparing its theoretical
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> function by comparing its theoretical
 predictions for average exposure, statistical information, and power
 against results from a large-scale simulation study.</p>
 <p>We specifically test a scenario with:</p>
@@ -85,55 +83,54 @@ against results from a large-scale simulation study.</p>
 <li>Piecewise constant accrual rates.</li>
 <li>Piecewise exponential dropout (constant in this example).</li>
 <li>Negative binomial outcomes.</li>
+<li>Event gaps (dead time after each event).</li>
 <li>Fixed follow-up design.</li>
 </ul>
+<p>The simulation uses the corrected sample size (<span class="math inline">\(n = 436\)</span>) computed by
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>, which includes the second-order
+Taylor correction for Jensen’s inequality in the event gap effective
+rate (see <code><a href="../articles/sample-size-nbinom.html">vignette("sample-size-nbinom")</a></code>). Results for the
+first <span class="math inline">\(n = 422\)</span> subjects are also
+extracted from each simulation to compare with the uncorrected (naive)
+sample size.</p>
 </div>
 <div class="section level2">
 <h2 id="simulation-design">Simulation design<a class="anchor" aria-label="anchor" href="#simulation-design"></a>
 </h2>
-<p>The study sample size suggested by the Friede method is used to
-evaluate the accuracy of that method. The parameters for both the
-theoretical calculation and the simulation study are as follows:</p>
 <div class="section level3">
 <h3 id="parameters">Parameters<a class="anchor" aria-label="anchor" href="#parameters"></a>
 </h3>
 <ul>
 <li>
-<strong>Rates</strong>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>1</mn></msub><mo>=</mo><mn>0.4</mn></mrow><annotation encoding="application/x-tex">\lambda_1 = 0.4</annotation></semantics></math>
-(Control),
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>2</mn></msub><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda_2 = 0.3</annotation></semantics></math>
-(Experimental).</li>
+<strong>Rates</strong>: <span class="math inline">\(\lambda_1 =
+0.4\)</span> (Control), <span class="math inline">\(\lambda_2 =
+0.3\)</span> (Experimental).</li>
 <li>
-<strong>Dispersion</strong>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">k = 0.5</annotation></semantics></math>.</li>
+<strong>Dispersion</strong>: <span class="math inline">\(k =
+0.5\)</span>.</li>
 <li>
 <strong>Power</strong>: 90%.</li>
 <li>
 <strong>Alpha</strong>: 0.025 (one-sided).</li>
 <li>
 <strong>Dropout</strong>: 10% per year adjusted to monthly rate
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>δ</mi><mo>=</mo><mn>0.1</mn><mi>/</mi><mn>12</mn></mrow><annotation encoding="application/x-tex">\delta = 0.1 / 12</annotation></semantics></math>).</li>
+(<span class="math inline">\(\delta = 0.1 / 12\)</span>).</li>
 <li>
-<strong>Trial Duration</strong>: 24 months.</li>
+<strong>Trial duration</strong>: 24 months.</li>
 <li>
-<strong>Max Follow-up</strong>: 12 months.</li>
+<strong>Max follow-up</strong>: 12 months.</li>
 <li>
-<strong>Event Gap</strong>: 30 days (approx 0.082 years).</li>
+<strong>Event gap</strong>: 20 days.</li>
 <li>
-<strong>Accrual</strong>: Piecewise linear ramp-up over 12 months
-(Rate
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
-for 0-6mo,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>R</mi></mrow><annotation encoding="application/x-tex">2R</annotation></semantics></math>
-for 6-12mo).</li>
+<strong>Accrual</strong>: Piecewise ramp-up over 12 months (Rate
+<span class="math inline">\(R\)</span> for 0-6mo, <span class="math inline">\(2R\)</span> for 6-12mo).</li>
 </ul>
 </div>
 <div class="section level3">
 <h3 id="theoretical-calculation">Theoretical calculation<a class="anchor" aria-label="anchor" href="#theoretical-calculation"></a>
 </h3>
 <p>First, we calculate the required sample size and expected properties
-using <code>sample_size_nbinom</code>.</p>
+using <code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Parameters</span></span>
 <span><span class="va">lambda1</span> <span class="op">&lt;-</span> <span class="fl">0.4</span></span>
@@ -147,7 +144,6 @@ using <code>sample_size_nbinom</code>.</p>
 <span><span class="va">event_gap</span> <span class="op">&lt;-</span> <span class="fl">20</span> <span class="op">/</span> <span class="fl">30.42</span> <span class="co"># 20 days</span></span>
 <span></span>
 <span><span class="co"># Accrual targeting 90% power</span></span>
-<span><span class="co"># We provide relative rates (1:2) and the function scales them to achieve power</span></span>
 <span><span class="va">accrual_rate_rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">accrual_duration</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">6</span><span class="op">)</span></span>
 <span></span>
@@ -160,20 +156,15 @@ using <code>sample_size_nbinom</code>.</p>
 <span>  trial_duration <span class="op">=</span> <span class="va">trial_duration</span>,</span>
 <span>  dropout_rate <span class="op">=</span> <span class="va">dropout_rate</span>,</span>
 <span>  max_followup <span class="op">=</span> <span class="va">max_followup</span>,</span>
-<span>  event_gap <span class="op">=</span> <span class="va">event_gap</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"friede"</span></span>
+<span>  event_gap <span class="op">=</span> <span class="va">event_gap</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Extract calculated absolute accrual rates</span></span>
-<span><span class="va">accrual_rate</span> <span class="op">&lt;-</span> <span class="va">design</span><span class="op">$</span><span class="va">accrual_rate</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">design</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          friede</span></span>
-<span><span class="co">#&gt; Sample size:     n1 = 211, n2 = 211, total = 422</span></span>
-<span><span class="co">#&gt; Expected events: 1366.9 (n1: 763.1, n2: 603.8)</span></span>
+<span><span class="co">#&gt; Sample size:     n1 = 218, n2 = 218, total = 436</span></span>
+<span><span class="co">#&gt; Expected events: 1304.3 (n1: 723.4, n2: 580.9)</span></span>
 <span><span class="co">#&gt; Power: 90%, Alpha: 0.025 (1-sided)</span></span>
 <span><span class="co">#&gt; Rates: control = 0.4000, treatment = 0.3000 (RR = 0.7500)</span></span>
 <span><span class="co">#&gt; Dispersion: 0.5000, Avg exposure (calendar): 11.42</span></span>
@@ -187,11 +178,11 @@ using <code>sample_size_nbinom</code>.</p>
 <div class="section level2">
 <h2 id="simulation-results">Simulation results<a class="anchor" aria-label="anchor" href="#simulation-results"></a>
 </h2>
-<p>We simulated 3,600 trials using the parameters defined above from the
-Friede method. This number of simulations was chosen to achieve a
-standard error for the power estimate of approximately 0.005 when the
-true power is 90%
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mn>0.9</mn><mo>×</mo><mn>0.1</mn><mi>/</mi><mn>3600</mn></mrow></msqrt><mo>=</mo><mn>0.005</mn></mrow><annotation encoding="application/x-tex">\sqrt{0.9 \times 0.1 / 3600} = 0.005</annotation></semantics></math>).
+<p>We simulated 3,600 trials at the corrected sample size (<span class="math inline">\(n = 436\)</span>). For each trial, we also
+analyzed the first <span class="math inline">\(n = 422\)</span> subjects
+to provide a comparison with the naive (uncorrected) sample size. This
+number of simulations achieves a standard error for the power estimate
+of approximately 0.005 when the true power is 90% (<span class="math inline">\(\sqrt{0.9 \times 0.1 / 3600} = 0.005\)</span>).
 The simulation script is located in
 <code>data-raw/generate_simulation_data.R</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -205,183 +196,2555 @@ The simulation script is located in
 <span><span class="kw">if</span> <span class="op">(</span><span class="va">results_file</span> <span class="op">!=</span> <span class="st">""</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">sim_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">results_file</span><span class="op">)</span></span>
 <span>  <span class="va">results</span> <span class="op">&lt;-</span> <span class="va">sim_data</span><span class="op">$</span><span class="va">results</span></span>
+<span>  <span class="va">results_naive</span> <span class="op">&lt;-</span> <span class="va">sim_data</span><span class="op">$</span><span class="va">results_naive</span></span>
 <span>  <span class="va">design_ref</span> <span class="op">&lt;-</span> <span class="va">sim_data</span><span class="op">$</span><span class="va">design</span></span>
+<span>  <span class="va">n_full</span> <span class="op">&lt;-</span> <span class="va">sim_data</span><span class="op">$</span><span class="va">n_full</span></span>
+<span>  <span class="va">n_naive</span> <span class="op">&lt;-</span> <span class="va">sim_data</span><span class="op">$</span><span class="va">n_naive</span></span>
 <span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>  <span class="co"># Fallback if data is not available (e.g. not installed yet)</span></span>
-<span>  <span class="co"># This block allows the vignette to build without the data, but warns.</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning</a></span><span class="op">(</span><span class="st">"Simulation results not found. Skipping verification plots."</span><span class="op">)</span></span>
 <span>  <span class="va">results</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span>  <span class="va">results_naive</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span>  <span class="va">design_ref</span> <span class="op">&lt;-</span> <span class="va">design</span></span>
+<span>  <span class="va">n_full</span> <span class="op">&lt;-</span> <span class="va">design</span><span class="op">$</span><span class="va">n_total</span></span>
+<span>  <span class="va">n_naive</span> <span class="op">&lt;-</span> <span class="fl">422L</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="average-exposure-verification">1. Average exposure verification<a class="anchor" aria-label="anchor" href="#average-exposure-verification"></a>
+<h3 id="power-comparison">Power comparison<a class="anchor" aria-label="anchor" href="#power-comparison"></a>
 </h3>
-<p>We compare the theoretical average exposure calculated by
-<code>sample_size_nbinom</code> with the observed average exposure in
-the simulation.</p>
+<p>The key question is whether the corrected sample size achieves the
+nominal 90% power.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Theoretical Exposure</span></span>
-<span><span class="va">theo_exposure</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">exposure</span></span>
+<code class="sourceCode R"><span><span class="va">power_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">p_value</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">power_naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results_naive</span><span class="op">$</span><span class="va">p_value</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">power_full_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">p_value_score</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">power_naive_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results_naive</span><span class="op">$</span><span class="va">p_value_score</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Observed Exposure (Average across all trials and arms)</span></span>
-<span><span class="co"># Note: Exposure is the same for both arms in this design (randomized)</span></span>
-<span><span class="va">obs_exposure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">exposure_control</span>, <span class="va">results</span><span class="op">$</span><span class="va">exposure_experimental</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ci_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">p_value</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
+<span><span class="va">ci_naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results_naive</span><span class="op">$</span><span class="va">p_value</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results_naive</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
+<span><span class="va">ci_full_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">p_value_score</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
+<span><span class="va">ci_naive_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results_naive</span><span class="op">$</span><span class="va">p_value_score</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results_naive</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
 <span></span>
-<span><span class="va">comparison_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  Metric <span class="op">=</span> <span class="st">"Average Exposure"</span>,</span>
-<span>  Theoretical <span class="op">=</span> <span class="va">theo_exposure</span>,</span>
-<span>  Simulated <span class="op">=</span> <span class="va">obs_exposure</span>,</span>
-<span>  Difference <span class="op">=</span> <span class="va">obs_exposure</span> <span class="op">-</span> <span class="va">theo_exposure</span>,</span>
-<span>  Rel_Diff_Pct <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="op">(</span><span class="va">obs_exposure</span> <span class="op">-</span> <span class="va">theo_exposure</span><span class="op">)</span> <span class="op">/</span> <span class="va">theo_exposure</span></span>
+<span><span class="va">power_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Corrected (n = "</span>, <span class="va">n_full</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Naive (n = "</span>, <span class="va">n_naive</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Corrected (n = "</span>, <span class="va">n_full</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Naive (n = "</span>, <span class="va">n_naive</span>, <span class="st">")"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  Test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wald"</span>, <span class="st">"Wald"</span>, <span class="st">"Score"</span>, <span class="st">"Score"</span><span class="op">)</span>,</span>
+<span>  Theoretical <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">design_ref</span><span class="op">$</span><span class="va">power</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  Empirical <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">power_full</span>, <span class="va">power_naive</span>, <span class="va">power_full_score</span>, <span class="va">power_naive_score</span><span class="op">)</span>,</span>
+<span>  CI_Lower <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ci_full</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">ci_naive</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">ci_full_score</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">ci_naive_score</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  CI_Upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ci_full</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">ci_naive</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">ci_full_score</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">ci_naive_score</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">comparison_exp</span>, digits <span class="op">=</span> <span class="fl">4</span>, caption <span class="op">=</span> <span class="st">"Comparison of Average Exposure"</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<caption>Comparison of Average Exposure</caption>
-<thead><tr class="header">
-<th align="left">Metric</th>
-<th align="right">Theoretical</th>
-<th align="right">Simulated</th>
-<th align="right">Difference</th>
-<th align="right">Rel_Diff_Pct</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="left">Average Exposure</td>
-<td align="right">11.4195</td>
-<td align="right">11.3598</td>
-<td align="right">-0.0597</td>
-<td align="right">-0.5232</td>
-</tr></tbody>
+<span><span class="va">power_df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Power Comparison: Wald vs Score Test**"</span><span class="op">)</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Based on "</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span>, <span class="st">" simulated trials"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">Theoretical</span>, <span class="va">Empirical</span>, <span class="va">CI_Lower</span>, <span class="va">CI_Upper</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
+<span>    Design <span class="op">=</span> <span class="st">"Design"</span>,</span>
+<span>    Test <span class="op">=</span> <span class="st">"Test"</span>,</span>
+<span>    Theoretical <span class="op">=</span> <span class="st">"Target"</span>,</span>
+<span>    Empirical <span class="op">=</span> <span class="st">"Empirical"</span>,</span>
+<span>    CI_Lower <span class="op">=</span> <span class="st">"95% CI Lower"</span>,</span>
+<span>    CI_Upper <span class="op">=</span> <span class="st">"95% CI Upper"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div id="mwlefoodfi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#mwlefoodfi table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#mwlefoodfi thead, #mwlefoodfi tbody, #mwlefoodfi tfoot, #mwlefoodfi tr, #mwlefoodfi td, #mwlefoodfi th {
+  border-style: none;
+}
+
+#mwlefoodfi p {
+  margin: 0;
+  padding: 0;
+}
+
+#mwlefoodfi .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#mwlefoodfi .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#mwlefoodfi .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#mwlefoodfi .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#mwlefoodfi .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#mwlefoodfi .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#mwlefoodfi .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#mwlefoodfi .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#mwlefoodfi .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#mwlefoodfi .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#mwlefoodfi .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#mwlefoodfi .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#mwlefoodfi .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#mwlefoodfi .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#mwlefoodfi .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#mwlefoodfi .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#mwlefoodfi .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#mwlefoodfi .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#mwlefoodfi .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#mwlefoodfi .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#mwlefoodfi .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#mwlefoodfi .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#mwlefoodfi .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#mwlefoodfi .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#mwlefoodfi .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#mwlefoodfi .gt_left {
+  text-align: left;
+}
+
+#mwlefoodfi .gt_center {
+  text-align: center;
+}
+
+#mwlefoodfi .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#mwlefoodfi .gt_font_normal {
+  font-weight: normal;
+}
+
+#mwlefoodfi .gt_font_bold {
+  font-weight: bold;
+}
+
+#mwlefoodfi .gt_font_italic {
+  font-style: italic;
+}
+
+#mwlefoodfi .gt_super {
+  font-size: 65%;
+}
+
+#mwlefoodfi .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#mwlefoodfi .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#mwlefoodfi .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#mwlefoodfi .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#mwlefoodfi .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#mwlefoodfi .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#mwlefoodfi .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#mwlefoodfi .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#mwlefoodfi div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="6" class="gt_heading gt_title gt_font_normal" style><span class="gt_from_md"><strong>Power Comparison: Wald vs Score Test</strong></span></td>
+    </tr>
+<tr class="gt_heading">
+<td colspan="6" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Based on 3600 simulated trials</td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Design">Design</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Test">Test</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Theoretical">Target</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Empirical">Empirical</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="CI_Lower">95% CI Lower</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="CI_Upper">95% CI Upper</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr>
+<td headers="Design" class="gt_row gt_left">Corrected (n = 436)</td>
+<td headers="Test" class="gt_row gt_left">Wald</td>
+<td headers="Theoretical" class="gt_row gt_right">0.9000</td>
+<td headers="Empirical" class="gt_row gt_right">0.9122</td>
+<td headers="CI_Lower" class="gt_row gt_right">0.9025</td>
+<td headers="CI_Upper" class="gt_row gt_right">0.9213</td>
+</tr>
+<tr>
+<td headers="Design" class="gt_row gt_left">Naive (n = 422)</td>
+<td headers="Test" class="gt_row gt_left">Wald</td>
+<td headers="Theoretical" class="gt_row gt_right">0.9000</td>
+<td headers="Empirical" class="gt_row gt_right">0.9039</td>
+<td headers="CI_Lower" class="gt_row gt_right">0.8938</td>
+<td headers="CI_Upper" class="gt_row gt_right">0.9133</td>
+</tr>
+<tr>
+<td headers="Design" class="gt_row gt_left">Corrected (n = 436)</td>
+<td headers="Test" class="gt_row gt_left">Score</td>
+<td headers="Theoretical" class="gt_row gt_right">0.9000</td>
+<td headers="Empirical" class="gt_row gt_right">0.8964</td>
+<td headers="CI_Lower" class="gt_row gt_right">0.8860</td>
+<td headers="CI_Upper" class="gt_row gt_right">0.9062</td>
+</tr>
+<tr>
+<td headers="Design" class="gt_row gt_left">Naive (n = 422)</td>
+<td headers="Test" class="gt_row gt_left">Score</td>
+<td headers="Theoretical" class="gt_row gt_right">0.9000</td>
+<td headers="Empirical" class="gt_row gt_right">0.8872</td>
+<td headers="CI_Lower" class="gt_row gt_right">0.8764</td>
+<td headers="CI_Upper" class="gt_row gt_right">0.8974</td>
+</tr>
+</tbody>
 </table>
-<p>The theoretical exposure should closely match the simulated average
-exposure.</p>
+</div>
 </div>
 <div class="section level3">
-<h3 id="statistical-information-and-variance">2. Statistical information and variance<a class="anchor" aria-label="anchor" href="#statistical-information-and-variance"></a>
+<h3 id="summary-of-verification-results-corrected-design">Summary of verification results (corrected design)<a class="anchor" aria-label="anchor" href="#summary-of-verification-results-corrected-design"></a>
 </h3>
-<p>The theoretical variance of the log rate ratio estimator (Wald test)
-is given by:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mrow><mi>t</mi><mi>h</mi><mi>e</mi><mi>o</mi></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn><mi>/</mi><msub><mi>μ</mi><mn>1</mn></msub><mo>+</mo><msub><mi>k</mi><mrow><mi>a</mi><mi>d</mi><mi>j</mi></mrow></msub></mrow><msub><mi>n</mi><mn>1</mn></msub></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn><mi>/</mi><msub><mi>μ</mi><mn>2</mn></msub><mo>+</mo><msub><mi>k</mi><mrow><mi>a</mi><mi>d</mi><mi>j</mi></mrow></msub></mrow><msub><mi>n</mi><mn>2</mn></msub></mfrac></mrow><annotation encoding="application/x-tex"> V_{theo} = \frac{1/\mu_1 + k_{adj}}{n_1} + \frac{1/\mu_2 + k_{adj}}{n_2} </annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo>=</mo><msub><mi>λ</mi><mrow><mi>i</mi><mo>,</mo><mi>e</mi><mi>f</mi><mi>f</mi></mrow></msub><mover><mi>t</mi><mo accent="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\mu_i = \lambda_{i,eff} \bar{t}</annotation></semantics></math>
-is the expected number of events per subject in group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-(using effective rates adjusted for event gaps), and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mrow><mi>a</mi><mi>d</mi><mi>j</mi></mrow></msub><mo>=</mo><mi>k</mi><mo>⋅</mo><mi>Q</mi></mrow><annotation encoding="application/x-tex">k_{adj} = k \cdot Q</annotation></semantics></math>
-is the dispersion parameter inflated for variable follow-up.</p>
-<p>The dispersion parameter
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-directly increases the variance of the estimator. In a standard Poisson
-model,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">k=0</annotation></semantics></math>,
-and the variance depends only on the expected number of events. With
-negative binomial dispersion
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">k &gt; 0</annotation></semantics></math>),
-the variance is inflated, reflecting the extra variability
-(overdispersion) in the data.</p>
-<p>We compare this with the variance of the estimates from the
-simulation.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Theoretical Variance (from design object)</span></span>
-<span><span class="va">theo_var</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">variance</span></span>
-<span></span>
-<span><span class="co"># Empirical Variance of the Log Hazard Ratio estimates</span></span>
-<span><span class="va">emp_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Average Squared Standard Error (mean of the estimated variances)</span></span>
-<span><span class="va">avg_se_sq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">se</span><span class="op">^</span><span class="fl">2</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">comparison_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  Metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Variance of Estimator"</span><span class="op">)</span>,</span>
-<span>  Theoretical <span class="op">=</span> <span class="va">theo_var</span>,</span>
-<span>  Empirical_Var <span class="op">=</span> <span class="va">emp_var</span>,</span>
-<span>  Avg_Estimated_Var <span class="op">=</span> <span class="va">avg_se_sq</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">comparison_var</span>, digits <span class="op">=</span> <span class="fl">5</span>, caption <span class="op">=</span> <span class="st">"Comparison of Variance"</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<caption>Comparison of Variance</caption>
-<thead><tr class="header">
-<th align="left">Metric</th>
-<th align="right">Theoretical</th>
-<th align="right">Empirical_Var</th>
-<th align="right">Avg_Estimated_Var</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="left">Variance of Estimator</td>
-<td align="right">0.00786</td>
-<td align="right">0.00755</td>
-<td align="right">0.00728</td>
-</tr></tbody>
-</table>
+<p>We compare the theoretical predictions from
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> with the observed simulation results
+at the corrected sample size.</p>
+<p><strong>Key distinction: Total Exposure vs Exposure at
+Risk</strong></p>
 <ul>
 <li>
-<strong>Empirical Var</strong>: The actual variability of the
-estimated log rate ratios across 3,600 trials.</li>
+<strong>Total Exposure</strong> (<code>tte_total</code>): The
+calendar time a subject is on study, from randomization to the analysis
+cut date (or censoring). This is the same for both treatment arms by
+design.</li>
 <li>
-<strong>Avg Estimated Var</strong>: The average of the variance
-estimates
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msup><mi>E</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">SE^2</annotation></semantics></math>)
-produced by the Wald test in each trial.</li>
+<strong>Exposure at Risk</strong> (<code>tte</code>): The time
+during which a subject can experience a <em>new</em> event. After each
+event, there is an “event gap” period during which new events are not
+counted (e.g., representing recovery time or treatment effect). This
+differs by treatment group because the group with more events loses more
+time to gaps.</li>
 </ul>
-<p>While there is reasonable agreement, the sample size formula may
-slightly underestimate the variability of the test statistic and thus
-may overstate power.</p>
-</div>
-<div class="section level3">
-<h3 id="power-verification">3. Power verification<a class="anchor" aria-label="anchor" href="#power-verification"></a>
-</h3>
-<p>Finally, we compare the theoretical power with the empirical power
-(proportion of trials rejecting the null hypothesis).</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Theoretical Power</span></span>
-<span><span class="va">theo_power</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">power</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ---- Compute all metrics ----</span></span>
 <span></span>
-<span><span class="co"># Empirical Power</span></span>
+<span><span class="co"># Number of simulations</span></span>
+<span><span class="va">n_sims</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Total Exposure (calendar follow-up time)</span></span>
+<span><span class="va">theo_exposure</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">exposure</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">obs_exposure_ctrl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">exposure_total_control</span><span class="op">)</span></span>
+<span><span class="va">obs_exposure_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">exposure_total_experimental</span><span class="op">)</span></span>
+<span><span class="va">obs_exposure_at_risk_ctrl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">exposure_at_risk_control</span><span class="op">)</span></span>
+<span><span class="va">obs_exposure_at_risk_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">exposure_at_risk_experimental</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Exposure at risk (time at risk excluding event gaps)</span></span>
+<span><span class="va">theo_exposure_at_risk_ctrl</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">exposure_at_risk_n1</span></span>
+<span><span class="va">theo_exposure_at_risk_exp</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">exposure_at_risk_n2</span></span>
+<span></span>
+<span><span class="co"># Events by treatment group</span></span>
+<span><span class="va">theo_events_ctrl</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">events_n1</span></span>
+<span><span class="va">theo_events_exp</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">events_n2</span></span>
+<span><span class="va">obs_events_ctrl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">events_control</span><span class="op">)</span></span>
+<span><span class="va">obs_events_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">events_experimental</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Treatment effect</span></span>
+<span><span class="va">true_rr</span> <span class="op">&lt;-</span> <span class="va">lambda2</span> <span class="op">/</span> <span class="va">lambda1</span></span>
+<span><span class="va">true_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">true_rr</span><span class="op">)</span></span>
+<span><span class="va">mean_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Variance</span></span>
+<span><span class="va">theo_var</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">variance</span></span>
+<span><span class="va">median_se_sq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">se</span><span class="op">^</span><span class="fl">2</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">emp_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Power</span></span>
+<span><span class="va">theo_power</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">power</span></span>
 <span><span class="va">emp_power</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">p_value</span> <span class="op">&lt;</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">inputs</span><span class="op">$</span><span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">comparison_pwr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  Metric <span class="op">=</span> <span class="st">"Power"</span>,</span>
-<span>  Theoretical <span class="op">=</span> <span class="va">theo_power</span>,</span>
-<span>  Simulated <span class="op">=</span> <span class="va">emp_power</span>,</span>
-<span>  Difference <span class="op">=</span> <span class="va">emp_power</span> <span class="op">-</span> <span class="va">theo_power</span></span>
+<span><span class="va">n_sim_total</span> <span class="op">&lt;-</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">n_total</span></span>
+<span></span>
+<span><span class="co"># ---- Build summary table ----</span></span>
+<span><span class="va">summary_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Total Exposure (months) - Control"</span>,</span>
+<span>    <span class="st">"Total Exposure (months) - Experimental"</span>,</span>
+<span>    <span class="st">"Exposure at Risk (months) - Control"</span>,</span>
+<span>    <span class="st">"Exposure at Risk (months) - Experimental"</span>,</span>
+<span>    <span class="st">"Events per Subject - Control"</span>,</span>
+<span>    <span class="st">"Events per Subject - Experimental"</span>,</span>
+<span>    <span class="st">"Treatment Effect: log(RR)"</span>,</span>
+<span>    <span class="st">"Variance of log(RR)"</span>,</span>
+<span>    <span class="st">"Power"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  Theoretical <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="va">theo_exposure</span>,</span>
+<span>    <span class="va">theo_exposure</span>,</span>
+<span>    <span class="va">theo_exposure_at_risk_ctrl</span>,</span>
+<span>    <span class="va">theo_exposure_at_risk_exp</span>,</span>
+<span>    <span class="va">theo_events_ctrl</span> <span class="op">/</span> <span class="op">(</span><span class="va">n_sim_total</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    <span class="va">theo_events_exp</span> <span class="op">/</span> <span class="op">(</span><span class="va">n_sim_total</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    <span class="va">true_log_rr</span>,</span>
+<span>    <span class="va">theo_var</span>,</span>
+<span>    <span class="va">theo_power</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  Simulated <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="va">obs_exposure_ctrl</span>,</span>
+<span>    <span class="va">obs_exposure_exp</span>,</span>
+<span>    <span class="va">obs_exposure_at_risk_ctrl</span>,</span>
+<span>    <span class="va">obs_exposure_at_risk_exp</span>,</span>
+<span>    <span class="va">obs_events_ctrl</span> <span class="op">/</span> <span class="op">(</span><span class="va">n_sim_total</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    <span class="va">obs_events_exp</span> <span class="op">/</span> <span class="op">(</span><span class="va">n_sim_total</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    <span class="va">mean_log_rr</span>,</span>
+<span>    <span class="va">median_se_sq</span>,</span>
+<span>    <span class="va">emp_power</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">comparison_pwr</span>, digits <span class="op">=</span> <span class="fl">4</span>, caption <span class="op">=</span> <span class="st">"Comparison of Power"</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<caption>Comparison of Power</caption>
-<thead><tr class="header">
-<th align="left">Metric</th>
-<th align="right">Theoretical</th>
-<th align="right">Simulated</th>
-<th align="right">Difference</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="left">Power</td>
-<td align="right">0.9</td>
-<td align="right">0.8739</td>
-<td align="right">-0.0261</td>
-</tr></tbody>
+<span><span class="va">summary_df</span><span class="op">$</span><span class="va">Difference</span> <span class="op">&lt;-</span> <span class="va">summary_df</span><span class="op">$</span><span class="va">Simulated</span> <span class="op">-</span> <span class="va">summary_df</span><span class="op">$</span><span class="va">Theoretical</span></span>
+<span><span class="va">summary_df</span><span class="op">$</span><span class="va">Rel_Diff_Pct</span> <span class="op">&lt;-</span> <span class="fl">100</span> <span class="op">*</span> <span class="va">summary_df</span><span class="op">$</span><span class="va">Difference</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">summary_df</span><span class="op">$</span><span class="va">Theoretical</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">summary_df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Verification of sample_size_nbinom() Predictions**"</span><span class="op">)</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Based on "</span>, <span class="va">n_sims</span>, <span class="st">" simulated trials (n = "</span>, <span class="va">n_sim_total</span>, <span class="st">")"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_row_group.html" class="external-link">tab_row_group</a></span><span class="op">(</span></span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Power**"</span><span class="op">)</span>,</span>
+<span>    rows <span class="op">=</span> <span class="va">Metric</span> <span class="op">==</span> <span class="st">"Power"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_row_group.html" class="external-link">tab_row_group</a></span><span class="op">(</span></span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Variance**"</span><span class="op">)</span>,</span>
+<span>    rows <span class="op">=</span> <span class="va">Metric</span> <span class="op">==</span> <span class="st">"Variance of log(RR)"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_row_group.html" class="external-link">tab_row_group</a></span><span class="op">(</span></span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Treatment Effect**"</span><span class="op">)</span>,</span>
+<span>    rows <span class="op">=</span> <span class="va">Metric</span> <span class="op">==</span> <span class="st">"Treatment Effect: log(RR)"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_row_group.html" class="external-link">tab_row_group</a></span><span class="op">(</span></span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Events**"</span><span class="op">)</span>,</span>
+<span>    rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Events"</span>, <span class="va">Metric</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_row_group.html" class="external-link">tab_row_group</a></span><span class="op">(</span></span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Exposure**"</span><span class="op">)</span>,</span>
+<span>    rows <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Exposure"</span>, <span class="va">Metric</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/row_group_order.html" class="external-link">row_group_order</a></span><span class="op">(</span>groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"**Exposure**"</span>, <span class="st">"**Events**"</span>, <span class="st">"**Treatment Effect**"</span>,</span>
+<span>                              <span class="st">"**Variance**"</span>, <span class="st">"**Power**"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">Theoretical</span>, <span class="va">Simulated</span>, <span class="va">Difference</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="va">Rel_Diff_Pct</span>, decimals <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
+<span>    Metric <span class="op">=</span> <span class="st">""</span>,</span>
+<span>    Theoretical <span class="op">=</span> <span class="st">"Theoretical"</span>,</span>
+<span>    Simulated <span class="op">=</span> <span class="st">"Simulated"</span>,</span>
+<span>    Difference <span class="op">=</span> <span class="st">"Difference"</span>,</span>
+<span>    Rel_Diff_Pct <span class="op">=</span> <span class="st">"Rel. Diff (%)"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/sub_missing.html" class="external-link">sub_missing</a></span><span class="op">(</span>missing_text <span class="op">=</span> <span class="st">"—"</span><span class="op">)</span></span></code></pre></div>
+<div id="wkkeulbfdp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#wkkeulbfdp table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#wkkeulbfdp thead, #wkkeulbfdp tbody, #wkkeulbfdp tfoot, #wkkeulbfdp tr, #wkkeulbfdp td, #wkkeulbfdp th {
+  border-style: none;
+}
+
+#wkkeulbfdp p {
+  margin: 0;
+  padding: 0;
+}
+
+#wkkeulbfdp .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#wkkeulbfdp .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#wkkeulbfdp .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#wkkeulbfdp .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#wkkeulbfdp .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#wkkeulbfdp .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#wkkeulbfdp .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#wkkeulbfdp .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#wkkeulbfdp .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#wkkeulbfdp .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#wkkeulbfdp .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#wkkeulbfdp .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#wkkeulbfdp .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#wkkeulbfdp .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#wkkeulbfdp .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wkkeulbfdp .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#wkkeulbfdp .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#wkkeulbfdp .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#wkkeulbfdp .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wkkeulbfdp .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#wkkeulbfdp .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wkkeulbfdp .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#wkkeulbfdp .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wkkeulbfdp .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wkkeulbfdp .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wkkeulbfdp .gt_left {
+  text-align: left;
+}
+
+#wkkeulbfdp .gt_center {
+  text-align: center;
+}
+
+#wkkeulbfdp .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#wkkeulbfdp .gt_font_normal {
+  font-weight: normal;
+}
+
+#wkkeulbfdp .gt_font_bold {
+  font-weight: bold;
+}
+
+#wkkeulbfdp .gt_font_italic {
+  font-style: italic;
+}
+
+#wkkeulbfdp .gt_super {
+  font-size: 65%;
+}
+
+#wkkeulbfdp .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#wkkeulbfdp .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#wkkeulbfdp .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#wkkeulbfdp .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#wkkeulbfdp .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#wkkeulbfdp .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#wkkeulbfdp .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#wkkeulbfdp .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#wkkeulbfdp div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="5" class="gt_heading gt_title gt_font_normal" style><span class="gt_from_md"><strong>Verification of sample_size_nbinom() Predictions</strong></span></td>
+    </tr>
+<tr class="gt_heading">
+<td colspan="5" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Based on 3600 simulated trials (n = 436)</td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Metric"></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Theoretical">Theoretical</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Simulated">Simulated</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Difference">Difference</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Rel_Diff_Pct">Rel. Diff (%)</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="gt_group_heading_row">
+<th colspan="5" class="gt_group_heading" scope="colgroup" id="&lt;span class='gt_from_md'&gt;&lt;strong&gt;Exposure&lt;/strong&gt;&lt;/span&gt;"><span class="gt_from_md"><strong>Exposure</strong></span></th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="**Exposure**  Metric" class="gt_row gt_left">Total Exposure (months) - Control</td>
+<td headers="**Exposure**  Theoretical" class="gt_row gt_right">11.4195</td>
+<td headers="**Exposure**  Simulated" class="gt_row gt_right">11.4142</td>
+<td headers="**Exposure**  Difference" class="gt_row gt_right">−0.0053</td>
+<td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">−0.05</td>
+</tr>
+<tr>
+<td headers="**Exposure**  Metric" class="gt_row gt_left">Total Exposure (months) - Experimental</td>
+<td headers="**Exposure**  Theoretical" class="gt_row gt_right">11.4195</td>
+<td headers="**Exposure**  Simulated" class="gt_row gt_right">11.4134</td>
+<td headers="**Exposure**  Difference" class="gt_row gt_right">−0.0061</td>
+<td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">−0.05</td>
+</tr>
+<tr>
+<td headers="**Exposure**  Metric" class="gt_row gt_left">Exposure at Risk (months) - Control</td>
+<td headers="**Exposure**  Theoretical" class="gt_row gt_right">9.0417</td>
+<td headers="**Exposure**  Simulated" class="gt_row gt_right">9.2563</td>
+<td headers="**Exposure**  Difference" class="gt_row gt_right">0.2146</td>
+<td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">2.37</td>
+</tr>
+<tr>
+<td headers="**Exposure**  Metric" class="gt_row gt_left">Exposure at Risk (months) - Experimental</td>
+<td headers="**Exposure**  Theoretical" class="gt_row gt_right">9.5382</td>
+<td headers="**Exposure**  Simulated" class="gt_row gt_right">9.6883</td>
+<td headers="**Exposure**  Difference" class="gt_row gt_right">0.1501</td>
+<td headers="**Exposure**  Rel_Diff_Pct" class="gt_row gt_right">1.57</td>
+</tr>
+<tr class="gt_group_heading_row">
+<th colspan="5" class="gt_group_heading" scope="colgroup" id="&lt;span class='gt_from_md'&gt;&lt;strong&gt;Events&lt;/strong&gt;&lt;/span&gt;"><span class="gt_from_md"><strong>Events</strong></span></th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="**Events**  Metric" class="gt_row gt_left">Events per Subject - Control</td>
+<td headers="**Events**  Theoretical" class="gt_row gt_right">3.3185</td>
+<td headers="**Events**  Simulated" class="gt_row gt_right">3.3788</td>
+<td headers="**Events**  Difference" class="gt_row gt_right">0.0603</td>
+<td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">1.82</td>
+</tr>
+<tr>
+<td headers="**Events**  Metric" class="gt_row gt_left">Events per Subject - Experimental</td>
+<td headers="**Events**  Theoretical" class="gt_row gt_right">2.6646</td>
+<td headers="**Events**  Simulated" class="gt_row gt_right">2.7013</td>
+<td headers="**Events**  Difference" class="gt_row gt_right">0.0367</td>
+<td headers="**Events**  Rel_Diff_Pct" class="gt_row gt_right">1.38</td>
+</tr>
+<tr class="gt_group_heading_row">
+<th colspan="5" class="gt_group_heading" scope="colgroup" id="&lt;span class='gt_from_md'&gt;&lt;strong&gt;Treatment Effect&lt;/strong&gt;&lt;/span&gt;"><span class="gt_from_md"><strong>Treatment Effect</strong></span></th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="**Treatment Effect**  Metric" class="gt_row gt_left">Treatment Effect: log(RR)</td>
+<td headers="**Treatment Effect**  Theoretical" class="gt_row gt_right">−0.2877</td>
+<td headers="**Treatment Effect**  Simulated" class="gt_row gt_right">−0.2878</td>
+<td headers="**Treatment Effect**  Difference" class="gt_row gt_right">−0.0001</td>
+<td headers="**Treatment Effect**  Rel_Diff_Pct" class="gt_row gt_right">−0.03</td>
+</tr>
+<tr class="gt_group_heading_row">
+<th colspan="5" class="gt_group_heading" scope="colgroup" id="&lt;span class='gt_from_md'&gt;&lt;strong&gt;Variance&lt;/strong&gt;&lt;/span&gt;"><span class="gt_from_md"><strong>Variance</strong></span></th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="**Variance**  Metric" class="gt_row gt_left">Variance of log(RR)</td>
+<td headers="**Variance**  Theoretical" class="gt_row gt_right">0.0078</td>
+<td headers="**Variance**  Simulated" class="gt_row gt_right">0.0075</td>
+<td headers="**Variance**  Difference" class="gt_row gt_right">−0.0003</td>
+<td headers="**Variance**  Rel_Diff_Pct" class="gt_row gt_right">−3.96</td>
+</tr>
+<tr class="gt_group_heading_row">
+<th colspan="5" class="gt_group_heading" scope="colgroup" id="&lt;span class='gt_from_md'&gt;&lt;strong&gt;Power&lt;/strong&gt;&lt;/span&gt;"><span class="gt_from_md"><strong>Power</strong></span></th>
+    </tr>
+<tr class="gt_row_group_first">
+<td headers="**Power**  Metric" class="gt_row gt_left">Power</td>
+<td headers="**Power**  Theoretical" class="gt_row gt_right">0.9000</td>
+<td headers="**Power**  Simulated" class="gt_row gt_right">0.9122</td>
+<td headers="**Power**  Difference" class="gt_row gt_right">0.0122</td>
+<td headers="**Power**  Rel_Diff_Pct" class="gt_row gt_right">1.36</td>
+</tr>
+</tbody>
 </table>
-<p>A 95% confidence interval for the empirical power can be calculated
-to check if the theoretical power falls within the simulation error
-bounds.</p>
+</div>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>
+<strong>Total Exposure</strong> is the average calendar follow-up
+time per subject. The theoretical value is the same for both arms
+(symmetric design), while simulated values may differ slightly due to
+sampling variability in enrollment and dropout.</li>
+<li>
+<strong>Exposure at Risk</strong> is the time during which new
+events can occur, after subtracting the “event gap” periods following
+each event. The control group has lower exposure at risk because it
+experiences more events (higher rate), each followed by a gap
+period.</li>
+<li>
+<strong>Events per Subject</strong> is the mean number of events per
+subject in each treatment group.</li>
+<li>
+<strong>Variance</strong> uses the median of the estimated variances
+(SE²) from each simulation, which is robust to outliers from unstable
+model fits.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="distribution-of-the-test-statistic">Distribution of the test statistic<a class="anchor" aria-label="anchor" href="#distribution-of-the-test-statistic"></a>
+</h3>
+<p>Here we plot the density of the Wald Z-scores from the simulation and
+compare it to the expected normal distribution centered at the
+theoretical mean Z-score.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">z_scores</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">$</span><span class="va">estimate</span> <span class="op">/</span> <span class="va">results</span><span class="op">$</span><span class="va">se</span></span>
+<span></span>
+<span><span class="va">theo_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">theo_var</span><span class="op">)</span></span>
+<span><span class="va">theo_mean_z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">lambda2</span> <span class="op">/</span> <span class="va">lambda1</span><span class="op">)</span> <span class="op">/</span> <span class="va">theo_se</span></span>
+<span><span class="va">crit_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="va">design_ref</span><span class="op">$</span><span class="va">inputs</span><span class="op">$</span><span class="va">alpha</span><span class="op">)</span></span>
+<span><span class="va">prop_reject</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">z_scores</span> <span class="op">&lt;</span> <span class="va">crit_val</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>z <span class="op">=</span> <span class="va">z_scores</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html" class="external-link">geom_density</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"Simulated Density"</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_function.html" class="external-link">stat_function</a></span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="va">dnorm</span>,</span>
+<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="va">theo_mean_z</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"Theoretical Normal"</span><span class="op">)</span>,</span>
+<span>    linewidth <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    linetype <span class="op">=</span> <span class="st">"dashed"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">crit_val</span>, linetype <span class="op">=</span> <span class="st">"dotted"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span></span>
+<span>    <span class="st">"text"</span>,</span>
+<span>    x <span class="op">=</span> <span class="va">crit_val</span>, y <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"  Reject: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">prop_reject</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"%"</span><span class="op">)</span>,</span>
+<span>    hjust <span class="op">=</span> <span class="fl">0</span>, vjust <span class="op">=</span> <span class="fl">0</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Distribution of Wald Z-scores (corrected design)"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Theoretical Mean Z ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">theo_mean_z</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Z-score (Estimate / Estimated SE)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Density"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"Distribution"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="verification-simulation_files/figure-html/z_score_dist-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="wald-vs-score-z-score-comparison">Wald vs score Z-score comparison<a class="anchor" aria-label="anchor" href="#wald-vs-score-z-score-comparison"></a>
+</h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">p_value</span> <span class="op">&lt;</span> <span class="va">design_ref</span><span class="op">$</span><span class="va">inputs</span><span class="op">$</span><span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
-<span><span class="co">#&gt; [1] 0.8626014 0.8845653</span></span>
-<span><span class="co">#&gt; attr(,"conf.level")</span></span>
-<span><span class="co">#&gt; [1] 0.95</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">z_wald</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">$</span><span class="va">estimate</span> <span class="op">/</span> <span class="va">results</span><span class="op">$</span><span class="va">se</span></span>
+<span><span class="va">z_score</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">$</span><span class="va">z_score</span></span>
+<span></span>
+<span><span class="va">z_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">z_wald</span>, <span class="va">z_score</span><span class="op">)</span>,</span>
+<span>  Test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wald"</span>, <span class="st">"Score"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">z_wald</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">z_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">z</span>, color <span class="op">=</span> <span class="va">Test</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html" class="external-link">geom_density</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_function.html" class="external-link">stat_function</a></span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="va">dnorm</span>,</span>
+<span>    args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="va">theo_mean_z</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    linewidth <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>    linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"grey40"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">crit_val</span>, linetype <span class="op">=</span> <span class="st">"dotted"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Z-score Distribution: Wald vs Score (corrected design)"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Dashed = theoretical N("</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">theo_mean_z</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">", 1)"</span><span class="op">)</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Z-score"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Density"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"Test"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="verification-simulation_files/figure-html/z_score_comparison-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="distribution-statistics-for-logrr">Distribution statistics for log(RR)<a class="anchor" aria-label="anchor" href="#distribution-statistics-for-logrr"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">theo_mean_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">lambda2</span> <span class="op">/</span> <span class="va">lambda1</span><span class="op">)</span></span>
+<span><span class="va">theo_sd_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">theo_var</span><span class="op">)</span></span>
+<span><span class="va">emp_mean_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">emp_sd_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">emp_median_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ests</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">estimate</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">q_low</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">ests</span>, <span class="fl">0.01</span><span class="op">)</span></span>
+<span><span class="va">q_high</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">ests</span>, <span class="fl">0.99</span><span class="op">)</span></span>
+<span><span class="va">ests_trimmed</span> <span class="op">&lt;-</span> <span class="va">ests</span><span class="op">[</span><span class="va">ests</span> <span class="op">&gt;=</span> <span class="va">q_low</span> <span class="op">&amp;</span> <span class="va">ests</span> <span class="op">&lt;=</span> <span class="va">q_high</span><span class="op">]</span></span>
+<span><span class="va">n_trimmed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ests_trimmed</span><span class="op">)</span></span>
+<span><span class="va">m3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">ests_trimmed</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">ests_trimmed</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">3</span><span class="op">)</span> <span class="op">/</span> <span class="va">n_trimmed</span></span>
+<span><span class="va">m4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">ests_trimmed</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">ests_trimmed</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">4</span><span class="op">)</span> <span class="op">/</span> <span class="va">n_trimmed</span></span>
+<span><span class="va">s2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">ests_trimmed</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">ests_trimmed</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="va">n_trimmed</span></span>
+<span><span class="va">emp_skew_log_rr</span> <span class="op">&lt;-</span> <span class="va">m3</span> <span class="op">/</span> <span class="va">s2</span><span class="op">^</span><span class="op">(</span><span class="fl">3</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">emp_kurt_log_rr</span> <span class="op">&lt;-</span> <span class="va">m4</span> <span class="op">/</span> <span class="va">s2</span><span class="op">^</span><span class="fl">2</span></span>
+<span></span>
+<span><span class="va">comparison_log_rr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Metric <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Mean"</span>, <span class="st">"SD"</span>, <span class="st">"Median"</span>, <span class="st">"Skewness (trimmed)"</span>, <span class="st">"Kurtosis (trimmed)"</span><span class="op">)</span>,</span>
+<span>  Theoretical <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">theo_mean_log_rr</span>, <span class="va">theo_sd_log_rr</span>, <span class="va">theo_mean_log_rr</span>, <span class="fl">0</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  Simulated <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">emp_mean_log_rr</span>, <span class="va">emp_sd_log_rr</span>, <span class="va">emp_median_log_rr</span>, <span class="va">emp_skew_log_rr</span>, <span class="va">emp_kurt_log_rr</span><span class="op">)</span>,</span>
+<span>  Difference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="va">emp_mean_log_rr</span> <span class="op">-</span> <span class="va">theo_mean_log_rr</span>,</span>
+<span>    <span class="va">emp_sd_log_rr</span> <span class="op">-</span> <span class="va">theo_sd_log_rr</span>,</span>
+<span>    <span class="va">emp_median_log_rr</span> <span class="op">-</span> <span class="va">theo_mean_log_rr</span>,</span>
+<span>    <span class="va">emp_skew_log_rr</span> <span class="op">-</span> <span class="fl">0</span>,</span>
+<span>    <span class="va">emp_kurt_log_rr</span> <span class="op">-</span> <span class="fl">3</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">comparison_log_rr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span>title <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Comparison of log(RR) Statistics**"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/where.html" class="external-link">where</a></span><span class="op">(</span><span class="va">is.numeric</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<div id="byesrejlds" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#byesrejlds table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#byesrejlds thead, #byesrejlds tbody, #byesrejlds tfoot, #byesrejlds tr, #byesrejlds td, #byesrejlds th {
+  border-style: none;
+}
+
+#byesrejlds p {
+  margin: 0;
+  padding: 0;
+}
+
+#byesrejlds .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#byesrejlds .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#byesrejlds .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#byesrejlds .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#byesrejlds .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#byesrejlds .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#byesrejlds .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#byesrejlds .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#byesrejlds .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#byesrejlds .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#byesrejlds .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#byesrejlds .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#byesrejlds .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#byesrejlds .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#byesrejlds .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#byesrejlds .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#byesrejlds .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#byesrejlds .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#byesrejlds .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#byesrejlds .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#byesrejlds .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#byesrejlds .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#byesrejlds .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#byesrejlds .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#byesrejlds .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#byesrejlds .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#byesrejlds .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#byesrejlds .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#byesrejlds .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#byesrejlds .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#byesrejlds .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#byesrejlds .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#byesrejlds .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#byesrejlds .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#byesrejlds .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#byesrejlds .gt_left {
+  text-align: left;
+}
+
+#byesrejlds .gt_center {
+  text-align: center;
+}
+
+#byesrejlds .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#byesrejlds .gt_font_normal {
+  font-weight: normal;
+}
+
+#byesrejlds .gt_font_bold {
+  font-weight: bold;
+}
+
+#byesrejlds .gt_font_italic {
+  font-style: italic;
+}
+
+#byesrejlds .gt_super {
+  font-size: 65%;
+}
+
+#byesrejlds .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#byesrejlds .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#byesrejlds .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#byesrejlds .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#byesrejlds .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#byesrejlds .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#byesrejlds .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#byesrejlds .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#byesrejlds div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="4" class="gt_heading gt_title gt_font_normal gt_bottom_border" style><span class="gt_from_md"><strong>Comparison of log(RR) Statistics</strong></span></td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Metric">Metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Theoretical">Theoretical</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Simulated">Simulated</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Difference">Difference</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr>
+<td headers="Metric" class="gt_row gt_left">Mean</td>
+<td headers="Theoretical" class="gt_row gt_right">−0.2877</td>
+<td headers="Simulated" class="gt_row gt_right">−0.2878</td>
+<td headers="Difference" class="gt_row gt_right">−0.0001</td>
+</tr>
+<tr>
+<td headers="Metric" class="gt_row gt_left">SD</td>
+<td headers="Theoretical" class="gt_row gt_right">0.0886</td>
+<td headers="Simulated" class="gt_row gt_right">0.0876</td>
+<td headers="Difference" class="gt_row gt_right">−0.0010</td>
+</tr>
+<tr>
+<td headers="Metric" class="gt_row gt_left">Median</td>
+<td headers="Theoretical" class="gt_row gt_right">−0.2877</td>
+<td headers="Simulated" class="gt_row gt_right">−0.2874</td>
+<td headers="Difference" class="gt_row gt_right">0.0002</td>
+</tr>
+<tr>
+<td headers="Metric" class="gt_row gt_left">Skewness (trimmed)</td>
+<td headers="Theoretical" class="gt_row gt_right">0.0000</td>
+<td headers="Simulated" class="gt_row gt_right">0.0056</td>
+<td headers="Difference" class="gt_row gt_right">0.0056</td>
+</tr>
+<tr>
+<td headers="Metric" class="gt_row gt_left">Kurtosis (trimmed)</td>
+<td headers="Theoretical" class="gt_row gt_right">3.0000</td>
+<td headers="Simulated" class="gt_row gt_right">2.5476</td>
+<td headers="Difference" class="gt_row gt_right">−0.4524</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
+<h2 id="type-i-error-wald-vs-score-test">Type I error: Wald vs score test<a class="anchor" aria-label="anchor" href="#type-i-error-wald-vs-score-test"></a>
 </h2>
-<p>The simulation results confirm that <code>sample_size_nbinom</code>
-reasonably predicts average exposure, variance (information), and power
-for this complex design with piecewise accrual and dropout. However,
-given the slight underpowering that the simulation study suggests, it
-may be useful to consider a larger sample size than the Friede
-approximation suggests, with power verified by simulation.</p>
+<p>A well-calibrated test should reject at most <span class="math inline">\(\alpha = 0.025\)</span> under the null (<span class="math inline">\(\text{RR} = 1\)</span>). We simulated trials under
+the null hypothesis using the same design parameters (accrual, dropout,
+dispersion, sample size) but with <span class="math inline">\(\lambda_2
+= \lambda_1\)</span> in both arms. The Wald test (based on the ML
+estimate under the alternative) tends to be slightly anti-conservative
+in finite samples, while the score test (evaluated entirely under <span class="math inline">\(H_0\)</span>) is expected to be better
+calibrated.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">null_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"null_simulation_results.rds"</span>, package <span class="op">=</span> <span class="st">"gsDesignNB"</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">null_file</span> <span class="op">==</span> <span class="st">""</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="st">"../inst/extdata/null_simulation_results.rds"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">null_file</span> <span class="op">&lt;-</span> <span class="st">"../inst/extdata/null_simulation_results.rds"</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">has_null</span> <span class="op">&lt;-</span> <span class="va">null_file</span> <span class="op">!=</span> <span class="st">""</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">has_null</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">null_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">null_file</span><span class="op">)</span></span>
+<span>  <span class="va">results_null</span> <span class="op">&lt;-</span> <span class="va">null_data</span><span class="op">$</span><span class="va">results_null</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">type1_wald</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">$</span><span class="va">p_value_wald</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">type1_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">$</span><span class="va">p_value_score</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">n_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">$</span><span class="va">p_value_wald</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ci_wald</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">$</span><span class="va">p_value_wald</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">n_null</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
+<span><span class="va">ci_score</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/binom.test.html" class="external-link">binom.test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">$</span><span class="va">p_value_score</span> <span class="op">&lt;</span> <span class="va">alpha</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">n_null</span><span class="op">)</span><span class="op">$</span><span class="va">conf.int</span></span>
+<span></span>
+<span><span class="va">type1_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wald (ML)"</span>, <span class="st">"Score (null model)"</span><span class="op">)</span>,</span>
+<span>  Nominal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">alpha</span>, <span class="va">alpha</span><span class="op">)</span>,</span>
+<span>  Empirical <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">type1_wald</span>, <span class="va">type1_score</span><span class="op">)</span>,</span>
+<span>  CI_Lower <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ci_wald</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">ci_score</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>  CI_Upper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ci_wald</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">ci_score</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">type1_df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Type I Error: Wald vs Score Test Under RR = 1**"</span><span class="op">)</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Based on "</span>, <span class="va">n_null</span>, <span class="st">" simulated null trials (n = "</span>, <span class="va">null_data</span><span class="op">$</span><span class="va">n_total</span>, <span class="st">")"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">Nominal</span>, <span class="va">Empirical</span>, <span class="va">CI_Lower</span>, <span class="va">CI_Upper</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
+<span>    Test <span class="op">=</span> <span class="st">"Test"</span>,</span>
+<span>    Nominal <span class="op">=</span> <span class="st">"Nominal α"</span>,</span>
+<span>    Empirical <span class="op">=</span> <span class="st">"Empirical"</span>,</span>
+<span>    CI_Lower <span class="op">=</span> <span class="st">"95% CI Lower"</span>,</span>
+<span>    CI_Upper <span class="op">=</span> <span class="st">"95% CI Upper"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div id="txjxwiyjis" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#txjxwiyjis table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#txjxwiyjis thead, #txjxwiyjis tbody, #txjxwiyjis tfoot, #txjxwiyjis tr, #txjxwiyjis td, #txjxwiyjis th {
+  border-style: none;
+}
+
+#txjxwiyjis p {
+  margin: 0;
+  padding: 0;
+}
+
+#txjxwiyjis .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#txjxwiyjis .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#txjxwiyjis .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#txjxwiyjis .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#txjxwiyjis .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#txjxwiyjis .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#txjxwiyjis .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#txjxwiyjis .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#txjxwiyjis .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#txjxwiyjis .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#txjxwiyjis .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#txjxwiyjis .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#txjxwiyjis .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#txjxwiyjis .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#txjxwiyjis .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#txjxwiyjis .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#txjxwiyjis .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#txjxwiyjis .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#txjxwiyjis .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#txjxwiyjis .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#txjxwiyjis .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#txjxwiyjis .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#txjxwiyjis .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#txjxwiyjis .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#txjxwiyjis .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#txjxwiyjis .gt_left {
+  text-align: left;
+}
+
+#txjxwiyjis .gt_center {
+  text-align: center;
+}
+
+#txjxwiyjis .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#txjxwiyjis .gt_font_normal {
+  font-weight: normal;
+}
+
+#txjxwiyjis .gt_font_bold {
+  font-weight: bold;
+}
+
+#txjxwiyjis .gt_font_italic {
+  font-style: italic;
+}
+
+#txjxwiyjis .gt_super {
+  font-size: 65%;
+}
+
+#txjxwiyjis .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#txjxwiyjis .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#txjxwiyjis .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#txjxwiyjis .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#txjxwiyjis .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#txjxwiyjis .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#txjxwiyjis .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#txjxwiyjis .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#txjxwiyjis div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+<table class="table gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading">
+<td colspan="5" class="gt_heading gt_title gt_font_normal" style><span class="gt_from_md"><strong>Type I Error: Wald vs Score Test Under RR = 1</strong></span></td>
+    </tr>
+<tr class="gt_heading">
+<td colspan="5" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Based on 3600 simulated null trials (n = 436)</td>
+    </tr>
+<tr class="gt_col_headings">
+<th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="Test">Test</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Nominal">Nominal α</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="Empirical">Empirical</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="CI_Lower">95% CI Lower</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="CI_Upper">95% CI Upper</th>
+    </tr>
+</thead>
+<tbody class="gt_table_body">
+<tr>
+<td headers="Test" class="gt_row gt_left">Wald (ML)</td>
+<td headers="Nominal" class="gt_row gt_right">0.0250</td>
+<td headers="Empirical" class="gt_row gt_right">0.0258</td>
+<td headers="CI_Lower" class="gt_row gt_right">0.0209</td>
+<td headers="CI_Upper" class="gt_row gt_right">0.0316</td>
+</tr>
+<tr>
+<td headers="Test" class="gt_row gt_left">Score (null model)</td>
+<td headers="Nominal" class="gt_row gt_right">0.0250</td>
+<td headers="Empirical" class="gt_row gt_right">0.0200</td>
+<td headers="CI_Lower" class="gt_row gt_right">0.0157</td>
+<td headers="CI_Upper" class="gt_row gt_right">0.0251</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">z_null_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">$</span><span class="va">z_wald</span>, <span class="va">results_null</span><span class="op">$</span><span class="va">z_score</span><span class="op">)</span>,</span>
+<span>  Test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Wald"</span>, <span class="st">"Score"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">results_null</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">z_null_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">z</span>, color <span class="op">=</span> <span class="va">Test</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html" class="external-link">geom_density</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_function.html" class="external-link">stat_function</a></span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="va">dnorm</span>, args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    linewidth <span class="op">=</span> <span class="fl">0.8</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, color <span class="op">=</span> <span class="st">"grey40"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="va">alpha</span><span class="op">)</span>, linetype <span class="op">=</span> <span class="st">"dotted"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span><span class="st">"text"</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="va">alpha</span><span class="op">)</span>, y <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>           label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"  α = "</span>, <span class="va">alpha</span><span class="op">)</span>, hjust <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Null Z-score Distribution: Wald vs Score"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Dashed = N(0, 1) reference"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Z-score"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Density"</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"Test"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="verification-simulation_files/figure-html/type1_z_density-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level2">
+<h2 id="scenario-sweep-impact-of-the-jensen-correction">Scenario sweep: impact of the Jensen correction<a class="anchor" aria-label="anchor" href="#scenario-sweep-impact-of-the-jensen-correction"></a>
+</h2>
+<p>The Jensen correction for event gaps only applies when both the
+dispersion (<span class="math inline">\(k &gt; 0\)</span>) and the event
+gap (<span class="math inline">\(g &gt; 0\)</span>) are nonzero. When
+either is zero, the corrected and naive formulas produce identical
+sample sizes.</p>
+<p>To assess the correction’s impact across a range of realistic
+parameter combinations, we ran a simulation sweep with 10,000 replicates
+per scenario. For each scenario, trials were simulated at the corrected
+sample size (<span class="math inline">\(n_\text{corr}\)</span>), and
+results were also extracted for the first <span class="math inline">\(n_\text{naive}\)</span> subjects (the uncorrected
+sample size). Because both analyses use the same simulated data, the
+<strong>paired</strong> comparison is very precise.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sweep_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"scenario_sweep_results.rds"</span>, package <span class="op">=</span> <span class="st">"gsDesignNB"</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">sweep_file</span> <span class="op">==</span> <span class="st">""</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="st">"../inst/extdata/scenario_sweep_results.rds"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">sweep_file</span> <span class="op">&lt;-</span> <span class="st">"../inst/extdata/scenario_sweep_results.rds"</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">has_sweep</span> <span class="op">&lt;-</span> <span class="va">sweep_file</span> <span class="op">!=</span> <span class="st">""</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">has_sweep</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">sweep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">sweep_file</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sweep_display</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  Scenario <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"k = %.1f, gap = %d days"</span>, <span class="va">sweep</span><span class="op">$</span><span class="va">k</span>, <span class="va">sweep</span><span class="op">$</span><span class="va">gap_days</span><span class="op">)</span>,</span>
+<span>  `n (corrected)` <span class="op">=</span> <span class="va">sweep</span><span class="op">$</span><span class="va">n_corrected</span>,</span>
+<span>  `n (naive)` <span class="op">=</span> <span class="va">sweep</span><span class="op">$</span><span class="va">n_naive</span>,</span>
+<span>  `Extra subjects` <span class="op">=</span> <span class="va">sweep</span><span class="op">$</span><span class="va">n_diff</span>,</span>
+<span>  `Power (corrected)` <span class="op">=</span> <span class="va">sweep</span><span class="op">$</span><span class="va">power_corrected</span>,</span>
+<span>  `Power (naive)` <span class="op">=</span> <span class="va">sweep</span><span class="op">$</span><span class="va">power_naive</span>,</span>
+<span>  `Difference` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%.2f ± %.2f"</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">sweep</span><span class="op">$</span><span class="va">power_diff</span>, <span class="fl">100</span> <span class="op">*</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">sweep</span><span class="op">$</span><span class="va">power_diff_se</span><span class="op">)</span>,</span>
+<span>  check.names <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sweep_display</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/gt.html" class="external-link">gt</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/tab_header.html" class="external-link">tab_header</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="fu"><a href="https://gt.rstudio.com/reference/md.html" class="external-link">md</a></span><span class="op">(</span><span class="st">"**Impact of Jensen Correction Across Scenarios**"</span><span class="op">)</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"10,000 replicates per scenario; power difference is paired (95% CI)"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/fmt_number.html" class="external-link">fmt_number</a></span><span class="op">(</span>columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">`Power (corrected)`</span>, <span class="va">`Power (naive)`</span><span class="op">)</span>, decimals <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://gt.rstudio.com/reference/cols_label.html" class="external-link">cols_label</a></span><span class="op">(</span></span>
+<span>    Scenario <span class="op">=</span> <span class="st">"Scenario"</span>,</span>
+<span>    `n (corrected)` <span class="op">=</span> <span class="st">"n (corr.)"</span>,</span>
+<span>    `n (naive)` <span class="op">=</span> <span class="st">"n (naive)"</span>,</span>
+<span>    `Extra subjects` <span class="op">=</span> <span class="st">"Δn"</span>,</span>
+<span>    `Power (corrected)` <span class="op">=</span> <span class="st">"Power (corr.)"</span>,</span>
+<span>    `Power (naive)` <span class="op">=</span> <span class="st">"Power (naive)"</span>,</span>
+<span>    Difference <span class="op">=</span> <span class="st">"Diff (pp) ± 95% CI"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"**Key findings:**\n\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"*   The corrected design achieves power at or above the 90% target in **all** scenarios.\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"*   The naive design falls below 90% in **three of four** scenarios, with the shortfall increasing as $k$ and $g$ grow.\n"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"*   The largest paired power difference is %.1f percentage points ($k = %.1f$, gap = %d days), "</span>,</span>
+<span>    <span class="fl">100</span> <span class="op">*</span> <span class="va">sweep</span><span class="op">$</span><span class="va">power_diff</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">power_diff</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>    <span class="va">sweep</span><span class="op">$</span><span class="va">k</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">power_diff</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>    <span class="va">sweep</span><span class="op">$</span><span class="va">gap_days</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">power_diff</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"where the corrected design adds %d subjects.\n"</span>,</span>
+<span>    <span class="va">sweep</span><span class="op">$</span><span class="va">n_diff</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">power_diff</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"*   All paired differences are statistically significant (discordant pair ratios range from %.1f:1 to %.1f:1 in favor of the corrected design).\n"</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">corr_only</span> <span class="op">/</span> <span class="va">sweep</span><span class="op">$</span><span class="va">naive_only</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">corr_only</span> <span class="op">/</span> <span class="va">sweep</span><span class="op">$</span><span class="va">naive_only</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="discussion-why-we-apply-the-correction">Discussion: why we apply the correction<a class="anchor" aria-label="anchor" href="#discussion-why-we-apply-the-correction"></a>
+</h2>
+<p>In the primary verification scenario above (<span class="math inline">\(k = 0.5\)</span>, gap = 20 days), the corrected
+design slightly overshoots the 90% target while the naive design is very
+close to 90%. This pattern — where the naive formula appears
+well-calibrated — reflects a <strong>partial cancellation of two
+biases</strong>:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Design-stage bias</strong> (hurts power): The naive
+effective rate <span class="math inline">\(\lambda/(1+\lambda
+g)\)</span> overestimates the true population-level effective rate,
+leading to an underestimated variance and thus a sample size that is too
+small.</p></li>
+<li><p><strong>Analysis-stage bias</strong> (helps power): The
+model-based standard error from <code><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">MASS::glm.nb()</a></code> tends to
+slightly underestimate the true standard deviation of <span class="math inline">\(\hat\theta\)</span>, making the Wald test slightly
+anti-conservative (z-statistic too extreme, more rejections).</p></li>
+</ol>
+<p>These biases act in opposite directions. In the <span class="math inline">\(k = 0.5\)</span>, gap = 20 day scenario, they
+happen to nearly cancel, giving the naive design the appearance of
+correct calibration.</p>
+<p>We apply the Jensen correction despite this for several reasons:</p>
+<ul>
+<li><p><strong>The cancellation is fragile.</strong> It depends on the
+specific test statistic (NB Wald via <code>glm.nb</code>). A different
+analysis method — sandwich standard errors, bootstrap, permutation test,
+or a different link function — would change the analysis-stage bias
+while the design-stage bias remains, breaking the cancellation.</p></li>
+<li><p><strong>The correction is conservative.</strong> It produces
+power at or slightly above 90% rather than at or slightly below. For a
+pivotal trial, a slight overshoot of the power target is preferable to a
+slight undershoot.</p></li>
+<li><p><strong>The correction is principled.</strong> It fixes the
+effective rate approximation by accounting for the known distributional
+assumption (Gamma frailty). The remaining small overshoot is a separate
+finite-sample phenomenon.</p></li>
+<li><p><strong>The scenario sweep demonstrates the benefit.</strong> As
+the table above shows, the naive formula increasingly underpowers as
+<span class="math inline">\(k\)</span> and <span class="math inline">\(g\)</span> grow, while the corrected formula
+maintains nominal or conservative power across all scenarios
+tested.</p></li>
+<li><p><strong>The cost is modest.</strong> The extra subjects required
+by the correction range from 14 to 40 (3–6% of total), a small price for
+reliable power.</p></li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -390,7 +2753,7 @@ approximation suggests, with power verified by simulation.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Keaven Anderson.</p>
+  <p>Developed by Keaven Anderson, Hongtao Zhang, Andrea Maes.</p>
 </div>
 
 <div class="pkgdown-footer-right">

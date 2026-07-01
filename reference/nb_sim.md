@@ -31,7 +31,7 @@ nb_sim(
   exponential failure rate for each treatment group. Optionally, a
   `dispersion` column can be provided to generate data from a negative
   binomial distribution. The dispersion parameter `k` is such that
-  \\Var(Y) = \mu + k \mu^2\\.
+  \\\mathrm{Var}(Y) = \mu + k \mu^2\\.
 
 - dropout_rate:
 
@@ -96,11 +96,22 @@ the final censoring time).
 ## Details
 
 The simulation generates data consistent with the negative binomial
-models described by Friede and Schmidli (2010) and Mutze et al. (2019).
+models described by Friede and Schmidli (2010) and Mütze et al. (2019).
 Specifically, it simulates a Gamma-distributed frailty variable for each
 individual (if dispersion \> 0), which acts as a multiplier for that
 individual's event rate. Events are then generated according to a
 Poisson process with this subject-specific rate.
+
+More explicitly, for a subject with baseline rate \\\lambda\\ and
+exposure time \\t\\, the model used here is a Gamma–Poisson mixture:
+\$\$\Lambda_i \sim \mathrm{Gamma}(\text{shape}=1/k,\\
+\text{scale}=k\lambda), \quad Y_i \mid \Lambda_i \sim
+\mathrm{Poisson}(\Lambda_i t).\$\$ Marginally, \\Y_i\\ follows a
+negative binomial distribution with \\\mathrm{E}\[Y_i\]=\mu=\lambda t\\
+and \\\mathrm{Var}(Y_i)=\mu + k\mu^2\\. This \\k\\ is the package
+dispersion parameter (and corresponds to \\1/\theta\\ in
+[`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html)
+terminology).
 
 ## References
 
@@ -113,3 +124,23 @@ Mütze, T., Glimm, E., Schmidli, H., & Friede, T. (2019). Group
 sequential designs for negative binomial outcomes. *Statistical Methods
 in Medical Research*, 28(8), 2326–2347.
 [doi:10.1177/0962280218773115](https://doi.org/10.1177/0962280218773115)
+
+## Examples
+
+``` r
+enroll_rate <- data.frame(rate = 20 / (5 / 12), duration = 5 / 12)
+fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.3))
+dropout_rate <- data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(0.1, 0.05), duration = c(100, 100)
+)
+sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 20)
+head(sim)
+#>   id id    treatment enroll_time       tte calendar_time event
+#> 1  1  1 Experimental 0.001902444 1.7248241     1.7267265     1
+#> 2  1  1 Experimental 0.001902444 2.0000000     2.0019024     0
+#> 3  2  2      Control 0.022290809 2.0000000     2.0222908     0
+#> 4  3  3      Control 0.104505310 0.4552284     0.5597337     1
+#> 5  3  3      Control 0.104505310 2.0000000     2.1045053     0
+#> 6  4  4 Experimental 0.104650382 1.4448820     1.5495324     1
+```

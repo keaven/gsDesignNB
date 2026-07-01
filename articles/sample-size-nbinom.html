@@ -6,9 +6,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Sample size calculation for negative binomial outcomes • gsDesignNB</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Sample size calculation for negative binomial outcomes">
 </head>
@@ -20,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,17 +36,8 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/completers-interim-example.html">Group sequential simulation with completers analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/group-sequential-simulation.html">Group sequential design and simulation</a></li>
-    <li><a class="dropdown-item" href="../articles/sample-size-nbinom.html">Sample size calculation for negative binomial outcomes</a></li>
-    <li><a class="dropdown-item" href="../articles/seasonal-simulation.html">Seasonal event simulation</a></li>
-    <li><a class="dropdown-item" href="../articles/simulation-example.html">Simulation of recurrent events</a></li>
-    <li><a class="dropdown-item" href="../articles/verification-simulation.html">Verification of sample size calculation via simulation</a></li>
-  </ul>
-</li>
+<li class="active nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -63,7 +60,7 @@
       <h1>Sample size calculation for negative binomial outcomes</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/v0.2.1/vignettes/sample-size-nbinom.Rmd" class="external-link"><code>vignettes/sample-size-nbinom.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/sample-size-nbinom.Rmd" class="external-link"><code>vignettes/sample-size-nbinom.Rmd</code></a></small>
       <div class="d-none name"><code>sample-size-nbinom.Rmd</code></div>
     </div>
 
@@ -72,208 +69,888 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://keaven.github.io/gsDesignNB/">gsDesignNB</a></span><span class="op">)</span></span></code></pre></div>
 <p>This vignette describes the methodology used in the
-<code>sample_size_nbinom</code> function for calculating sample sizes
-when comparing two treatment groups with negative binomial outcomes. It
-covers two available methods and how to account for variable accrual
-rates.</p>
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> function for calculating sample sizes
+when comparing two treatment groups with negative binomial outcomes. We
+present the notation, compare the underlying methods from the
+literature, derive the average exposure calculations, discuss
+statistical information, and provide simulation verification.</p>
+<div class="section level2">
+<h2 id="notation">Notation<a class="anchor" aria-label="anchor" href="#notation"></a>
+</h2>
+<p>We use the following notation throughout this vignette and the
+package documentation.</p>
+<table class="table">
+<colgroup>
+<col width="38%">
+<col width="61%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Symbol</th>
+<th align="left">Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\lambda_g\)</span></td>
+<td align="left">Event rate (events per unit time) for group <span class="math inline">\(g\)</span> (<span class="math inline">\(g =
+1\)</span> for control, <span class="math inline">\(g = 2\)</span> for
+treatment)</td>
+</tr>
+<tr class="even">
+<td align="left">
+<span class="math inline">\(k\)</span> (or <span class="math inline">\(k_g\)</span>)</td>
+<td align="left">Dispersion parameter such that <span class="math inline">\(\mathrm{Var}(Y) = \mu + k \mu^2\)</span>;
+equivalent to <span class="math inline">\(1/\texttt{size}\)</span> in
+R’s <code>rnbinom</code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(t_i\)</span></td>
+<td align="left">Exposure (follow-up) time for subject <span class="math inline">\(i\)</span>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\bar{t}_g\)</span></td>
+<td align="left">Average exposure time for group <span class="math inline">\(g\)</span>: <span class="math inline">\(\bar{t}_g
+= \mathrm{E}[t_i \mid \text{group } g]\)</span>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mu_{g} = \lambda_g
+\bar{t}_g\)</span></td>
+<td align="left">Expected event count per subject in group <span class="math inline">\(g\)</span>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\theta = \log(\lambda_2 /
+\lambda_1)\)</span></td>
+<td align="left">Log rate ratio (treatment effect)</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\theta_0 =
+\log(\text{rr}_0)\)</span></td>
+<td align="left">Log rate ratio under the null hypothesis</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(p_g = n_g /
+n_{\text{total}}\)</span></td>
+<td align="left">Allocation proportion for group <span class="math inline">\(g\)</span>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(r = n_2 / n_1\)</span></td>
+<td align="left">Allocation ratio</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(Q_g = \mathrm{E}[t^2_g] /
+(\mathrm{E}[t_g])^2\)</span></td>
+<td align="left">Variance inflation factor for variable follow-up in
+group <span class="math inline">\(g\)</span>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\mathcal{I}\)</span></td>
+<td align="left">Statistical information: <span class="math inline">\(\mathcal{I} = 1 /
+\mathrm{Var}(\hat\theta)\)</span>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(z_\alpha,
+z_\beta\)</span></td>
+<td align="left">Standard normal quantiles at levels <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section level2">
 <h2 id="methodology">Methodology<a class="anchor" aria-label="anchor" href="#methodology"></a>
 </h2>
-<p>We assume the outcome
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
-follows a negative binomial distribution with mean
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
-and dispersion parameter
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>,
-such that the variance is given by:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>a</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>μ</mi><mo>+</mo><mi>k</mi><msup><mi>μ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex"> Var(Y) = \mu + k \mu^2 </annotation></semantics></math></p>
-<p>Note that in R’s <code>rnbinom</code> parameterization,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>1</mn><mi>/</mi><mtext mathvariant="monospace">𝚜𝚒𝚣𝚎</mtext></mrow><annotation encoding="application/x-tex">k = 1/\texttt{size}</annotation></semantics></math>.</p>
-<p>We wish to test the null hypothesis
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><msub><mi>λ</mi><mn>1</mn></msub><mo>=</mo><msub><mi>λ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">H_0: \lambda_1 = \lambda_2</annotation></semantics></math>
-against the alternative
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>1</mn></msub><mo>:</mo><msub><mi>λ</mi><mn>1</mn></msub><mo>≠</mo><msub><mi>λ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">H_1: \lambda_1 \neq \lambda_2</annotation></semantics></math>,
-where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\lambda_1</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\lambda_2</annotation></semantics></math>
-are the event rates in the control and treatment groups,
-respectively.</p>
-<p>The function implements two methods:</p>
+<p>We wish to test for differences in rates of recurrent events between
+two treatment groups using a negative binomial model to account for
+overdispersion. The underlying test evaluates the log rate ratio <span class="math inline">\(\theta = \log(\lambda_2 / \lambda_1)\)</span>
+between the two groups. The usual null hypothesis is <span class="math inline">\(H_0\!: \theta \ge \theta_0\)</span> with <span class="math inline">\(\theta_0 = 0\)</span> (i.e., equal rates) and a
+one-sided alternative <span class="math inline">\(H_1\!: \theta &lt;
+0\)</span> (treatment reduces the event rate). Non-inferiority or
+super-superiority tests can also be performed by specifying <span class="math inline">\(\theta_0 \ne 0\)</span>.</p>
 <div class="section level3">
-<h3 id="method-1-zhu2014sample">Method 1: <span class="citation">Zhu and Lakkis (2014)</span><a class="anchor" aria-label="anchor" href="#method-1-zhu2014sample"></a>
+<h3 id="negative-binomial-distribution">Negative binomial distribution<a class="anchor" aria-label="anchor" href="#negative-binomial-distribution"></a>
 </h3>
-<p>This method is based on the asymptotic normality of the log rate
-ratio. The sample size for the control group
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mn>1</mn></msub><annotation encoding="application/x-tex">n_1</annotation></semantics></math>)
-is:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mi>α</mi><mi>/</mi><mi>s</mi></mrow></msub><mo>+</mo><msub><mi>z</mi><mi>β</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>⋅</mo><mi>V</mi></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mn>1</mn></msub><mi>/</mi><msub><mi>μ</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex"> n_1 = \frac{(z_{\alpha/s} + z_{\beta})^2 \cdot V}{(\log(\mu_1/\mu_2))^2} </annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
-is the variance component:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>1</mn><msub><mi>μ</mi><mn>1</mn></msub></mfrac><mo>+</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mfrac><mn>1</mn><mi>r</mi></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>1</mn><msub><mi>μ</mi><mn>2</mn></msub></mfrac><mo>+</mo><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex"> V = \left(\frac{1}{\mu_1} + k\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k\right) </annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><msub><mi>n</mi><mn>2</mn></msub><mi>/</mi><msub><mi>n</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">r = n_2/n_1</annotation></semantics></math>
-is the allocation ratio, and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>i</mi></msub><mo>=</mo><msub><mi>λ</mi><mi>i</mi></msub><mo>⋅</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">\mu_i = \lambda_i \cdot t</annotation></semantics></math>
-is the expected mean count over exposure duration
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+<p>We assume the outcome <span class="math inline">\(Y\)</span> for a
+subject with exposure time <span class="math inline">\(t\)</span>
+follows a negative binomial distribution with mean <span class="math inline">\(\mu = \lambda t\)</span> and dispersion parameter
+<span class="math inline">\(k\)</span>, such that the variance is:</p>
+<p><span class="math display">\[ \mathrm{Var}(Y) = \mu + k \mu^2
+\]</span></p>
+<p>Note that in R’s <code>rnbinom</code> parameterization, <span class="math inline">\(k = 1/\texttt{size}\)</span>. When <span class="math inline">\(k = 0\)</span>, the negative binomial reduces to
+the Poisson distribution.</p>
 </div>
 <div class="section level3">
-<h3 id="method-2-friede2010blinded-mutze2019group">Method 2: <span class="citation">Friede and Schmidli (2010)</span> /
-<span class="citation">Mütze et al. (2019)</span><a class="anchor" aria-label="anchor" href="#method-2-friede2010blinded-mutze2019group"></a>
+<h3 id="gamma-poisson-mixture-motivation">Gamma-Poisson mixture motivation<a class="anchor" aria-label="anchor" href="#gamma-poisson-mixture-motivation"></a>
 </h3>
-<p>This method uses a Wald test statistic and is commonly used in group
-sequential designs (as implemented in the <code>gscounts</code>
-package). The total sample size
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi><mi>a</mi><mi>l</mi></mrow></msub><annotation encoding="application/x-tex">n_{total}</annotation></semantics></math>
-is calculated as:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mi>α</mi><mi>/</mi><mi>s</mi></mrow></msub><mo>+</mo><msub><mi>z</mi><mi>β</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>⋅</mo><mover><mi>V</mi><mo accent="true">‾</mo></mover></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mn>1</mn></msub><mi>/</mi><msub><mi>λ</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex"> n_{total} = \frac{(z_{\alpha/s} + z_{\beta})^2 \cdot \bar{V}}{(\log(\lambda_1/\lambda_2))^2} </annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>V</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar{V}</annotation></semantics></math>
-is the average variance per subject:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>V</mi><mo accent="true">‾</mo></mover><mo>=</mo><mfrac><mrow><mn>1</mn><mi>/</mi><msub><mi>μ</mi><mn>1</mn></msub><mo>+</mo><mi>k</mi></mrow><msub><mi>p</mi><mn>1</mn></msub></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn><mi>/</mi><msub><mi>μ</mi><mn>2</mn></msub><mo>+</mo><mi>k</mi></mrow><msub><mi>p</mi><mn>2</mn></msub></mfrac></mrow><annotation encoding="application/x-tex"> \bar{V} = \frac{1/ \mu_1 + k}{p_1} + \frac{1/ \mu_2 + k}{p_2} </annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><mo>=</mo><msub><mi>n</mi><mn>1</mn></msub><mi>/</mi><msub><mi>n</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi><mi>a</mi><mi>l</mi></mrow></msub></mrow><annotation encoding="application/x-tex">p_1 = n_1/n_{total}</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>2</mn></msub><mo>=</mo><msub><mi>n</mi><mn>2</mn></msub><mi>/</mi><msub><mi>n</mi><mrow><mi>t</mi><mi>o</mi><mi>t</mi><mi>a</mi><mi>l</mi></mrow></msub></mrow><annotation encoding="application/x-tex">p_2 = n_2/n_{total}</annotation></semantics></math>
-are the allocation proportions.</p>
-<p><strong>Note:</strong> For a fixed design with equal allocation, both
-methods yield identical sample sizes.</p>
+<p>The negative binomial distribution arises naturally as a
+Gamma-Poisson mixture. For each subject <span class="math inline">\(i\)</span>, suppose the subject-specific event
+rate <span class="math inline">\(\Lambda_i\)</span> follows a Gamma
+distribution: <span class="math display">\[ \Lambda_i \sim
+\text{Gamma}\!\left(\text{shape} = \frac{1}{k},\; \text{rate} =
+\frac{1}{k\lambda}\right) \]</span> so that <span class="math inline">\(\mathrm{E}[\Lambda_i] = \lambda\)</span> and <span class="math inline">\(\mathrm{Var}(\Lambda_i) = k\lambda^2\)</span>.</p>
+<p>Given <span class="math inline">\(\Lambda_i\)</span>, the event count
+over exposure time <span class="math inline">\(t_i\)</span> is Poisson:
+<span class="math display">\[ Y_i \mid \Lambda_i \sim
+\text{Poisson}(\Lambda_i\, t_i) \]</span></p>
+<p>Marginalizing over <span class="math inline">\(\Lambda_i\)</span>,
+the unconditional distribution of <span class="math inline">\(Y_i\)</span> is negative binomial with: <span class="math display">\[
+\mathrm{Var}(Y_i) = \mathrm{E}[\Lambda_i t_i] + \mathrm{Var}(\Lambda_i
+t_i)
+= \lambda t_i + k\lambda^2 t_i^2
+= \mu_i + k\mu_i^2
+\]</span></p>
+<p>This connects the event rate <span class="math inline">\(\lambda\)</span> (hypothesis testing framework)
+with the expected count <span class="math inline">\(\mu\)</span>
+(negative binomial parameterization).</p>
+</div>
+<div class="section level3">
+<h3 id="graphical-illustration">Graphical illustration<a class="anchor" aria-label="anchor" href="#graphical-illustration"></a>
+</h3>
+<p>The following panel illustrates the distribution of event counts with
+mean <span class="math inline">\(\mu = 5\)</span> for dispersion
+parameters <span class="math inline">\(k \in \{0, 0.5, 1\}\)</span>. As
+<span class="math inline">\(k\)</span> increases, the variance increases
+and the distribution becomes more spread out.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">k_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="va">k_values</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">mu</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
+<span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="fl">15</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">k</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">dpois</a></span><span class="op">(</span><span class="va">x</span>, lambda <span class="op">=</span> <span class="va">mu</span><span class="op">)</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">size</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">k</span></span>
+<span>    <span class="va">probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/NegBinomial.html" class="external-link">dnbinom</a></span><span class="op">(</span><span class="va">x</span>, size <span class="op">=</span> <span class="va">size</span>, mu <span class="op">=</span> <span class="va">mu</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">probs</span>,</span>
+<span>    names.arg <span class="op">=</span> <span class="va">x</span>, horiz <span class="op">=</span> <span class="cn">TRUE</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"k ="</span>, <span class="va">k</span><span class="op">)</span>,</span>
+<span>    xlab <span class="op">=</span> <span class="st">"Probability"</span>, ylab <span class="op">=</span> <span class="st">"Event Count"</span>, las <span class="op">=</span> <span class="fl">1</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.2</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><img src="sample-size-nbinom_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="768"></p>
+</div>
+<div class="section level3">
+<h3 id="sample-size-formula">Sample size formula<a class="anchor" aria-label="anchor" href="#sample-size-formula"></a>
+</h3>
+<p>The default sample size formula is based on the asymptotic normality
+of the maximum likelihood estimator of the log rate ratio <span class="math inline">\(\hat\theta\)</span>, using a Wald test. The
+required sample size for group 1 is:</p>
+<p><span class="math display">\[ n_1 = \frac{(z_{\alpha/s} +
+z_{\beta})^2 \cdot \tilde{V}}{(\theta - \theta_0)^2} \]</span></p>
+<p>where <span class="math inline">\(n_2 = r \cdot n_1\)</span>, <span class="math inline">\(n_{\text{total}} = n_1 + n_2\)</span>, and <span class="math inline">\(\tilde{V}\)</span> is the per-subject variance
+factor:</p>
+<p><span class="math display">\[ \tilde{V} = \left(\frac{1}{\mu_1} +
+k_1\right) + \frac{1}{r}\left(\frac{1}{\mu_2} + k_2\right) \]</span></p>
+<p>Here <span class="math inline">\(\mu_g = \lambda_g \bar{t}_g\)</span>
+is the expected event count per subject in group <span class="math inline">\(g\)</span>, and <span class="math inline">\(k_g\)</span> is the (possibly inflated) dispersion
+parameter for group <span class="math inline">\(g\)</span>.</p>
+<p>In the simplest case where both groups share a common dispersion
+<span class="math inline">\(k\)</span> and a common average exposure
+<span class="math inline">\(\bar{t}\)</span>, with equal allocation
+(<span class="math inline">\(r = 1\)</span>, <span class="math inline">\(p_1 = p_2 = 1/2\)</span>), this simplifies to:</p>
+<p><span class="math display">\[ n_{\text{total}} = \frac{(z_{\alpha/s}
++ z_{\beta})^2 \left[\left(\frac{1}{\mu_1} + k\right) +
+\left(\frac{1}{\mu_2} + k\right)\right]}{(\theta - \theta_0)^2}
+\]</span></p>
+<p>When <code>test_type = "score"</code>,
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> instead uses a two-variance score-test
+formula:</p>
+<p><span class="math display">\[
+n_1 =
+\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+     {(\theta - \theta_0)^2},
+\]</span></p>
+<p>where <span class="math inline">\(V_1\)</span> is the alternative
+variance factor above and <span class="math inline">\(V_0\)</span> is
+the corresponding null variance factor under the constrained null model.
+This aligns the design calculation with a score statistic evaluated
+under <span class="math inline">\(H_0\)</span>. It is most useful as a
+diagnostic and alternative sizing rule when finite-sample Type I error
+control is the dominant objective, for example in lower-information
+designs, high-dispersion settings, event-gap settings, non-inferiority
+or super-superiority hypotheses, or adaptive/group sequential designs
+that will use a score statistic at analysis. The simulation grid in
+<code><a href="../articles/score-vs-wald-simulation.html">vignette("score-vs-wald-simulation")</a></code> shows that the final
+test statistic can matter more than the small difference between Wald
+and score sample sizes: in the displayed superiority scenarios, the
+traditional Zhu–Lakkis Wald sample size paired with the score test
+preserved Type I error and gave slightly higher score-test power than
+score sizing. Thus, if the planned analysis remains the Wald
+log-rate-ratio test, the Zhu–Lakkis Wald formula is the directly matched
+calculation. If the planned analysis is the score test, the practical
+default is to compare Wald and score sizing, often retaining Wald sizing
+as a modest sample-size margin, and then verify both Type I error and
+power by simulation.</p>
+</div>
+<div class="section level3">
+<h3 id="relationship-between-zhu-lakkis-friede-schmidli-and-mutze-et-al-">Relationship between Zhu-Lakkis, Friede-Schmidli, and Mutze et
+al.<a class="anchor" aria-label="anchor" href="#relationship-between-zhu-lakkis-friede-schmidli-and-mutze-et-al-"></a>
+</h3>
+<p>The default Wald sample size formula implemented in
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> corresponds to <strong>Method
+3</strong> of <span class="citation">Zhu and Lakkis (2014)</span>, which
+is the Wald test for the log rate ratio under a negative binomial model
+with a log link and an exposure offset. This same test statistic and
+variance formula are used by <span class="citation">Friede and Schmidli
+(2010)</span> in the context of blinded sample size reestimation and by
+<span class="citation">Mütze et al. (2019)</span> for group sequential
+designs.</p>
+<p><strong>What the three references share:</strong></p>
+<p>All three references use the same underlying asymptotic result for
+the variance of the MLE of the log rate ratio. For a single subject
+<span class="math inline">\(i\)</span> in group <span class="math inline">\(g\)</span> with exposure <span class="math inline">\(t_i\)</span> and expected count <span class="math inline">\(\mu_i = \lambda_g t_i\)</span>, the Fisher
+information contribution is:</p>
+<p><span class="math display">\[ \mathcal{I}_i = \frac{\mu_i}{1 +
+k\,\mu_i} \]</span></p>
+<p>The total information for the log rate ratio is:</p>
+<p><span class="math display">\[ \mathcal{I} = \frac{1}{1/W_1 + 1/W_2},
+\quad W_g = \sum_{i \in \text{group } g} \frac{\mu_i}{1 + k\,\mu_i}
+\]</span></p>
+<p>When all subjects in a group have the same exposure <span class="math inline">\(\bar{t}\)</span>, this simplifies to <span class="math inline">\(W_g = n_g \cdot \mu_g / (1 + k\,\mu_g)\)</span>,
+giving the familiar formula above.</p>
+<p><strong>How the references differ:</strong></p>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="13%">
+<col width="25%">
+<col width="33%">
+<col width="28%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Aspect</th>
+<th align="left"><span class="citation">Zhu and Lakkis
+(2014)</span></th>
+<th align="left"><span class="citation">Friede and Schmidli
+(2010)</span></th>
+<th align="left"><span class="citation">Mütze et al. (2019)</span></th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>Focus</strong></td>
+<td align="left">Fixed sample size calculation</td>
+<td align="left">Blinded sample size reestimation</td>
+<td align="left">Group sequential designs</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Methods compared</strong></td>
+<td align="left">Five different test statistics (Methods 1–5)</td>
+<td align="left">One method (equivalent to Zhu Method 3)</td>
+<td align="left">One method (same Wald test)</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Dispersion</strong></td>
+<td align="left">Common <span class="math inline">\(k\)</span> across
+groups</td>
+<td align="left">Common <span class="math inline">\(k\)</span>;
+estimated from blinded data</td>
+<td align="left">Common <span class="math inline">\(k\)</span>
+</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Exposure</strong></td>
+<td align="left">Fixed <span class="math inline">\(\bar{t}\)</span> for
+all subjects</td>
+<td align="left">Fixed <span class="math inline">\(\bar{t}\)</span>
+</td>
+<td align="left">Fixed <span class="math inline">\(\bar{t}\)</span>
+</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Key contribution</strong></td>
+<td align="left">Systematic comparison of NB sample size methods</td>
+<td align="left">Blinded estimation of nuisance parameters (<span class="math inline">\(k\)</span>, <span class="math inline">\(\lambda\)</span>) during a trial</td>
+<td align="left">Extension to interim analyses with spending
+functions</td>
+</tr>
+</tbody>
+</table>
+<p>The <code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> function extends these methods
+by allowing:</p>
+<ul>
+<li>
+<strong>Group-specific dispersion</strong> (<span class="math inline">\(k_1 \ne k_2\)</span>),</li>
+<li>
+<strong>Variable exposure</strong> across subjects (piecewise
+accrual, dropout, max follow-up),</li>
+<li>
+<strong>Variance inflation</strong> (<span class="math inline">\(Q\)</span> factor) to account for non-constant
+exposure, following the approach in <span class="citation">Zhu and
+Lakkis (2014)</span>, and</li>
+<li>
+<strong>Event gaps</strong> that reduce effective exposure, and</li>
+<li>
+<strong>Score-test sizing</strong> with separate null and
+alternative variance factors when <code>test_type = "score"</code>.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="non-inferiority-and-super-superiority">Non-inferiority and super-superiority<a class="anchor" aria-label="anchor" href="#non-inferiority-and-super-superiority"></a>
+</h3>
+<p>The parameter <code>rr0</code> (<span class="math inline">\(\theta_0\)</span>) allows for testing
+non-inferiority or super-superiority hypotheses. The null hypothesis is
+<span class="math inline">\(H_0\!: \lambda_2 / \lambda_1 \ge
+\text{rr}_0\)</span> (assuming lower rates are better).</p>
+<ul>
+<li>
+<strong>Superiority (default):</strong> <span class="math inline">\(\text{rr}_0 = 1\)</span> (<span class="math inline">\(\theta_0 = 0\)</span>). We test if the treatment
+rate is lower than the control rate.</li>
+<li>
+<strong>Non-inferiority:</strong> <span class="math inline">\(\text{rr}_0 &gt; 1\)</span> (e.g., 1.1). We test
+if the treatment rate is not worse than the control rate by more than a
+specified margin.</li>
+<li>
+<strong>Super-superiority:</strong> <span class="math inline">\(\text{rr}_0 &lt; 1\)</span> (e.g., 0.8). We test
+if the treatment rate is better than the control rate by at least a
+specified margin.</li>
+</ul>
 </div>
 </div>
 <div class="section level2">
-<h2 id="average-exposure-with-variable-accrual-and-dropout">Average exposure with variable accrual and dropout<a class="anchor" aria-label="anchor" href="#average-exposure-with-variable-accrual-and-dropout"></a>
+<h2 id="average-exposure">Average exposure<a class="anchor" aria-label="anchor" href="#average-exposure"></a>
 </h2>
-<p>When the accrual rate is not constant or when the trial has a fixed
-duration with ongoing recruitment, the exposure time for patients will
-vary. The function calculates an <em>average exposure</em> time to use
-in the sample size formula. Additionally, if a <code>dropout_rate</code>
-is specified, the exposure is adjusted to account for patients leaving
-the study early.</p>
-<p>Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
-be the total trial duration. Suppose recruitment occurs in
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math>
-segments, where the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>-th
-segment has accrual rate
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>j</mi></msub><annotation encoding="application/x-tex">R_j</annotation></semantics></math>
-and duration
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>j</mi></msub><annotation encoding="application/x-tex">D_j</annotation></semantics></math>.</p>
-<p>If <code>dropout_rate</code> is 0:</p>
-<ol style="list-style-type: decimal">
-<li>The expected number of patients recruited in segment
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>j</mi></msub><mo>=</mo><msub><mi>R</mi><mi>j</mi></msub><mo>⋅</mo><msub><mi>D</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">N_j = R_j \cdot D_j</annotation></semantics></math>.</li>
-<li>The start time of segment
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msubsup><msub><mi>D</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">S_{j-1} = \sum_{i=1}^{j-1} D_i</annotation></semantics></math>
-(with
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">S_0 = 0</annotation></semantics></math>).</li>
-<li>The midpoint of recruitment for segment
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mi>j</mi></msub><mo>=</mo><msub><mi>S</mi><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>D</mi><mi>j</mi></msub><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">M_j = S_{j-1} + D_j/2</annotation></semantics></math>.</li>
-<li>The average follow-up (exposure) time for patients recruited in
-segment
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-is approximately
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>j</mi></msub><mo>=</mo><mi>T</mi><mo>−</mo><msub><mi>M</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">E_j = T - M_j</annotation></semantics></math>.</li>
-</ol>
-<p>If <code>dropout_rate</code>
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>δ</mi><annotation encoding="application/x-tex">\delta</annotation></semantics></math>)
-&gt; 0, the average exposure is calculated by integrating the exposure
-function over the recruitment interval:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>E</mi><mi>j</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mn>1</mn><msub><mi>D</mi><mi>j</mi></msub></mfrac><msubsup><mo>∫</mo><msub><mi>u</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><msub><mi>u</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub></msubsup><mfrac><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>δ</mi><mi>u</mi></mrow></msup></mrow><mi>δ</mi></mfrac><mi>d</mi><mi>u</mi></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mn>1</mn><mi>δ</mi></mfrac><mo>−</mo><mfrac><mn>1</mn><mrow><msup><mi>δ</mi><mn>2</mn></msup><msub><mi>D</mi><mi>j</mi></msub></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>δ</mi><msub><mi>u</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub></mrow></msup><mo>−</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>δ</mi><msub><mi>u</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">
-\begin{aligned}
-E_j &amp;= \frac{1}{D_j}\int_{u_{min}}^{u_{max}} \frac{1 - e^{-\delta u}}{\delta} du \\
-&amp;= \frac{1}{\delta} - \frac{1}{\delta^2 D_j} \left( e^{-\delta u_{min}} - e^{-\delta u_{max}} \right)
-\end{aligned}
-</annotation></semantics></math> where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><annotation encoding="application/x-tex">u_{max}</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">u_{min}</annotation></semantics></math>
-are the maximum and minimum potential follow-up times for patients in
-that segment
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>−</mo><msub><mi>S</mi><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">T - S_{j-1}</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>−</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>D</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">T - (S_{j-1} + D_j)</annotation></semantics></math>
-respectively).</p>
+<p>In practice, subjects have variable follow-up times due to staggered
+enrollment, administrative censoring at the end of the study, dropout,
+and maximum follow-up caps. The sample size formula requires the
+<em>expected</em> exposure <span class="math inline">\(\bar{t}_g =
+\mathrm{E}[t_i \mid \text{group } g]\)</span> for each group. This
+section derives the average exposure computation implemented in
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>.</p>
+<div class="section level3">
+<h3 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
+</h3>
+<p>Let <span class="math inline">\(T\)</span> denote the total trial
+duration. Suppose recruitment occurs in <span class="math inline">\(J\)</span> segments, where segment <span class="math inline">\(j\)</span> has accrual rate <span class="math inline">\(R_j\)</span> and duration <span class="math inline">\(D_j\)</span>. The start time of segment <span class="math inline">\(j\)</span> is <span class="math inline">\(S_j =
+\sum_{i=1}^{j-1} D_i\)</span> (with <span class="math inline">\(S_0 =
+0\)</span>). The expected number of patients in segment <span class="math inline">\(j\)</span> is <span class="math inline">\(N_j =
+R_j D_j\)</span>.</p>
+<p>A patient enrolled at calendar time <span class="math inline">\(s\)</span> has a <em>potential</em> follow-up time
+of <span class="math inline">\(u = T - s\)</span> before administrative
+censoring. For patients in segment <span class="math inline">\(j\)</span>, the potential follow-up ranges from
+<span class="math inline">\(u_{\min} = T - (S_j + D_j)\)</span> to <span class="math inline">\(u_{\max} = T - S_j\)</span>.</p>
+</div>
+<div class="section level3">
+<h3 id="calendar-exposure-without-dropout">Calendar exposure without dropout<a class="anchor" aria-label="anchor" href="#calendar-exposure-without-dropout"></a>
+</h3>
+<p>When there is no dropout (<span class="math inline">\(\delta =
+0\)</span>), a patient enrolled at time <span class="math inline">\(s\)</span> is followed for exactly <span class="math inline">\(u = T - s\)</span> time units (or until
+<code>max_followup</code>, whichever comes first). Under uniform
+enrollment within each segment, the average follow-up for segment <span class="math inline">\(j\)</span> is:</p>
+<p><span class="math display">\[ E_j = \frac{u_{\min} + u_{\max}}{2} = T
+- S_j - \frac{D_j}{2} \]</span></p>
+<p>This is simply the midpoint of the follow-up range for that
+segment.</p>
+</div>
+<div class="section level3">
+<h3 id="calendar-exposure-with-dropout">Calendar exposure with dropout<a class="anchor" aria-label="anchor" href="#calendar-exposure-with-dropout"></a>
+</h3>
+<p>Dropout is modeled as a piecewise exponential process with hazard
+rates <span class="math inline">\(\delta_1, \delta_2, \ldots\)</span>
+over successive intervals <span class="math inline">\([0, c_1), [c_1,
+c_2), \ldots\)</span> (the last interval extends to <span class="math inline">\(\infty\)</span>). The survival function is <span class="math inline">\(S(t) = \exp\!\bigl(-\sum_j \delta_j
+\ell_j\bigr)\)</span> where <span class="math inline">\(\ell_j\)</span>
+is the time spent in interval <span class="math inline">\(j\)</span>.
+The expected exposure for a patient with potential follow-up <span class="math inline">\(u\)</span> is</p>
+<p><span class="math display">\[ m(u) = \int_0^u S(t)\, dt \]</span></p>
+<p>which decomposes into a sum of closed-form exponential integrals over
+each piece. For a single constant rate <span class="math inline">\(\delta &gt; 0\)</span> (the most common special
+case) this simplifies to</p>
+<p><span class="math display">\[ m(u) = \frac{1 - e^{-\delta u}}{\delta}
+\]</span></p>
+<p>The average exposure for segment <span class="math inline">\(j\)</span> is obtained by averaging <span class="math inline">\(m(u)\)</span> over the uniform distribution of
+enrollment times within the segment. For a single constant rate this
+yields:</p>
+<p><span class="math display">\[
+\bar{t}_j = \frac{1}{D_j}\int_{u_{\min}}^{u_{\max}} m(u)\, du
+= \frac{1}{\delta} - \frac{e^{-\delta u_{\min}} - e^{-\delta
+u_{\max}}}{\delta^2 D_j}
+\]</span></p>
+<p>Note that as <span class="math inline">\(\delta \to 0\)</span>, this
+reduces to <span class="math inline">\((u_{\min} + u_{\max})/2\)</span>,
+consistent with the no-dropout case.</p>
+<p>The <code>dropout_rate</code> argument accepts a scalar (common
+constant rate), a length-2 vector (per-group constant rates), or a data
+frame with columns <code>rate</code> and <code>duration</code> (and
+optionally <code>treatment</code>) for the full piecewise
+specification.</p>
+</div>
 <div class="section level3">
 <h3 id="maximum-follow-up">Maximum follow-up<a class="anchor" aria-label="anchor" href="#maximum-follow-up"></a>
 </h3>
-<p>If <code>max_followup</code>
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>)
-is specified, the follow-up time for any individual is capped at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>.
-This creates three scenarios for a recruitment segment:</p>
+<p>If <code>max_followup</code> (<span class="math inline">\(F\)</span>)
+is specified, the follow-up time is capped at <span class="math inline">\(F\)</span> for each patient. The expected exposure
+for a patient with potential follow-up <span class="math inline">\(u\)</span> becomes:</p>
+<p><span class="math display">\[ m^*(u) = \mathrm{E}[\min(u, F,
+\text{dropout time})] \]</span></p>
+<p>For segment <span class="math inline">\(j\)</span>, three cases
+arise:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>All truncated:</strong> If
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>≥</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">u_{min} \ge F</annotation></semantics></math>,
-all patients in the segment have potential follow-up
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≥</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">\ge F</annotation></semantics></math>,
-so their actual follow-up is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
-(subject to dropout).</li>
+<strong>No truncation</strong> (<span class="math inline">\(u_{\max}
+\le F\)</span>): All patients have potential follow-up <span class="math inline">\(\le F\)</span>. The calculation is as above.</li>
 <li>
-<strong>None truncated:</strong> If
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo>≤</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">u_{max} \le F</annotation></semantics></math>,
-no patients reach the cap
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
-before the trial ends. The calculation is as above.</li>
+<strong>Full truncation</strong> (<span class="math inline">\(u_{\min} \ge F\)</span>): All patients have
+potential follow-up <span class="math inline">\(\ge F\)</span>, so each
+patient’s exposure is <span class="math inline">\(\min(F, \text{dropout
+time})\)</span>, giving <span class="math inline">\(m^*(F) = (1 -
+e^{-\delta F})/\delta\)</span> (or simply <span class="math inline">\(F\)</span> when <span class="math inline">\(\delta
+= 0\)</span>).</li>
 <li>
-<strong>Partial truncation:</strong> If
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>&lt;</mo><mi>F</mi><mo>&lt;</mo><msub><mi>u</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub></mrow><annotation encoding="application/x-tex">u_{min} &lt; F &lt; u_{max}</annotation></semantics></math>,
-patients recruited earlier in the segment are capped at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>,
-while those recruited later are followed until the trial end. The
-segment is split into two parts for calculation.</li>
+<strong>Partial truncation</strong> (<span class="math inline">\(u_{\min} &lt; F &lt; u_{\max}\)</span>): Patients
+enrolled earlier (with <span class="math inline">\(u \ge F\)</span>) are
+capped, while later enrollees are not. The average is a weighted
+combination:</li>
 </ol>
-<p>The overall average exposure used for the calculation is the weighted
-average:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>t</mi><mo accent="true">‾</mo></mover><mo>=</mo><mfrac><mrow><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>J</mi></munderover><msub><mi>N</mi><mi>j</mi></msub><msub><mi>E</mi><mi>j</mi></msub></mrow><mrow><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>J</mi></munderover><msub><mi>N</mi><mi>j</mi></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex"> \bar{t} = \frac{\sum_{j=1}^J N_j E_j}{\sum_{j=1}^J N_j} </annotation></semantics></math></p>
+<p><span class="math display">\[ \bar{t}_j = \frac{(u_{\max} - F)\,
+m^*(F) + \int_{u_{\min}}^{F} m(u)\, du}{D_j} \]</span></p>
 </div>
 <div class="section level3">
-<h3 id="variance-inflation-for-variable-follow-up">Variance inflation for variable follow-up<a class="anchor" aria-label="anchor" href="#variance-inflation-for-variable-follow-up"></a>
+<h3 id="weighted-average-across-segments">Weighted average across segments<a class="anchor" aria-label="anchor" href="#weighted-average-across-segments"></a>
 </h3>
-<p>When follow-up times are variable (due to accrual, dropout, or
-administrative censoring), simply using the average follow-up time
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>t</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar{t}</annotation></semantics></math>
-in the variance formula underestimates the true variance of the rate
-estimator. This is because the variance of the negative binomial
-distribution depends on the exposure time in a non-linear way
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>a</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>μ</mi><mo>+</mo><mi>k</mi><msup><mi>μ</mi><mn>2</mn></msup><mo>=</mo><mi>λ</mi><mi>t</mi><mo>+</mo><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">Var(Y) = \mu + k\mu^2 = \lambda t + k (\lambda t)^2</annotation></semantics></math>).</p>
-<p>To account for this, we apply a variance inflation factor
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math>
-to the dispersion parameter
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>,
-as derived by <span class="citation">Zhu and Lakkis (2014)</span>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mfrac><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><msup><mi>t</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">]</mo></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>t</mi><mo stretchy="false" form="postfix">]</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex"> Q = \frac{E[t^2]}{(E[t])^2} </annotation></semantics></math></p>
-<p>The adjusted dispersion parameter used in the sample size calculation
-is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mrow><mi>a</mi><mi>d</mi><mi>j</mi></mrow></msub><mo>=</mo><mi>k</mi><mo>⋅</mo><mi>Q</mi></mrow><annotation encoding="application/x-tex">k_{adj} = k \cdot Q</annotation></semantics></math>.
-The function automatically calculates
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>t</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">E[t]</annotation></semantics></math>
-and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><msup><mi>t</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">E[t^2]</annotation></semantics></math>
-based on the accrual, dropout, and trial duration parameters.</p>
+<p>The overall average exposure for group <span class="math inline">\(g\)</span> is:</p>
+<p><span class="math display">\[ \bar{t}_g = \frac{\sum_{j=1}^{J} N_j\,
+\bar{t}_{j,g}}{\sum_{j=1}^{J} N_j} \]</span></p>
+<p>When dropout rates are the same for both groups, <span class="math inline">\(\bar{t}_1 = \bar{t}_2\)</span>. When they differ,
+each group has its own average exposure.</p>
+</div>
+<div class="section level3">
+<h3 id="group-specific-parameters">Group-specific parameters<a class="anchor" aria-label="anchor" href="#group-specific-parameters"></a>
+</h3>
+<p>The function supports specifying <code>dropout_rate</code> as a
+scalar, a length-2 vector, or a data frame with piecewise rates (see
+above), and <code>max_followup</code> as a scalar or vector of length 2,
+corresponding to the control and treatment groups respectively. When
+these differ between groups, the average exposure <span class="math inline">\(\bar{t}_g\)</span>, the second moment <span class="math inline">\(\mathrm{E}[t_g^2]\)</span>, and the variance
+inflation factor <span class="math inline">\(Q_g\)</span> are all
+computed separately for each group.</p>
+</div>
+<div class="section level3">
+<h3 id="variance-inflation-for-variable-follow-up-q-factor">Variance inflation for variable follow-up (<span class="math inline">\(Q\)</span> factor)<a class="anchor" aria-label="anchor" href="#variance-inflation-for-variable-follow-up-q-factor"></a>
+</h3>
+<p>When follow-up times vary across subjects, using <span class="math inline">\(\bar{t}\)</span> alone in the variance formula
+underestimates the true variance. This is because the negative binomial
+variance depends <em>non-linearly</em> on exposure through the <span class="math inline">\(k\mu^2 = k\lambda^2 t^2\)</span> term.</p>
+<p><span class="citation">Zhu and Lakkis (2014)</span> derive a
+correction factor:</p>
+<p><span class="math display">\[ Q_g =
+\frac{\mathrm{E}[t_g^2]}{(\mathrm{E}[t_g])^2} \ge 1 \]</span></p>
+<p>by Jensen’s inequality. The effective dispersion used in the sample
+size formula is <span class="math inline">\(k_{g,\text{adj}} = k_g \cdot
+Q_g\)</span>.</p>
+<p>When exposure is constant (<span class="math inline">\(t_i =
+\bar{t}\)</span> for all <span class="math inline">\(i\)</span>), <span class="math inline">\(Q = 1\)</span> and no adjustment is needed.
+Variable follow-up inflates <span class="math inline">\(Q\)</span> above
+1, increasing the required sample size.</p>
+<p><strong>Computing <span class="math inline">\(\mathrm{E}[t^2]\)</span>:</strong> The second
+moment is computed analogously to <span class="math inline">\(\mathrm{E}[t]\)</span> by integrating <span class="math inline">\(m_2(u) = \mathrm{E}[\min(u, \text{dropout
+time})^2]\)</span> over the enrollment distribution. Without dropout,
+<span class="math inline">\(m_2(u) = u^2\)</span>. With a single
+constant dropout rate <span class="math inline">\(\delta\)</span>:</p>
+<p><span class="math display">\[ m_2(u) = \frac{2}{\delta^2}\left(1 -
+e^{-\delta u}(1 + \delta u)\right) \]</span></p>
+<p>For piecewise dropout, <span class="math inline">\(m_2(u)\)</span> is
+computed by integrating <span class="math inline">\(2 t\, S(t)\)</span>
+over the piecewise survival function, analogously to <span class="math inline">\(m(u)\)</span>. The average of <span class="math inline">\(m_2(u)\)</span> across enrollment segments (with
+appropriate handling of <code>max_followup</code> truncation) gives
+<span class="math inline">\(\mathrm{E}[t^2_g]\)</span>.</p>
 </div>
 <div class="section level3">
 <h3 id="event-gaps">Event gaps<a class="anchor" aria-label="anchor" href="#event-gaps"></a>
 </h3>
-<p>In some clinical trials, there is a mandatory “dead time” or gap
-after an event during which no new events can occur (e.g., a recovery
-period). If an <code>event_gap</code> is specified, the effective
-exposure time for a subject is reduced by the time spent in these
-gaps.</p>
-<p>The function approximates the effective event rate as:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mrow><mi>e</mi><mi>f</mi><mi>f</mi></mrow></msub><mo>≈</mo><mfrac><mi>λ</mi><mrow><mn>1</mn><mo>+</mo><mi>λ</mi><mo>⋅</mo><mtext mathvariant="normal">gap</mtext></mrow></mfrac></mrow><annotation encoding="application/x-tex"> \lambda_{eff} \approx \frac{\lambda}{1 + \lambda \cdot \text{gap}} </annotation></semantics></math>
-This adjusted rate is then used in the sample size calculations. The
-effective exposure time reported is also adjusted similarly.</p>
+<p>In some recurrent event trials, there is a mandatory “dead time” or
+gap of duration <span class="math inline">\(g\)</span> after each event,
+during which no new events can occur (e.g., a recovery period). This
+reduces the effective time at risk.</p>
+<p><strong>Naive approximation.</strong> For a <em>single subject</em>
+with fixed event rate <span class="math inline">\(\lambda\)</span> and
+gap <span class="math inline">\(g\)</span>, the long-run effective rate
+from renewal theory is:</p>
+<p><span class="math display">\[ \lambda_{\text{naive}} =
+\frac{\lambda}{1 + \lambda g} \]</span></p>
+<p><strong>Jensen’s inequality correction.</strong> In the negative
+binomial model, subjects do not share the same rate. Each subject’s rate
+<span class="math inline">\(\Lambda_i\)</span> is drawn from a Gamma
+distribution with mean <span class="math inline">\(\lambda\)</span> and
+variance <span class="math inline">\(k\lambda^2\)</span> (the
+Gamma-Poisson mixture). The population-level effective rate is <span class="math inline">\(\mathrm{E}[\Lambda_i / (1 + \Lambda_i
+g)]\)</span>, which by Jensen’s inequality is strictly less than <span class="math inline">\(\lambda / (1 + \lambda g)\)</span> because <span class="math inline">\(f(x) = x/(1+xg)\)</span> is concave.</p>
+<p>The naive formula overestimates the effective rate (and thus the
+expected event count), leading to underestimated variance and slightly
+underpowered designs. The bias scales with both the dispersion <span class="math inline">\(k\)</span> and the gap <span class="math inline">\(g\)</span>.</p>
+<p>To correct for this, <code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> applies a
+second-order Taylor expansion of <span class="math inline">\(f(\Lambda)\)</span> around <span class="math inline">\(\mathrm{E}[\Lambda] = \lambda\)</span>:</p>
+<p><span class="math display">\[
+\mathrm{E}\!\left[\frac{\Lambda}{1+\Lambda g}\right]
+\approx \frac{\lambda}{1+\lambda g}
++ \frac{f''(\lambda)}{2}\,\mathrm{Var}(\Lambda)
+= \frac{\lambda}{1+\lambda g}
+\left(1 - \frac{k\lambda g}{(1+\lambda g)^2}\right)
+\]</span></p>
+<p>where <span class="math inline">\(f''(\lambda) =
+-2g/(1+\lambda g)^3\)</span> and <span class="math inline">\(\mathrm{Var}(\Lambda) = k\lambda^2\)</span>. This
+corrected effective rate is used in the sample size formula:</p>
+<p><span class="math display">\[ \mu_g = \lambda_{g,\text{eff}} \cdot
+\bar{t}_g \]</span></p>
+<p>The function also reports the <em>at-risk exposure</em>, which is the
+calendar exposure reduced by the expected gap time:</p>
+<p><span class="math display">\[ \bar{t}_{g,\text{risk}} =
+\frac{\bar{t}_g}{1 + \lambda_g \cdot g} \]</span></p>
+<p>Since the gap correction depends on <span class="math inline">\(\lambda_g\)</span>, the at-risk exposure differs
+between groups even when the calendar exposure is the same.</p>
+<p><strong>Magnitude of the correction.</strong> The following table
+illustrates the correction factor <span class="math inline">\(1 -
+k\lambda g / (1+\lambda g)^2\)</span> for selected parameter
+combinations. The correction is negligible when <span class="math inline">\(k\)</span> or <span class="math inline">\(g\)</span> is small, but can reach 5–10% for
+high-dispersion, high-rate, large-gap scenarios.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Show correction magnitude for various parameter combos</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>  lambda <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">2.0</span><span class="op">)</span>,</span>
+<span>  k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span><span class="op">)</span>,</span>
+<span>  gap <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">params</span><span class="op">$</span><span class="va">naive_eff</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">lambda</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">params</span><span class="op">$</span><span class="va">lambda</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">gap</span><span class="op">)</span></span>
+<span><span class="va">params</span><span class="op">$</span><span class="va">correction</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="va">params</span><span class="op">$</span><span class="va">k</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">lambda</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">gap</span> <span class="op">/</span></span>
+<span>  <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">params</span><span class="op">$</span><span class="va">lambda</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">gap</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
+<span><span class="va">params</span><span class="op">$</span><span class="va">corrected_eff</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">naive_eff</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">correction</span></span>
+<span><span class="va">params</span><span class="op">$</span><span class="va">pct_reduction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">params</span><span class="op">$</span><span class="va">correction</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Show a subset</span></span>
+<span><span class="va">subset_df</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">[</span><span class="va">params</span><span class="op">$</span><span class="va">pct_reduction</span> <span class="op">&gt;</span> <span class="fl">0.5</span>, <span class="op">]</span></span>
+<span><span class="va">subset_df</span> <span class="op">&lt;-</span> <span class="va">subset_df</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">subset_df</span><span class="op">$</span><span class="va">pct_reduction</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">subset_df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lambda"</span>, <span class="st">"k"</span>, <span class="st">"gap"</span>, <span class="st">"naive_eff"</span>, <span class="st">"corrected_eff"</span>, <span class="st">"pct_reduction"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fl">4</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lambda"</span>, <span class="st">"k"</span>, <span class="st">"gap"</span>, <span class="st">"Naive eff. rate"</span>, <span class="st">"Corrected eff. rate"</span>, <span class="st">"Reduction (%)"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="10%">
+<col width="6%">
+<col width="7%">
+<col width="24%">
+<col width="30%">
+<col width="21%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">lambda</th>
+<th align="right">k</th>
+<th align="right">gap</th>
+<th align="right">Naive eff. rate</th>
+<th align="right">Corrected eff. rate</th>
+<th align="right">Reduction (%)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">2.0</td>
+<td align="right">1.0</td>
+<td align="right">0.50</td>
+<td align="right">1.0000</td>
+<td align="right">0.7500</td>
+<td align="right">25.00</td>
+</tr>
+<tr class="even">
+<td align="right">1.0</td>
+<td align="right">1.0</td>
+<td align="right">1.00</td>
+<td align="right">0.5000</td>
+<td align="right">0.3750</td>
+<td align="right">25.00</td>
+</tr>
+<tr class="odd">
+<td align="right">2.0</td>
+<td align="right">1.0</td>
+<td align="right">0.25</td>
+<td align="right">1.3333</td>
+<td align="right">1.0370</td>
+<td align="right">22.22</td>
+</tr>
+<tr class="even">
+<td align="right">1.0</td>
+<td align="right">1.0</td>
+<td align="right">0.50</td>
+<td align="right">0.6667</td>
+<td align="right">0.5185</td>
+<td align="right">22.22</td>
+</tr>
+<tr class="odd">
+<td align="right">0.5</td>
+<td align="right">1.0</td>
+<td align="right">1.00</td>
+<td align="right">0.3333</td>
+<td align="right">0.2593</td>
+<td align="right">22.22</td>
+</tr>
+<tr class="even">
+<td align="right">2.0</td>
+<td align="right">1.0</td>
+<td align="right">1.00</td>
+<td align="right">0.6667</td>
+<td align="right">0.5185</td>
+<td align="right">22.22</td>
+</tr>
+<tr class="odd">
+<td align="right">0.3</td>
+<td align="right">1.0</td>
+<td align="right">1.00</td>
+<td align="right">0.2308</td>
+<td align="right">0.1898</td>
+<td align="right">17.75</td>
+</tr>
+<tr class="even">
+<td align="right">1.0</td>
+<td align="right">1.0</td>
+<td align="right">0.25</td>
+<td align="right">0.8000</td>
+<td align="right">0.6720</td>
+<td align="right">16.00</td>
+</tr>
+<tr class="odd">
+<td align="right">0.5</td>
+<td align="right">1.0</td>
+<td align="right">0.50</td>
+<td align="right">0.4000</td>
+<td align="right">0.3360</td>
+<td align="right">16.00</td>
+</tr>
+<tr class="even">
+<td align="right">2.0</td>
+<td align="right">0.5</td>
+<td align="right">0.50</td>
+<td align="right">1.0000</td>
+<td align="right">0.8750</td>
+<td align="right">12.50</td>
+</tr>
+<tr class="odd">
+<td align="right">1.0</td>
+<td align="right">0.5</td>
+<td align="right">1.00</td>
+<td align="right">0.5000</td>
+<td align="right">0.4375</td>
+<td align="right">12.50</td>
+</tr>
+<tr class="even">
+<td align="right">0.3</td>
+<td align="right">1.0</td>
+<td align="right">0.50</td>
+<td align="right">0.2609</td>
+<td align="right">0.2313</td>
+<td align="right">11.34</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="simulation-verification-of-average-exposure">Simulation verification of average exposure<a class="anchor" aria-label="anchor" href="#simulation-verification-of-average-exposure"></a>
+</h3>
+<p>We verify the average exposure computation by simulating trials with
+known parameters and comparing the simulated average exposure to the
+theoretical prediction.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Design parameters</span></span>
+<span><span class="va">lambda1</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
+<span><span class="va">lambda2</span> <span class="op">&lt;-</span> <span class="fl">0.3</span></span>
+<span><span class="va">dispersion</span> <span class="op">&lt;-</span> <span class="fl">0.3</span></span>
+<span><span class="va">dropout_rate_val</span> <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
+<span><span class="va">max_followup_val</span> <span class="op">&lt;-</span> <span class="fl">8</span></span>
+<span><span class="va">trial_duration</span> <span class="op">&lt;-</span> <span class="fl">12</span></span>
+<span></span>
+<span><span class="co"># Piecewise accrual: 5/month for 4 months, then 15/month for 4 months</span></span>
+<span><span class="va">accrual_rate_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">accrual_duration_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Theoretical calculation</span></span>
+<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
+<span>  lambda1 <span class="op">=</span> <span class="va">lambda1</span>, lambda2 <span class="op">=</span> <span class="va">lambda2</span>, dispersion <span class="op">=</span> <span class="va">dispersion</span>,</span>
+<span>  power <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  accrual_rate <span class="op">=</span> <span class="va">accrual_rate_vec</span>,</span>
+<span>  accrual_duration <span class="op">=</span> <span class="va">accrual_duration_vec</span>,</span>
+<span>  trial_duration <span class="op">=</span> <span class="va">trial_duration</span>,</span>
+<span>  dropout_rate <span class="op">=</span> <span class="va">dropout_rate_val</span>,</span>
+<span>  max_followup <span class="op">=</span> <span class="va">max_followup_val</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">theo_exposure</span> <span class="op">&lt;-</span> <span class="va">design</span><span class="op">$</span><span class="va">exposure</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="co"># Same for both groups (same dropout)</span></span>
+<span></span>
+<span><span class="co"># Simulate many trials and compute average exposure</span></span>
+<span><span class="va">enroll_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="va">design</span><span class="op">$</span><span class="va">accrual_rate</span>, duration <span class="op">=</span> <span class="va">accrual_duration_vec</span><span class="op">)</span></span>
+<span><span class="va">fail_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Experimental"</span><span class="op">)</span>,</span>
+<span>  rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">lambda1</span>, <span class="va">lambda2</span><span class="op">)</span>,</span>
+<span>  dispersion <span class="op">=</span> <span class="va">dispersion</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">dropout</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Experimental"</span><span class="op">)</span>,</span>
+<span>  rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">dropout_rate_val</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  duration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">n_sims</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">sim_exposures</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="va">n_sims</span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_sims</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">sim_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nb_sim.html">nb_sim</a></span><span class="op">(</span></span>
+<span>    enroll_rate <span class="op">=</span> <span class="va">enroll_rate</span>,</span>
+<span>    fail_rate <span class="op">=</span> <span class="va">fail_rate</span>,</span>
+<span>    dropout_rate <span class="op">=</span> <span class="va">dropout</span>,</span>
+<span>    max_followup <span class="op">=</span> <span class="va">max_followup_val</span>,</span>
+<span>    n <span class="op">=</span> <span class="va">design</span><span class="op">$</span><span class="va">n_total</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="va">cut</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cut_data_by_date.html">cut_data_by_date</a></span><span class="op">(</span><span class="va">sim_data</span>, cut_date <span class="op">=</span> <span class="va">trial_duration</span><span class="op">)</span></span>
+<span>  <span class="va">sim_exposures</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cut</span><span class="op">$</span><span class="va">tte_total</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Theoretical average exposure:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">theo_exposure</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Theoretical average exposure: 5.5176</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Simulated average exposure (mean over"</span>, <span class="va">n_sims</span>, <span class="st">"trials):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">sim_exposures</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Simulated average exposure (mean over 100 trials): 5.5052</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Simulation SE:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">sim_exposures</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">n_sims</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Simulation SE: 0.028</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Relative difference:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">sim_exposures</span><span class="op">)</span> <span class="op">-</span> <span class="va">theo_exposure</span><span class="op">)</span> <span class="op">/</span> <span class="va">theo_exposure</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"%\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Relative difference: -0.23 %</span></span>
+<span></span>
+<span><span class="co"># Histogram of simulated average exposures</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">sim_exposures</span>,</span>
+<span>  breaks <span class="op">=</span> <span class="fl">30</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, border <span class="op">=</span> <span class="st">"white"</span>,</span>
+<span>  main <span class="op">=</span> <span class="st">"Distribution of simulated average exposure"</span>,</span>
+<span>  xlab <span class="op">=</span> <span class="st">"Average exposure per subject"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">theo_exposure</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Theoretical"</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sample-size-nbinom_files/figure-html/exposure-verification-1.png" class="r-plt" alt="" width="672"></p>
+<p>The theoretical prediction from <code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>
+closely matches the simulation average, confirming the correctness of
+the average exposure computation under piecewise accrual, dropout, and
+maximum follow-up truncation.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="statistical-information">Statistical information<a class="anchor" aria-label="anchor" href="#statistical-information"></a>
+</h2>
+<p>The <em>statistical information</em> <span class="math inline">\(\mathcal{I}\)</span> for the log rate ratio <span class="math inline">\(\theta\)</span> is the inverse of the variance of
+the MLE <span class="math inline">\(\hat\theta\)</span>. It plays a
+central role in sample size calculation, group sequential design, and
+information monitoring during a trial.</p>
+<div class="section level3">
+<h3 id="per-subject-fisher-information">Per-subject Fisher information<a class="anchor" aria-label="anchor" href="#per-subject-fisher-information"></a>
+</h3>
+<p>For a single subject <span class="math inline">\(i\)</span> in group
+<span class="math inline">\(g\)</span> with exposure <span class="math inline">\(t_i\)</span> and expected count <span class="math inline">\(\mu_i = \lambda_g t_i\)</span>, the contribution
+to the Fisher information is (from the negative binomial log-likelihood
+with log link):</p>
+<p><span class="math display">\[ \mathcal{I}_i = \frac{\mu_i}{1 +
+k\,\mu_i} \]</span></p>
+<p>This formula has intuitive limits:</p>
+<ul>
+<li>When <span class="math inline">\(k = 0\)</span> (Poisson): <span class="math inline">\(\mathcal{I}_i = \mu_i = \lambda t_i\)</span>
+(information is proportional to expected events).</li>
+<li>When <span class="math inline">\(k\mu_i \gg 1\)</span> (large
+overdispersion): <span class="math inline">\(\mathcal{I}_i \approx
+1/k\)</span> (information saturates regardless of exposure).</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="total-information">Total information<a class="anchor" aria-label="anchor" href="#total-information"></a>
+</h3>
+<p>The total statistical information for the log rate ratio is:</p>
+<p><span class="math display">\[ \mathcal{I} =
+\frac{1}{\mathrm{Var}(\hat\theta)} = \frac{1}{1/W_1 + 1/W_2}
+\]</span></p>
+<p>where <span class="math inline">\(W_g = \sum_{i \in \text{group } g}
+\mathcal{I}_i\)</span> is the total information contributed by group
+<span class="math inline">\(g\)</span>.</p>
+<p>When all subjects in a group have the same average exposure <span class="math inline">\(\bar{t}_g\)</span>:</p>
+<p><span class="math display">\[ W_g = n_g \cdot \frac{\mu_g}{1 + k_g
+\mu_g} = \frac{n_g}{1/\mu_g + k_g} \]</span></p>
+<p>and thus:</p>
+<p><span class="math display">\[ \mathrm{Var}(\hat\theta) =
+\frac{1/\mu_1 + k_1}{n_1} + \frac{1/\mu_2 + k_2}{n_2} \]</span></p>
+<p>This is exactly the alternative variance used in the Wald sample size
+formula. For score-test sizing, the null variance is also computed under
+the constrained null and used in the Type I error component of the
+sample size calculation.</p>
+</div>
+<div class="section level3">
+<h3 id="information-in-practice-blinded-and-unblinded-estimation">Information in practice: blinded and unblinded estimation<a class="anchor" aria-label="anchor" href="#information-in-practice-blinded-and-unblinded-estimation"></a>
+</h3>
+<p>During a clinical trial, the statistical information can be estimated
+at interim analyses for information monitoring. The package provides
+four variants:</p>
+<table class="table">
+<colgroup>
+<col width="20%">
+<col width="25%">
+<col width="30%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Method</th>
+<th align="left">Blinding</th>
+<th align="left">Estimation</th>
+<th align="left">Function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Blinded ML</td>
+<td align="left">Blinded</td>
+<td align="left">Maximum likelihood via <code><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">MASS::glm.nb()</a></code>
+</td>
+<td align="left"><code><a href="../reference/calculate_blinded_info.html">calculate_blinded_info()</a></code></td>
+</tr>
+<tr class="even">
+<td align="left">Unblinded ML</td>
+<td align="left">Unblinded</td>
+<td align="left">Maximum likelihood via <code><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">MASS::glm.nb()</a></code>
+</td>
+<td align="left">
+<code><a href="../reference/mutze_test.html">mutze_test()</a></code> (SE gives info)</td>
+</tr>
+<tr class="odd">
+<td align="left">Blinded MoM</td>
+<td align="left">Blinded</td>
+<td align="left">Method of moments</td>
+<td align="left"><code><a href="../reference/estimate_nb_mom.html">estimate_nb_mom()</a></code></td>
+</tr>
+<tr class="even">
+<td align="left">Unblinded MoM</td>
+<td align="left">Unblinded</td>
+<td align="left">Method of moments</td>
+<td align="left"><code>estimate_nb_mom(group = "treatment")</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Blinded estimation</strong> <span class="citation">(Friede
+and Schmidli 2010)</span> fits a single model to pooled data (ignoring
+treatment assignment) and then “splits” the estimated overall rate <span class="math inline">\(\hat\lambda\)</span> into group-specific rates
+using the <em>planned</em> rate ratio: <span class="math inline">\(\hat\lambda_1 = \hat\lambda / (p_1 + p_2 \cdot
+\text{RR}_{\text{plan}})\)</span> and <span class="math inline">\(\hat\lambda_2 = \hat\lambda_1 \cdot
+\text{RR}_{\text{plan}}\)</span>. This preserves the blind while
+allowing nuisance parameter (<span class="math inline">\(k\)</span>)
+re-estimation.</p>
+<p><strong>Unblinded estimation</strong> fits a model with a treatment
+covariate, directly estimating the log rate ratio and its standard
+error. The information is <span class="math inline">\(\mathcal{I} =
+1/\text{SE}^2\)</span>.</p>
+</div>
+<div class="section level3">
+<h3 id="connection-to-sample-size">Connection to sample size<a class="anchor" aria-label="anchor" href="#connection-to-sample-size"></a>
+</h3>
+<p>The sample size formula can be expressed in terms of information. For
+the Wald formula, the target information for a fixed design is:</p>
+<p><span class="math display">\[ \mathcal{I}_{\text{target}} =
+\frac{(z_{\alpha/s} + z_\beta)^2}{(\theta - \theta_0)^2} \]</span></p>
+<p>The sample size is then the smallest <span class="math inline">\(n_{\text{total}}\)</span> such that the expected
+information at the end of the trial exceeds <span class="math inline">\(\mathcal{I}_{\text{target}}\)</span>. For
+score-test sizing, the equivalent calculation separates the information
+scale under the null from the information scale under the planned
+alternative through <span class="math inline">\(V_0\)</span> and <span class="math inline">\(V_1\)</span>.</p>
 </div>
 </div>
 <div class="section level2">
@@ -285,21 +962,21 @@ effective exposure time reported is also adjusted similarly.</p>
 </h3>
 <p>Calculate sample size for:</p>
 <ul>
-<li>Control rate
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>1</mn></msub><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">\lambda_1 = 0.5</annotation></semantics></math>
+<li>Control rate <span class="math inline">\(\lambda_1 =
+0.5\)</span>
 </li>
-<li>Treatment rate
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>2</mn></msub><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda_2 = 0.3</annotation></semantics></math>
+<li>Treatment rate <span class="math inline">\(\lambda_2 =
+0.3\)</span>
 </li>
-<li>Dispersion
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">k = 0.1</annotation></semantics></math>
+<li>Dispersion <span class="math inline">\(k = 0.1\)</span>
 </li>
 <li>Power = 80%</li>
 <li>Alpha = 0.025 (one-sided)</li>
 <li>Accrual over 12 months</li>
-<li>Trial duration 12 months (implying exposure approx 6 months)</li>
+<li>Trial duration 12 months (implying average exposure of 6
+months)</li>
 </ul>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
 <span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
@@ -309,41 +986,11 @@ effective exposure time reported is also adjusted similarly.</p>
 <span>  sided <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  accrual_rate <span class="op">=</span> <span class="fl">10</span>, <span class="co"># arbitrary, just for average exposure</span></span>
 <span>  accrual_duration <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  trial_duration <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"zhu"</span></span>
+<span>  trial_duration <span class="op">=</span> <span class="fl">12</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          zhu</span></span>
-<span><span class="co">#&gt; Sample size:     n1 = 35, n2 = 35, total = 70</span></span>
-<span><span class="co">#&gt; Expected events: 168.0 (n1: 105.0, n2: 63.0)</span></span>
-<span><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
-<span><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
-<span><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 6.00</span></span>
-<span><span class="co">#&gt; Accrual: 12.0, Trial duration: 12.0</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="using-friede2010blinded-method">Using <span class="citation">Friede and Schmidli (2010)</span>
-method<a class="anchor" aria-label="anchor" href="#using-friede2010blinded-method"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
-<span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>  dispersion <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>  power <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">0.025</span>,</span>
-<span>  sided <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  accrual_rate <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  accrual_duration <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  trial_duration <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"friede"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
-<span><span class="co">#&gt; ==========================================</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          friede</span></span>
 <span><span class="co">#&gt; Sample size:     n1 = 35, n2 = 35, total = 70</span></span>
 <span><span class="co">#&gt; Expected events: 168.0 (n1: 105.0, n2: 63.0)</span></span>
 <span><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
@@ -362,7 +1009,7 @@ method<a class="anchor" aria-label="anchor" href="#using-friede2010blinded-metho
 </ul>
 <p>The function automatically calculates the average exposure based on
 this accrual pattern.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
 <span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
@@ -375,7 +1022,6 @@ this accrual pattern.</p>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          zhu</span></span>
 <span><span class="co">#&gt; Sample size:     n1 = 26, n2 = 26, total = 52</span></span>
 <span><span class="co">#&gt; Expected events: 176.8 (n1: 110.5, n2: 66.3)</span></span>
 <span><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
@@ -388,7 +1034,7 @@ this accrual pattern.</p>
 </h3>
 <p>Same design as above, but with a 5% dropout rate per unit time and a
 maximum follow-up of 6 months.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
 <span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
@@ -403,7 +1049,6 @@ maximum follow-up of 6 months.</p>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          zhu</span></span>
 <span><span class="co">#&gt; Sample size:     n1 = 38, n2 = 38, total = 76</span></span>
 <span><span class="co">#&gt; Expected events: 157.6 (n1: 98.5, n2: 59.1)</span></span>
 <span><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
@@ -414,15 +1059,41 @@ maximum follow-up of 6 months.</p>
 <span><span class="co">#&gt; Max follow-up: 6.0</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="group-specific-dropout-rates">Group-specific dropout rates<a class="anchor" aria-label="anchor" href="#group-specific-dropout-rates"></a>
+</h3>
+<p>Suppose the control group has a higher dropout rate (10%) than the
+treatment group (5%).</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
+<span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  dispersion <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  power <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  accrual_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span>,</span>
+<span>  accrual_duration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  trial_duration <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>  dropout_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.10</span>, <span class="fl">0.05</span><span class="op">)</span>, <span class="co"># Control, Treatment</span></span>
+<span>  max_followup <span class="op">=</span> <span class="fl">6</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
+<span><span class="co">#&gt; ==========================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Sample size:     n1 = 40, n2 = 40, total = 80</span></span>
+<span><span class="co">#&gt; Expected events: 152.4 (n1: 90.2, n2: 62.2)</span></span>
+<span><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
+<span><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 4.51 (n1), 5.18 (n2)</span></span>
+<span><span class="co">#&gt; Dropout rate: 0.1000 (n1), 0.0500 (n2)</span></span>
+<span><span class="co">#&gt; Accrual: 6.0, Trial duration: 12.0</span></span>
+<span><span class="co">#&gt; Max follow-up: 6.0</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="calculating-power-for-fixed-design">Calculating power for fixed design<a class="anchor" aria-label="anchor" href="#calculating-power-for-fixed-design"></a>
 </h3>
 <p>Using the accrual rates and design from the previous example, suppose
-we want to calculate the power if the treatment effect is smaller
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>2</mn></msub><mo>=</mo><mn>0.4</mn></mrow><annotation encoding="application/x-tex">\lambda_2 = 0.4</annotation></semantics></math>
-instead of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.3</mn><annotation encoding="application/x-tex">0.3</annotation></semantics></math>).
-We use the <code>accrual_rate</code> computed in the previous step.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+we want to calculate the power if the treatment effect is smaller (<span class="math inline">\(\lambda_2 = 0.4\)</span> instead of <span class="math inline">\(0.3\)</span>). We use the
+<code>accrual_rate</code> computed in the previous step.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Store the result from the previous calculation</span></span>
 <span><span class="va">design_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
 <span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
@@ -451,7 +1122,6 @@ We use the <code>accrual_rate</code> computed in the previous step.</p>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          zhu</span></span>
 <span><span class="co">#&gt; Sample size:     n1 = 38, n2 = 38, total = 76</span></span>
 <span><span class="co">#&gt; Expected events: 177.3 (n1: 98.5, n2: 78.8)</span></span>
 <span><span class="co">#&gt; Power: 26%, Alpha: 0.025 (1-sided)</span></span>
@@ -464,9 +1134,8 @@ We use the <code>accrual_rate</code> computed in the previous step.</p>
 <div class="section level3">
 <h3 id="unequal-allocation">Unequal allocation<a class="anchor" aria-label="anchor" href="#unequal-allocation"></a>
 </h3>
-<p>Sample size with a 2:1 allocation ratio
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mn>2</mn></msub><mo>=</mo><mn>2</mn><msub><mi>n</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">n_2 = 2 n_1</annotation></semantics></math>).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Sample size with a 2:1 allocation ratio (<span class="math inline">\(n_2 = 2 n_1\)</span>).</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
 <span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
@@ -479,7 +1148,6 @@ We use the <code>accrual_rate</code> computed in the previous step.</p>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          zhu</span></span>
 <span><span class="co">#&gt; Sample size:     n1 = 40, n2 = 80, total = 120</span></span>
 <span><span class="co">#&gt; Expected events: 264.0 (n1: 120.0, n2: 144.0)</span></span>
 <span><span class="co">#&gt; Power: 95%, Alpha: 0.025 (1-sided)</span></span>
@@ -487,63 +1155,38 @@ We use the <code>accrual_rate</code> computed in the previous step.</p>
 <span><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 6.00</span></span>
 <span><span class="co">#&gt; Accrual: 12.0, Trial duration: 12.0</span></span></code></pre></div>
 </div>
-</div>
-<div class="section level2">
-<h2 id="accounting-for-event-gaps">Accounting for event gaps<a class="anchor" aria-label="anchor" href="#accounting-for-event-gaps"></a>
-</h2>
-<p>In some recurrent event trials, there may be a mandatory “gap” period
-after each event during which no new events can be recorded (e.g., a
-recovery period or administrative window). This effectively reduces the
-time at risk.</p>
-<p>If an <code>event_gap</code>
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>)
-is specified, the function adjusts the calculation as follows:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Effective Rates</strong>: The event rates are adjusted to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>λ</mi><mo>*</mo></msup><mo>=</mo><mi>λ</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><mi>λ</mi><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\lambda^* = \lambda / (1 + \lambda g)</annotation></semantics></math>
-for the sample size calculation (Zhu and Lakkis method).</li>
-<li>
-<strong>At-Risk Exposure</strong>: The function reports the “average
-at-risk exposure”
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mrow><mi>r</mi><mi>i</mi><mi>s</mi><mi>k</mi></mrow></msub><mo>=</mo><msub><mi>E</mi><mrow><mi>c</mi><mi>a</mi><mi>l</mi></mrow></msub><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><mi>λ</mi><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">E_{risk} = E_{cal} / (1 + \lambda g)</annotation></semantics></math>
-alongside the standard calendar exposure. This provides transparency on
-the actual time subjects are at risk for events.</li>
-</ol>
-<p>Since the gap reduction depends on the event rate
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>),
-the at-risk exposure differs between treatment groups if their rates
-differ.</p>
 <div class="section level3">
 <h3 id="example-with-event-gap">Example with event gap<a class="anchor" aria-label="anchor" href="#example-with-event-gap"></a>
 </h3>
-<p>Calculate sample size assuming a 5-day gap after each event (approx
-0.0137 years).</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p>Calculate sample size assuming a 20-day gap after each event (approx
+0.055 years). Note how the at-risk exposure differs between groups
+because the group with the higher event rate (<span class="math inline">\(\lambda_1 = 2.0\)</span>) spends more time in gap
+periods than the group with the lower rate (<span class="math inline">\(\lambda_2 = 1.0\)</span>).</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sample_size_nbinom.html">sample_size_nbinom</a></span><span class="op">(</span></span>
-<span>  lambda1 <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>  lambda2 <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  lambda1 <span class="op">=</span> <span class="fl">2.0</span>,</span>
+<span>  lambda2 <span class="op">=</span> <span class="fl">1.0</span>,</span>
 <span>  dispersion <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  power <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>  accrual_rate <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  accrual_duration <span class="op">=</span> <span class="fl">12</span>,</span>
 <span>  trial_duration <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  event_gap <span class="op">=</span> <span class="fl">5</span> <span class="op">/</span> <span class="fl">365.25</span></span>
+<span>  event_gap <span class="op">=</span> <span class="fl">20</span> <span class="op">/</span> <span class="fl">365.25</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Sample size for negative binomial outcome</span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Method:          zhu</span></span>
-<span><span class="co">#&gt; Sample size:     n1 = 35, n2 = 35, total = 70</span></span>
-<span><span class="co">#&gt; Expected events: 167.0 (n1: 104.3, n2: 62.7)</span></span>
+<span><span class="co">#&gt; Sample size:     n1 = 9, n2 = 9, total = 18</span></span>
+<span><span class="co">#&gt; Expected events: 147.4 (n1: 96.5, n2: 50.9)</span></span>
 <span><span class="co">#&gt; Power: 80%, Alpha: 0.025 (1-sided)</span></span>
-<span><span class="co">#&gt; Rates: control = 0.5000, treatment = 0.3000 (RR = 0.6000)</span></span>
+<span><span class="co">#&gt; Rates: control = 2.0000, treatment = 1.0000 (RR = 0.5000)</span></span>
 <span><span class="co">#&gt; Dispersion: 0.1000, Avg exposure (calendar): 6.00</span></span>
-<span><span class="co">#&gt; Avg exposure (at-risk): n1 = 5.96, n2 = 5.98</span></span>
-<span><span class="co">#&gt; Event gap: 0.01</span></span>
+<span><span class="co">#&gt; Avg exposure (at-risk): n1 = 5.41, n2 = 5.69</span></span>
+<span><span class="co">#&gt; Event gap: 0.05</span></span>
 <span><span class="co">#&gt; Accrual: 12.0, Trial duration: 12.0</span></span></code></pre></div>
-<p>The output shows both the “Avg exposure (calendar)” and the “Avg
-exposure (at-risk)” for each group.</p>
+<p>In this example, even though the calendar time is the same for both
+groups, the effective at-risk exposure is lower for Group 1 because they
+have more events and thus more gap time.</p>
 </div>
 </div>
 <div class="section level2 unnumbered">
@@ -551,20 +1194,20 @@ exposure (at-risk)” for each group.</p>
 </h2>
 <div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-friede2010blinded" class="csl-entry">
-Friede, T, and H Schmidli. 2010. <span>“Blinded Sample Size Reestimation
-with Negative Binomial Counts in Superiority and Non-Inferiority
-Trials.”</span> <em>Methods of Information in Medicine</em> 49 (06):
-618–24.
+Friede, Tim, and Heinz Schmidli. 2010. <span>“Blinded Sample Size
+Reestimation with Negative Binomial Counts in Superiority and
+Non-Inferiority Trials.”</span> <em>Methods of Information in
+Medicine</em> 49 (06): 618–24. <a href="https://doi.org/10.3414/ME09-02-0060" class="external-link">https://doi.org/10.3414/ME09-02-0060</a>.
 </div>
 <div id="ref-mutze2019group" class="csl-entry">
 Mütze, Tobias, Ekkehard Glimm, Heinz Schmidli, and Tim Friede. 2019.
 <span>“Group Sequential Designs for Negative Binomial Outcomes.”</span>
-<em>Statistical Methods in Medical Research</em> 28 (8): 2326–47.
+<em>Statistical Methods in Medical Research</em> 28 (8): 2326–47. <a href="https://doi.org/10.1177/0962280218773115" class="external-link">https://doi.org/10.1177/0962280218773115</a>.
 </div>
 <div id="ref-zhu2014sample" class="csl-entry">
 Zhu, Haiyuan, and Hassan Lakkis. 2014. <span>“Sample Size Calculation
 for Comparing Two Negative Binomial Rates.”</span> <em>Statistics in
-Medicine</em> 33 (3): 376–87.
+Medicine</em> 33 (3): 376–87. <a href="https://doi.org/10.1002/sim.5947" class="external-link">https://doi.org/10.1002/sim.5947</a>.
 </div>
 </div>
 </div>
@@ -575,7 +1218,7 @@ Medicine</em> 33 (3): 376–87.
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Keaven Anderson.</p>
+  <p>Developed by Keaven Anderson, Hongtao Zhang, Andrea Maes.</p>
 </div>
 
 <div class="pkgdown-footer-right">

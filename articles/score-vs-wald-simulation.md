@@ -20,14 +20,14 @@ when score-test sizing is a useful diagnostic, and when the score test
 itself is the more important change for Type I error control.
 
 The **Wald sizing** option in `sample_size_nbinom(test_type = "wald")`
-uses the alternative variance V_1 for both the Type I and power
+uses the alternative variance \\V_1\\ for both the Type I and power
 components. The **score sizing** option in
-`sample_size_nbinom(test_type = "score")` uses the null variance V_0 for
-the Type I component and the alternative variance V_1 for the power
-component:
+`sample_size_nbinom(test_type = "score")` uses the null variance \\V_0\\
+for the Type I component and the alternative variance \\V_1\\ for the
+power component:
 
-n_1 = \frac{(z\_{\alpha/s}\sqrt{V_0} + z\_\beta\sqrt{V_1})^2} {(\theta -
-\theta_0)^2}.
+\\ n_1 = \frac{(z\_{\alpha/s}\sqrt{V_0} + z\_\beta\sqrt{V_1})^2}
+{(\theta - \theta_0)^2}. \\
 
 This distinction matters most when the planned final analysis uses a
 score statistic evaluated under the null, or when finite-sample Type I
@@ -37,7 +37,7 @@ score sample sizes are close; the traditional Wald sample size paired
 with the score test often provides a useful practical margin for power
 while preserving the score test’s Type I error protection.
 
-The full 2 \times 2 factorial comparison is:
+The full \\2 \times 2\\ factorial comparison is:
 
 |                | Wald-sized trial | Score-sized trial |
 |----------------|------------------|-------------------|
@@ -46,8 +46,8 @@ The full 2 \times 2 factorial comparison is:
 
 We assess:
 
-- **Type I error control** under H_0: RR = 1
-- **Power** under H_1: RR = 0.70
+- **Type I error control** under \\H_0: RR = 1\\
+- **Power** under \\H_1: RR = 0.70\\
 - **Z-score distributions** to check asymptotic normality
 
 All tables are interactive: use the column filters to narrow results.
@@ -87,11 +87,11 @@ cat(sprintf(
 
 ### Scenario grid
 
-The base scenario grid varies control event rate (\lambda_1),
-overdispersion (k), and minimum inter-event gap. For each base scenario,
-sample sizes are computed using both the Wald and score variance
-formulas. In this superiority grid the score-sized trials are equal to
-or slightly smaller than the Wald-sized trials; score sizing is
+The base scenario grid varies control event rate (\\\lambda_1\\),
+overdispersion (\\k\\), and minimum inter-event gap. For each base
+scenario, sample sizes are computed using both the Wald and score
+variance formulas. In this superiority grid the score-sized trials are
+equal to or slightly smaller than the Wald-sized trials; score sizing is
 therefore not a generic “add a few subjects” rule, and the operating
 characteristics still need to be checked under the planned analysis
 test.
@@ -343,8 +343,8 @@ if (has_plotly) {
 
 ## Z-score density comparison (null simulations)
 
-Under H_0, the Z-statistics should follow N(0, 1) if the asymptotic
-approximation holds.
+Under \\H_0\\, the Z-statistics should follow \\N(0, 1)\\ if the
+asymptotic approximation holds.
 
 ``` r
 
