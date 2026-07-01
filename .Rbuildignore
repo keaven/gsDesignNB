@@ -15,6 +15,9 @@
 ^Meta$
 ^RELEASE\.md$
 ^create-release-tag\.sh$
+^\.agents$
+^paper$
+^papers$
 ^\.positai$
 ^\.claude$
 ^llms\.txt$

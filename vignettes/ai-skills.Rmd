@@ -20,12 +20,10 @@ library(gsDesignNB)
 
 ## Purpose
 
-`gsDesignNB` includes two AI-facing documentation files:
+`gsDesignNB` includes an AI-facing documentation file:
 
-- [`SKILL.md`](../SKILL.md), a concise workflow guide for assistants or humans
-  using the package for negative binomial recurrent-event trial design.
-- [`llms.txt`](../llms.txt), a generated pkgdown index that helps language
-  models find the package documentation, articles, and reference pages.
+- `.agents/skills/gsdesignnb/SKILL.md`, a concise workflow guide for assistants
+  or humans using the package for negative binomial recurrent-event trial design.
 
 This vignette demonstrates how the skill is intended to be used. The skill does
 not replace the package documentation, the manuscript, or statistical review.

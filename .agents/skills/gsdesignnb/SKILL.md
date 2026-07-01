@@ -1,5 +1,5 @@
 ---
-name: gsDesignNB
+name: gsdesignnb
 description: >
   Design, simulate, and adapt clinical trials with negative binomial recurrent event endpoints
   using the gsDesignNB R package. Use this skill when the task involves: NB sample size or power,
@@ -339,7 +339,7 @@ If units are mixed, fix that first.
 | `non-inferiority-example` | Non-inferiority design |
 | `verification-simulation` | Simulation verification of sample size and test |
 | `score-vs-wald-simulation` | 2×2 comparison: Wald/score sizing × Wald/score test (interactive DT/plotly) |
-| `ai-skills` | Demonstrates how to use `SKILL.md` and `llms.txt` to guide package-native workflows |
+| `ai-skills` | Demonstrates how to use `SKILL.md` to guide package-native workflows |
 | `blinded-info-diagnostics` | Blinded information estimation diagnostics |
 | `blinded-info-diagnostics` | Edge cases for blinded information |
 | `verification-simulation` | Design-formula verification against simulation |
