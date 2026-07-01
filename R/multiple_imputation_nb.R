@@ -120,7 +120,7 @@
 #' matches `glmmTMB`'s `nbinom2` family, where `glmmTMB::sigma()` returns
 #' \eqn{k} directly.
 #'
-#' @importFrom stats predict
+#' @importFrom stats predict setNames
 #' @export
 #'
 #' @examples

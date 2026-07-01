@@ -29,7 +29,7 @@ sample_size_nbinom(
 
 \item{dispersion}{Dispersion parameter \eqn{k} such that
 \eqn{\mathrm{Var}(Y) = \mu + k\mu^2}.
-Equivalent to \code{1/size} in \code{\link[stats:NegBinomial]{stats::rnbinom()}}. Can be a scalar (common
+Equivalent to \code{1/size} in \code{\link[stats:rnbinom]{stats::rnbinom()}}. Can be a scalar (common
 dispersion) or a vector of length 2 (group-specific: control, treatment).}
 
 \item{power}{Target power (\eqn{1 - \beta}). If \code{NULL}, power is computed

@@ -2,6 +2,7 @@
 name: gsdesignnb-simulation-entrypoint
 description: Route gsDesignNB simulation requests to the right package functions and vignettes. Use when working on recurrent-event simulation, group sequential simulation, sample size re-estimation, blinded information, or when the user needs help choosing between nb_sim, sim_gs_nbinom, sim_ssr_nbinom, and related workflows.
 ---
+
 # gsDesignNB Simulation Entry Point
 
 ## Quick routing
