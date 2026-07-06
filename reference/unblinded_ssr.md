@@ -158,7 +158,7 @@ unblinded_ssr(
 #>          10 
 #> 
 #> $dispersion_unblinded
-#> [1] 1.428901e-05
+#> [1] 1.428899e-05
 #> 
 #> $lambda1_unblinded
 #> (Intercept) 
