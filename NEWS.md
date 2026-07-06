@@ -36,6 +36,9 @@
   after rounding the final sample size.
 - `toInteger.gsNB()` now preserves the shape of piecewise accrual schedules
   when rescaling calendar-time designs after final sample-size rounding.
+- `gsNBCalendar()`, `update_gsNB()`, and simulation boundary checks now support
+  harm-bound group sequential designs available in `gsDesign` 3.10.0
+  (`test.type = 7` or `8`, `sfharm`, `sfharmparam`, and `testHarm`).
 - `summarize_gs_sim()` now reports optional sample-size and exposure summaries
   when available and uses finite trimmed means for information estimates.
 - Updated SSR simulation reporting in the manuscript and SSR simulation article

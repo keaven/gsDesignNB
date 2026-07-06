@@ -29,7 +29,7 @@ Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
-    gsDesign (>= 3.9.0),
+    gsDesign (>= 3.10.0),
     simtrial,
     stats,
     MASS

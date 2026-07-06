@@ -53,6 +53,7 @@ reference:
       Extend negative binomial designs to group sequential monitoring via gsDesign boundaries.
     contents:
       - gsNBCalendar
+      - update_gsNB
       - toInteger
       - summary.gsNB
       - print.gsNBsummary

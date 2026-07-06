@@ -158,9 +158,8 @@ gsNBCalendar <- function(
   info_fixed <- 1 / x$variance
 
   # Build the argument list for gsDesign::gsDesign(), conditionally including
-  # parameters that were added in gsDesign 3.9.0.9004+ (sfharm, sfharmparam,
-  # testUpper, testLower, testHarm). This ensures compatibility with the CRAN
-  # release of gsDesign that does not yet include these parameters.
+  # parameters introduced in newer gsDesign releases so older installations can
+  # still use non-harm-bound designs.
   gs_args <- list(
     k = k,
     test.type = test.type,
@@ -885,6 +884,16 @@ update_gsNB <- function(design, observed_info, spending_time = NULL) {
   if (design$test.type %in% c(7, 8) && !is.null(design$harm)) {
     gs_args$sfharm     <- design$harm$sf
     gs_args$sfharmparam <- design$harm$param
+  }
+  gs_formals <- names(formals(gsDesign::gsDesign))
+  if ("testUpper" %in% gs_formals && !is.null(design$testUpper)) {
+    gs_args$testUpper <- design$testUpper
+  }
+  if ("testLower" %in% gs_formals && !is.null(design$testLower)) {
+    gs_args$testLower <- design$testLower
+  }
+  if ("testHarm" %in% gs_formals && !is.null(design$testHarm)) {
+    gs_args$testHarm <- design$testHarm
   }
 
   updated <- do.call(gsDesign::gsDesign, gs_args)

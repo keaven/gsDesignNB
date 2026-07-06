@@ -73,6 +73,30 @@ test_that("gsNBCalendar works with different test types", {
   expect_s3_class(gs4, "gsNB")
 })
 
+test_that("gsNBCalendar supports harm-bound designs from gsDesign", {
+  skip_if_not("testHarm" %in% names(formals(gsDesign::gsDesign)))
+
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+
+  gs_design <- gsNBCalendar(
+    nb_ss,
+    k = 3,
+    test.type = 8,
+    astar = 0.025,
+    analysis_times = c(10, 18, 24),
+    testHarm = c(FALSE, TRUE, TRUE)
+  )
+
+  expect_s3_class(gs_design, "gsNB")
+  expect_true(!is.null(gs_design$harm))
+  expect_identical(gs_design$testHarm, c(FALSE, TRUE, TRUE))
+  expect_equal(gs_design$harm$bound[1], -20)
+  expect_true("Harm" %in% names(gsDesign::gsBoundSummary(gs_design)))
+})
+
 test_that("gsNBCalendar works with custom spending functions", {
   nb_ss <- sample_size_nbinom(
     lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
@@ -220,6 +244,34 @@ test_that("toInteger.gsDesign dispatches correctly", {
   gs <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 2)
   gs_int <- toInteger(gs)
   expect_s3_class(gs_int, "gsDesign")
+})
+
+test_that("update_gsNB preserves selective harm-bound settings", {
+  skip_if_not("testHarm" %in% names(formals(gsDesign::gsDesign)))
+
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+
+  gs_design <- gsNBCalendar(
+    nb_ss,
+    k = 3,
+    test.type = 8,
+    astar = 0.025,
+    analysis_times = c(10, 18, 24),
+    testUpper = c(FALSE, TRUE, TRUE),
+    testLower = c(TRUE, TRUE, FALSE),
+    testHarm = c(FALSE, TRUE, TRUE)
+  )
+
+  updated <- update_gsNB(gs_design, observed_info = gs_design$n.I[1])
+
+  expect_identical(updated$design$testUpper, gs_design$testUpper)
+  expect_identical(updated$design$testLower, gs_design$testLower)
+  expect_identical(updated$design$testHarm, gs_design$testHarm)
+  expect_equal(updated$design$upper$bound[1], 20)
+  expect_equal(updated$design$harm$bound[1], -20)
 })
 
 test_that("compute_info_at_time returns positive value", {
