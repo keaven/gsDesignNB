@@ -19,8 +19,8 @@ Description: Provides tools for planning and simulating recurrent event trials
     sequential monitoring by building on the 'gsDesign' package.
     Includes recurrent-event simulation utilities (including seasonal rates),
     interim data truncation, Wald and score-test inference for rate ratios,
-    and blinded or unblinded information estimation and sample size
-    re-estimation.
+    and information estimation and sample size re-estimation with or without
+    treatment-group labels.
 License: GPL (>= 3)
 URL: https://keaven.github.io/gsDesignNB/, https://github.com/keaven/gsDesignNB
 BugReports: https://github.com/keaven/gsDesignNB/issues

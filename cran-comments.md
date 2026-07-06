@@ -1,3 +1,8 @@
+## Resubmission
+
+This is a resubmission. In this version I have reworded the DESCRIPTION to
+address the CRAN incoming spell-check NOTE for "unblinded".
+
 ## Test environments
 
 * Local macOS Tahoe 26.5.1, R 4.6.1
