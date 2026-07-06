@@ -715,10 +715,12 @@ than planned)</li>
 <p>For routine use, <code><a href="../reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code> wraps the recurring
 steps in an adaptive SSR simulation: information-based interim timing,
 dynamic bounds, optional blinded/unblinded re-estimation, and compact
-summaries.</p>
+summaries. This vignette uses a small number of replicates so CRAN
+checks remain fast; increase <code>n_sims</code> for applied
+operating-characteristic work.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sim_helper</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_ssr_nbinom.html">sim_ssr_nbinom</a></span><span class="op">(</span></span>
-<span>  n_sims <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  n_sims <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  enroll_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="va">accrual_rate_plan</span>, duration <span class="op">=</span> <span class="va">accrual_dur_plan</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  fail_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Experimental"</span><span class="op">)</span>,</span>
@@ -1239,101 +1241,101 @@ summaries.</p>
 <tr>
 <td headers="scenario" class="gt_row gt_left">Lower control rate, higher dispersion</td>
 <td headers="strategy" class="gt_row gt_left">Blinded SSR</td>
-<td headers="n_sims" class="gt_row gt_right">100</td>
-<td headers="rejection_rate" class="gt_row gt_right">0.94</td>
-<td headers="futility_rate" class="gt_row gt_right">0.06</td>
-<td headers="mean_n" class="gt_row gt_right">878.59</td>
-<td headers="sd_n" class="gt_row gt_right">107.70959</td>
-<td headers="pct_adapted" class="gt_row gt_right">24</td>
-<td headers="expected_participants_with_events" class="gt_row gt_right">390.41</td>
-<td headers="expected_events_observed" class="gt_row gt_right">902.90</td>
+<td headers="n_sims" class="gt_row gt_right">20</td>
+<td headers="rejection_rate" class="gt_row gt_right">1</td>
+<td headers="futility_rate" class="gt_row gt_right">0</td>
+<td headers="mean_n" class="gt_row gt_right">918.20</td>
+<td headers="sd_n" class="gt_row gt_right">82.44462</td>
+<td headers="pct_adapted" class="gt_row gt_right">25</td>
+<td headers="expected_participants_with_events" class="gt_row gt_right">413.55</td>
+<td headers="expected_events_observed" class="gt_row gt_right">969.95</td>
 <td headers="pct_reach_ia1" class="gt_row gt_right">100</td>
-<td headers="mean_if_ia1" class="gt_row gt_right">0.4164735</td>
-<td headers="mean_ia1_time" class="gt_row gt_right">24.78918</td>
-<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">223.47</td>
-<td headers="mean_events_observed_ia1" class="gt_row gt_right">433.74</td>
+<td headers="mean_if_ia1" class="gt_row gt_right">0.4169721</td>
+<td headers="mean_ia1_time" class="gt_row gt_right">24.79013</td>
+<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">222.5</td>
+<td headers="mean_events_observed_ia1" class="gt_row gt_right">430.35</td>
 <td headers="n_fallback_ia1" class="gt_row gt_right">0</td>
-<td headers="cross_ia1" class="gt_row gt_right">0.53</td>
-<td headers="pct_futility_ia1" class="gt_row gt_right">0.06</td>
-<td headers="pct_reach_final" class="gt_row gt_right">41</td>
-<td headers="mean_if_final" class="gt_row gt_right">1.240871</td>
-<td headers="mean_final_time" class="gt_row gt_right">70.48547</td>
-<td headers="mean_participants_with_events_final" class="gt_row gt_right">629.2439</td>
-<td headers="mean_events_observed_final" class="gt_row gt_right">1570.659</td>
+<td headers="cross_ia1" class="gt_row gt_right">0.55</td>
+<td headers="pct_futility_ia1" class="gt_row gt_right">0</td>
+<td headers="pct_reach_final" class="gt_row gt_right">45</td>
+<td headers="mean_if_final" class="gt_row gt_right">1.262133</td>
+<td headers="mean_final_time" class="gt_row gt_right">72.00702</td>
+<td headers="mean_participants_with_events_final" class="gt_row gt_right">648.3333</td>
+<td headers="mean_events_observed_final" class="gt_row gt_right">1624.667</td>
 <td headers="n_fallback_final" class="gt_row gt_right">0</td>
-<td headers="cross_final" class="gt_row gt_right">0.41</td>
+<td headers="cross_final" class="gt_row gt_right">0.45</td>
 <td headers="pct_futility_final" class="gt_row gt_right">0</td>
-<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.78918</td>
-<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.51814</td>
-<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.09809</td>
+<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.79013</td>
+<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.20748</td>
+<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.29705</td>
 <td headers="pct_adapt_allowed" class="gt_row gt_right">100</td>
-<td headers="pct_adapt_applied" class="gt_row gt_right">24</td>
+<td headers="pct_adapt_applied" class="gt_row gt_right">25</td>
 </tr>
 <tr>
 <td headers="scenario" class="gt_row gt_left">Lower control rate, higher dispersion</td>
 <td headers="strategy" class="gt_row gt_left">No adaptation</td>
-<td headers="n_sims" class="gt_row gt_right">100</td>
-<td headers="rejection_rate" class="gt_row gt_right">0.94</td>
-<td headers="futility_rate" class="gt_row gt_right">0.06</td>
-<td headers="mean_n" class="gt_row gt_right">859.24</td>
-<td headers="sd_n" class="gt_row gt_right">90.72448</td>
+<td headers="n_sims" class="gt_row gt_right">20</td>
+<td headers="rejection_rate" class="gt_row gt_right">1</td>
+<td headers="futility_rate" class="gt_row gt_right">0</td>
+<td headers="mean_n" class="gt_row gt_right">882.00</td>
+<td headers="sd_n" class="gt_row gt_right">0.00000</td>
 <td headers="pct_adapted" class="gt_row gt_right">0</td>
-<td headers="expected_participants_with_events" class="gt_row gt_right">377.31</td>
-<td headers="expected_events_observed" class="gt_row gt_right">868.62</td>
+<td headers="expected_participants_with_events" class="gt_row gt_right">389.10</td>
+<td headers="expected_events_observed" class="gt_row gt_right">906.50</td>
 <td headers="pct_reach_ia1" class="gt_row gt_right">100</td>
-<td headers="mean_if_ia1" class="gt_row gt_right">0.4164735</td>
-<td headers="mean_ia1_time" class="gt_row gt_right">24.78918</td>
-<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">223.47</td>
-<td headers="mean_events_observed_ia1" class="gt_row gt_right">433.74</td>
+<td headers="mean_if_ia1" class="gt_row gt_right">0.4169721</td>
+<td headers="mean_ia1_time" class="gt_row gt_right">24.79013</td>
+<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">222.5</td>
+<td headers="mean_events_observed_ia1" class="gt_row gt_right">430.35</td>
 <td headers="n_fallback_ia1" class="gt_row gt_right">0</td>
-<td headers="cross_ia1" class="gt_row gt_right">0.53</td>
-<td headers="pct_futility_ia1" class="gt_row gt_right">0.06</td>
-<td headers="pct_reach_final" class="gt_row gt_right">41</td>
-<td headers="mean_if_final" class="gt_row gt_right">1.178834</td>
-<td headers="mean_final_time" class="gt_row gt_right">68.11869</td>
-<td headers="mean_participants_with_events_final" class="gt_row gt_right">597.2927</td>
-<td headers="mean_events_observed_final" class="gt_row gt_right">1487.049</td>
+<td headers="cross_ia1" class="gt_row gt_right">0.55</td>
+<td headers="pct_futility_ia1" class="gt_row gt_right">0</td>
+<td headers="pct_reach_final" class="gt_row gt_right">45</td>
+<td headers="mean_if_final" class="gt_row gt_right">1.156964</td>
+<td headers="mean_final_time" class="gt_row gt_right">67.92168</td>
+<td headers="mean_participants_with_events_final" class="gt_row gt_right">594.0000</td>
+<td headers="mean_events_observed_final" class="gt_row gt_right">1483.667</td>
 <td headers="n_fallback_final" class="gt_row gt_right">0</td>
-<td headers="cross_final" class="gt_row gt_right">0.41</td>
+<td headers="cross_final" class="gt_row gt_right">0.45</td>
 <td headers="pct_futility_final" class="gt_row gt_right">0</td>
-<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.78918</td>
-<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.51814</td>
-<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.09809</td>
+<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.79013</td>
+<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.20748</td>
+<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.29705</td>
 <td headers="pct_adapt_allowed" class="gt_row gt_right">100</td>
 <td headers="pct_adapt_applied" class="gt_row gt_right">0</td>
 </tr>
 <tr>
 <td headers="scenario" class="gt_row gt_left">Lower control rate, higher dispersion</td>
 <td headers="strategy" class="gt_row gt_left">Unblinded SSR</td>
-<td headers="n_sims" class="gt_row gt_right">100</td>
-<td headers="rejection_rate" class="gt_row gt_right">0.94</td>
-<td headers="futility_rate" class="gt_row gt_right">0.06</td>
-<td headers="mean_n" class="gt_row gt_right">876.81</td>
-<td headers="sd_n" class="gt_row gt_right">105.94564</td>
-<td headers="pct_adapted" class="gt_row gt_right">23</td>
-<td headers="expected_participants_with_events" class="gt_row gt_right">389.21</td>
-<td headers="expected_events_observed" class="gt_row gt_right">899.54</td>
+<td headers="n_sims" class="gt_row gt_right">20</td>
+<td headers="rejection_rate" class="gt_row gt_right">1</td>
+<td headers="futility_rate" class="gt_row gt_right">0</td>
+<td headers="mean_n" class="gt_row gt_right">915.55</td>
+<td headers="sd_n" class="gt_row gt_right">77.12770</td>
+<td headers="pct_adapted" class="gt_row gt_right">25</td>
+<td headers="expected_participants_with_events" class="gt_row gt_right">411.60</td>
+<td headers="expected_events_observed" class="gt_row gt_right">964.80</td>
 <td headers="pct_reach_ia1" class="gt_row gt_right">100</td>
-<td headers="mean_if_ia1" class="gt_row gt_right">0.4164735</td>
-<td headers="mean_ia1_time" class="gt_row gt_right">24.78918</td>
-<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">223.47</td>
-<td headers="mean_events_observed_ia1" class="gt_row gt_right">433.74</td>
+<td headers="mean_if_ia1" class="gt_row gt_right">0.4169721</td>
+<td headers="mean_ia1_time" class="gt_row gt_right">24.79013</td>
+<td headers="mean_participants_with_events_ia1" class="gt_row gt_right">222.5</td>
+<td headers="mean_events_observed_ia1" class="gt_row gt_right">430.35</td>
 <td headers="n_fallback_ia1" class="gt_row gt_right">0</td>
-<td headers="cross_ia1" class="gt_row gt_right">0.53</td>
-<td headers="pct_futility_ia1" class="gt_row gt_right">0.06</td>
-<td headers="pct_reach_final" class="gt_row gt_right">41</td>
-<td headers="mean_if_final" class="gt_row gt_right">1.235190</td>
-<td headers="mean_final_time" class="gt_row gt_right">70.26246</td>
-<td headers="mean_participants_with_events_final" class="gt_row gt_right">626.3171</td>
-<td headers="mean_events_observed_final" class="gt_row gt_right">1562.463</td>
+<td headers="cross_ia1" class="gt_row gt_right">0.55</td>
+<td headers="pct_futility_ia1" class="gt_row gt_right">0</td>
+<td headers="pct_reach_final" class="gt_row gt_right">45</td>
+<td headers="mean_if_final" class="gt_row gt_right">1.252567</td>
+<td headers="mean_final_time" class="gt_row gt_right">71.63922</td>
+<td headers="mean_participants_with_events_final" class="gt_row gt_right">644.0000</td>
+<td headers="mean_events_observed_final" class="gt_row gt_right">1613.222</td>
 <td headers="n_fallback_final" class="gt_row gt_right">0</td>
-<td headers="cross_final" class="gt_row gt_right">0.41</td>
+<td headers="cross_final" class="gt_row gt_right">0.45</td>
 <td headers="pct_futility_final" class="gt_row gt_right">0</td>
-<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.78918</td>
-<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.51814</td>
-<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.09809</td>
+<td headers="mean_adapt_cut_time" class="gt_row gt_right">24.79013</td>
+<td headers="mean_adapt_enroll_pct" class="gt_row gt_right">56.20748</td>
+<td headers="mean_adapt_months_to_close" class="gt_row gt_right">19.29705</td>
 <td headers="pct_adapt_allowed" class="gt_row gt_right">100</td>
-<td headers="pct_adapt_applied" class="gt_row gt_right">23</td>
+<td headers="pct_adapt_applied" class="gt_row gt_right">25</td>
 </tr>
 </tbody>
 </table>

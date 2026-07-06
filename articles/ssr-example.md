@@ -140,12 +140,14 @@ For routine use,
 [`sim_ssr_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_ssr_nbinom.md)
 wraps the recurring steps in an adaptive SSR simulation:
 information-based interim timing, dynamic bounds, optional
-blinded/unblinded re-estimation, and compact summaries.
+blinded/unblinded re-estimation, and compact summaries. This vignette
+uses a small number of replicates so CRAN checks remain fast; increase
+`n_sims` for applied operating-characteristic work.
 
 ``` r
 
 sim_helper <- sim_ssr_nbinom(
-  n_sims = 100,
+  n_sims = 20,
   enroll_rate = data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2),
   fail_rate = data.frame(
     treatment = c("Control", "Experimental"),
@@ -177,9 +179,9 @@ helper_summary$trial_summary |>
 |----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
 | Expected participants with events and expected events observed are included directly |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | scenario | strategy | n_sims | rejection_rate | futility_rate | mean_n | sd_n | pct_adapted | expected_participants_with_events | expected_events_observed | pct_reach_ia1 | mean_if_ia1 | mean_ia1_time | mean_participants_with_events_ia1 | mean_events_observed_ia1 | n_fallback_ia1 | cross_ia1 | pct_futility_ia1 | pct_reach_final | mean_if_final | mean_final_time | mean_participants_with_events_final | mean_events_observed_final | n_fallback_final | cross_final | pct_futility_final | mean_adapt_cut_time | mean_adapt_enroll_pct | mean_adapt_months_to_close | pct_adapt_allowed | pct_adapt_applied |
-| Lower control rate, higher dispersion | Blinded SSR | 100 | 0.94 | 0.06 | 878.59 | 107.70959 | 24 | 390.41 | 902.90 | 100 | 0.4164735 | 24.78918 | 223.47 | 433.74 | 0 | 0.53 | 0.06 | 41 | 1.240871 | 70.48547 | 629.2439 | 1570.659 | 0 | 0.41 | 0 | 24.78918 | 56.51814 | 19.09809 | 100 | 24 |
-| Lower control rate, higher dispersion | No adaptation | 100 | 0.94 | 0.06 | 859.24 | 90.72448 | 0 | 377.31 | 868.62 | 100 | 0.4164735 | 24.78918 | 223.47 | 433.74 | 0 | 0.53 | 0.06 | 41 | 1.178834 | 68.11869 | 597.2927 | 1487.049 | 0 | 0.41 | 0 | 24.78918 | 56.51814 | 19.09809 | 100 | 0 |
-| Lower control rate, higher dispersion | Unblinded SSR | 100 | 0.94 | 0.06 | 876.81 | 105.94564 | 23 | 389.21 | 899.54 | 100 | 0.4164735 | 24.78918 | 223.47 | 433.74 | 0 | 0.53 | 0.06 | 41 | 1.235190 | 70.26246 | 626.3171 | 1562.463 | 0 | 0.41 | 0 | 24.78918 | 56.51814 | 19.09809 | 100 | 23 |
+| Lower control rate, higher dispersion | Blinded SSR | 20 | 1 | 0 | 918.20 | 82.44462 | 25 | 413.55 | 969.95 | 100 | 0.4169721 | 24.79013 | 222.5 | 430.35 | 0 | 0.55 | 0 | 45 | 1.262133 | 72.00702 | 648.3333 | 1624.667 | 0 | 0.45 | 0 | 24.79013 | 56.20748 | 19.29705 | 100 | 25 |
+| Lower control rate, higher dispersion | No adaptation | 20 | 1 | 0 | 882.00 | 0.00000 | 0 | 389.10 | 906.50 | 100 | 0.4169721 | 24.79013 | 222.5 | 430.35 | 0 | 0.55 | 0 | 45 | 1.156964 | 67.92168 | 594.0000 | 1483.667 | 0 | 0.45 | 0 | 24.79013 | 56.20748 | 19.29705 | 100 | 0 |
+| Lower control rate, higher dispersion | Unblinded SSR | 20 | 1 | 0 | 915.55 | 77.12770 | 25 | 411.60 | 964.80 | 100 | 0.4169721 | 24.79013 | 222.5 | 430.35 | 0 | 0.55 | 0 | 45 | 1.252567 | 71.63922 | 644.0000 | 1613.222 | 0 | 0.45 | 0 | 24.79013 | 56.20748 | 19.29705 | 100 | 25 |
 
 The remainder of this vignette walks through the same ideas step by step
 on a single simulated trial so the mechanics remain transparent. For
