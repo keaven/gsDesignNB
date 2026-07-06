@@ -2,6 +2,8 @@
 
 This is a resubmission. In this version I have reworded the DESCRIPTION to
 address the CRAN incoming spell-check NOTE for "unblinded".
+I also reduced the number of illustrative simulation replicates in one vignette
+to address the Windows incoming checktime NOTE.
 
 ## Test environments
 

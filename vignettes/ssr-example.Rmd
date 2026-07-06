@@ -121,10 +121,12 @@ gsBoundSummary(gs_plan,
 For routine use, `sim_ssr_nbinom()` wraps the recurring steps in an adaptive
 SSR simulation: information-based interim timing, dynamic bounds, optional
 blinded/unblinded re-estimation, and compact summaries.
+This vignette uses a small number of replicates so CRAN checks remain fast;
+increase `n_sims` for applied operating-characteristic work.
 
 ```{r helper_workflow}
 sim_helper <- sim_ssr_nbinom(
-  n_sims = 100,
+  n_sims = 20,
   enroll_rate = data.frame(rate = accrual_rate_plan, duration = accrual_dur_plan * 2),
   fail_rate = data.frame(
     treatment = c("Control", "Experimental"),
