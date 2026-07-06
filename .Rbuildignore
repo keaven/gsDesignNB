@@ -27,3 +27,4 @@
 ^timings\.tab$
 ^inst/extdata/score_sweep_results\.rds$
 ^inst/extdata/ssr_sim_vignette_outputs.*\.rds$
+^CRAN-SUBMISSION$
