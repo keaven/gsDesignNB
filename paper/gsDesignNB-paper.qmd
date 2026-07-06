@@ -67,7 +67,8 @@ abstract: |
   to a Poisson Wald or score test, but under extreme overdispersion or ML non-convergence it
   switches to a MoM-based NB test using the observed Fisher information formula, avoiding the
   Type I error inflation of a blind Poisson fallback. The package also supports calendar-time
-  group sequential monitoring and both blinded and unblinded SSR. A 90-scenario SSR article
+  group sequential monitoring, including efficacy, futility, and harm-bound designs, and both
+  blinded and unblinded SSR. A 90-scenario SSR article
   illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
   should be checked under the null with the planned final test statistic. In our examples, the
   Wald test exhibits mild Type I error inflation after SSR, whereas the score test preserves Type I error
@@ -154,7 +155,8 @@ the software design.
 events, and variance of the log rate ratio. `gsNBCalendar()` lifts that object into a `gsNB` design
 that inherits from `gsDesign`, so the NB-specific information calculations live in
 **gsDesignNB** while spending functions, boundary summaries, and integer rounding remain compatible
-with the underlying **gsDesign** ecosystem. For simulation, `nb_sim()` and `nb_sim_seasonal()`
+with the underlying **gsDesign** ecosystem, including efficacy, futility, and harm-bound
+monitoring designs. For simulation, `nb_sim()` and `nb_sim_seasonal()`
 generate subject-level recurrent-event histories, `cut_data_by_date()` and related helpers convert
 them to interim analysis data sets, and `sim_gs_nbinom()` or `sim_ssr_nbinom()` produce operating
 characteristics that can be summarized with `summarize_gs_sim()` and `summarize_ssr_sim()`.
@@ -695,6 +697,9 @@ planned accrual and follow-up structure, then stores the corresponding statistic
 the `n.I` slot inherited from `gsDesign`. The resulting `gsNB` object therefore behaves like a
 `gsDesign` object for spending functions and boundary summaries while retaining the NB-specific
 quantities needed for simulation and interpretation.
+When harm monitoring is part of the group sequential plan, `gsNBCalendar()` passes the corresponding
+`gsDesign` harm-bound spending function, parameters, and bound-selection indicators through to the
+inherited design object.
 
 This calendar-time emphasis matters because timing of analyses in trials is often primarily
 governed by operational issues, and thus we have chosen this approach to analysis timing. This also
@@ -1192,10 +1197,13 @@ GS simulation, end-to-end SSR, the larger SSR simulation study, blinded-informat
 seasonal simulation, completer-based interims, non-inferiority design, and verification of the
 planning formulas against simulation. We treat these articles as supplementary material for the
 paper: the manuscript gives the design rationale, selected tables, and interpretation, while the
-package articles provide the fuller grids, code paths, and rendered results. The two code examples in
-this paper are deliberately small extracts of those vignettes so that the manuscript highlights the
-core software interface while the installed package retains more extensive executable workflows. For
-local exploratory use, the package also provides `run_ssr_shiny()` as an interactive front end to the
-SSR engine and `preview_pkgdown_site()` for documentation preview.
+package articles provide the fuller grids, code paths, and rendered results. The larger simulation
+articles in the installed package use compact precomputed summaries; the full trial-level Monte
+Carlo objects are kept outside the CRAN build and can be regenerated or archived separately for
+auditing. The two code examples in this paper are deliberately small extracts of those vignettes so
+that the manuscript highlights the core software interface while the installed package retains more
+extensive executable workflows. For local exploratory use, the package also provides
+`run_ssr_shiny()` as an interactive front end to the SSR engine and `preview_pkgdown_site()` for
+documentation preview.
 
 ## References {.unnumbered}
