@@ -9,6 +9,10 @@
 - Added an `ai-skills` vignette demonstrating how the agent skills under
   `.agents/skills/` can guide package-native score-test and simulation
   workflows without replacing statistical review.
+- Added a published sample-size examples vignette showing how the
+  package-specific AI skill translates literature and protocol descriptions
+  into transparent `sample_size_nbinom()` calls, including dropout, event-gap,
+  non-inferiority, and group sequential parameterization checks.
 - Refined score-test recommendations to distinguish the final analysis test
   from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful
   practical baseline and may provide a power margin when paired with the score

@@ -1,8 +1,9 @@
 ---
-title: "Sample size calculation using the gsDesignNB AI skill"
+title: "Published sample-size examples with the gsDesignNB AI skill"
 output: rmarkdown::html_vignette
+bibliography: gsDesignNB.bib
 vignette: >
-  %\VignetteIndexEntry{Sample size calculation using the gsDesignNB AI skill}
+  %\VignetteIndexEntry{Published sample-size examples with the gsDesignNB AI skill}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,16 +17,16 @@ knitr::opts_chunk$set(
 
 ```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
-library(gsDesign)
 ```
 
 ## Purpose
 
-This vignette demonstrates how the `SKILL.md` file packaged with
-**gsDesignNB** enables an AI coding assistant to compute a negative binomial
-sample size from natural-language input — a protocol excerpt, a publication
-quote, or a plain-English trial description — without requiring the user to
-write R code directly. The skill teaches the AI to:
+This vignette demonstrates how the `SKILL.md` file in the **gsDesignNB**
+repository helps an AI coding assistant turn natural-language trial
+descriptions into transparent `sample_size_nbinom()` calls. The examples are
+not meant to replace the original protocols or statistical review; they show
+how the skill keeps the translation from text to code disciplined. The skill
+teaches the AI to:
 
 1. **Extract** stated parameters from the text.
 2. **Prompt** for essential information that is missing.
@@ -43,63 +44,21 @@ validation checks, unit-conversion logic, and domain heuristics (e.g.,
 "COPD dispersion is typically 0.5–1.0") so that the AI can work
 reliably without requiring the user to know the package API.
 
-The `SKILL.md` shipped with **gsDesignNB** covers sample size
-calculation, group sequential design, blinded SSR, simulation, and
-interim data cuts. This vignette focuses on the sample size workflow.
+The main **gsDesignNB** skill covers sample size calculation, group sequential
+design, blinded SSR, simulation, and interim data cuts. This vignette focuses
+on the sample size workflow.
 
 ## Using the skill with an AI assistant
 
-The `SKILL.md` file is included in the installed package root. You can
-find its path with:
+In the source repository, the main skill lives at
+`.agents/skills/gsdesignnb/SKILL.md`. A companion simulation entrypoint lives at
+`.agents/skills/gsdesignnb-simulation-entrypoint/SKILL.md`.
 
-```r
-system.file("SKILL.md", package = "gsDesignNB")
-```
-
-or read it directly from the
-[GitHub repository](https://github.com/keaven/gsDesignNB/blob/main/SKILL.md).
-
-How you provide the skill to your AI depends on the platform:
-
-### VS Code with GitHub Copilot
-
-Copilot detects `SKILL.md` files in the workspace automatically. If
-you have the **gsDesignNB** repository open (or cloned), the skill is
-loaded when Copilot's agent mode is active — no manual steps needed.
-You can also reference it explicitly:
-
-```
-@workspace /explain Use the gsDesignNB skill to size a trial with ...
-```
-
-### Claude (Anthropic)
-
-In [Claude Projects](https://claude.ai), add `SKILL.md` as a project
-knowledge file. In the API, include the file contents in the system
-prompt or as a document attachment:
-```
-[system] You have access to the following skill: <content of SKILL.md>
-```
-
-### ChatGPT (OpenAI)
-
-In a **Custom GPT**, upload `SKILL.md` as a knowledge file. In the
-standard chat, paste the file contents at the start of the conversation
-or attach it as a file.
-
-### Gemini (Google)
-
-Attach `SKILL.md` as a file in Gemini or include it in the system
-instruction for the Gemini API.
-
-### General pattern (any LLM)
-
-For any LLM with a system prompt or context window:
-
-1. Copy the contents of `SKILL.md`.
-2. Paste it into the system prompt, a "knowledge" upload, or the
-   beginning of the conversation.
-3. Then provide your trial description in natural language.
+How you provide the skill depends on the assistant. Workspace-aware coding
+assistants may discover the file automatically when the repository is open. For
+assistants that accept attached files, project knowledge, or system
+instructions, attach or paste `SKILL.md`, then provide the trial description in
+natural language.
 
 The skill is model-agnostic — it uses structured Markdown with
 extraction tables, decision rules, and worked examples that any
@@ -113,12 +72,12 @@ challenges the skill must handle:
 
 | Example | Disease | Design | Key skill challenge |
 |:--------|:--------|:-------|:--------------------|
-| FLAME (Wedzicha 2016) | COPD | Non-inferiority | Dropout interpretation (inflation vs exposure integral); inferring follow-up from "annual rate" |
-| IMPACT (Lipson 2018) | COPD | 3-arm superiority | Unequal allocation; deriving control rate from stated treatment rate + % reduction; 28-day event gap |
-| OPERA I/II (Hauser 2017) | MS | Superiority (paired studies) | Protocol sized by t-test, not NB — dispersion $k$ must be assumed; low rate + large effect |
-| Friede & Schmidli (2010) | COPD | Fixed superiority + NI | Pooled-rate parameterization ($\lambda$ overall, not per-arm); $\phi = k$ notation |
-| Mutze et al. (2019) | HF + MS | Group sequential | Inverse dispersion ($\kappa = 1/k$); variable follow-up from staggered entry; monthly vs annual units |
-| PARADIGM-HF (McMurray 2014) | HF | Event-driven GS | Primary endpoint is NOT NB — recurrent-event parameters must be sourced externally |
+| FLAME [@wedzicha2016flame] | COPD | Non-inferiority | Dropout interpretation (inflation vs exposure integral); inferring follow-up from "annual rate" |
+| IMPACT [@lipson2018impact] | COPD | 3-arm superiority | Unequal allocation; deriving control rate from stated treatment rate + % reduction; 28-day event gap |
+| OPERA I/II [@hauser2017ocrelizumab] | MS | Superiority (paired studies) | Protocol sized by t-test, not NB; dispersion $k$ must be assumed |
+| Friede & Schmidli [@friede2010blinded] | COPD | Fixed superiority + NI | Pooled-rate parameterization ($\lambda$ overall, not per-arm); $\phi = k$ notation |
+| Mutze et al. [@mutze2019group] | HF + MS | Group sequential | Inverse dispersion ($\kappa = 1/k$); variable follow-up from staggered entry; monthly vs annual units |
+| PARADIGM-HF [@mcmurray2014paradigm] | HF | Event-driven GS | Primary endpoint is not NB; recurrent-event parameters must be sourced externally |
 
 The first example (FLAME) walks through the full skill workflow in
 detail. Subsequent examples focus on the extraction and computation
@@ -126,22 +85,18 @@ steps, highlighting where each trial poses a new challenge.
 
 ## FLAME trial
 
-We replicate the sample size from the FLAME protocol
-(indacaterol--glycopyrronium vs salmeterol--fluticasone for COPD
-exacerbations; Wedzicha et al., 2016).
+We replicate the sample size from the FLAME COPD exacerbation protocol
+[@wedzicha2016flame].
 
 ### The user's input
 
-In a real session, the user might paste a single block of text:
+In a real session, the user might paste a protocol paragraph or summarize the
+design as follows:
 
-> "3332 randomized patients (or 1666 per group) would be required to rule
-> out a 1.15-fold increase of QVA149 comparing to Seretide on the rate of
-> COPD exacerbations (mild/moderate/severe) with greater than 95% power at
-> the level of 0.025 (one-sided), assuming (1) the underlying annual rate
-> is 3.0, (2) there is no difference between treatment groups on the
-> annual rate, (3) the index parameter k = 0.625, and (4) 30% of
-> randomized patients are either dropped out from the study early or major
-> protocol violators."
+> Size a non-inferiority COPD exacerbation trial with equal annual rates of
+> 3.0, non-inferiority margin 1.15, one-sided alpha 0.025, greater than 95%
+> power, dispersion k = 0.625, and 30% dropout or major protocol violations.
+> The published target was 3332 randomized patients.
 
 The rest of this vignette walks through what the skill instructs the AI
 to do with this input.
@@ -214,7 +169,7 @@ dispersion      <- 0.625                # NB dispersion k
 rr0             <- 1.15                 # non-inferiority margin
 event_gap       <- 0                    # no gap specified in protocol
 max_followup    <- 1                    # 1-year follow-up
-dropout_inflate <- 0.70                 # 30% dropout/violator → multiply N by 1/0.70
+dropout_retained <- 0.70                # 30% dropout/violator -> inflate by 1/0.70
 alpha           <- 0.025
 power           <- 0.95
 
@@ -224,18 +179,15 @@ accrual_dur     <- 1                    # 1-year enrollment (placeholder)
 trial_duration  <- 2                    # years
 ```
 
-#### Replication with dropout modeled through exposure
+#### Skill-compatible replication
 
-Rather than computing N under full follow-up and inflating, the more
-natural approach in `sample_size_nbinom()` is to model dropout directly:
-convert the 30% cumulative dropout to an instantaneous hazard rate
-($-\log(0.70)/T$) and let the formula integrate the exposure reduction
-into the variance and information calculations. Subjects who drop out
-still contribute their partial follow-up to the information, so the
-required N is smaller than a simple $1/0.70$ inflation.
+Because the FLAME wording combines dropout and major protocol violations, the
+skill treats the 30% as an inflation factor rather than as pure time-to-dropout.
+First compute the evaluable sample size under full follow-up, then divide by
+0.70.
 
 ```{r}
-wald <- sample_size_nbinom(
+wald_evaluable <- sample_size_nbinom(
   lambda1          = lambda1,
   lambda2          = lambda2,
   dispersion       = dispersion,
@@ -245,17 +197,22 @@ wald <- sample_size_nbinom(
   accrual_rate     = accrual_rate,
   accrual_duration = accrual_dur,
   trial_duration   = trial_duration,
-  dropout_rate     = -log(dropout_inflate) / max_followup,  # hazard for 30% in 1 yr
+  dropout_rate     = 0,
   max_followup     = max_followup,
   event_gap        = event_gap,
   test_type        = "wald"
 )
+
+n_inflated <- ceiling(ceiling(wald_evaluable$n_total) / dropout_retained)
 ```
 
-For comparison, compute the simple inflation result as well:
+If the 30% represented true dropout only, an alternative is to model it through
+the exposure integral by converting cumulative dropout to an exponential hazard.
+That gives partial credit for follow-up before dropout, so it is smaller than a
+sample-size inflation.
 
 ```{r}
-wald_full <- sample_size_nbinom(
+wald_exposure <- sample_size_nbinom(
   lambda1          = lambda1,
   lambda2          = lambda2,
   dispersion       = dispersion,
@@ -265,31 +222,32 @@ wald_full <- sample_size_nbinom(
   accrual_rate     = accrual_rate,
   accrual_duration = accrual_dur,
   trial_duration   = trial_duration,
-  dropout_rate     = 0,                  # no dropout in formula
+  dropout_rate     = -log(dropout_retained) / max_followup,
   max_followup     = max_followup,
   event_gap        = event_gap,
   test_type        = "wald"
 )
 
-n_inflated <- ceiling(ceiling(wald_full$n_total) / dropout_inflate)
-
 data.frame(
-  Method           = c("Dropout via exposure integral",
-                        "Full FU + inflate ÷ 0.70",
+  Method           = c("Full follow-up + inflate / 0.70",
+                        "Dropout via exposure integral",
                         "Protocol target"),
-  N                = c(ceiling(wald$n_total), n_inflated, 3332)
+  N                = c(n_inflated, ceiling(wald_exposure$n_total), 3332)
 ) |> knitr::kable(caption = "Sample size comparison: two dropout approaches vs protocol.")
 ```
 
-The protocol's 3332 falls between the two approaches. The exposure-integral
-method gives partial credit for dropout follow-up, producing a smaller N.
-The inflation method treats all 30% as contributing nothing, producing a
-larger N. When some of the 30% are protocol violators who still contribute
-data, the truth lies between these extremes. The exposure-integral approach
-is closer and is the methodologically preferred method in **gsDesignNB**.
+The protocol's 3332 falls between the two approaches and is closer to the
+inflation-factor calculation. That is expected because the protocol quantity
+combines true dropout with major protocol violations. For a design where dropout
+is purely loss of follow-up, modeling dropout through the exposure integral is
+usually more informative; for a replication of this protocol statement, the
+inflation calculation is the cleaner match.
+
+The object summary below is the evaluable Wald calculation before the 30%
+randomized-sample inflation is applied.
 
 ```{r}
-summary(wald)
+summary(wald_evaluable)
 ```
 
 ### Extensions beyond the core skill
@@ -306,7 +264,7 @@ score formula's null-variance calibration can produce a meaningfully
 different sample size.
 
 ```{r}
-score <- sample_size_nbinom(
+score_evaluable <- sample_size_nbinom(
   lambda1          = lambda1,
   lambda2          = lambda2,
   dispersion       = dispersion,
@@ -316,13 +274,15 @@ score <- sample_size_nbinom(
   accrual_rate     = accrual_rate,
   accrual_duration = accrual_dur,
   trial_duration   = trial_duration,
-  dropout_rate     = -log(dropout_inflate) / max_followup,
+  dropout_rate     = 0,
   max_followup     = max_followup,
   event_gap        = event_gap,
   test_type        = "score"
 )
 
-summary(score)
+score_inflated <- ceiling(ceiling(score_evaluable$n_total) / dropout_retained)
+
+summary(score_evaluable)
 ```
 
 #### Compare the two sizing rules
@@ -330,20 +290,21 @@ summary(score)
 ```{r}
 comparison <- data.frame(
   Sizing        = c("Wald", "Score", "Protocol target"),
-  N             = c(ceiling(wald$n_total), ceiling(score$n_total), 3332),
-  events        = round(c(wald$total_events, score$total_events, NA), 1)
+  evaluable_N   = c(ceiling(wald_evaluable$n_total), ceiling(score_evaluable$n_total), NA),
+  randomized_N  = c(n_inflated, score_inflated, 3332),
+  events        = round(c(wald_evaluable$total_events, score_evaluable$total_events, NA), 1)
 )
 
 knitr::kable(comparison,
-  caption = "Wald vs score sizing (dropout via exposure integral)."
+  caption = "Wald vs score sizing with randomized-sample inflation."
 )
 ```
 
 For this non-inferiority design with equal planned rates ($\lambda_1 =
-\lambda_2 = 3.0$) the null variance is evaluated at $\text{rr}_0 = 1.15$,
-which inflates the null-information component and makes the score sample
-size slightly larger than the Wald. The difference between the two formulas
-would grow if the margin were wider or the rates were lower.
+\lambda_2 = 3.0$), score sizing is slightly smaller than Wald sizing. That is
+not a general rule; it depends on the null margin, rates, dispersion, and the
+variance reference used by the formula. The skill asks the analyst to compare
+both rules rather than assume one is always more conservative.
 
 #### What if the protocol required an event gap?
 
@@ -353,7 +314,7 @@ we show how the Jensen correction would change the sample size if a 28-day
 gap were imposed. (Since rates are in years, we convert: 28/365.25 years.)
 
 ```{r}
-wald_gap <- sample_size_nbinom(
+wald_gap_evaluable <- sample_size_nbinom(
   lambda1          = lambda1,
   lambda2          = lambda2,
   dispersion       = dispersion,
@@ -363,16 +324,18 @@ wald_gap <- sample_size_nbinom(
   accrual_rate     = accrual_rate,
   accrual_duration = accrual_dur,
   trial_duration   = trial_duration,
-  dropout_rate     = -log(dropout_inflate) / max_followup,
+  dropout_rate     = 0,
   max_followup     = max_followup,
   event_gap        = 28 / 365.25,       # 28 days in years
   test_type        = "wald"
 )
 
+n_gap_inflated <- ceiling(ceiling(wald_gap_evaluable$n_total) / dropout_retained)
+
 data.frame(
   Formula   = c("No gap (FLAME protocol)", "28-day gap (Jensen-corrected)"),
-  N         = ceiling(c(wald$n_total, wald_gap$n_total)),
-  delta_n   = c(0, ceiling(wald_gap$n_total) - ceiling(wald$n_total))
+  N         = c(n_inflated, n_gap_inflated),
+  delta_n   = c(0, n_gap_inflated - n_inflated)
 ) |> knitr::kable(
   caption = "Impact of a hypothetical 28-day event gap on the FLAME sample size."
 )
@@ -380,10 +343,12 @@ data.frame(
 
 #### Verify by simulation (fixed design)
 
-A small simulation confirms the analytical sample size delivers the
-target power. We simulate 200 trials under the alternative
-($\lambda_1 = \lambda_2 = 3.0$, so $\text{rr} = 1$) and test
-non-inferiority against the margin $\text{rr}_0 = 1.15$.
+A simulation can check whether the randomized sample size delivers the target
+power under the alternative ($\lambda_1 = \lambda_2 = 3.0$, so
+$\text{rr} = 1$) when the analysis tests non-inferiority against
+$\text{rr}_0 = 1.15$. The code below is intentionally not run during vignette
+building; use thousands of replicates for a real operating-characteristic
+check.
 
 Since `mutze_test()` tests $H_0\!: \log(\text{rr}) = 0$, we shift the
 z-statistic to test the NI null:
@@ -392,9 +357,9 @@ $$z_{\text{NI}} = \frac{\log(\text{rr}_0) - \hat{\beta}}{\widehat{\text{SE}}}$$
 
 and reject when $z_{\text{NI}} \geq z_{1-\alpha}$.
 
-```{r}
-n_sims <- 200
-n_per_arm <- ceiling(wald$n_total / 2)
+```{r, eval=FALSE}
+n_sims <- 5000
+n_per_arm <- ceiling(n_inflated / 2)
 
 enroll_rate <- data.frame(rate = n_per_arm * 2, duration = accrual_dur)
 fail_rate <- data.frame(
@@ -404,7 +369,7 @@ fail_rate <- data.frame(
 )
 dropout_df <- data.frame(
   treatment = c("Control", "Experimental"),
-  rate      = c(-log(dropout_inflate), -log(dropout_inflate)),
+  rate      = c(-log(dropout_retained), -log(dropout_retained)),
   duration  = c(100, 100)
 )
 
@@ -434,13 +399,12 @@ data.frame(
 ) |> knitr::kable(caption = "Fixed-design simulation verification.")
 ```
 
-With only `r n_sims` replicates the simulation SE is about
-`r round(sqrt(empirical_power * (1 - empirical_power) / n_sims) * 100, 1)` pp.
-Production verification should use $\geq$ 5,000 replicates.
+At 5,000 replicates, the Monte Carlo standard error near 95% power is about
+0.3 percentage points.
 
 ## IMPACT trial
 
-The IMPACT trial (Lipson et al., 2018) compared triple therapy
+The IMPACT trial [@lipson2018impact] compared triple therapy
 (fluticasone furoate/umeclidinium/vilanterol, FF/UMEC/VI) to two dual
 therapies (FF/VI and UMEC/VI) in COPD patients with a history of
 exacerbations. The protocol (Section 8.2.1) gives exact sample size
@@ -448,15 +412,13 @@ assumptions.
 
 ### The user's input
 
-> "The sample size of approximately 10,000 patients (4,000 FF/UMEC/VI,
-> 4,000 FF/VI, 2,000 UMEC/VI) provides 90% power to detect a 15%
-> reduction in the rate of moderate/severe exacerbations with FF/UMEC/VI
-> versus UMEC/VI (and 12% versus FF/VI) at a two-sided 1% significance
-> level, assuming an annual exacerbation rate of 0.80 in the triple
-> therapy arm and a negative binomial dispersion parameter of 0.75
-> (from the TORCH trial and FF/VI programs). Follow-up is 52 weeks.
-> Exacerbations require 28 symptom-free days to be counted as new
-> events."
+The user might summarize the protocol assumptions this way:
+
+> Size the two pairwise IMPACT contrasts from a 2:2:1 trial: 4000 on triple
+> therapy, 4000 on FF/VI, and 2000 on UMEC/VI. Use 90% power, two-sided 1%
+> alpha, a 0.80/year triple-therapy event rate, 15% reduction versus UMEC/VI,
+> 12% reduction versus FF/VI, dispersion k = 0.75, 52 weeks of follow-up, and a
+> 28-day event gap.
 
 ### Extraction and computation
 
@@ -533,9 +495,8 @@ data.frame(
 The protocol states $k = 0.75$ but acknowledges uncertainty. How does
 sample size vary with $k$?
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.width=6, fig.height=4}
 library(ggplot2)
-library(plotly)
 
 k_vals <- seq(0.3, 1.5, by = 0.05)
 n_by_k <- vapply(k_vals, function(k) {
@@ -549,10 +510,8 @@ n_by_k <- vapply(k_vals, function(k) {
 }, numeric(1))
 
 sens_df <- data.frame(k = k_vals, N = n_by_k)
-sens_df$label <- sprintf("k = %.2f\nN = %s", sens_df$k,
-                          format(sens_df$N, big.mark = ","))
 
-p <- ggplot(sens_df, aes(x = k, y = N, text = label)) +
+p <- ggplot(sens_df, aes(x = k, y = N)) +
   geom_line(linewidth = 0.8, colour = "#2166AC") +
   geom_point(
     data = sens_df[sens_df$k == 0.75, ],
@@ -569,7 +528,7 @@ p <- ggplot(sens_df, aes(x = k, y = N, text = label)) +
   ) +
   theme_minimal(base_size = 12)
 
-ggplotly(p, tooltip = "text")
+p
 ```
 
 The sample size increases substantially with $k$ — motivating blinded
@@ -598,18 +557,19 @@ data.frame(
 
 ## OPERA I/II trials
 
-The OPERA I and II trials (Hauser et al., 2017) evaluated ocrelizumab
-vs interferon beta-1a (Rebif) in relapsing multiple sclerosis. The
-primary endpoint was the annualized relapse rate (ARR) at 96 weeks,
-analyzed with a negative binomial model.
+The OPERA I and II trials [@hauser2017ocrelizumab] evaluated ocrelizumab
+vs interferon beta-1a (Rebif) in relapsing multiple sclerosis. The primary
+endpoint was the annualized relapse rate (ARR) at 96 weeks, analyzed with a
+negative binomial model.
 
 ### The user's input
 
-> "Each OPERA study randomized 400 patients per arm. The assumed
-> control (Rebif) annualized relapse rate was 0.33, with a predicted
-> 50% relative reduction to 0.165 for ocrelizumab. Using a two-sided
-> alpha of 0.05 and allowing for 20% dropout over 2 years, 400 per arm
-> provides 84% power. The analysis uses a negative binomial model."
+The user might summarize the published design as:
+
+> Each OPERA study randomized about 400 patients per arm. Use a Rebif ARR of
+> 0.33/year, a 50% relative reduction for ocrelizumab, two-sided alpha 0.05,
+> 84% power, 96 weeks of follow-up, and 20% dropout. The protocol does not give
+> an NB dispersion value for sample-size replication.
 
 ### Extraction and computation
 
@@ -647,15 +607,17 @@ knitr::kable(opera_df,
 )
 ```
 
-With a 50% rate reduction, the NB sample size is modest even with
-substantial overdispersion. The protocol's 400 per arm was sized by
-t-test; the NB model gives a similar or slightly different answer
-depending on the assumed $k$.
+With a 50% rate reduction, this NB calculation gives fewer than 400 subjects per
+arm across the assumed dispersion range. That does not mean the protocol was
+over-sized: the published calculation used a different sizing model, and this
+NB replication requires an assumed $k$ that was not stated in the excerpt. The
+skill should therefore present this as a sensitivity analysis, not an exact
+replication.
 
 
-## Friede & Schmidli — formula validation
+## Friede & Schmidli - formula validation
 
-Friede & Schmidli (2010) provide sample sizes for balanced COPD
+Friede & Schmidli [-@friede2010blinded] provide sample sizes for balanced COPD
 superiority trials using the same Wald formula implemented in
 `sample_size_nbinom()`. Their Table 1 gives fixed-design $n_0$ per group
 for specific combinations of rate ratio $\theta$, overall event rate
@@ -719,11 +681,16 @@ knitr::kable(
     power     = friede_scenarios$power,
     published = published_n0,
     gsDesignNB = friede_results,
-    match     = ifelse(friede_results == published_n0, "Yes", "No")
+    difference = friede_results - published_n0,
+    within_one = ifelse(abs(friede_results - published_n0) <= 1, "Yes", "No")
   ),
   caption = "Friede & Schmidli (2010) Table 1: fixed-design validation."
 )
 ```
+
+The replicated values match the published table exactly or within one subject
+per arm, which is the expected resolution for small differences in rounding
+conventions.
 
 ### Non-inferiority extension
 
@@ -762,9 +729,9 @@ and different dispersion — both are COPD trials with identical 15%
 non-inferiority margins.
 
 
-## Mutze et al. — group sequential validation
+## Mutze et al. - group sequential parameterization examples
 
-Mutze et al. (2019) extended the fixed-design NB sample size formula
+Mutze et al. [-@mutze2019group] extended the fixed-design NB sample size formula
 to group sequential designs and provide Tables 4 and 5 with information
 and sample size calculations under O'Brien-Fleming and Pocock spending
 functions.
@@ -962,9 +929,9 @@ al., 2019, Section 5.2).
 
 ## PARADIGM-HF: recurrent-event re-analysis
 
-The PARADIGM-HF trial (McMurray et al., 2014) was designed with a
-time-to-first-event primary endpoint (CV death or HF hospitalization)
-analyzed by Cox regression. The protocol specified:
+The PARADIGM-HF trial [@mcmurray2014paradigm] was designed with a
+time-to-first-event primary endpoint (CV death or HF hospitalization) analyzed
+by Cox regression. The protocol specified:
 
 - N = 7,980 (3,990 per arm)
 - CV death hazard reduction: 15%, event rate 7%/year in enalapril
@@ -1023,9 +990,9 @@ below summarizes what the skill handled well and where challenges arose.
 | Dispersion check | FLAME, IMPACT | Values checked against disease-area ranges (COPD: $k \in [0.5, 1.0]$); no false alarms |
 | Event gap handling | IMPACT | 28-day gap automatically triggered Jensen correction; sensitivity table showed practical impact |
 | Non-inferiority | FLAME, Friede NI | NI margin ($\text{rr}_0 = 1.15$) correctly distinguished from the treatment effect |
-| Formula validation | Friede & Schmidli | Published $n_0$ values matched exactly, confirming Wald formula implementation |
+| Formula validation | Friede & Schmidli | Published $n_0$ values matched exactly or within one subject per arm, confirming the Wald formula implementation up to rounding |
 | Score vs Wald comparison | FLAME, BOLD | Both sizing rules computed; difference clearly explained in context |
-| Dropout modeling | FLAME | Exposure-integral approach yielded N closer to protocol target than naïve inflation |
+| Dropout modeling | FLAME | Inflation and exposure-integral approaches separated so protocol replication and prospective dropout modeling are not conflated |
 
 ### Challenges
 
@@ -1051,9 +1018,10 @@ below summarizes what the skill handled well and where challenges arose.
 3. **Flag non-NB primaries.** When the protocol's primary analysis is
    Cox or another model, the skill should state clearly that the NB
    calculation is exploratory or hypothetical.
-4. **Dropout: prefer the exposure integral.** Across examples, the
-   exposure-integral method (`dropout_rate > 0`) consistently matched
-   published targets better than $N/(1-p)$ inflation.
+4. **Dropout handling depends on wording.** If dropout is a true loss of
+   follow-up, model it through the exposure integral with `dropout_rate > 0`.
+   If the protocol combines dropout with non-evaluable or protocol-violator
+   assumptions, an inflation factor may be the better replication.
 5. **Event gap matters more at high rates.** The Jensen correction had
    a visible impact for IMPACT (COPD, rate ≈ 0.9/year, 28-day gap) but
    would be negligible for MS relapses at 0.3/year.
@@ -1061,10 +1029,12 @@ below summarizes what the skill handled well and where challenges arose.
 ### Practical notes for literature replication
 
 - **Dropout handling.** Modeling dropout through the exposure integral
-  (`dropout_rate > 0`) gives partial credit for dropout follow-up and
-  typically produces a sample size closer to published targets than a
-  simple $N/(1 - p)$ inflation. Convert cumulative dropout incidence
-  $p$ to an instantaneous rate: `dropout_rate = -log(1 - p) / T`.
+  (`dropout_rate > 0`) gives partial credit for dropout follow-up. Convert
+  cumulative dropout incidence $p$ to an instantaneous rate:
+  `dropout_rate = -log(1 - p) / T`. Use a simple $N/(1 - p)$ inflation when the
+  protocol describes non-evaluable patients, major protocol violators, or a
+  conventionally inflated randomized sample size rather than a pure dropout
+  process.
 - **Accrual pattern.** For a fixed-design replication where all patients
   get the same maximum follow-up, the accrual shape does not affect N.
 - **Event gap.** When a protocol does not mention a minimum inter-event
@@ -1078,3 +1048,5 @@ below summarizes what the skill handled well and where challenges arose.
 For group sequential designs and SSR studies, see the
 `group-sequential-simulation`, `ssr-example`, and
 `ssr-simulation-study` vignettes.
+
+## References
