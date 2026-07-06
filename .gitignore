@@ -24,4 +24,6 @@ paper/jss.cls
 paper/jsslogo.jpg
 data-raw/*.log
 data-raw/*.pid
+inst/extdata/score_sweep_results.rds
+inst/extdata/ssr_sim_vignette_outputs*.rds
 papers/

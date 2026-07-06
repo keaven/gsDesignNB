@@ -45,6 +45,13 @@
   to use the production score-test cache: 3,600 replicates per power scenario,
   20,000 per RR = 1 main-grid scenario, 1,000 per RR > 1 scenario, and 20,000
   per dispersion/test-statistic cell for the non-binding Type I tables.
+- Replaced the CRAN-bundled SSR trial-level simulation cache with compact
+  precomputed summaries for tables and figures, while leaving full raw
+  simulation caches available for local development or external archival.
+- Converted the score-vs-Wald simulation article from interactive widget output
+  to static vignette tables and figures backed by compact precomputed
+  summaries, reducing the CRAN package size while leaving the full simulation
+  cache available outside the CRAN build.
 - Updated the SSR simulation study to compare Wald and score tests at the same
   nominal one-sided alpha of 0.025, and aligned the SSR power simulations with
   the score final-analysis recommendation.
