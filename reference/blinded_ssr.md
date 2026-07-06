@@ -155,7 +155,7 @@ blinded_ssr(
 #>           6 
 #> 
 #> $dispersion_blinded
-#> [1] 1.617397e-05
+#> [1] 1.617394e-05
 #> 
 #> $lambda_blinded
 #> (Intercept) 
