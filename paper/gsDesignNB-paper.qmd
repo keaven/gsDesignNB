@@ -1,17 +1,41 @@
 ---
 title: "gsDesignNB: Group Sequential Design and Sample Size Re-estimation for Negative Binomial Recurrent Event Trials"
+title-plain: "gsDesignNB: Group Sequential Design and Sample Size Re-estimation for Negative Binomial Recurrent Event Trials"
+short-title: "gsDesignNB"
+author:
+  - name: Keaven Anderson
+    affiliation:
+      name: Merck & Co., Inc., Rahway, NJ, USA
+    email: keaven_anderson@merck.com
+  - name: Hongtao Zhang
+    affiliation:
+      name: Merck & Co., Inc., Rahway, NJ, USA
+  - name: Nan Xiao
+    affiliation:
+      name: Genentech, Inc., South San Francisco, CA, USA
+  - name: Andrea Maes
+    affiliation:
+      name: Merck & Co., Inc., Rahway, NJ, USA
+keywords:
+  - group sequential design
+  - R package
+  - recurrent events
+  - overdispersion
+  - negative binomial distribution
+  - sample size re-estimation
 format:
-  pdf:
+  quarto-journals/jss-pdf:
     number-sections: true
-    documentclass: article
-    geometry:
-      - margin=1in
-    fontsize: 11pt
-    linkcolor: blue
-    urlcolor: blue
-    citecolor: blue
+    keep-tex: true
+    journal:
+      type: article
+  html:
+    number-sections: true
+    toc: true
 bibliography: references.bib
-csl: https://www.zotero.org/styles/american-statistical-association
+execute:
+  warning: false
+  message: false
 abstract: |
   We present the R package **gsDesignNB** for planning, monitoring, and adapting clinical trials
   with recurrent event endpoints analyzed using negative binomial models. The package links fixed
@@ -19,10 +43,12 @@ abstract: |
   unblinded information estimation, sample size re-estimation (SSR), and recurrent-event simulation
   in a single workflow built on the **gsDesign** package. In the working model, conditional on
   treatment arm and a subject-level gamma frailty, recurrent events follow a Poisson process with
-  constant within-subject rate, yielding marginal negative binomial counts. For fixed designs, the
+  constant within-subject rate, yielding marginal negative binomial counts; a seasonal-rate
+  extension relaxes the constant-rate assumption for respiratory and other
+  calendar-time-dependent applications. For fixed designs, the
   package extends the methods of @zhu2014sample and @friede2010blinded to handle piecewise accrual,
-  piecewise exponential dropout, maximum follow-up truncation, and protocol-defined gaps between counted
-  events. Because statistical information for the log rate ratio depends jointly on exposure, event
+  piecewise exponential dropout, maximum follow-up truncation, and protocol-defined minimum
+  intervals between countable events (combining event duration and required symptom-free days). Because statistical information for the log rate ratio depends jointly on exposure, event
   rates, and dispersion, it is not generally proportional to raw event counts. We derive and
   implement a second-order delta-method correction for the Jensen-inequality bias in the event-gap
   effective-rate approximation; in a 64-scenario simulation sweep, the correction reduces
@@ -40,17 +66,25 @@ abstract: |
   (MoM) nuisance-parameter estimation: when the NB ML fit is near-Poisson the software switches
   to a Poisson Wald or score test, but under extreme overdispersion or ML non-convergence it
   switches to a MoM-based NB test using the observed Fisher information formula, avoiding the
-  anti-conservative behaviour of a blind Poisson fallback. The package also supports calendar-time
-  group sequential monitoring and both blinded and unblinded SSR. A 90-scenario SSR article
+  Type I error inflation of a blind Poisson fallback. The package also supports calendar-time
+  group sequential monitoring, including efficacy, futility, and harm-bound designs, and both
+  blinded and unblinded SSR. A 90-scenario SSR article
   illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
   should be checked under the null with the planned final test statistic. In our examples, the
-  Wald test is mildly anti-conservative after SSR, whereas the score test preserves Type I error
+  Wald test exhibits mild Type I error inflation after SSR, whereas the score test preserves Type I error
   more conservatively. The paper emphasizes
   both the statistical methodology and the software architecture that make these workflows
   reproducible.
 ---
 
-# Introduction
+```{r setup, include=FALSE}
+library(gsDesignNB)
+library(gsDesign)
+library(ggplot2)
+library(knitr)
+```
+
+## Introduction
 
 Recurrent event endpoints are common in clinical trials for conditions such as multiple sclerosis
 relapses, COPD exacerbations, and heart failure hospitalizations. When every patient has the same
@@ -58,21 +92,30 @@ underlying event rate, a Poisson model suffices: the variance equals the mean, a
 accrues linearly with exposure. Real patient populations, however, exhibit substantial
 between-patient heterogeneity in event rates. Sicker patients contribute many events while most
 contribute few, inflating the observed variance well beyond the Poisson mean. Ignoring this
-overdispersion leads to anticonservative tests and overstated power, understating the sample size
+overdispersion leads to inflated Type I error and overstated power, understating the sample size
 needed to detect a clinically meaningful treatment effect.
 
 The negative binomial (NB) model addresses this by adding a single dispersion parameter $k$
 that captures the excess variation. Published NB fits from pivotal or large trials confirm that
-$k>0$ is the rule rather than the exception: estimates commonly fall in the $0.3$–$1.5$ range
-across disease areas where recurrent events are the primary endpoint, including COPD
+$k>0$ is the rule rather than the exception: reported estimates range from approximately $0.3$
+to $3.0$ or higher across disease areas including COPD
 exacerbations [@wedzicha2016flame; @lipson2018impact], heart failure hospitalizations
-[@mcmurray2014paradigm], and multiple sclerosis relapses [@hauser2017ocrelizumab]. Even moderate
+[@mcmurray2014paradigm], and multiple sclerosis relapses [@hauser2017ocrelizumab].
+As a rough calibration, $k < 0.3$ indicates near-Poisson behaviour, $0.3 \leq k \leq 1.0$ is
+moderate overdispersion (typical of many pivotal trials), $k > 1.5$ is high (common for severe
+COPD exacerbations and asthma endpoints), and $k > 5$ is extreme (where method-of-moments
+fallback estimation may become relevant). Dispersion is rarely reported directly in publications;
+it can often be back-calculated from published mean and variance (or confidence intervals) of
+event counts, or from the NB shape parameter $\theta_{\text{NB}} = 1/k$ in `MASS::glm.nb()`
+notation. The package function `estimate_nb_mom()` supports method-of-moments estimation from
+summary statistics. Even moderate
 dispersion materially reduces the Fisher information for the log rate that each subject
 contributes — from $\mu_i$ under the Poisson to $\mu_i/(1+k\mu_i)$ under the NB — so that a design
 ignoring $k$ can understate the required sample size by 10–30%.
 
 Negative binomial design work also becomes operationally more complicated once a trial moves beyond
-a fixed final analysis. Information for the log rate ratio depends jointly on exposure, event rates,
+a fixed final analysis to include interim analyses.
+Information for the log rate ratio depends jointly on exposure, event rates,
 and dispersion, so raw event counts are only an incomplete proxy for monitoring. Accrual may be
 piecewise, dropout may truncate follow-up, interim looks may be scheduled on the calendar rather
 than exactly on information fractions, and some protocols only count events separated by a minimum
@@ -85,7 +128,8 @@ The **gsDesignNB** package for R provides an integrated toolkit for these tasks:
    protocol event gaps, and either Wald or score-test sizing.
 2. Calendar-time group sequential designs that inherit spending-function infrastructure from the
    **gsDesign** package [@JTBook].
-3. Blinded and unblinded information estimation together with blinded and unblinded SSR, with a
+3. Blinded and unblinded information estimation together with blinded and unblinded SSR
+   [@friede2010blinded; @mutze2019group], with a
    disciplined maximum likelihood / method-of-moments fallback scheme that keeps Wald and score
    inference well-defined under extreme overdispersion or ML non-convergence.
 4. Recurrent-event simulation, including seasonal rates, event- and information-driven interim
@@ -102,28 +146,33 @@ first describes that workflow, including the different notions of "gaps" that ar
 recurrent-event trials, and then presents the methodological and simulation results that motivated
 the software design.
 
-# Package overview and workflow
+## Package overview and workflow
 
-## Scope and relation to gsDesign
+### Scope and relation to gsDesign
 
 `sample_size_nbinom()` is the fixed-design entry point. It returns a
 `sample_size_nbinom_result` object containing the planning assumptions, expected exposure, expected
 events, and variance of the log rate ratio. `gsNBCalendar()` lifts that object into a `gsNB` design
 that inherits from `gsDesign`, so the NB-specific information calculations live in
 **gsDesignNB** while spending functions, boundary summaries, and integer rounding remain compatible
-with the underlying **gsDesign** ecosystem. For simulation, `nb_sim()` and `nb_sim_seasonal()`
+with the underlying **gsDesign** ecosystem, including efficacy, futility, and harm-bound
+monitoring designs. For simulation, `nb_sim()` and `nb_sim_seasonal()`
 generate subject-level recurrent-event histories, `cut_data_by_date()` and related helpers convert
 them to interim analysis data sets, and `sim_gs_nbinom()` or `sim_ssr_nbinom()` produce operating
 characteristics that can be summarized with `summarize_gs_sim()` and `summarize_ssr_sim()`.
 
 | Task | Primary functions | Main outputs |
 |:-----|:------------------|:-------------|
-| Fixed design planning | `sample_size_nbinom()`, `compute_info_at_time()` | `sample_size_nbinom_result` with Wald or score-test sizing |
+| **Planning** | | |
+| Fixed design | `sample_size_nbinom()`, `compute_info_at_time()` | `sample_size_nbinom_result` with Wald or score-test sizing |
 | Calendar-time GS design | `gsNBCalendar()`, `toInteger()`, `gsBoundSummary()` | `gsNB` object with information and calendar timing |
+| **Data generation and interim construction** | | |
 | Recurrent-event data generation | `nb_sim()`, `nb_sim_seasonal()` | Subject-level event histories |
 | Interim data construction | `cut_data_by_date()`, `get_cut_date()`, `get_analysis_date()`, `cut_completers()` | One row per randomized subject with events and exposure |
+| **Inference and monitoring** | | |
 | Interim inference and information | `mutze_test()`, `calculate_blinded_info()`, `estimate_nb_mom()` | Wald or score statistics and blinded/unblinded information estimates |
 | GS operating-characteristic simulation | `sim_gs_nbinom()`, `check_gs_bound()`, `summarize_gs_sim()` | Boundary-crossing summaries |
+| **Adaptive designs** | | |
 | Adaptive simulation | `blinded_ssr()`, `unblinded_ssr()`, `sim_ssr_nbinom()`, `summarize_ssr_sim()` | Adapted sample sizes and SSR summaries |
 
 The package also re-exports the common **gsDesign** spending functions so that users can stay in one
@@ -131,25 +180,180 @@ namespace when they move from fixed design planning to spending-function specifi
 the simulation engines rely on **data.table** for aggregation and on reproducible parallel random
 number streams for larger Monte Carlo studies.
 
-## Timing, information, and three notions of gaps
+### Worked design example
 
-The package documentation uses the word "gap" in three different senses, and distinguishing them is
-important for both the methods and the software.
+To make the workflow concrete, consider a semi-real recurrent-event superiority trial inspired by
+exacerbation studies. The control-arm event rate is 0.5 events/month, the target rate ratio is 0.70,
+the dispersion is $k = 0.5$, maximum follow-up is 12 months, annual dropout is 10%, and the
+endpoint counts only events separated by at least 20 days. Accrual is piecewise, with 12
+participants/month for the first 6 months and 24 participants/month for the next 6 months. The
+planned analysis uses the score test with one-sided $\alpha = 0.025$ and 90% power.
+The futility boundary uses a Cauchy spending function
+[@anderson2010fitting] with parameters specifying that 56% and 63% of total futility
+spending occur by information fractions 0.4 and 0.75, respectively; this yields spending
+that increases relatively quickly between information fractions 0 and 0.2, flattens
+between 0.2 and 0.85, and then rises again from 0.85 to 1.
 
-| Concept | Scale | Role in the package |
-|:--------|:------|:--------------------|
-| Analysis gap $\Delta_i$ | Trial calendar | Minimum time between database locks or interim looks |
-| Timing heterogeneity | Accrual, dropout, and follow-up | Determines how exposure and information accumulate over calendar time |
-| Event gap $g$ | Patient time | Defines which recurrent events count and how much post-event time is removed from the at-risk set |
+```{r worked-design}
+ex_fixed <- sample_size_nbinom(
+  lambda1 = 0.5,              # control event rate (events/month)
+  lambda2 = 0.35,             # experimental event rate (RR = 0.70)
+  dispersion = 0.5,           # NB overdispersion parameter k
+  power = 0.90,               # target power
+  alpha = 0.025,              # one-sided Type I error
+  accrual_rate = c(12, 24),   # relative enrollment rates (ramp-up)
+  accrual_duration = c(6, 6), # duration of each accrual period (months)
+  trial_duration = 24,        # total study duration (months)
+  dropout_rate = 0.10 / 12,   # monthly dropout rate (10% annual)
+  max_followup = 12,          # maximum per-subject follow-up (months)
+  event_gap = 20 / 30.4375,   # 20-day minimum gap between counted events
+  test_type = "score"         # score-test sizing
+)
 
-The first two affect *when* an analysis can occur. The third affects *which* events contribute to
-the endpoint and how much at-risk exposure remains after each counted event. In **gsDesignNB**, the
-same `event_gap` argument is carried through planning, simulation, and interim data cutting, so the
-effective event rate, counted events, and at-risk exposure stay aligned. By contrast, calendar-time
-analysis constraints are handled through `analysis_times` in `gsNBCalendar()` or through the search
-criteria in `get_cut_date()`.
+# Note: the gsDesign argument `k` below is the number of analyses (K),
+# not the NB dispersion parameter k used elsewhere in this paper.
+ex_gs <- ex_fixed |>
+  gsNBCalendar(
+    k = 3,                                  # K = 3 analyses (2 interim + final)
+    test.type = 4,                          # non-binding futility bound
+    alpha = 0.025,                          # one-sided alpha
+    sfu = sfHSD,                            # efficacy: Hwang-Shih-DeCani
+    sfupar = -2,                            # HSD gamma parameter
+    sfl = sfCauchy,                         # futility: Cauchy spending
+    sflpar = c(0.4, 0.75, 0.56, 0.63),      # 56%/63% spending at IF 0.4/0.75
+    analysis_times = c(9, 14, 24)           # calendar months for each look
+  ) |>
+  gsDesignNB::toInteger()
+```
 
-## Primary and secondary workflows
+```{r worked-design-summary, echo=FALSE}
+ex_design_summary <- data.frame(
+  Quantity = c(
+    "Fixed-design sample size",
+    "Group sequential final sample size",
+    "Target information",
+    "Expected final counted events",
+    "Average final exposure",
+    "Score-test sizing"
+  ),
+  Value = c(
+    round(ex_fixed$n_total),
+    round(ex_gs$n_total[ex_gs$k]),
+    round(ex_gs$n.I[ex_gs$k], 1),
+    round(ex_gs$events[ex_gs$k], 1),
+    round(ex_gs$exposure[ex_gs$k], 1),
+    ex_fixed$test_type
+  )
+)
+
+knitr::kable(
+  ex_design_summary,
+  caption = "Summary of the semi-real recurrent-event design example."
+)
+```
+
+The fixed design requires `r round(ex_fixed$n_total)` participants. After calendar-time group
+sequential monitoring and integer rounding, the final maximum sample size is
+`r round(ex_gs$n_total[ex_gs$k])`. The same object stores the expected information, exposure, and
+event totals at each analysis. These quantities are the inputs used by the simulation engines, so
+the operating-characteristic calculations inherit the same calendar and recurrent-event assumptions.
+
+```{r worked-boundary-table, echo=FALSE}
+ex_boundaries <- data.frame(
+  Look = c("IA 1", "IA 2", "Final"),
+  Month = ex_gs$T,
+  `Information fraction` = round(ex_gs$timing, 3),
+  `Cumulative N` = round(ex_gs$n_total),
+  `Expected events` = round(ex_gs$events, 1),
+  `Upper Z` = round(ex_gs$upper$bound, 3),
+  `Lower Z` = round(ex_gs$lower$bound, 3),
+  check.names = FALSE
+)
+
+knitr::kable(
+  ex_boundaries,
+  caption = "Calendar-time group sequential looks for the design example."
+)
+```
+
+```{r worked-design-figure, echo=FALSE, fig.cap="Information fraction and cumulative sample size for the design example."}
+ex_plot_data <- data.frame(
+  Look = factor(c("IA 1", "IA 2", "Final"), levels = c("IA 1", "IA 2", "Final")),
+  Month = ex_gs$T,
+  Information = ex_gs$timing,
+  N = ex_gs$n_total
+)
+
+if_breaks <- c(0, ex_gs$timing)
+if_labels <- c("0", format(round(ex_gs$timing, 2), nsmall = 2))
+
+ggplot(ex_plot_data, aes(x = Month, y = Information)) +
+  geom_line(linewidth = 0.8, color = "#1f78b4") +
+  geom_point(size = 2.5, color = "#1f78b4") +
+  geom_text(aes(label = paste0("N=", round(N))), vjust = -0.8, size = 3) +
+  scale_x_continuous(breaks = ex_gs$T) +
+  scale_y_continuous(
+    limits = c(0, 1.05),
+    breaks = if_breaks,
+    labels = if_labels
+  ) +
+  labs(x = "Calendar month", y = "Information fraction") +
+  theme_minimal(base_size = 11) +
+  theme(
+    panel.grid.major = element_line(color = "grey85"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+The worked example is intentionally small enough to render as part of the manuscript, but it is
+not a toy calculation: it uses piecewise accrual, dropout, maximum follow-up, an event gap, score
+sizing, calendar-time monitoring, non-binding futility, and integer rounding. The longer vignettes
+reuse the same objects for simulation and SSR operating-characteristic studies.
+
+### Calendar timing, enrollment, and event gaps
+
+Interim and final analyses are specified as calendar times (months from first enrollment) via the
+`analysis_times` argument to `gsNBCalendar()`. This is computationally simpler than solving for
+the calendar dates at which target information fractions are reached, and in practice it is
+straightforward to adjust calendar times to approximate desired information fractions. At the
+simulation stage, `sim_gs_nbinom()` and `sim_ssr_nbinom()` can combine multiple requirements
+(e.g., both a minimum calendar time and a minimum information fraction) to trigger each analysis.
+
+The `accrual_rate` and `accrual_duration` arguments together describe the *relative* enrollment
+pattern over time. For example, `accrual_rate = c(12, 24)` with `accrual_duration = c(6, 6)`
+specifies a 12-month enrollment period in which the rate doubles after the first 6 months.
+When sizing the trial, `sample_size_nbinom()` multiplies all values in `accrual_rate` 
+by a common constant so that
+the total sample size achieves the targeted power; thus `accrual_rate` defines the enrollment
+*shape*, not the absolute number of subjects per month.
+
+Some recurrent-event protocols only count events separated by a minimum patient-level interval.
+This interval typically combines two components: the duration of the event itself (e.g., a 7-day
+course of corticosteroids for a COPD exacerbation) plus a protocol-defined separation period to
+declare a subsequent event as distinct (e.g., an additional 7 days symptom-free). The `event_gap`
+argument represents the *total* exclusion window after each counted event; the user is responsible
+for summing any event-duration and separation components appropriate to their protocol. For
+example, a COPD trial with 7-day steroid courses and a 7-day new-event rule would use
+`event_gap = 14 / 30.4375` (14 days expressed in months).  The `event_gap` parameter can
+represent either a start-to-start or an end-to-start convention, depending on what the user
+includes in the total: a start-to-start rule simply sets `event_gap` to the minimum start-to-start
+interval, whereas an end-to-start rule adds the expected event duration.
+
+The package implements an "excluding recovery time" (ERT) model: the gap reduces both the
+effective event rate and the at-risk exposure. In `nb_sim()`, events are generated sequentially so
+that after each counted event, the next event cannot occur until at least `event_gap` time units
+later --- this is an integral part of the data-generation process, not a post-hoc discard. The
+same gap rule is applied in the planning formulas (`sample_size_nbinom()`) and data-cutting
+functions (`cut_data_by_date()`), keeping counted events and exposure aligned throughout the
+workflow.
+
+Protocols that use an "always-at-risk" (AAR) exposure offset --- where the full calendar time on
+study enters the log-exposure term regardless of event-gap periods --- should set `event_gap = 0`
+and combine events externally according to their protocol-defined counting rule.  Under AAR, event
+gaps affect event *counting* but not the exposure offset, so the gap-correction machinery in the
+package is not needed.
+
+### Primary and secondary workflows
 
 For most users, the package workflow is:
 
@@ -168,46 +372,39 @@ looks, non-inferiority and super-superiority designs, blinded-information diagno
 interactive Shiny front end to the SSR engine. These are enumerated with their corresponding
 vignettes in Section 6.3.
 
-## Dropout, MAR, and imputation scope
+### Dropout and missing data
 
 Dropout is represented in **gsDesignNB** as exposure truncation. At the planning stage,
-`sample_size_nbinom()` accounts for piecewise exponential dropout and maximum follow-up through the expected
-exposure $\bar{t}_g$ in each treatment arm; at interim analyses, data-cutting functions retain each
-subject's observed counted events and observed time at risk, including partial follow-up before
-dropout or the analysis cut. Thus the default analysis is not a complete-case analysis that discards
-subjects who discontinue early. It is an observed-exposure likelihood analysis for recurrent-event
-counts.
+`sample_size_nbinom()` accounts for piecewise exponential dropout and maximum follow-up through the
+expected exposure $\bar{t}_g$ in each treatment arm; at interim analyses, data-cutting functions
+retain each subject's observed counted events and observed exposure time, including partial
+follow-up before dropout or the analysis cut. Every randomized subject contributes to the
+analysis regardless of whether they complete follow-up --- including subjects who discontinue
+before experiencing any event (contributing observed exposure $> 0$ and event count $= 0$). Each
+subject's counted events and observed exposure time enter the negative binomial likelihood through
+the log-exposure offset, making this an observed-exposure likelihood analysis rather than a
+complete-case analysis that discards early discontinuers.
 
-Under an ignorable missing-data process -- missing at random (MAR) together with distinct parameters
-for the observation and outcome processes -- direct likelihood inference can use the observed data
-without modelling the missingness mechanism [@rubin1976inference]. For the NB log-rate-ratio
-estimand used here, this means that MAR dropout does not by itself require multiple imputation (MI):
-the event count accrued before dropout and its corresponding exposure time already contribute to the
-NB likelihood and to the Wald variance through the offset and information formula. MI may still be
-useful as an auxiliary reporting or modelling device when important covariates are incompletely
-observed, but it is not needed simply to make the MAR recurrent-event analysis valid.
+Under an ignorable missing-data process --- missing at random (MAR) together with distinct
+parameters for the observation and outcome processes --- direct likelihood inference is valid
+without modelling the missingness mechanism [@rubin1976inference]. This includes the common
+treatment-policy estimand scenario in which subjects who discontinue treatment are followed for the
+planned study duration ("retrieved dropout"): their post-discontinuation events and exposure
+contribute directly to the NB likelihood. When within-subject rates may vary over calendar time
+(e.g., due to seasonality), the `nb_sim_seasonal()` simulator captures this variation in the
+data-generation model while the likelihood analysis retains the same observed-exposure structure.
 
-Missing not at random (MNAR) dropout is different. If the post-dropout event process depends on
-unobserved future outcomes or unmeasured deterioration, the observed-exposure likelihood no longer
-identifies the same full-follow-up estimand without additional assumptions. In that setting MI is
-best treated as a sensitivity-analysis framework rather than as a default primary analysis
-[@nrc2010missing]. For recurrent events, the controlled-imputation approach of
-@keene2014missing is a useful template: it uses a negative multinomial formulation, compatible with
-the Gamma--Poisson view of NB counts, to impute missing post-withdrawal recurrent events under
-reference-based assumptions such as borrowing the control-arm event behaviour for active-arm
-dropouts. This targets de facto sensitivity estimands rather than replacing the MAR primary analysis.
+Missing not at random (MNAR) dropout is a different setting. If the post-dropout event process
+depends on unobserved future outcomes or unmeasured deterioration, the observed-exposure likelihood
+no longer identifies the same full-follow-up estimand without additional assumptions. A natural
+future extension would add MNAR sensitivity analysis by imputing post-dropout events under
+reference-based assumptions (e.g., experimental-arm dropouts revert to control-arm rates)
+compatible with the Gamma--Poisson model; this is not currently implemented
+[@nrc2010missing; @keene2014missing].
 
-A useful future extension would therefore preserve the censoring reason and planned follow-up horizon
-in the simulated data, then impute post-dropout counts or event times from an NB recurrent-event
-model with treatment, exposure, prior event history, dropout reason, and prespecified
-reference-based or delta-adjusted assumptions for informative dropout. Each imputed data set would be
-analyzed with the same NB Wald estimand, with variance estimation checked as part of the sensitivity
-analysis. When `event_gap` is part of the estimand, imputing event times rather than only total counts
-would be preferable so that the protocol counting rule can be re-applied consistently.
+## Sample size methodology
 
-# Sample size methodology
-
-## Negative binomial model
+### Negative binomial model
 
 For subject $i$ in treatment arm $g$ with exposure time $t_i$, the event count $Y_i$ follows a
 negative binomial distribution with mean $\mu_i = \lambda_g t_i$ and variance
@@ -217,9 +414,11 @@ rate
 $\Lambda_i \sim \text{Gamma}(\text{shape}=1/k,\ \text{scale}=k\lambda_g)$,
 so $E[\Lambda_i] = \lambda_g$ and $\text{Var}(\Lambda_i) = k\lambda_g^2$, and, conditional on
 $\Lambda_i$, the event count is $\text{Poisson}(\Lambda_i t_i)$. In `MASS::glm.nb()` terminology
-the shape parameter $\theta_{\text{NB}} = 1/k$.
+the shape parameter $\theta_{\text{NB}} = 1/k$; thus $k = 1/\theta_{\text{NB}}$.
+(Throughout this paper, $k$ always denotes the NB dispersion parameter except where explicitly
+noted as the number of analyses $K$ in the `gsDesign` interface.)
 
-## Wald and score-test sample size formulas
+### Wald and score-test sample size formulas
 
 The treatment effect is the log rate ratio $\theta = \log(\lambda_2/\lambda_1)$, estimated via
 maximum likelihood under a negative binomial GLM with log link and exposure offset. The design
@@ -242,9 +441,12 @@ n_1 = \frac{(z_\alpha + z_\beta)^2}{(\theta - \theta_0)^2}
 \right]
 $$
 
-where $\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, and $k_g$ may be
+where $\theta_0 = \log(\texttt{rr0})$ is the null log rate ratio ($\theta_0 = 0$ for superiority),
+$\mu_g = \lambda_g \bar{t}_g$, $\bar{t}_g$ is the average exposure, and $k_g$ may be
 inflated by a variance correction factor $Q_g = E[t_g^2]/(E[t_g])^2$ to account for variable
-follow-up [@zhu2014sample]. Accordingly, two analyses with similar event totals can carry
+follow-up [@zhu2014sample]. Throughout, subscript $g = 1$ denotes the control arm and $g = 2$ the
+experimental arm; $k_g$ is the arm-specific dispersion, which reduces to a common $k$ when
+specified as a scalar. Accordingly, two analyses with similar event totals can carry
 different information if follow-up or dispersion differs.
 
 This is the default `test_type = "wald"` calculation in `sample_size_nbinom()`. It is equivalent
@@ -262,7 +464,7 @@ two-variance calculation in the spirit of restricted-null score-test sample sizi
 
 $$
 n_1 =
-\frac{(z_{\alpha/s}\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
+\frac{(z_\alpha\sqrt{V_0} + z_\beta\sqrt{V_1})^2}
      {(\theta - \theta_0)^2},
 $$
 
@@ -281,24 +483,33 @@ planned alternative information scale.
 
 This distinction leads to a practical recommendation. The Zhu--Lakkis / Friede--Schmidli / Mutze
 formula should remain the baseline for a Wald primary analysis and for moderate-information designs
-where simulation confirms Type I error. When the sample size is modest, dispersion or event gaps
-are large, the null margin differs from 1, or adaptive/group sequential decisions make Type I
-calibration central, the more important move is often to use a score statistic for the analysis
-and operating-characteristic simulations. The two-variance score formula is useful as a
+where simulation confirms Type I error. A score statistic for the analysis
+and operating-characteristic simulations is often the more appropriate choice when any of the
+following conditions hold:
+
+- total sample size is small (e.g., fewer than ${\sim}200$ per arm),
+- dispersion is high ($k \geq 1$) or event gaps are large ($\geq 20$ days),
+- the null margin differs from 1 (non-inferiority or super-superiority), or
+- adaptive or group sequential decisions make Type I calibration central.
+
+The two-variance score formula is useful as a
 test-aligned alternative and diagnostic, but it is not automatically the most powerful choice.
 For superiority designs like those studied below, the traditional Wald sample size paired with the
 score test can be a defensible practical default because it preserves Type I error and provides a
 small sample-size margin. Final designs should therefore compare Wald and score sizing under the
 planned score test rather than assuming one formula is uniformly preferable.
+In practice, this comparison is best made through simulation, as illustrated in the group
+sequential example below.
 
 In `sample_size_nbinom()`, the same information framework is used for superiority,
 non-inferiority, and super-superiority designs via the `rr0` argument, and the nuisance parameters
 may be specified either as common scalars or as arm-specific vectors.
 
-## Jensen's inequality correction for event gaps
+### Jensen's inequality correction for event gaps
 
-In trials with a mandatory gap of duration $\gamma$ after each counted event (e.g., a recovery
-period or a protocol-defined "new-event" window), the effective counted-event rate for a subject
+In trials with a mandatory gap of duration $\gamma$ after each counted event --- representing the
+total exclusion window that may include event duration (e.g., a course of treatment) plus a
+protocol-defined separation period --- the effective counted-event rate for a subject
 with underlying Poisson rate $\lambda$ is $\lambda_\text{eff} = \lambda/(1 + \lambda\gamma)$
 [@coxlewis1966]. This follows from elementary renewal theory: expected events per unit calendar
 time equal the reciprocal of the expected inter-event interval $E[T] = 1/\lambda + \gamma$.
@@ -344,9 +555,14 @@ conservative power (@tbl-power-comparison). During package development, this cor
 for simulation-based power to agree with the analytical planning formula when event gaps were
 non-negligible.
 
-In the implementation, the same gap rule is used by `nb_sim()` and `cut_data_by_date()`: events
-that fall inside the post-event gap are not counted, and the corresponding gap time is removed
-from the at-risk set used for information calculations.
+In the implementation, the same gap rule is used by `nb_sim()` and `cut_data_by_date()`: after
+each counted event, the next event cannot occur until at least $\gamma$ time units later (this is
+enforced during event generation, not applied as a post-hoc filter), and the corresponding gap
+time is removed from the at-risk set used for information calculations. The rate $\lambda$ is
+therefore interpreted as the rate per unit of *at-risk* time (excluding recovery), not per unit
+of calendar time. An alternative approach --- simply reducing the exposure offset by the gap
+periods without modelling the gap in the event-generation process --- would understate the
+effective rate and produce a different (generally less accurate) power calculation.
 
 | $k$ | Gap (days) | $n$ (corrected) | $n$ (naive) | Power (corr.) | Power (naive) |
 |:---:|:----------:|:---------------:|:-----------:|:--------------:|:-------------:|
@@ -357,22 +573,27 @@ from the at-risk set used for information calculations.
 
 : Power comparison: Jensen-corrected vs naive formula (10,000 replicates each). {#tbl-power-comparison}
 
-### Broader parameter sweep
+#### Broader parameter sweep
 
 The four scenarios in @tbl-power-comparison fix $\lambda_1 = 0.4$ and vary only $k$ and the gap
 duration. To characterize *when* the correction matters across a wider range of clinically
 relevant settings, we conducted a broader simulation sweep over three axes: the control event
-rate $\lambda_1$, the dispersion $k$, and the event gap $\gamma$.
+rate $\lambda_1$, the dispersion $k$, and the event gap $\gamma$. All scenarios target a single
+rate ratio $\lambda_2/\lambda_1 = 0.7$ (30% reduction); the sweep therefore isolates the impact
+of the correction on power at a fixed effect size.
 
 **Parameter grid.** The sweep covers $4 \times 4 \times 4 = 64$ scenarios defined by:
 
 | Parameter | Values | Clinical rationale |
 |:----------|:-------|:-------------------|
-| $\lambda_1$ (events/month) | 0.3, 0.5, 1.0, 2.0 | Heart failure hospitalizations ($\sim$0.3) through COPD exacerbations ($\sim$0.5) to MS relapses ($\sim$1--2) |
-| $k$ (dispersion) | 0.1, 0.3, 0.5, 1.0 | Near-Poisson (0.1) to substantial patient heterogeneity (1.0); published NB trials typically report $k \in [0.3, 1.0]$ |
-| Gap (days) | 10, 20, 30, 45 | Short recovery (migraine) to extended gap (steroid taper in COPD exacerbations) |
+| Control rate | 0.3, 0.5, 1.0, 2.0 events/month | Low to high recurrent-event burden |
+| Dispersion | 0.1, 0.3, 0.5, 1.0 | Near-Poisson to substantial patient heterogeneity |
+| Event gap | 10, 20, 30, 45 days | Short to extended counting windows |
 
-: Broad sweep parameter grid for Jensen correction impact study. {#tbl-sweep-grid}
+: Broad sweep parameter grid for Jensen correction impact study. The sweep extends to
+$k = 1.0$; in disease areas with higher dispersion ($k \geq 2$, e.g., severe COPD
+exacerbations or asthma), the correction is even larger and simulation becomes the primary
+validation tool because the second-order delta-method expansion loses accuracy. {#tbl-sweep-grid}
 
 The remaining design parameters are held constant across all scenarios:
 $\lambda_2/\lambda_1 = 0.7$ (30% rate reduction), power = 90%, one-sided $\alpha = 0.025$,
@@ -390,9 +611,16 @@ $$
 recurrent event trials. Heart failure hospitalization trials such as PARADIGM-HF report control
 rates of approximately 0.3 events/month with dispersion near 0.5 [@mcmurray2014paradigm].
 COPD exacerbation trials (e.g., FLAME, IMPACT) report rates around 0.5--0.8/month with
-$k \in [0.5, 1.0]$ and commonly define a new exacerbation as requiring $\geq$28 symptom-free days
-[@wedzicha2016flame; @lipson2018impact]. Multiple sclerosis relapse trials observe rates of
-1--2/year with moderate-to-high overdispersion [@hauser2017ocrelizumab]. At one extreme
+$k \in [0.5, 1.0]$ and commonly define a new exacerbation as requiring $\geq 28$ symptom-free days
+[@wedzicha2016flame; @lipson2018impact]; in practice, lower dispersion ($k < 0.4$) tends to
+co-occur with larger gap definitions, and higher values ($k \geq 2$) are observed with severe
+COPD exacerbations and asthma endpoints.
+Multiple sclerosis relapse trials observe rates of
+1--2/year with moderate-to-high overdispersion [@hauser2017ocrelizumab].
+Some published analyses (e.g., IMPACT) effectively assume zero event duration by using
+start-date-to-start-date counting and an always-at-risk exposure offset; the `event_gap`
+parameter in **gsDesignNB** can accommodate either convention, as described in Section 2.3.
+At one extreme
 ($\lambda_1 = 0.3$, $k = 0.1$, gap = 10 days), the theoretical correction factor is below 0.1%
 and the naive formula suffices. At the other ($\lambda_1 = 2.0$, $k = 1.0$, gap = 45 days), it
 exceeds 10%, and the underpowering from the naive formula becomes practically meaningful.
@@ -436,10 +664,11 @@ Three patterns emerge:
     (3--8% of total $n$).
 
 2.  **High event rates do not amplify the power gap as much as high dispersion.** At $k = 0.3$,
-    even $\lambda_1 = 2.0$ with a 45-day gap shows only $\sim$0.6 pp of underpowering.
+    even $\lambda_1 = 2.0$ with a 45-day gap shows only ${\sim}0.6$ pp of underpowering.
     Conversely, at $k = 1.0$, $\lambda_1 = 0.5$ with a 30-day gap shows
     2.1 pp --- the largest gap in the sweep. This is because the correction factor
-    $k\lambda\gamma/(1+\lambda\gamma)^2$ saturates in $\lambda$ but grows linearly in $k$.
+    $k\lambda\gamma/(1+\lambda\gamma)^2$ is bounded in $\lambda$ (it approaches $k/\gamma$ for
+    large $\lambda$) but grows linearly in $k$.
 
 3.  **The correction is negligible when either $k$ or $\gamma$ is small.** All scenarios with
     $k = 0.1$ show $\Delta n \leq 4$ and $\Delta\text{Power} < 0.8$ pp. Similarly, all 10-day
@@ -449,30 +678,43 @@ These findings provide practical guidance: the Jensen correction is most valuabl
 in therapeutic areas with substantial patient heterogeneity ($k \geq 0.5$) and protocol-defined
 event gaps exceeding 20 days, such as COPD exacerbation studies with 28-day new-event windows
 or heart failure trials with extended hospitalization-free windows.
+The correction addresses only the planning formula; it does not resolve the Wald test's tendency
+toward Type I error inflation in finite samples. When event gaps are present, the Jensen-corrected
+sample size should therefore be paired with the score test for the final analysis, which controls
+Type I error across the scenarios studied below. Power under this combination should be confirmed
+by simulation.
 
-# Group sequential design, monitoring, and sample size re-estimation
+## Group sequential design, monitoring, and sample size re-estimation
 
-## Calendar-time design construction
+### Calendar-time design construction
 
-The `gsNBCalendar()` function creates a group sequential design from a
+The `gsNBCalendar()` function creates a group sequential design with $K$ planned analyses from a
 `sample_size_nbinom_result` by evaluating the planned design at user-specified calendar analysis
-times. For each look it recomputes expected enrollment, exposure, events, and variance under the
+times. (The `gsDesign` argument `k` denotes the number of analyses $K$; it should not be confused
+with the NB dispersion parameter $k$ used elsewhere in this paper.)
+For each look it recomputes expected enrollment, exposure, events, and variance under the
 planned accrual and follow-up structure, then stores the corresponding statistical information in
 the `n.I` slot inherited from `gsDesign`. The resulting `gsNB` object therefore behaves like a
 `gsDesign` object for spending functions and boundary summaries while retaining the NB-specific
 quantities needed for simulation and interpretation.
+When harm monitoring is part of the group sequential plan, `gsNBCalendar()` passes the corresponding
+`gsDesign` harm-bound spending function, parameters, and bound-selection indicators through to the
+inherited design object.
 
-This calendar-time emphasis matters because recurrent-event trials are often governed by operational
-rules rather than by exact information fractions. If $C_i$ denotes a calendar floor for look $i$,
-$\Delta_i$ a minimum gap after the prior look, and $\mathcal{I}_i$ the target information for that
-look, the analysis time can be expressed schematically as
+This calendar-time emphasis matters because timing of analyses in trials is often primarily
+governed by operational issues, and thus we have chosen this approach to analysis timing. This also
+makes computation faster since there is no root-finding for when analyses are expected. Finally,
+calendar times are easily adjusted if the information fractions derived from this approach are
+thought inappropriate. If $C_j$ denotes a calendar floor for look $j$,
+$\delta_j$ a minimum separation from the prior look, and $\mathcal{I}_j$ the target information
+for that look, the analysis time for $j = 1, \ldots, K$ can be expressed schematically as
 
 $$
-\tau_i =
+\tau_j =
 \max\left\{
-  C_i,\;
-  \tau_{i-1} + \Delta_i,\;
-  \inf \left\{ t : \widehat{\mathcal{I}}(t) \geq \mathcal{I}_i \right\}
+  C_j,\;
+  \tau_{j-1} + \delta_j,\;
+  \inf \left\{ t : \widehat{\mathcal{I}}(t) \geq \mathcal{I}_j \right\}
 \right\}.
 $$
 
@@ -482,7 +724,7 @@ event-count, completer, and information targets. This is the package's bridge be
 information-time group sequential design and the calendar rules encountered in real monitoring
 charters.
 
-## Interim data cuts and information estimates
+### Interim data cuts and information estimates
 
 The function `cut_data_by_date()` converts subject-level recurrent-event histories into an interim
 analysis data set with one row per randomized subject, containing counted events, time at risk, and
@@ -499,7 +741,7 @@ negative binomial fit of @friede2010blinded, then splits the pooled rate accordi
 rate ratio. `estimate_nb_mom()` supplies method-of-moments estimates that are useful when maximum
 likelihood fits become unstable in sparse or highly overdispersed interim data.
 
-## Wald and score inference with a two-sided ML/MoM fallback rule
+### Wald and score inference with a two-sided ML/MoM fallback rule
 
 For unblinded interim analyses, `mutze_test()` fits the negative binomial log-linear model with an
 offset for exposure and returns either a Wald statistic for the treatment effect
@@ -534,7 +776,7 @@ $$
 
 The methodological point of the second branch is straightforward. Under genuine overdispersion
 ($k \gg 0$), a Poisson fallback underestimates $\text{Var}(\hat\theta)$ by a factor of
-$(1 + k\mu)^{-1}$ per subject, producing anti-conservative tests exactly when the NB model is most
+$(1 + k\mu)^{-1}$ per subject, inflating Type I error exactly when the NB model is most
 needed. MoM does not require ML convergence, always returns a nonnegative $\hat{k}$, and, plugged
 into the NB information formula, yields a variance estimate with the correct overdispersion
 structure. The same two-branch rule is used in `calculate_blinded_info()` (pooled blinded
@@ -544,13 +786,13 @@ functions now returns a `fallback` field (`"ml"`, `"mom"`, or `"poisson"`) so th
 engines and diagnostic tables can record which estimator was used at each interim.
 
 The simulation engines also expose blinded and unblinded information columns under both ML and
-MoM estimation (`info_*_ml`, `info_*_mom`) so that users can stress-test whether a design's
+MoM estimation (e.g., `info_blinded_ml`, `info_unblinded_mom`) so that users can stress-test whether a design's
 monitoring behaviour is sensitive to the nuisance-parameter estimation method. These alternative
 columns are diagnostics rather than competing estimands; in well-behaved data they agree closely,
 while in sparse or unstable interim data the MoM columns remain finite when the ML columns
 degenerate.
 
-## Blinded and unblinded SSR
+### Blinded and unblinded SSR
 
 At interim analyses, nuisance parameters ($k$ and the underlying event rates) can be re-estimated
 to update the required sample size. `blinded_ssr()` uses the pooled model of @friede2010blinded,
@@ -566,6 +808,11 @@ with the planned accrual, dropout, maximum follow-up, and event-gap assumptions.
 therefore adjusts for the loss of information expected from dropout under the specified ignorable
 censoring model; it is not an MNAR sensitivity procedure.
 
+To prevent extreme sample-size inflation in unfavourable scenarios, `sim_ssr_nbinom()` caps the
+adapted enrollment at `n_max`, which defaults to 150% of the planned total and is always at least
+the planned sample size. This cap is applied after the GS inflation factor so that it bounds the
+operational commitment while still allowing meaningful upward adaptation.
+
 `sim_ssr_nbinom()` wraps these choices into a full adaptive simulation engine. It supports "No
 adaptation", "Blinded SSR", and "Unblinded SSR" strategies; searches for interim looks using
 information-based timing; and allows efficacy and futility bounds to be driven by alternative
@@ -580,9 +827,9 @@ Monte Carlo studies: they use `data.table` for repeated aggregation, support rep
 execution, and return both trial-level and analysis-level summaries so that design calibration can
 be checked after the fact.
 
-# Reproducible workflows
+## Reproducible workflows
 
-## Example 1: fixed design to calendar-time GS simulation
+### Example 1: fixed design to calendar-time GS simulation
 
 The first workflow shows the main path from fixed-design planning to a calendar-time GS simulation.
 The full executable version appears in the group-sequential simulation vignette; the code here is a
@@ -591,15 +838,15 @@ minimal example.
 ```r
 library(gsDesignNB)
 
-enroll_rate <- data.frame(rate = 12, duration = 6)
-fail_rate <- data.frame(
+enroll_rate <- data.frame(rate = 12, duration = 6)  # enrollment: 12 subjects/month for 6 months
+fail_rate <- data.frame(                             # event rates (fail_rate follows simtrial convention)
   treatment = c("Control", "Experimental"),
-  rate = c(0.6, 0.42),
-  dispersion = c(0.4, 0.4)
+  rate = c(0.6, 0.42),                               # NB event rate (events/month)
+  dispersion = c(0.4, 0.4)                            # NB dispersion parameter k
 )
 dropout_rate <- data.frame(
   treatment = c("Control", "Experimental"),
-  rate = c(0.05, 0.05),
+  rate = c(0.05, 0.05),                               # monthly dropout rate
   duration = c(12, 12)
 )
 
@@ -617,7 +864,7 @@ fixed_design <- sample_size_nbinom(
 
 gs_design <- gsNBCalendar(
   fixed_design,
-  k = 3,
+  k = 3,                    # K = 3 analyses
   test.type = 4,
   analysis_times = c(4, 8, 12)
 )
@@ -651,7 +898,7 @@ the target information, `gsNBCalendar()` maps that information to calendar looks
 `sim_gs_nbinom()` generates trial histories consistent with the planning assumptions, and
 `check_gs_bound()` applies the group sequential boundaries on the selected information scale.
 
-## Example 2: information-based SSR
+### Example 2: information-based SSR
 
 The second workflow shows how the same design object can be used in an adaptive simulation with
 blinded and unblinded sample size re-estimation.
@@ -683,7 +930,7 @@ tables are stored at production scale. The essential software idea is already vi
 compact example: one `gsNB` planning object can drive both non-adaptive and adaptive
 operating-characteristic evaluations.
 
-## Additional workflows
+### Additional workflows
 
 The package includes further worked examples that round out the software contribution.
 
@@ -694,13 +941,12 @@ The package includes further worked examples that round out the software contrib
 | Non-inferiority and super-superiority | `sample_size_nbinom(rr0 = ...)` | Alternative null hypotheses in the same design framework |
 | Blinded-information diagnostics | `calculate_blinded_info()`, `estimate_nb_mom()` | Stability checks for sparse or unstable interims |
 | Verification studies | `nb_sim()`, `mutze_test()`, `sim_gs_nbinom()` | Simulation-based agreement checks for design formulas |
-
 These workflows are documented in the package vignettes so that the manuscript examples can remain
 brief while the installed package still serves as the full replication resource.
 
-# Simulation study
+## Simulation study
 
-## Design
+### Design
 
 The manuscript reports selected operating characteristics, while the package articles serve as
 executable supplementary material. This keeps the paper readable in a software-journal format but
@@ -738,13 +984,13 @@ simulation summaries.
 | Wald versus score inference | Compare Wald and score tests under Wald- and score-sized designs | `score-vs-wald-simulation` | 27-scenario factorial grid; 20,000 null replicates and 3,500 power replicates per cell; Type I error, power, and null Z distributions |
 | SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
 | SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled production cache uses 3,600 replicates per RR $<1$ scenario and 1,000 replicates per RR $>1$ scenario |
-| SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study`; `data-raw/generate_ssr_sizing_sensitivity.R` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
+| SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
 | Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
 
 : Simulation reporting map. The package articles are treated as executable supplementary material
 for the condensed results reported in the manuscript. {#tbl-simulation-reporting}
 
-## Results
+### Results
 
 **Wald versus score calibration.** The `score-vs-wald-simulation` article evaluates 27 base
 scenarios varying $\lambda_1 \in \{0.15, 0.40, 1.00\}$, $k \in \{0.2, 0.5, 1.0\}$, and event
@@ -765,8 +1011,8 @@ should still be simulated for power and may need a modest information margin.
 **SSR Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
 RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$, comparing the
 Wald statistic with the score statistic under the same group sequential design. With $20{,}000$
-replicates per cell the Monte Carlo standard error is about $0.001$. The Wald statistic is mildly
-anti-conservative, with empirical Type I error ranging from 0.0279 to 0.0312. The score statistic
+replicates per cell the Monte Carlo standard error is about $0.001$. The Wald statistic exhibits
+mild Type I error inflation, with empirical rejection rates ranging from 0.0279 to 0.0312. The score statistic
 is conservative in the same design, with empirical Type I error ranging from 0.0214 to 0.0232.
 Thus the preferred remedy is to align the analysis and simulation engine with the score test and
 then verify power, rather than to lower alpha for a Wald analysis.
@@ -801,7 +1047,13 @@ the full nuisance range.
 **Diminishing returns at smaller effects.** For RR = 0.85 (true effect smaller than planned), the
 planned design is inherently underpowered; SSR compensates for nuisance-parameter misspecification
 but cannot overcome the effect-size mismatch. In the production score-test cache, no-adaptation
-power averaged 0.242, while blinded and unblinded SSR averaged about 0.296 and 0.297. For RR = 1.1
+power averaged 0.242, while blinded and unblinded SSR averaged about 0.296 and 0.297.
+However, futility stopping provides substantial cost savings: approximately 46% of trials stopped
+for futility (38% at the first interim, 8% at the second), reducing the average sample size from
+the planned 312 to about 291 without adaptation or about 345 with SSR. Under the null
+(RR = 1.0), futility stopping was even more effective, with 87% of trials stopped early and
+average sample size reduced to about 268--285 depending on strategy.
+For RR = 1.1
 (treatment worse than control), all three strategies had maximum rejection rates of 0.005 across
 the scenario grid, confirming that SSR does not artificially inflate one-sided rejections in the
 wrong direction.
@@ -813,6 +1065,23 @@ both strategies adapt frequently when $k = 1.0$, and unblinded SSR has slightly 
 size in the displayed scenarios. The practical conclusion is therefore not that one approach is
 uniformly more efficient, but that the masked and unmasked update rules should be compared under
 the trial-specific nuisance range, adaptation cap, and analysis statistic.
+
+A potential concern with blinded SSR is unnecessary sample-size inflation when the true treatment
+effect is larger than planned, because the pooled nuisance estimates may overstate the required
+information. However, early efficacy stopping largely neutralizes this risk. At RR = 0.6 (a larger
+effect than the planned RR = 0.7), 94% of trials crossed an efficacy boundary at an interim
+analysis, SSR was triggered in fewer than 5% of trials, and the median sample size was
+identical to the no-adaptation design; mean sample size increased by only about 11 subjects
+(312 vs.\ 323). Even at the planned RR = 0.7, early efficacy stopping at 67% of trials limits
+the average inflation from SSR to about 43 subjects.
+At higher dispersion ($k = 1.0$), where blinded SSR is triggered more often, the pattern holds:
+at RR = 0.6, SSR was applied in about 9% of trials, but early efficacy stopping still occurred
+in 91%, keeping the median sample size at 312 and the mean at 334 compared with 312 without
+adaptation. The additional enrollment mostly occurred in the 5% of trials that reached the 95th
+percentile ($n = 564$), which are precisely the trials where nuisance misspecification would
+otherwise have caused the design to lose power. At the planned RR = 0.7 with $k = 1.0$, SSR was
+applied in 35% of trials and mean sample size rose to 393; however, power increased from 0.733
+without adaptation to 0.889, confirming that the inflation is productive rather than wasteful.
 
 **SSR starting-size sensitivity.** The fixed-design score-versus-Wald sweep suggests that the
 traditional Wald sample size can provide a small information margin when the planned analysis uses
@@ -827,7 +1096,7 @@ power is also similar: 0.898--0.907 for the Wald-sized start and 0.900--0.911 fo
 start (MCSE about 0.005). Thus Wald sizing should be viewed as a candidate margin to evaluate, not
 as a guaranteed SSR power improvement.
 
-# Discussion
+## Discussion
 
 The **gsDesignNB** package fills a gap in the R ecosystem for planning and adapting recurrent-event
 trials with NB outcomes. Its statistical contributions are the alignment of fixed-design planning,
@@ -863,13 +1132,13 @@ Wald sizing and slightly less powerful for the score test. Thus Wald/Zhu--Lakkis
 with the score test is a reasonable practical recommendation when it supplies a modest information
 margin. Because the score test can be conservative, the final design should still be calibrated for
 both Type I error and power; increasing the target power or total information slightly may be
-preferable to reverting to an anti-conservative Wald test.
+preferable to reverting to a Wald test with inflated Type I error.
 
 The SSR study likewise shows how the package's computational layer supports statistical design
 checks. The production score-test grid confirms that adverse nuisance-parameter misspecification
 can be diagnosed and that SSR moves sample size in the expected direction, but it also shows why
-the final test statistic matters. The non-binding null simulations show that Wald analyses are
-mildly anti-conservative in this configuration, whereas score analyses are conservative at the
+the final test statistic matters. The non-binding null simulations show that Wald analyses
+exhibit mild Type I error inflation in this configuration, whereas score analyses are conservative at the
 same nominal one-sided alpha. The updated SSR article therefore compares Wald and score analyses
 directly rather than treating an ad hoc alpha reduction as the primary remedy. The larger adapted
 sample sizes under high dispersion should be interpreted primarily as nuisance-parameter
@@ -887,13 +1156,14 @@ simulation engine is a practical advantage of the package design: because each i
 fallback label actually used, simulation summaries can verify that adaptive decisions were driven
 by well-posed estimators rather than degenerate ML fits.
 
-The package's current missing-data position is deliberately narrower than a full causal estimand
-framework. Dropout and administrative censoring are handled as exposure truncation under ignorable
-censoring, which is the setting in which observed-data NB likelihood inference is appropriate and MI
-is not required. MNAR sensitivity analyses would need additional data structure -- in particular,
-explicit censoring reason, planned remaining follow-up, and assumptions about post-dropout event
-rates -- before MI can be implemented transparently. This is a natural extension of the simulator
-and data-cutting layer, but it should not be conflated with the primary MAR analysis.
+The package handles dropout and administrative censoring as exposure truncation under
+ignorable censoring (MAR), which is the setting in which observed-data NB likelihood inference
+is appropriate without multiple imputation. This includes the treatment-policy estimand where
+subjects are followed post-treatment-discontinuation (retrieved dropout) and their
+post-discontinuation events and exposure enter the likelihood directly. MNAR sensitivity
+analysis --- for example, imputing that experimental-arm dropouts revert to control-arm rates for
+the remainder of the planned follow-up --- is a natural future extension of the
+simulator and data-cutting layer but is not currently implemented.
 
 From a software perspective, **gsDesignNB** is complementary to both **gsDesign** and
 **gscounts**. The general-purpose **gsDesign** package provides mature spending-function and
@@ -912,40 +1182,28 @@ non-inferiority, blinded-diagnostics, and verification vignettes show that the s
 support multiple design questions. In that sense, the package is not only a collection of isolated
 functions but a coherent interface for recurrent-event trial planning and evaluation.
 
-**A two-sided ML/MoM fallback rule.** A further methodological feature delivered in the current
-release replaces the previously permissive single-sided Poisson fallback with a two-sided rule.
-Near-Poisson data ($\hat{k} < 0.02$) still fall back to the corresponding Poisson Wald or score
-test, where the Poisson variance is statistically correct. Under extreme overdispersion
-($\hat{k} > 20$) or ML non-convergence, however, the package now falls back to a
-method-of-moments re-estimation of $(\hat{\lambda}_1, \hat{\lambda}_2, \hat{k})$ via
-`estimate_nb_mom()` and plugs those values into the observed Fisher information formula that the
-package uses everywhere else, rather than a Poisson test. This matters because under genuine
-overdispersion the Poisson variance is anti-conservative by a factor of $(1 + k\mu)^{-1}$ per
-subject, which is exactly the regime where a robust fallback is most needed. The MoM path requires
-no ML convergence, always returns a nonnegative $\hat{k}$, and preserves the NB variance structure.
-The rule is applied uniformly in `mutze_test()`, `calculate_blinded_info()`, and `unblinded_ssr()`,
-each of which now reports a `fallback` label (`"ml"`, `"mom"`, or `"poisson"`) in its return value
-so that simulation engines can audit which estimator was used at each interim. In `mutze_test()`
-the behaviour is controlled by two thresholds, `poisson_threshold` (default $50$, i.e.,
-$\hat{k} < 0.02$) and `mom_threshold` (default $20$, i.e., $\hat{k} > 20$); both are user-tunable
-for sensitivity analyses.
-
-# Reproducibility and software availability
+## Reproducibility and software availability
 
 The **gsDesignNB** package is available on GitHub at
 <https://github.com/keaven/gsDesignNB> with documentation at
 <https://keaven.github.io/gsDesignNB/>. The package requires R $\geq$ 4.1.0 and depends primarily
-on **gsDesign**, **data.table**, **simtrial**, and **MASS**.
+on R [@R-base], **gsDesignNB** [@R-gsDesignNB], **gsDesign** [@R-gsDesign],
+**data.table** [@R-data.table], **simtrial** [@R-simtrial], and **MASS** [@MASS].
+Figures and rendered package documentation use **ggplot2** [@ggplot2], **scales** [@R-scales],
+**knitr** [@R-knitr], **rmarkdown** [@R-rmarkdown], and **pkgdown** [@R-pkgdown].
 
 The source distribution includes vignettes for fixed-design NB sample size calculation, calendar-time
 GS simulation, end-to-end SSR, the larger SSR simulation study, blinded-information diagnostics,
 seasonal simulation, completer-based interims, non-inferiority design, and verification of the
 planning formulas against simulation. We treat these articles as supplementary material for the
 paper: the manuscript gives the design rationale, selected tables, and interpretation, while the
-package articles provide the fuller grids, code paths, and rendered results. The two code examples in
-this paper are deliberately small extracts of those vignettes so that the manuscript highlights the
-core software interface while the installed package retains more extensive executable workflows. For
-local exploratory use, the package also provides `run_ssr_shiny()` as an interactive front end to the
-SSR engine and `preview_pkgdown_site()` for documentation preview.
+package articles provide the fuller grids, code paths, and rendered results. The larger simulation
+articles in the installed package use compact precomputed summaries; the full trial-level Monte
+Carlo objects are kept outside the CRAN build and can be regenerated or archived separately for
+auditing. The two code examples in this paper are deliberately small extracts of those vignettes so
+that the manuscript highlights the core software interface while the installed package retains more
+extensive executable workflows. For local exploratory use, the package also provides
+`run_ssr_shiny()` as an interactive front end to the SSR engine and `preview_pkgdown_site()` for
+documentation preview.
 
-# References {.unnumbered}
+## References {.unnumbered}

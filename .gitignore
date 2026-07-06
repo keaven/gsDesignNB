@@ -16,3 +16,14 @@ inst/extdata/ssr_type1_null_*.rds
 /doc/
 /Meta/
 .positai
+/_extensions/
+paper/gsDesignNB-paper.tex
+paper/gsDesignNB-paper_files/
+paper/jss.bst
+paper/jss.cls
+paper/jsslogo.jpg
+data-raw/*.log
+data-raw/*.pid
+inst/extdata/score_sweep_results.rds
+inst/extdata/ssr_sim_vignette_outputs*.rds
+papers/

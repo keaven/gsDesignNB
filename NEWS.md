@@ -9,6 +9,10 @@
 - Added an `ai-skills` vignette demonstrating how the agent skills under
   `.agents/skills/` can guide package-native score-test and simulation
   workflows without replacing statistical review.
+- Added a published sample-size examples vignette showing how the
+  package-specific AI skill translates literature and protocol descriptions
+  into transparent `sample_size_nbinom()` calls, including dropout, event-gap,
+  non-inferiority, and group sequential parameterization checks.
 - Refined score-test recommendations to distinguish the final analysis test
   from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful
   practical baseline and may provide a power margin when paired with the score
@@ -34,12 +38,24 @@
 - `toInteger.gsNB()` now preserves calendar-time enrollment quantities at
   interim analyses and recomputes expected events, exposures, and information
   after rounding the final sample size.
+- `toInteger.gsNB()` now preserves the shape of piecewise accrual schedules
+  when rescaling calendar-time designs after final sample-size rounding.
+- `gsNBCalendar()`, `update_gsNB()`, and simulation boundary checks now support
+  harm-bound group sequential designs available in `gsDesign` 3.10.0
+  (`test.type = 7` or `8`, `sfharm`, `sfharmparam`, and `testHarm`).
 - `summarize_gs_sim()` now reports optional sample-size and exposure summaries
   when available and uses finite trimmed means for information estimates.
 - Updated SSR simulation reporting in the manuscript and SSR simulation article
   to use the production score-test cache: 3,600 replicates per power scenario,
   20,000 per RR = 1 main-grid scenario, 1,000 per RR > 1 scenario, and 20,000
   per dispersion/test-statistic cell for the non-binding Type I tables.
+- Replaced the CRAN-bundled SSR trial-level simulation cache with compact
+  precomputed summaries for tables and figures, while leaving full raw
+  simulation caches available for local development or external archival.
+- Converted the score-vs-Wald simulation article from interactive widget output
+  to static vignette tables and figures backed by compact precomputed
+  summaries, reducing the CRAN package size while leaving the full simulation
+  cache available outside the CRAN build.
 - Updated the SSR simulation study to compare Wald and score tests at the same
   nominal one-sided alpha of 0.025, and aligned the SSR power simulations with
   the score final-analysis recommendation.
@@ -64,6 +80,13 @@
   that framing.
 - Updated the paper and slide materials to cite package articles as executable
   supplementary material for the fuller simulation grids and reporting.
+
+## Manuscript
+
+- Converted the paper to the Quarto Journal of Statistical Software template,
+  added a semi-real recurrent-event group sequential design example with tables
+  and a figure, added formal R package citations, and simplified the Jensen
+  correction grid table so the formula-heavy entries no longer break the PDF.
 
 # gsDesignNB 0.3.1
 

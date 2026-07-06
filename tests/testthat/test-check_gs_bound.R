@@ -49,6 +49,29 @@ test_that("check_gs_bound detects lower crossings for test.type >= 2", {
   expect_true(result$cross_lower[1])
 })
 
+test_that("check_gs_bound detects harm crossings for harm-bound designs", {
+  skip_if_not("testHarm" %in% names(formals(gsDesign::gsDesign)))
+
+  design <- gsDesign::gsDesign(
+    k = 2,
+    n.fix = 100,
+    test.type = 8,
+    astar = 0.025,
+    timing = c(0.5, 1)
+  )
+  sim_df <- data.frame(
+    sim = c(1, 1),
+    analysis = c(1, 2),
+    z_stat = c(-5.0, NA),
+    blinded_info = c(50, 100),
+    unblinded_info = c(50, 100)
+  )
+
+  result <- check_gs_bound(sim_df, design)
+  expect_true(result$cross_harm[1])
+  expect_false(result$cross_lower[1])
+})
+
 test_that("check_gs_bound errors on bad design", {
   sim_df <- data.frame(
     sim = 1, analysis = 1, z_stat = 1.5,

@@ -53,6 +53,7 @@ reference:
       Extend negative binomial designs to group sequential monitoring via gsDesign boundaries.
     contents:
       - gsNBCalendar
+      - update_gsNB
       - toInteger
       - summary.gsNB
       - print.gsNBsummary
@@ -109,18 +110,31 @@ reference:
       - sfXG3
 
 articles:
-  - title: "Vignettes"
+  - title: "Design fundamentals"
     contents:
       - sample-size-nbinom
+      - non-inferiority-example
+
+  - title: "Simulation and validation"
+    contents:
       - simulation-example
       - seasonal-simulation
       - verification-simulation
       - score-vs-wald-simulation
-      - ai-skills
-      - non-inferiority-example
+
+  - title: "Group sequential monitoring"
+    contents:
+      - group-sequential-simulation
+      - completers-interim-example
+
+  - title: "Sample size re-estimation"
+    contents:
       - ssr-example
       - ssr-simulation-study
       - blinded-info-diagnostics
-      - group-sequential-simulation
-      - completers-interim-example
+
+  - title: "Advanced workflows"
+    contents:
       - multiple-imputation-nb
+      - ai-skills
+      - sample-size-skills-example

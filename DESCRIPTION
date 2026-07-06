@@ -29,7 +29,7 @@ Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
-    gsDesign (>= 3.9.0),
+    gsDesign (>= 3.10.0),
     simtrial,
     stats,
     MASS
@@ -42,17 +42,13 @@ Suggests:
     ggplot2,
     dplyr,
     gt,
-    DT,
-    htmltools,
     scales,
     shiny,
     foreach,
     doFuture,
     future,
     future.apply,
-    gridExtra,
-    plotly,
-    crosstalk
+    gridExtra
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

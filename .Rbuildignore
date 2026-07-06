@@ -20,3 +20,10 @@
 ^papers$
 ^\.positai$
 ^\.claude$
+^llms\.txt$
+^_extensions$
+^pkgdown-site-portable\.zip$
+^score_sweep\.log$
+^timings\.tab$
+^inst/extdata/score_sweep_results\.rds$
+^inst/extdata/ssr_sim_vignette_outputs.*\.rds$

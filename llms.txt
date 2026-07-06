@@ -1,0 +1,62 @@
+# gsDesignNB
+
+> Sample size, simulation, and group sequential design for clinical trials with negative binomial recurrent event endpoints.
+
+gsDesignNB is an R package for planning, monitoring, and adapting clinical trials whose primary endpoint is a recurrent event count analyzed with a negative binomial model. It extends the gsDesign ecosystem to handle information that depends on exposure and dispersion, protocol event gaps, calendar-time interim looks, and blinded/unblinded sample size re-estimation.
+
+## Key links
+
+- Documentation: https://keaven.github.io/gsDesignNB/
+- Repository: https://github.com/keaven/gsDesignNB
+- Bug reports: https://github.com/keaven/gsDesignNB/issues
+- AI skill file: https://github.com/keaven/gsDesignNB/blob/main/SKILL.md
+
+## Core functions
+
+- `sample_size_nbinom()`: Sample size (or power) for comparing two NB groups. Supports Wald and score test sizing, variable accrual, dropout, max follow-up, event gaps with Jensen correction, and non-inferiority/super-superiority margins.
+- `mutze_test()`: Wald or score test for treatment effect from aggregated subject-level data. Auto-fallback to Poisson or method-of-moments when ML fit is unreliable.
+- `nb_sim()`: Simulate recurrent-event trial data with piecewise accrual, dropout, and maximum follow-up.
+- `nb_sim_seasonal()`: Simulate with time-varying (seasonal) event rates.
+- `gsNBCalendar()`: Calendar-time group sequential design for NB outcomes, building on gsDesign.
+- `sim_gs_nbinom()`: Monte Carlo simulation of group sequential NB trials.
+- `blinded_ssr()`: Blinded sample size re-estimation from pooled interim data.
+- `unblinded_ssr()`: Unblinded SSR using treatment-specific interim estimates.
+- `calculate_blinded_info()`: Estimate statistical information from blinded interim data.
+- `compute_info_at_time()`: Compute expected information at a given analysis time.
+- `cut_data_by_date()`: Truncate simulated data at a calendar date for interim analysis.
+- `cut_completers()`: Cut data to include only patients who completed follow-up.
+- `estimate_nb_mom()`: Method-of-moments estimation of NB dispersion from blinded data.
+- `impute_nb_mar()`: Multiple imputation under missing-at-random for NB outcomes.
+- `impute_nb_composite()`: Composite imputation combining MAR and reference-based patterns.
+
+## Statistical model
+
+Events follow a Gamma-Poisson mixture: Var(Y) = μ + kμ², where k is the dispersion parameter and μ = λt (rate × exposure). The treatment effect is the log rate ratio θ = log(λ₂/λ₁). Fisher information per subject: I = μ/(1 + kμ).
+
+## Vignettes
+
+- [Sample size methodology](https://keaven.github.io/gsDesignNB/articles/sample-size-nbinom.html): Core NB sample size formula, Wald vs score, event gaps, dropout
+- [Skills-based examples](https://keaven.github.io/gsDesignNB/articles/sample-size-skills-example.html): Published trial replications (FLAME, IMPACT, OPERA, Friede & Schmidli, Mutze et al., PARADIGM-HF)
+- [Score vs Wald simulation](https://keaven.github.io/gsDesignNB/articles/score-vs-wald-simulation.html): Type I error and power comparison
+- [Group sequential simulation](https://keaven.github.io/gsDesignNB/articles/group-sequential-simulation.html): GS design with NB outcomes
+- [SSR example](https://keaven.github.io/gsDesignNB/articles/ssr-example.html): Blinded sample size re-estimation
+- [SSR simulation study](https://keaven.github.io/gsDesignNB/articles/ssr-simulation-study.html): Operating characteristics of SSR
+- [Simulation example](https://keaven.github.io/gsDesignNB/articles/simulation-example.html): Fixed-design simulation
+- [Seasonal simulation](https://keaven.github.io/gsDesignNB/articles/seasonal-simulation.html): Time-varying rates
+- [Verification simulation](https://keaven.github.io/gsDesignNB/articles/verification-simulation.html): Type I error verification
+- [Non-inferiority example](https://keaven.github.io/gsDesignNB/articles/non-inferiority-example.html): NI design with NB endpoints
+- [Completers interim example](https://keaven.github.io/gsDesignNB/articles/completers-interim-example.html): Completer-based interim analysis
+- [Blinded information diagnostics](https://keaven.github.io/gsDesignNB/articles/blinded-info-diagnostics.html): Diagnostic tools for blinded estimation
+
+## Disease-area parameter ranges
+
+- COPD exacerbations: 0.5–1.5 events/year, k ∈ [0.5, 1.0], often with 28-day event gap
+- Heart failure hospitalizations: ~0.3 events/month, k ≈ 0.5
+- MS relapses: 0.3–1.5 events/year, moderate-to-high k
+
+## Dispersion conventions
+
+This package uses Var = μ + kμ² (k = dispersion). Other conventions in the literature:
+- Friede & Schmidli (2010): φ = k (same as ours)
+- Mutze et al. (2019): κ = 1/k (inverse — the Gamma shape parameter)
+- R's rnbinom(): size = 1/k
