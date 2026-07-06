@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using the gsDesignNB AI skill • gsDesignNB</title>
+<title>AI-assisted gsDesignNB workflows • gsDesignNB</title>
 <!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
   window.MathJax = {
     chtml: {
@@ -16,7 +16,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using the gsDesignNB AI skill">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="AI-assisted gsDesignNB workflows">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Using the gsDesignNB AI skill</h1>
+      <h1>AI-assisted gsDesignNB workflows</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/keaven/gsDesignNB/blob/main/vignettes/ai-skills.Rmd" class="external-link"><code>vignettes/ai-skills.Rmd</code></a></small>
@@ -173,10 +173,13 @@ alternative variance for the power component.</li>
 That is not a general rule, but it illustrates why the sizing rule and
 the analysis test should not be conflated. In the package simulation
 grid, the traditional Wald/Zhu–Lakkis sample size paired with the score
-test preserved Type I error and provided a small practical power margin.
-The skill therefore reminds the analyst to compare sizing rules, choose
-the final test deliberately, and verify operating characteristics by
-simulation for the actual design setting.</p>
+test preserved Type I error and provided a small practical power margin;
+see
+<code><a href="../articles/score-vs-wald-simulation.html">vignette("score-vs-wald-simulation", package = "gsDesignNB")</a></code>
+for the supporting comparison. The skill therefore reminds the analyst
+to compare sizing rules, choose the final test deliberately, and verify
+operating characteristics by simulation for the actual design
+setting.</p>
 </div>
 <div class="section level2">
 <h2 id="calendar-time-group-sequential-design">Calendar-time group sequential design<a class="anchor" aria-label="anchor" href="#calendar-time-group-sequential-design"></a>
@@ -187,23 +190,26 @@ sequential design. Here the Wald-sized fixed design is used as a
 practical baseline sample size, while the planned analysis and
 simulation use the score test for Type I error control.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gs_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gsNBCalendar.html">gsNBCalendar</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">analysis_times</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gs_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gsNBCalendar.html">gsNBCalendar</a></span><span class="op">(</span></span>
 <span>  <span class="va">wald_design</span>,</span>
 <span>  k <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  test.type <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  analysis_times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span></span>
+<span>  beta <span class="op">=</span> <span class="fl">1</span> <span class="op">-</span> <span class="va">wald_design</span><span class="op">$</span><span class="va">power</span>,</span>
+<span>  analysis_times <span class="op">=</span> <span class="va">analysis_times</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  analysis <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">gs_design</span><span class="op">$</span><span class="va">n.I</span><span class="op">)</span>,</span>
-<span>  calendar_month <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span>,</span>
+<span>  calendar_month <span class="op">=</span> <span class="va">analysis_times</span>,</span>
 <span>  planned_information <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gs_design</span><span class="op">$</span><span class="va">n.I</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  information_fraction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gs_design</span><span class="op">$</span><span class="va">timing</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;   analysis calendar_month planned_information information_fraction</span></span>
-<span><span class="co">#&gt; 1        1             18               46.88                0.709</span></span>
-<span><span class="co">#&gt; 2        2             24               61.96                0.937</span></span>
-<span><span class="co">#&gt; 3        3             30               66.13                1.000</span></span></code></pre></div>
+<span><span class="co">#&gt; 1        1             18               46.84                0.709</span></span>
+<span><span class="co">#&gt; 2        2             24               61.91                0.937</span></span>
+<span><span class="co">#&gt; 3        3             30               66.08                1.000</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="simulate-cut-and-test-a-small-data-set">Simulate, cut, and test a small data set<a class="anchor" aria-label="anchor" href="#simulate-cut-and-test-a-small-data-set"></a>
@@ -216,7 +222,7 @@ replicates and saved seeds.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enroll_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">30</span> <span class="op">/</span> <span class="fl">6</span>, duration <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="va">demo_enroll_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">30</span> <span class="op">/</span> <span class="fl">6</span>, duration <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
 <span><span class="va">fail_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  treatment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Experimental"</span><span class="op">)</span>,</span>
 <span>  rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">design_args</span><span class="op">$</span><span class="va">lambda1</span>, <span class="va">design_args</span><span class="op">$</span><span class="va">lambda2</span><span class="op">)</span>,</span>
@@ -229,7 +235,7 @@ replicates and saved seeds.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sim_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nb_sim.html">nb_sim</a></span><span class="op">(</span></span>
-<span>  enroll_rate <span class="op">=</span> <span class="va">enroll_rate</span>,</span>
+<span>  enroll_rate <span class="op">=</span> <span class="va">demo_enroll_rate</span>,</span>
 <span>  fail_rate <span class="op">=</span> <span class="va">fail_rate</span>,</span>
 <span>  dropout_rate <span class="op">=</span> <span class="va">dropout_rate</span>,</span>
 <span>  max_followup <span class="op">=</span> <span class="va">design_args</span><span class="op">$</span><span class="va">max_followup</span>,</span>
@@ -275,31 +281,47 @@ replicates and saved seeds.</p>
 <h2 id="production-workflow-reminder">Production workflow reminder<a class="anchor" aria-label="anchor" href="#production-workflow-reminder"></a>
 </h2>
 <p>The small example above is useful for checking assumptions and object
-shapes. For design claims, the skill directs the user to the simulation
-routines and summary helpers:</p>
+shapes, but it deliberately uses only 60 subjects. For design claims,
+use the sample size and scaled accrual returned by
+<code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code>, choose the information scale for
+boundary checks explicitly, and run enough replicates to estimate
+operating characteristics:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sim_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_gs_nbinom.html">sim_gs_nbinom</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">production_enroll_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  rate <span class="op">=</span> <span class="va">wald_design</span><span class="op">$</span><span class="va">accrual_rate</span>,</span>
+<span>  duration <span class="op">=</span> <span class="va">wald_design</span><span class="op">$</span><span class="va">accrual_duration</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">sim_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_gs_nbinom.html">sim_gs_nbinom</a></span><span class="op">(</span></span>
 <span>  n_sims <span class="op">=</span> <span class="fl">10000</span>,</span>
-<span>  enroll_rate <span class="op">=</span> <span class="va">enroll_rate</span>,</span>
+<span>  enroll_rate <span class="op">=</span> <span class="va">production_enroll_rate</span>,</span>
 <span>  fail_rate <span class="op">=</span> <span class="va">fail_rate</span>,</span>
 <span>  dropout_rate <span class="op">=</span> <span class="va">dropout_rate</span>,</span>
 <span>  max_followup <span class="op">=</span> <span class="va">design_args</span><span class="op">$</span><span class="va">max_followup</span>,</span>
 <span>  event_gap <span class="op">=</span> <span class="va">design_args</span><span class="op">$</span><span class="va">event_gap</span>,</span>
+<span>  n_target <span class="op">=</span> <span class="va">wald_design</span><span class="op">$</span><span class="va">n_total</span>,</span>
 <span>  design <span class="op">=</span> <span class="va">gs_design</span>,</span>
-<span>  analysis_times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">24</span>, <span class="fl">30</span><span class="op">)</span>,</span>
+<span>  analysis_times <span class="op">=</span> <span class="va">analysis_times</span>,</span>
 <span>  test_type <span class="op">=</span> <span class="st">"score"</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">bounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_gs_bound.html">check_gs_bound</a></span><span class="op">(</span><span class="va">sim_results</span>, <span class="va">gs_design</span><span class="op">)</span></span>
+<span><span class="va">bounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/check_gs_bound.html">check_gs_bound</a></span><span class="op">(</span></span>
+<span>  <span class="va">sim_results</span>,</span>
+<span>  <span class="va">gs_design</span>,</span>
+<span>  info_col <span class="op">=</span> <span class="st">"info_unblinded_ml"</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/summarize_gs_sim.html">summarize_gs_sim</a></span><span class="op">(</span><span class="va">bounded</span><span class="op">)</span></span></code></pre></div>
 <p>For sample size re-estimation studies, use
-<code><a href="../reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code> and <code><a href="../reference/summarize_ssr_sim.html">summarize_ssr_sim()</a></code>. The
-score final test is especially important in SSR because adaptation can
-increase information under nuisance misspecification; the score test
-helps preserve Type I error where a Wald analysis may be mildly
-anti-conservative. The adapted sample size itself should still be
-checked by simulation rather than assumed from the formula alone.</p>
+<code><a href="../reference/sim_ssr_nbinom.html">sim_ssr_nbinom()</a></code> and <code><a href="../reference/summarize_ssr_sim.html">summarize_ssr_sim()</a></code>; see
+<code><a href="../articles/ssr-simulation-study.html">vignette("ssr-simulation-study", package = "gsDesignNB")</a></code>
+for a larger simulation case study. The score final test is especially
+important in SSR because adaptation can increase information under
+nuisance misspecification; the score test helps preserve Type I error
+where a Wald analysis may be mildly anti-conservative. The adapted
+sample size itself should still be checked by simulation rather than
+assumed from the formula alone.</p>
 </div>
 <div class="section level2">
 <h2 id="what-this-skill-is-and-is-not">What this skill is and is not<a class="anchor" aria-label="anchor" href="#what-this-skill-is-and-is-not"></a>

@@ -131,16 +131,8 @@ summary(gs_nb)
 #> 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial
 #> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,
 #> 0.0043), average exposure (calendar) 11.70, (at-risk n1=10.81, n2=11.09).
-#> Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5)
-#> Lower spending: Hwang-Shih-DeCani (gamma = -8)
-#> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 3 analyses, total sample size 376.0, 90 percent
-#> power, 2.5 percent (1-sided) Type I error. Control rate 0.1250, treatment rate
-#> 0.0833, risk ratio 0.6667, dispersion 0.5000. Accrual duration 12.0, trial
-#> duration 24.0, max follow-up 12.0, event gap 0.66, dropout rates (0.0043,
-#> 0.0043), average exposure (calendar) 11.70, (at-risk n1=10.81, n2=11.09).
-#> Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5)
-#> Lower spending: Hwang-Shih-DeCani (gamma = -8)
+#> Randomization ratio 1:1. Upper spending: Piecewise linear (line points = 0.5,
+#> line points = 0.5) Lower spending: Hwang-Shih-DeCani (gamma = -8)
 ```
 
 Tabular summary:

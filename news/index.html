@@ -45,6 +45,7 @@
 <h3 id="score-test-sizing-and-inference-guidance-0-3-2">Score-test sizing and inference guidance<a class="anchor" aria-label="anchor" href="#score-test-sizing-and-inference-guidance-0-3-2"></a></h3>
 <ul><li>Expanded the paper, sample-size vignette, and score-vs-Wald simulation vignette with recommendations for when the Zhu-Lakkis / Friede-Schmidli / Mutze Wald sample-size formula is appropriate and when to use score-test sizing with separate null and alternative variance factors.</li>
 <li>Added an <code>ai-skills</code> vignette demonstrating how the agent skills under <code>.agents/skills/</code> can guide package-native score-test and simulation workflows without replacing statistical review.</li>
+<li>Added a published sample-size examples vignette showing how the package-specific AI skill translates literature and protocol descriptions into transparent <code><a href="../reference/sample_size_nbinom.html">sample_size_nbinom()</a></code> calls, including dropout, event-gap, non-inferiority, and group sequential parameterization checks.</li>
 <li>Refined score-test recommendations to distinguish the final analysis test from the sample-size formula: Wald/Zhu-Lakkis sizing remains a useful practical baseline and may provide a power margin when paired with the score test in fixed-design superiority settings, while SSR designs should verify any starting-size margin inside the planned adaptation rule.</li>
 <li>Added a targeted SSR starting-size sensitivity cache comparing Wald- and score-sized starting designs under the score final test in a low-event stress setting. Both starts preserved near-nominal score-test Type I error, and the larger Wald-sized start did not produce a clear SSR power advantage.</li>
 <li>Documented the cached score-vs-Wald simulation results: the Wald test was mildly anti-conservative in several finite-sample scenarios, while the score test preserved Type I error more conservatively and should be paired with simulation-based power checks.</li>
@@ -56,8 +57,14 @@
 <li>
 <code><a href="../reference/toInteger.html">toInteger.gsNB()</a></code> now preserves calendar-time enrollment quantities at interim analyses and recomputes expected events, exposures, and information after rounding the final sample size.</li>
 <li>
+<code><a href="../reference/toInteger.html">toInteger.gsNB()</a></code> now preserves the shape of piecewise accrual schedules when rescaling calendar-time designs after final sample-size rounding.</li>
+<li>
+<code><a href="../reference/gsNBCalendar.html">gsNBCalendar()</a></code>, <code><a href="../reference/update_gsNB.html">update_gsNB()</a></code>, and simulation boundary checks now support harm-bound group sequential designs available in <code>gsDesign</code> 3.10.0 (<code>test.type = 7</code> or <code>8</code>, <code>sfharm</code>, <code>sfharmparam</code>, and <code>testHarm</code>).</li>
+<li>
 <code><a href="../reference/summarize_gs_sim.html">summarize_gs_sim()</a></code> now reports optional sample-size and exposure summaries when available and uses finite trimmed means for information estimates.</li>
 <li>Updated SSR simulation reporting in the manuscript and SSR simulation article to use the production score-test cache: 3,600 replicates per power scenario, 20,000 per RR = 1 main-grid scenario, 1,000 per RR &gt; 1 scenario, and 20,000 per dispersion/test-statistic cell for the non-binding Type I tables.</li>
+<li>Replaced the CRAN-bundled SSR trial-level simulation cache with compact precomputed summaries for tables and figures, while leaving full raw simulation caches available for local development or external archival.</li>
+<li>Converted the score-vs-Wald simulation article from interactive widget output to static vignette tables and figures backed by compact precomputed summaries, reducing the CRAN package size while leaving the full simulation cache available outside the CRAN build.</li>
 <li>Updated the SSR simulation study to compare Wald and score tests at the same nominal one-sided alpha of 0.025, and aligned the SSR power simulations with the score final-analysis recommendation.</li>
 <li>Added a checkpointed production generator for the SSR score-test cache so the long-running power and Type I simulations can be resumed from saved chunks.</li>
 <li>Updated the blinded-information diagnostics article to distinguish historical raw ML pathologies from the current MoM fallback behavior.</li>
@@ -68,6 +75,10 @@
 <li>Expanded MNAR sensitivity-analysis guidance for recurrent-event endpoints, including the need to preserve censoring reason and planned remaining follow-up before post-dropout outcomes can be imputed.</li>
 <li>Added Keene, Roger, Hartley, and Kenward (2014) as the recurrent-event controlled-imputation reference for de facto / reference-based sensitivity analyses, and aligned the manuscript, slides, and simulation vignette around that framing.</li>
 <li>Updated the paper and slide materials to cite package articles as executable supplementary material for the fuller simulation grids and reporting.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="manuscript-0-3-2">Manuscript<a class="anchor" aria-label="anchor" href="#manuscript-0-3-2"></a></h3>
+<ul><li>Converted the paper to the Quarto Journal of Statistical Software template, added a semi-real recurrent-event group sequential design example with tables and a figure, added formal R package citations, and simplified the Jensen correction grid table so the formula-heavy entries no longer break the PDF.</li>
 </ul></div>
 </div>
     <div class="section level2">

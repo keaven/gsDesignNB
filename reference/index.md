@@ -73,6 +73,8 @@ gsDesign boundaries.
 
 - [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
   : Group sequential design for negative binomial outcomes
+- [`update_gsNB()`](https://keaven.github.io/gsDesignNB/reference/update_gsNB.md)
+  : Update group sequential bounds with observed information
 - [`toInteger()`](https://keaven.github.io/gsDesignNB/reference/toInteger.md)
   : Convert group sequential design to integer sample sizes
 - [`summary(`*`<gsNB>`*`)`](https://keaven.github.io/gsDesignNB/reference/summary.gsNB.md)

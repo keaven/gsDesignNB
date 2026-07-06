@@ -1,4 +1,4 @@
-# Using the gsDesignNB AI skill
+# AI-assisted gsDesignNB workflows
 
 ``` r
 
@@ -109,10 +109,12 @@ In this scenario, score sizing is slightly smaller than Wald sizing.
 That is not a general rule, but it illustrates why the sizing rule and
 the analysis test should not be conflated. In the package simulation
 grid, the traditional Wald/Zhu–Lakkis sample size paired with the score
-test preserved Type I error and provided a small practical power margin.
-The skill therefore reminds the analyst to compare sizing rules, choose
-the final test deliberately, and verify operating characteristics by
-simulation for the actual design setting.
+test preserved Type I error and provided a small practical power margin;
+see
+[`vignette("score-vs-wald-simulation", package = "gsDesignNB")`](https://keaven.github.io/gsDesignNB/articles/score-vs-wald-simulation.md)
+for the supporting comparison. The skill therefore reminds the analyst
+to compare sizing rules, choose the final test deliberately, and verify
+operating characteristics by simulation for the actual design setting.
 
 ## Calendar-time group sequential design
 
@@ -125,23 +127,26 @@ error control.
 
 ``` r
 
+analysis_times <- c(18, 24, 30)
+
 gs_design <- gsNBCalendar(
   wald_design,
   k = 3,
   test.type = 4,
-  analysis_times = c(18, 24, 30)
+  beta = 1 - wald_design$power,
+  analysis_times = analysis_times
 )
 
 data.frame(
   analysis = seq_along(gs_design$n.I),
-  calendar_month = c(18, 24, 30),
+  calendar_month = analysis_times,
   planned_information = round(gs_design$n.I, 2),
   information_fraction = round(gs_design$timing, 3)
 )
 #>   analysis calendar_month planned_information information_fraction
-#> 1        1             18               46.88                0.709
-#> 2        2             24               61.96                0.937
-#> 3        3             30               66.13                1.000
+#> 1        1             18               46.84                0.709
+#> 2        2             24               61.91                0.937
+#> 3        3             30               66.08                1.000
 ```
 
 ## Simulate, cut, and test a small data set
@@ -158,7 +163,7 @@ with many replicates and saved seeds.
 
 set.seed(2026)
 
-enroll_rate <- data.frame(rate = 30 / 6, duration = 6)
+demo_enroll_rate <- data.frame(rate = 30 / 6, duration = 6)
 fail_rate <- data.frame(
   treatment = c("Control", "Experimental"),
   rate = c(design_args$lambda1, design_args$lambda2),
@@ -171,7 +176,7 @@ dropout_rate <- data.frame(
 )
 
 sim_data <- nb_sim(
-  enroll_rate = enroll_rate,
+  enroll_rate = demo_enroll_rate,
   fail_rate = fail_rate,
   dropout_rate = dropout_rate,
   max_followup = design_args$max_followup,
@@ -220,37 +225,54 @@ score_test
 ## Production workflow reminder
 
 The small example above is useful for checking assumptions and object
-shapes. For design claims, the skill directs the user to the simulation
-routines and summary helpers:
+shapes, but it deliberately uses only 60 subjects. For design claims,
+use the sample size and scaled accrual returned by
+[`sample_size_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sample_size_nbinom.md),
+choose the information scale for boundary checks explicitly, and run
+enough replicates to estimate operating characteristics:
 
 ``` r
 
+production_enroll_rate <- data.frame(
+  rate = wald_design$accrual_rate,
+  duration = wald_design$accrual_duration
+)
+
+set.seed(2026)
 sim_results <- sim_gs_nbinom(
   n_sims = 10000,
-  enroll_rate = enroll_rate,
+  enroll_rate = production_enroll_rate,
   fail_rate = fail_rate,
   dropout_rate = dropout_rate,
   max_followup = design_args$max_followup,
   event_gap = design_args$event_gap,
+  n_target = wald_design$n_total,
   design = gs_design,
-  analysis_times = c(18, 24, 30),
+  analysis_times = analysis_times,
   test_type = "score",
   seed = TRUE
 )
 
-bounded <- check_gs_bound(sim_results, gs_design)
+bounded <- check_gs_bound(
+  sim_results,
+  gs_design,
+  info_col = "info_unblinded_ml"
+)
 summarize_gs_sim(bounded)
 ```
 
 For sample size re-estimation studies, use
 [`sim_ssr_nbinom()`](https://keaven.github.io/gsDesignNB/reference/sim_ssr_nbinom.md)
 and
-[`summarize_ssr_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_ssr_sim.md).
-The score final test is especially important in SSR because adaptation
-can increase information under nuisance misspecification; the score test
-helps preserve Type I error where a Wald analysis may be mildly
-anti-conservative. The adapted sample size itself should still be
-checked by simulation rather than assumed from the formula alone.
+[`summarize_ssr_sim()`](https://keaven.github.io/gsDesignNB/reference/summarize_ssr_sim.md);
+see
+[`vignette("ssr-simulation-study", package = "gsDesignNB")`](https://keaven.github.io/gsDesignNB/articles/ssr-simulation-study.md)
+for a larger simulation case study. The score final test is especially
+important in SSR because adaptation can increase information under
+nuisance misspecification; the score test helps preserve Type I error
+where a Wald analysis may be mildly anti-conservative. The adapted
+sample size itself should still be checked by simulation rather than
+assumed from the formula alone.
 
 ## What this skill is and is not
 

@@ -99,13 +99,6 @@ summary(gs_plan)
 #> duration 24.0, max follow-up 12.0, average exposure 12.00. Randomization ratio
 #> 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -2) Lower spending:
 #> Hwang-Shih-DeCani (gamma = 1)
-#> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 2 analyses, total sample size 882.0, 90 percent
-#> power, 2.5 percent (1-sided) Type I error. Control rate 0.1000, treatment rate
-#> 0.0750, risk ratio 0.7500, dispersion 0.5000. Accrual duration 12.0, trial
-#> duration 24.0, max follow-up 12.0, average exposure 12.00. Randomization ratio
-#> 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -2) Lower spending:
-#> Hwang-Shih-DeCani (gamma = 1)
 ```
 
 ``` r
@@ -487,11 +480,11 @@ gsBoundSummary(gs_update,
 |----------------------------------------|---------------------|----------|
 | Final Information = 71.51              |                     |          |
 | Analysis                               | Value               | Efficacy |
-| IA 1: 17%                              | Z                   | 7.1773   |
-| Information: 12.06                     | p (1-sided)         | 0.0000   |
-|                                        | ~RR at bound        | 1.8918   |
-|                                        | P(Cross) if RR=1    | 0.0000   |
-|                                        | P(Cross) if RR=2.72 | 1.0000   |
+| IA 1: 17%                              | Z                   | NA       |
+| Information: 12.06                     | p (1-sided)         | NA       |
+|                                        | ~RR at bound        | NA       |
+|                                        | P(Cross) if RR=1    | NA       |
+|                                        | P(Cross) if RR=2.72 | NA       |
 | Final                                  | Z                   | 1.9600   |
 | Information: 71.51                     | p (1-sided)         | 0.0250   |
 |                                        | ~RR at bound        | 1.0741   |

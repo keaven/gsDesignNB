@@ -45,13 +45,6 @@ summary(gs_design)
 #> duration 24.0, max follow-up Inf, average exposure 14.00. Randomization ratio
 #> 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -4) Lower spending:
 #> Hwang-Shih-DeCani (gamma = -2)
-#> Asymmetric two-sided with non-binding futility bound group sequential design
-#> for negative binomial outcomes, 3 analyses, total sample size 53.5, 90 percent
-#> power, 2.5 percent (1-sided) Type I error. Control rate 0.5000, treatment rate
-#> 0.3000, risk ratio 0.6000, dispersion 0.1000. Accrual duration 20.0, trial
-#> duration 24.0, max follow-up Inf, average exposure 14.00. Randomization ratio
-#> 1:1. Upper spending: Hwang-Shih-DeCani (gamma = -4) Lower spending:
-#> Hwang-Shih-DeCani (gamma = -2)
 #> 
 
 # For tabular bounds summary, use gsBoundSummary() directly:

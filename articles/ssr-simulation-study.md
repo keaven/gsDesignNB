@@ -9,7 +9,6 @@ library(MASS)
 library(ggplot2)
 library(dplyr)
 library(gt)
-library(DT)
 library(future)
 library(future.apply)
 ```
@@ -422,21 +421,36 @@ max_enrollment_frac_for_ia2 <- 1.00
 min_months_to_close_for_adapt <- 2
 analysis_lag_months <- 2
 
-# Optional precomputed outputs for fast vignette builds
-precomputed_basename <- paste0("ssr_sim_vignette_outputs_", analysis_test_type, ".rds")
+# Optional precomputed summaries for fast vignette builds. The full
+# trial-level simulation cache is useful for development, but the CRAN build
+# uses compact summaries so the source package stays small.
+summary_basename <- paste0("ssr_sim_vignette_summary_", analysis_test_type, ".rds")
+raw_precomputed_basename <- paste0("ssr_sim_vignette_outputs_", analysis_test_type, ".rds")
 project_root <- if (file.exists("DESCRIPTION")) "." else
   if (file.exists("../DESCRIPTION")) ".." else "."
-precomputed_source_path <- file.path(
-  project_root, "inst", "extdata", precomputed_basename
+summary_source_path <- file.path(
+  project_root, "inst", "extdata", summary_basename
 )
-precomputed_file <- system.file("extdata", precomputed_basename, package = "gsDesignNB")
-if (precomputed_file == "" && file.exists(precomputed_source_path)) {
-  precomputed_file <- precomputed_source_path
+raw_precomputed_source_path <- file.path(
+  project_root, "inst", "extdata", raw_precomputed_basename
+)
+precomputed_file <- system.file("extdata", summary_basename, package = "gsDesignNB")
+precomputed_kind <- "summary"
+if (precomputed_file == "" && file.exists(summary_source_path)) {
+  precomputed_file <- summary_source_path
+}
+if (precomputed_file == "") {
+  precomputed_file <- system.file("extdata", raw_precomputed_basename, package = "gsDesignNB")
+  precomputed_kind <- "raw"
+}
+if (precomputed_file == "" && file.exists(raw_precomputed_source_path)) {
+  precomputed_file <- raw_precomputed_source_path
+  precomputed_kind <- "raw"
 }
 force_rerun <- identical(Sys.getenv("GSDESIGNNB_FORCE_SSR_SIM"), "true")
 use_precomputed <- (!use_production) && !force_rerun && nzchar(precomputed_file)
 save_precomputed <- identical(Sys.getenv("GSDESIGNNB_SAVE_SSR_OUTPUTS"), "true")
-save_precomputed_path <- precomputed_source_path
+save_precomputed_path <- summary_source_path
 # Re-run Type I (non-binding) sims even if RDS cache exists (see inst/extdata/ssr_type1_null_*.rds)
 force_type1_sim <- identical(Sys.getenv("GSDESIGNNB_FORCE_TYPE1_SIM"), "true")
 type1_cache_dir <- dirname(save_precomputed_path)
@@ -444,9 +458,9 @@ type1_cache_dir <- dirname(save_precomputed_path)
 cat("Scenarios:", nrow(scenarios), "| Fresh-run replicates requested:", sum(scenarios$n_sims), "\n")
 #> Scenarios: 90 | Fresh-run replicates requested: 4500
 if (use_precomputed) {
-  cat("Rendered results use the replicate counts stored in the precomputed cache.\n")
+  cat("Rendered results use the replicate counts stored in the precomputed summary cache.\n")
 }
-#> Rendered results use the replicate counts stored in the precomputed cache.
+#> Rendered results use the replicate counts stored in the precomputed summary cache.
 cat("Accrual rates used in simulation:", paste(round(sort(unique(scenarios$accrual_true)), 1), collapse = ", "),
     "/month\n")
 #> Accrual rates used in simulation: 12, 18, 24 /month
@@ -470,8 +484,8 @@ cat("Production plan:", n_sims_production_power,
 cat("separate RR = 1 non-binding futility check uses", n_sims_production_type1,
     "reps per k and test statistic.\n")
 #> separate RR = 1 non-binding futility check uses 20000 reps per k and test statistic.
-if (use_precomputed) cat("Using precomputed outputs:", precomputed_file, "\n")
-#> Using precomputed outputs: /home/runner/work/_temp/Library/gsDesignNB/extdata/ssr_sim_vignette_outputs_score.rds
+if (use_precomputed) cat("Using precomputed", precomputed_kind, "cache:", precomputed_file, "\n")
+#> Using precomputed summary cache: /home/runner/work/_temp/Library/gsDesignNB/extdata/ssr_sim_vignette_summary_score.rds
 cat(
   "Type I (RR=1, non-binding) per-test cache: inst/extdata/ssr_type1_null_alpha025_wald.rds,",
   "ssr_type1_null_alpha025_score.rds; set GSDESIGNNB_FORCE_TYPE1_SIM=true to rebuild.\n"
@@ -625,16 +639,26 @@ run_null_type1_sims <- function(gs_plan_x, alpha_plan_x, null_n, test_type_x) {
 ``` r
 
 precomputed_outputs <- NULL
+using_summary_cache <- FALSE
+rows_for_runtime <- NA_integer_
 if (use_precomputed) {
   precomputed_outputs <- readRDS(precomputed_file)
-  all_results <- as.data.frame(precomputed_outputs$plot_data)
+  using_summary_cache <- isTRUE(!is.null(precomputed_outputs$summary_dt))
   sim_runtime_seconds <- precomputed_outputs$sim_runtime_seconds
   workers <- if (!is.null(precomputed_outputs$workers)) {
     as.integer(precomputed_outputs$workers)
   } else {
     max(1L, future::availableCores() - 1L)
   }
-  sim_mode <- "Loaded precomputed outputs"
+  if (using_summary_cache) {
+    all_results <- NULL
+    rows_for_runtime <- precomputed_outputs$rows
+    sim_mode <- "Loaded precomputed summaries"
+  } else {
+    all_results <- as.data.frame(precomputed_outputs$plot_data)
+    rows_for_runtime <- nrow(all_results)
+    sim_mode <- "Loaded precomputed trial-level outputs"
+  }
 } else {
   sim_start <- Sys.time()
   workers <- max(1L, future::availableCores() - 1L)
@@ -647,26 +671,29 @@ if (use_precomputed) {
   all_results <- Filter(Negate(is.null), all_results)
   all_results <- do.call(rbind, all_results)
   sim_runtime_seconds <- as.numeric(difftime(Sys.time(), sim_start, units = "secs"))
+  rows_for_runtime <- nrow(all_results)
   sim_mode <- "Fresh simulation"
 }
 
 # Backward-compatible defaults for precomputed files from older vignette versions
-required_cols <- c(
-  "ia2_adapt_cut_time",
-  "ia2_enroll_frac", "ia2_months_to_close_pred",
-  "ia2_adapt_allowed", "ia2_adapt_applied"
-)
-missing_cols <- setdiff(required_cols, names(all_results))
-if (length(missing_cols) > 0) {
-  for (nm in missing_cols) all_results[[nm]] <- NA
+if (!using_summary_cache) {
+  required_cols <- c(
+    "ia2_adapt_cut_time",
+    "ia2_enroll_frac", "ia2_months_to_close_pred",
+    "ia2_adapt_allowed", "ia2_adapt_applied"
+  )
+  missing_cols <- setdiff(required_cols, names(all_results))
+  if (length(missing_cols) > 0) {
+    for (nm in missing_cols) all_results[[nm]] <- NA
+  }
 }
 
 cat("Simulation mode:", sim_mode, "\n")
-#> Simulation mode: Loaded precomputed outputs
+#> Simulation mode: Loaded precomputed summaries
 cat("Workers:", workers, "\n")
 #> Workers: 11
-cat("Rows:", nrow(all_results), "\n")
-#> Rows: 1717200
+cat("Trial-level rows represented:", rows_for_runtime, "\n")
+#> Trial-level rows represented: 1717200
 if (!is.null(sim_runtime_seconds) && is.finite(sim_runtime_seconds)) {
   cat(sprintf("Simulation wall time: %.2f minutes (%.1f seconds)\n",
               sim_runtime_seconds / 60, sim_runtime_seconds))
@@ -782,40 +809,125 @@ cat("k scenarios:", paste(null_k_scenarios, collapse = ", "), "\n")
 
 ``` r
 
-dt <- as.data.table(all_results)
-summary_dt <- summarize_ssr_sim(
-  dt,
-  by = c("lambda1_true", "k_true", "accrual_true", "rr_true", "strategy")
-)$trial_summary |>
-  as.data.table()
+if (using_summary_cache) {
+  dt <- NULL
+  summary_dt <- as.data.table(precomputed_outputs$summary_dt)
+  power_avg <- as.data.table(precomputed_outputs$power_avg)
+  stage_long <- as.data.table(precomputed_outputs$stage_long)
+  adapted_n_summary <- as.data.table(precomputed_outputs$adapted_n_summary)
+  en_summary <- as.data.table(precomputed_outputs$en_summary)
+  time_summary <- as.data.table(precomputed_outputs$time_summary)
+  if_summary <- as.data.table(precomputed_outputs$if_summary)
+} else {
+  dt <- as.data.table(all_results)
+  summary_dt <- summarize_ssr_sim(
+    dt,
+    by = c("lambda1_true", "k_true", "accrual_true", "rr_true", "strategy")
+  )$trial_summary |>
+    as.data.table()
+}
 ```
 
 ``` r
 
-plot_data <- dt[, .(
-  lambda1_true, k_true, accrual_true, rr_true, analysis_test, strategy,
-  reject, futility, reject_stage, futility_stage,
-  n_adapted, adapted,
-  participants_with_events_stop, events_observed_stop,
-  if_ia1, if_ia2, if_final,
-  ia1_time, ia2_time, final_time,
-  ia1_fallback, ia2_fallback,
-  participants_with_events_ia1, participants_with_events_ia2,
-  participants_with_events_final,
-  events_observed_ia1, events_observed_ia2, events_observed_final,
-  adapt_cut_time, adapt_enroll_frac, adapt_months_to_close_pred,
-  adapt_allowed, adapt_applied,
-  ia2_adapt_cut_time,
-  ia2_enroll_frac, ia2_months_to_close_pred,
-  ia2_adapt_allowed, ia2_adapt_applied
-)]
+if (is.null(dt)) {
+  stop("Saving precomputed summaries requires a fresh or raw trial-level run.")
+}
+
+power_avg <- dt[rr_true < 1.0, .(
+  power = mean(reject, na.rm = TRUE),
+  mean_final_if = mean(if_final, na.rm = TRUE),
+  mean_final_month = mean(final_time, na.rm = TRUE)
+), by = .(rr_true, strategy)]
+
+stage_dt <- dt[rr_true <= 1.0, .(
+  `Cross IA1` = mean(reject_stage == "IA1", na.rm = TRUE),
+  `Cross IA2` = mean(reject_stage == "IA2", na.rm = TRUE),
+  `Cross Final` = mean(reject_stage == "Final", na.rm = TRUE),
+  `No cross Final` = mean(reject_stage == "No reject" & !futility, na.rm = TRUE),
+  `Futility IA2` = mean(futility_stage == "IA2", na.rm = TRUE),
+  `Futility IA1` = mean(futility_stage == "IA1", na.rm = TRUE)
+), by = .(rr_true, lambda1_true, k_true, accrual_true, strategy)]
+
+stage_long <- data.table::melt(
+  stage_dt,
+  id.vars = c("rr_true", "lambda1_true", "k_true", "accrual_true", "strategy"),
+  variable.name = "outcome",
+  value.name = "prob"
+)
+
+summary_quantiles <- function(x) {
+  qs <- stats::quantile(
+    x,
+    probs = c(0.05, 0.25, 0.5, 0.75, 0.95),
+    na.rm = TRUE,
+    names = FALSE
+  )
+  list(
+    mean = mean(x, na.rm = TRUE),
+    sd = stats::sd(x, na.rm = TRUE),
+    q05 = qs[1],
+    q25 = qs[2],
+    q50 = qs[3],
+    q75 = qs[4],
+    q95 = qs[5]
+  )
+}
+
+adapted_n_summary <- dt[
+  rr_true <= 1.0 & strategy %in% c("Blinded SSR", "Unblinded SSR"),
+  as.list(summary_quantiles(n_adapted)),
+  by = .(rr_true, lambda1_true, k_true, accrual_true, strategy)
+]
+
+en_summary <- dt[rr_true <= 1.0, .(
+  mean_n = mean(n_adapted, na.rm = TRUE),
+  sd_n = stats::sd(n_adapted, na.rm = TRUE)
+), by = .(rr_true, lambda1_true, k_true, accrual_true, strategy)]
+
+time_long_save <- data.table::melt(
+  dt[strategy == "No adaptation" & rr_true == rr_plan, .(
+    lambda1_true, k_true, accrual_true,
+    IA1 = ia1_time, IA2 = ia2_time, Final = final_time
+  )],
+  id.vars = c("lambda1_true", "k_true", "accrual_true"),
+  variable.name = "analysis",
+  value.name = "calendar_time"
+)
+time_summary <- time_long_save[
+  ,
+  as.list(summary_quantiles(calendar_time)),
+  by = .(lambda1_true, k_true, accrual_true, analysis)
+]
+
+if_long_save <- data.table::melt(
+  dt[strategy == "No adaptation" & rr_true == rr_plan, .(
+    lambda1_true, k_true, accrual_true,
+    IA1 = 100 * if_ia1, IA2 = 100 * if_ia2, Final = 100 * if_final
+  )],
+  id.vars = c("lambda1_true", "k_true", "accrual_true"),
+  variable.name = "analysis",
+  value.name = "info_fraction"
+)
+if_summary <- if_long_save[
+  ,
+  as.list(summary_quantiles(info_fraction)),
+  by = .(lambda1_true, k_true, accrual_true, analysis)
+]
 
 dir.create(dirname(save_precomputed_path), recursive = TRUE, showWarnings = FALSE)
 saveRDS(
   list(
-    plot_data = as.data.frame(plot_data),
+    summary_dt = as.data.frame(summary_dt),
+    power_avg = as.data.frame(power_avg),
+    stage_long = as.data.frame(stage_long),
+    adapted_n_summary = as.data.frame(adapted_n_summary),
+    en_summary = as.data.frame(en_summary),
+    time_summary = as.data.frame(time_summary),
+    if_summary = as.data.frame(if_summary),
     sim_runtime_seconds = sim_runtime_seconds,
     workers = workers,
+    rows = nrow(dt),
     null_nonbinding_summary = as.data.frame(null_nonbinding_summary),
     null_nonbinding_by_test = lapply(null_nonbinding_by_test, as.data.frame),
     null_nonbinding_n = null_nonbinding_n,
@@ -850,7 +962,7 @@ runtime_df <- data.frame(
     as.character(workers),
     nrow(scenario_rep_counts),
     sum(scenario_rep_counts$n_sims),
-    nrow(all_results),
+    rows_for_runtime,
     if (!is.null(sim_runtime_seconds) && is.finite(sim_runtime_seconds))
       sprintf("%.2f", sim_runtime_seconds / 60) else "NA"
   )
@@ -860,15 +972,15 @@ runtime_df |>
   gt() |>
   tab_header(
     title = "Simulation Runtime",
-    subtitle = "Use precomputed outputs to avoid rerunning on pkgdown/CI/CRAN builds"
+    subtitle = "Use precomputed summaries to avoid rerunning on pkgdown/CI/CRAN builds"
   )
 ```
 
 | Simulation Runtime |  |
 |----|----|
-| Use precomputed outputs to avoid rerunning on pkgdown/CI/CRAN builds |  |
+| Use precomputed summaries to avoid rerunning on pkgdown/CI/CRAN builds |  |
 | Metric | Value |
-| Simulation mode | Loaded precomputed outputs |
+| Simulation mode | Loaded precomputed summaries |
 | Workers | 11 |
 | Scenarios | 90 |
 | Replicates | 572400 |
@@ -1047,11 +1159,14 @@ automatically translate into adaptive-design power.
 
 ``` r
 
-power_avg <- dt[rr_true < 1.0, .(
-  power = mean(reject, na.rm = TRUE),
-  mean_final_if = mean(if_final, na.rm = TRUE),
-  mean_final_month = mean(final_time, na.rm = TRUE)
-), by = .(rr_true, strategy)]
+if (!exists("power_avg")) {
+  power_avg <- dt[rr_true < 1.0, .(
+    power = mean(reject, na.rm = TRUE),
+    mean_final_if = mean(if_final, na.rm = TRUE),
+    mean_final_month = mean(final_time, na.rm = TRUE)
+  ), by = .(rr_true, strategy)]
+}
+power_avg <- as.data.table(power_avg)
 
 ggplot(power_avg, aes(x = rr_true, y = power,
                        color = strategy, linetype = strategy)) +
@@ -1156,99 +1271,148 @@ ggplot(power_rr_plan,
 
 ### Calendar and information at each analysis
 
-The plots below use split (side-by-side) violin distributions for \\k =
-0.5\\ and \\k = 1.0\\, with vertical panels for IA1, IA2, and Final
-analysis. Panels use free y-scales.
+The plots below summarize simulated distributions for \\k = 0.5\\ and
+\\k = 1.0\\, with vertical panels for IA1, IA2, and Final analysis.
+Points show medians, thick intervals show interquartile ranges, and thin
+intervals show 5th–95th percentile ranges. Panels use free y-scales.
 
 ``` r
 
-time_long <- dt[strategy == "No adaptation" & rr_true == rr_plan, .(
-  lambda1_true, k_true, accrual_true,
-  IA1 = ia1_time, IA2 = ia2_time, Final = final_time
-)]
-time_long <- data.table::melt(
-  time_long,
-  id.vars = c("lambda1_true", "k_true", "accrual_true"),
-  variable.name = "analysis",
-  value.name = "calendar_time"
-)
-time_long[, analysis := factor(analysis, levels = c("IA1", "IA2", "Final"))]
-time_long[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
-time_long[, k_label := paste0("k = ", k_true)]
+if (!exists("time_summary")) {
+  time_long <- dt[strategy == "No adaptation" & rr_true == rr_plan, .(
+    lambda1_true, k_true, accrual_true,
+    IA1 = ia1_time, IA2 = ia2_time, Final = final_time
+  )]
+  time_long <- data.table::melt(
+    time_long,
+    id.vars = c("lambda1_true", "k_true", "accrual_true"),
+    variable.name = "analysis",
+    value.name = "calendar_time"
+  )
+  time_summary <- time_long[
+    ,
+    {
+      qs <- stats::quantile(
+        calendar_time,
+        probs = c(0.05, 0.25, 0.5, 0.75, 0.95),
+        na.rm = TRUE,
+        names = FALSE
+      )
+      .(q05 = qs[1], q25 = qs[2], q50 = qs[3], q75 = qs[4], q95 = qs[5])
+    },
+    by = .(lambda1_true, k_true, accrual_true, analysis)
+  ]
+}
+time_summary <- as.data.table(time_summary)
+time_summary[, analysis := factor(analysis, levels = c("IA1", "IA2", "Final"))]
+time_summary[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
+time_summary[, k_label := paste0("k = ", k_true)]
 
 planned_time_df <- data.frame(
   analysis = factor(c("IA1", "IA2", "Final"), levels = c("IA1", "IA2", "Final")),
   planned_time = c(analysis_times_plan[1], analysis_times_plan[2], analysis_times_plan[3])
 )
 
-ggplot(time_long,
-       aes(x = factor(accrual_true), y = calendar_time, fill = factor(k_true))) +
-  geom_violin(position = position_dodge(width = 0.85),
-              alpha = 0.7, scale = "width", trim = FALSE) +
+ggplot(time_summary,
+       aes(x = factor(accrual_true), y = q50, color = factor(k_true))) +
+  geom_linerange(
+    aes(ymin = q05, ymax = q95, group = factor(k_true)),
+    position = position_dodge(width = 0.7),
+    alpha = 0.45,
+    linewidth = 0.9
+  ) +
+  geom_pointrange(
+    aes(ymin = q25, ymax = q75, group = factor(k_true)),
+    position = position_dodge(width = 0.7),
+    linewidth = 0.7,
+    size = 1.8
+  ) +
   geom_hline(
     data = planned_time_df,
     aes(yintercept = planned_time),
     linetype = "dashed", color = "darkgreen", inherit.aes = FALSE
   ) +
   facet_grid(analysis ~ lambda1_label, scales = "free_y") +
-  scale_fill_manual(values = c("0.5" = "#6BAED6", "1" = "#2171B5")) +
+  scale_color_manual(values = c("0.5" = "#6BAED6", "1" = "#2171B5")) +
   labs(
-    title = "Calendar Time Distribution by Analysis (RR = 0.7, No adaptation)",
+    title = "Calendar Time Distribution Summary by Analysis (RR = 0.7, No adaptation)",
     subtitle = paste("Dashed green = planned analysis time |", design_note),
     x = "Accrual rate (pts/month)",
     y = "Calendar month",
-    fill = "k"
+    color = "k"
   ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
-#> Warning: Removed 73998 rows containing non-finite outside the scale range
-#> (`stat_ydensity()`).
 ```
 
 ![](ssr-simulation-study_files/figure-html/analysis_time_violin-1.png)
 
 ``` r
 
-if_long <- dt[strategy == "No adaptation" & rr_true == rr_plan, .(
-  lambda1_true, k_true, accrual_true,
-  IA1 = 100 * if_ia1, IA2 = 100 * if_ia2, Final = 100 * if_final
-)]
-if_long <- data.table::melt(
-  if_long,
-  id.vars = c("lambda1_true", "k_true", "accrual_true"),
-  variable.name = "analysis",
-  value.name = "info_fraction"
-)
-if_long[, analysis := factor(analysis, levels = c("IA1", "IA2", "Final"))]
-if_long[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
+if (!exists("if_summary")) {
+  if_long <- dt[strategy == "No adaptation" & rr_true == rr_plan, .(
+    lambda1_true, k_true, accrual_true,
+    IA1 = 100 * if_ia1, IA2 = 100 * if_ia2, Final = 100 * if_final
+  )]
+  if_long <- data.table::melt(
+    if_long,
+    id.vars = c("lambda1_true", "k_true", "accrual_true"),
+    variable.name = "analysis",
+    value.name = "info_fraction"
+  )
+  if_summary <- if_long[
+    ,
+    {
+      qs <- stats::quantile(
+        info_fraction,
+        probs = c(0.05, 0.25, 0.5, 0.75, 0.95),
+        na.rm = TRUE,
+        names = FALSE
+      )
+      .(q05 = qs[1], q25 = qs[2], q50 = qs[3], q75 = qs[4], q95 = qs[5])
+    },
+    by = .(lambda1_true, k_true, accrual_true, analysis)
+  ]
+}
+if_summary <- as.data.table(if_summary)
+if_summary[, analysis := factor(analysis, levels = c("IA1", "IA2", "Final"))]
+if_summary[, lambda1_label := paste0("lambda1 = ", lambda1_true)]
 
 planned_if_df <- data.frame(
   analysis = factor(c("IA1", "IA2", "Final"), levels = c("IA1", "IA2", "Final")),
   planned_if = 100 * c(planned_timing[1], planned_timing[2], 1)
 )
 
-ggplot(if_long,
-       aes(x = factor(accrual_true), y = info_fraction, fill = factor(k_true))) +
-  geom_violin(position = position_dodge(width = 0.85),
-              alpha = 0.7, scale = "width", trim = FALSE) +
+ggplot(if_summary,
+       aes(x = factor(accrual_true), y = q50, color = factor(k_true))) +
+  geom_linerange(
+    aes(ymin = q05, ymax = q95, group = factor(k_true)),
+    position = position_dodge(width = 0.7),
+    alpha = 0.45,
+    linewidth = 0.9
+  ) +
+  geom_pointrange(
+    aes(ymin = q25, ymax = q75, group = factor(k_true)),
+    position = position_dodge(width = 0.7),
+    linewidth = 0.7,
+    size = 1.8
+  ) +
   geom_hline(
     data = planned_if_df,
     aes(yintercept = planned_if),
     linetype = "dashed", color = "darkgreen", inherit.aes = FALSE
   ) +
   facet_grid(analysis ~ lambda1_label, scales = "free_y") +
-  scale_fill_manual(values = c("0.5" = "#6BAED6", "1" = "#2171B5")) +
+  scale_color_manual(values = c("0.5" = "#6BAED6", "1" = "#2171B5")) +
   labs(
-    title = "Information Fraction Distribution by Analysis (RR = 0.7, No adaptation)",
+    title = "Information Fraction Distribution Summary by Analysis (RR = 0.7, No adaptation)",
     subtitle = paste("Dashed green = planned information fraction |", design_note),
     x = "Accrual rate (pts/month)",
     y = "Information fraction (%)",
-    fill = "k"
+    color = "k"
   ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
-#> Warning: Removed 73998 rows containing non-finite outside the scale range
-#> (`stat_ydensity()`).
 ```
 
 ![](ssr-simulation-study_files/figure-html/analysis_info_violin-1.png)

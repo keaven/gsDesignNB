@@ -281,10 +281,10 @@ gs_selective
 #> 
 #>                 ----Lower bounds----  ----Upper bounds-----
 #>   Analysis N    Z   Nominal p Spend+  Z   Nominal p Spend++
-#>          1 11 -0.24    0.4057 0.0148 3.01    0.0013  0.0013
-#>          2 29  0.94    0.8267 0.0289 2.55    0.0054  0.0049
-#>          3 44  2.00    0.9772 0.0563 2.00    0.0228  0.0188
-#>      Total                    0.1000                 0.0250 
+#>          1 11 -0.24    0.4057 0.0148   NA        NA      NA
+#>          2 29  0.94    0.8266 0.0289 2.50    0.0062  0.0062
+#>          3 44    NA        NA     NA 1.99    0.0230  0.0188
+#>      Total                    0.0437                 0.0250 
 #> + lower bound beta spending (under H1):
 #>  Hwang-Shih-DeCani spending function with gamma = -2.
 #> ++ alpha spending:
@@ -295,13 +295,13 @@ gs_selective
 #> 
 #> Upper boundary (power or Type I Error)
 #>           Analysis
-#>    Theta      1      2      3  Total E{N}
-#>   0.0000 0.0013 0.0049 0.0171 0.0233 25.4
-#>   0.5084 0.1412 0.4403 0.3185 0.9000 32.2
+#>    Theta 1      2      3  Total E{N}
+#>   0.0000 0 0.0062 0.0170 0.0233 25.4
+#>   0.5084 0 0.5945 0.3061 0.9006 34.0
 #> 
 #> Lower boundary (futility or Type II Error)
 #>           Analysis
-#>    Theta      1      2      3  Total
-#>   0.0000 0.4057 0.4290 0.1420 0.9767
-#>   0.5084 0.0148 0.0289 0.0563 0.1000
+#>    Theta      1      2 3  Total
+#>   0.0000 0.4057 0.4290 0 0.8347
+#>   0.5084 0.0148 0.0289 0 0.0437
 ```
