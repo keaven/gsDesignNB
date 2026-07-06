@@ -121,7 +121,6 @@ articles:
       - seasonal-simulation
       - verification-simulation
       - score-vs-wald-simulation
-      - score-vs-wald-simulation_v1
 
   - title: "Group sequential monitoring"
     contents:
