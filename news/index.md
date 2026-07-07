@@ -2,6 +2,8 @@
 
 ## gsDesignNB 0.3.2 (development)
 
+CRAN release: 2026-07-06
+
 ### Score-test sizing and inference guidance
 
 - Expanded the paper, sample-size vignette, and score-vs-Wald simulation

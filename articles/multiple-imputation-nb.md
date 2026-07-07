@@ -531,7 +531,7 @@ sessionInfo()
 #> [64] globals_0.19.1      otel_0.2.0          lme4_2.0-1         
 #> [67] ragg_1.5.2          zoo_1.8-15          evaluate_1.0.5     
 #> [70] knitr_1.51          glmmTMB_1.1.14      rbibutils_2.4.1    
-#> [73] mgcv_1.9-4          rlang_1.2.0         Rcpp_1.1.1-1.1     
+#> [73] mgcv_1.9-4          rlang_1.3.0         Rcpp_1.1.2         
 #> [76] xtable_1.8-8        glue_1.8.1          xml2_1.6.0         
 #> [79] minqa_1.2.8         jsonlite_2.0.0      R6_2.6.1           
 #> [82] systemfonts_1.3.2   fs_2.1.0
