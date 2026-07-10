@@ -12,17 +12,26 @@ author:
       name: Merck & Co., Inc., Rahway, NJ, USA
   - name: Nan Xiao
     affiliation:
-      name: Genentech, Inc., South San Francisco, CA, USA
+      name: Independent Consultant
   - name: Andrea Maes
     affiliation:
       name: Merck & Co., Inc., Rahway, NJ, USA
 keywords:
+  - clinical trials
   - group sequential design
-  - R package
-  - recurrent events
-  - overdispersion
   - negative binomial distribution
+  - overdispersion
+  - recurrent events
   - sample size re-estimation
+  - score test
+keywords-formatted:
+  - clinical trials
+  - group sequential design
+  - negative binomial distribution
+  - overdispersion
+  - recurrent events
+  - sample size re-estimation
+  - score test
 format:
   quarto-journals/jss-pdf:
     number-sections: true
@@ -38,44 +47,21 @@ execute:
   message: false
 abstract: |
   We present the R package **gsDesignNB** for planning, monitoring, and adapting clinical trials
-  with recurrent event endpoints analyzed using negative binomial models. The package links fixed
-  design sample size calculations, calendar-time group sequential design construction, blinded and
-  unblinded information estimation, sample size re-estimation (SSR), and recurrent-event simulation
-  in a single workflow built on the **gsDesign** package. In the working model, conditional on
-  treatment arm and a subject-level gamma frailty, recurrent events follow a Poisson process with
-  constant within-subject rate, yielding marginal negative binomial counts; a seasonal-rate
-  extension relaxes the constant-rate assumption for respiratory and other
-  calendar-time-dependent applications. For fixed designs, the
-  package extends the methods of @zhu2014sample and @friede2010blinded to handle piecewise accrual,
-  piecewise exponential dropout, maximum follow-up truncation, and protocol-defined minimum
-  intervals between countable events (combining event duration and required symptom-free days). 
-  Because statistical information for the log rate ratio depends jointly on exposure, event
-  rates, and dispersion, it is not generally proportional to raw event counts. We derive and
-  implement a second-order delta-method correction for the Jensen-inequality bias in the event-gap
-  effective-rate approximation; in a 64-scenario simulation sweep, the correction reduces
-  representative approximation error from about 8% to 1% and prevents 1--2.5 percentage points of
-  underpowering when dispersion is moderate-to-high and gaps exceed 20 days. A second
-  methodological advance is a score-test workflow with explicit comparison to the traditional
-  Wald/Zhu--Lakkis sample-size formula. The Wald formula uses the alternative variance for both
-  Type I error and power, whereas the score formula uses the null variance for the Type I
-  component and the alternative variance for the power component. A factorial null simulation
-  shows mild finite-sample Type I error inflation for the Wald test and conservative Type I
-  behaviour for the score test; in the displayed superiority scenarios, retaining Wald sizing
-  while using the score test provides a small practical power margin without losing Type I
-  protection. The
-  package also implements a disciplined fallback from maximum likelihood to method-of-moments
-  (MoM) nuisance-parameter estimation: when the NB ML fit is near-Poisson the software switches
-  to a Poisson Wald or score test, but under extreme overdispersion or ML non-convergence it
-  switches to a MoM-based NB test using the observed Fisher information formula, avoiding the
-  Type I error inflation of a blind Poisson fallback. The package also supports calendar-time
-  group sequential monitoring, including efficacy, futility, and harm-bound designs, and both
-  blinded and unblinded SSR. A 90-scenario SSR article
-  illustrates the adaptive simulation engine, and production-scale null simulations show that SSR
-  should be checked under the null with the planned final test statistic. In our examples, the
-  Wald test exhibits mild Type I error inflation after SSR, whereas the score test preserves Type I error
-  more conservatively. The paper emphasizes
-  both the statistical methodology and the software architecture that make these workflows
-  reproducible.
+  with recurrent event endpoints analyzed using negative binomial (NB) models. The package links
+  fixed design sample size calculations, calendar-time group sequential design construction,
+  blinded and unblinded information estimation, sample size re-estimation (SSR), and
+  recurrent-event simulation in a single workflow built on the **gsDesign** package. For fixed
+  designs, the package extends the methods of @zhu2014sample and @friede2010blinded to handle
+  piecewise accrual, piecewise exponential dropout, maximum follow-up truncation, and
+  protocol-defined minimum intervals (event gaps) between countable events. 
+  Key methodological contributions
+  include a second-order delta-method (Jensen) correction for the event-gap effective-rate
+  approximation, a score-test sizing formula alongside the traditional Wald/Zhu--Lakkis formula,
+  and a disciplined maximum likelihood / method-of-moments fallback for nuisance-parameter
+  estimation under extreme overdispersion. The package also supports calendar-time group
+  sequential monitoring with efficacy, futility, and harm bounds, and both blinded and unblinded
+  SSR. Simulation sweeps accompanying the package quantify the operating characteristics of these
+  methods across a wide range of design scenarios.
 ---
 
 ```{r setup, include=FALSE}
@@ -142,10 +128,25 @@ events, introduces a Jensen-correction for event-gap planning, adds score-test s
 where null calibration is paramount, and replaces the usual blind Poisson fallback with a
 method-of-moments NB test under genuine overdispersion.
 Computationally, it connects planning objects, calendar-time monitoring rules, subject-level
-simulated trial data, and interim analysis summaries in one workflow. The remainder of the paper
-first describes that workflow, including the different notions of "gaps" that arise in
-recurrent-event trials, and then presents the methodological and simulation results that motivated
-the software design.
+simulated trial data, and interim analysis summaries in one workflow.
+
+More specifically, the Jensen correction uses a second-order delta-method expansion to reduce the
+bias in the event-gap effective-rate approximation; in a 64-scenario simulation sweep, it reduces
+representative approximation error from about 8% to 1% and prevents 1--2.5 percentage points of
+underpowering when dispersion is moderate-to-high and gaps exceed 20 days. The score-test sizing
+formula uses the null variance for the Type I error component and the alternative variance for
+the power component, whereas the Wald/Zhu--Lakkis formula uses the alternative variance for both;
+a factorial null simulation shows mild finite-sample Type I error inflation for the Wald test
+and conservative behaviour for the score test. The ML/MoM fallback switches to a Poisson Wald or
+score test when the NB ML fit is near-Poisson, and to a MoM-based NB test under extreme
+overdispersion or ML non-convergence, avoiding the Type I error inflation of a blind Poisson
+fallback. For SSR, production-scale null simulations show that the Wald test exhibits mild
+Type I error inflation after re-estimation, whereas the score test preserves Type I error more
+conservatively.
+
+The remainder of the paper first describes the package workflow, including the different notions
+of "gaps" that arise in recurrent-event trials, and then presents the methodological and
+simulation results that motivated the software design.
 
 ## Package overview and workflow
 
@@ -183,8 +184,8 @@ number streams for larger Monte Carlo studies.
 
 ### Worked design example
 
-To make the workflow concrete, consider a semi-real recurrent-event superiority trial inspired by
-exacerbation studies. The control-arm event rate is 0.5 events/month, the target rate ratio is 0.70,
+To make the workflow concrete, consider a recurrent-event superiority trial.
+The control-arm event rate is 0.5 events/month, the target rate ratio is 0.70,
 the dispersion is $k = 0.5$, maximum follow-up is 12 months, annual dropout is 10%, and the
 endpoint counts only events separated by at least 20 days. Accrual is piecewise, with 12
 participants/month for the first 6 months and 24 participants/month for the next 6 months. The
@@ -335,10 +336,13 @@ declare a subsequent event as distinct (e.g., an additional 7 days symptom-free)
 argument represents the *total* exclusion window after each counted event; the user is responsible
 for summing any event-duration and separation components appropriate to their protocol. For
 example, a COPD trial with 7-day steroid courses and a 7-day new-event rule would use
-`event_gap = 14 / 30.4375` (14 days expressed in months).  The `event_gap` parameter can
-represent either a start-to-start or an end-to-start convention, depending on what the user
-includes in the total: a start-to-start rule simply sets `event_gap` to the minimum start-to-start
-interval, whereas an end-to-start rule adds the expected event duration.
+`event_gap = 14 / 30.4375` (14 days expressed in months).  Protocols differ in whether the
+minimum interval is measured from the *onset* of one event to the onset of the next
+(onset-to-onset), or from the *resolution* of one event to the onset of the next
+(resolution-to-onset). In either case, `event_gap` should be set to the total time from
+onset during which no new event can be counted: under an onset-to-onset rule, this is
+simply the required minimum inter-onset interval; under a resolution-to-onset rule, it is
+the expected event duration plus the required symptom-free period.
 
 The package implements an "excluding recovery time" (ERT) model: the gap reduces both the
 effective event rate and the at-risk exposure. In `nb_sim()`, events are generated sequentially so
@@ -511,44 +515,56 @@ may be specified either as common scalars or as arm-specific vectors.
 In trials with a mandatory gap of duration $\gamma$ after each counted event --- representing the
 total exclusion window that may include event duration (e.g., a course of treatment) plus a
 protocol-defined separation period --- the effective counted-event rate for a subject
-with underlying Poisson rate $\lambda$ is $\lambda_\text{eff} = \lambda/(1 + \lambda\gamma)$
-[@coxlewis1966]. This follows from elementary renewal theory: expected events per unit calendar
+with underlying Poisson rate $\lambda$ is given by the first-order renewal approximation
+[@coxlewis1966]:
+
+$$
+\lambda_\text{naive} = \frac{\lambda}{1 + \lambda\gamma}.
+$$ {#eq-naive}
+
+This follows from elementary renewal theory: expected events per unit calendar
 time equal the reciprocal of the expected inter-event interval $E[T] = 1/\lambda + \gamma$.
-However, applying this expression at the population rate is a population-level average that ignores
+However, applying @eq-naive at the population rate ignores
 subject-level heterogeneity. Since $f(x) = x/(1 + x\gamma)$ is concave and subject rates
 $\Lambda_i$ are random (Gamma-distributed), Jensen's inequality gives
-$E[f(\Lambda)] < f(E[\Lambda])$.
+$E[f(\Lambda)] < f(E[\Lambda])$, so @eq-naive overstates the population-average effective rate.
 
 A second-order delta-method expansion around $\lambda$,
 $$
 E[f(\Lambda)] \approx f(\lambda) + \tfrac{1}{2} f''(\lambda)\,\text{Var}(\Lambda),
 $$
 with $f''(\lambda) = -2\gamma/(1 + \lambda\gamma)^3$ and $\text{Var}(\Lambda) = k\lambda^2$,
-yields
+yields the corrected effective rate:
 
 $$
-\lambda_\text{eff} \approx \frac{\lambda}{1 + \lambda\gamma}
+\lambda_\text{eff} = \lambda_\text{naive}
 \left(1 - \frac{k\lambda\gamma}{(1 + \lambda\gamma)^2}\right).
-$$
+$$ {#eq-jensen}
 
-@tbl-jensen-correction shows the correction magnitude. When the first-order quantity
-$k\lambda\gamma/(1+\lambda\gamma)^2$ approaches 0.25, as in the first row, the second-order
-expansion is near its limit of accuracy and the full Gamma--Poisson expectation would differ
-modestly from the displayed value; the correction still moves $\lambda_\text{eff}$ in the correct
-direction and reduces simulation-based approximation error (@tbl-power-comparison).
+@tbl-jensen-correction compares these two approximations.
+The column $\lambda_\text{naive}$ is from @eq-naive; $\lambda_\text{eff}$ is from @eq-jensen;
+and the reduction column shows the percent by which the corrected rate is lower than the naive
+rate. When the correction factor $k\lambda\gamma/(1+\lambda\gamma)^2$ approaches 0.25, as in the
+first row, the second-order expansion is near its limit of accuracy and the full Gamma--Poisson
+expectation would differ modestly from the displayed value; the correction still moves
+$\lambda_\text{eff}$ in the correct direction and reduces simulation-based approximation error
+(@tbl-power-comparison).
 
-| $\lambda$ | $k$ | $\gamma$ | Correction (%) |
-|:---------:|:---:|:--------:|:--------------:|
-| 1.0       | 1.0 | 1.0      | 25.0           |
-| 1.0       | 1.0 | 0.5      | 22.2           |
-| 0.5       | 1.0 | 1.0      | 22.2           |
-| 0.3       | 1.0 | 1.0      | 17.8           |
-| 0.5       | 1.0 | 0.5      | 16.0           |
-| 1.0       | 0.5 | 1.0      | 12.5           |
-| 0.3       | 1.0 | 0.5      | 11.3           |
-| 1.0       | 0.5 | 0.5      | 11.1           |
+| $\lambda$ | $k$ | $\gamma$ | $\lambda_\text{naive}$ | $\lambda_\text{eff}$ | Reduction (%) |
+|:---------:|:---:|:--------:|:---------------------:|:-------------------:|:-------------:|
+| 1.0       | 1.0 | 1.0      | 0.500                 | 0.375               | 25.0          |
+| 1.0       | 1.0 | 0.5      | 0.667                 | 0.519               | 22.2          |
+| 0.5       | 1.0 | 1.0      | 0.333                 | 0.259               | 22.2          |
+| 0.3       | 1.0 | 1.0      | 0.231                 | 0.190               | 17.8          |
+| 0.5       | 1.0 | 0.5      | 0.400                 | 0.336               | 16.0          |
+| 1.0       | 0.5 | 1.0      | 0.500                 | 0.438               | 12.5          |
+| 0.3       | 1.0 | 0.5      | 0.261                 | 0.231               | 11.3          |
+| 1.0       | 0.5 | 0.5      | 0.667                 | 0.593               | 11.1          |
 
-: Jensen correction magnitude for selected parameter combinations. {#tbl-jensen-correction}
+: Naive (@eq-naive) versus Jensen-corrected (@eq-jensen) effective event rates for selected
+parameter combinations, ordered by reduction magnitude. The reduction column is
+$(\lambda_\text{naive} - \lambda_\text{eff}) / \lambda_\text{naive} \times 100$, which equals the
+correction factor $k\lambda\gamma/(1+\lambda\gamma)^2 \times 100$. {#tbl-jensen-correction}
 
 A simulation study with 10,000 replicates per scenario confirmed that the corrected formula
 reduces the effective rate estimation error from approximately 8% to 1% and produces slightly
@@ -638,7 +654,7 @@ ordered by the theoretical correction factor. The corrected design achieves powe
 across all 64 scenarios (range: 0.896--0.924), while the naive design falls below 90% in the
 majority of scenarios where $k \geq 0.5$ and the gap exceeds 20 days.
 
-| $\lambda_1$ | $k$ | Gap (days) | $n$ (corr.) | $n$ (naive) | $\Delta n$ | Power (corr.) | Power (naive) | $\Delta$ Power (pp) |
+| $\lambda_1$ | $k$ | Gap (days) | $n$ (corr.) | $n$ (naive) | $\Delta n$ | Power (corr.) | Power (naive) | $\Delta$ Power (pp.) |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | 1.0 | 1.0 | 30 | 426 | 406 | 20 | 0.911 | 0.899 | 1.1 |
 | 0.5 | 1.0 | 45 | 490 | 456 | 34 | 0.910 | 0.890 | 2.1 |
@@ -660,8 +676,8 @@ correction has no effect. {#tbl-broad-sweep}
 Three patterns emerge:
 
 1.  **The correction is driven by the $k \times \gamma$ interaction.** Dispersion $k \geq 0.5$
-    combined with gaps $\geq 30$ days consistently produces 1--2 percentage points of
-    underpowering from the naive formula, corresponding to 14--40 additional subjects
+    combined with gaps $\geq 30$ days consistently produces 1--2 percentage points (pp.)
+    of underpowering from the naive formula, corresponding to 14--40 additional subjects
     (3--8% of total $n$).
 
 2.  **High event rates do not amplify the power gap as much as high dispersion.** At $k = 0.3$,
@@ -839,15 +855,23 @@ minimal example.
 ```r
 library(gsDesignNB)
 
-enroll_rate <- data.frame(rate = 12, duration = 6)  # enrollment: 12 subjects/month for 6 months
-fail_rate <- data.frame(                            # event rates (fail_rate follows simtrial convention)
+# Enrollment: 12 subjects/month for 6 months
+enroll_rate <- data.frame(rate = 12, duration = 6)
+
+# Event rates (fail_rate follows simtrial convention)
+fail_rate <- data.frame(
   treatment = c("Control", "Experimental"),
-  rate = c(0.6, 0.42),                               # NB event rate (events/month)
-  dispersion = c(0.4, 0.4)                            # NB dispersion parameter k
+  # NB event rate (events/month)
+  rate = c(0.6, 0.42),
+  # NB dispersion parameter k
+  dispersion = c(0.4, 0.4)
 )
+
+# Monthly dropout rate; the final rate for each arm
+# extends through max_followup regardless of duration
 dropout_rate <- data.frame(
   treatment = c("Control", "Experimental"),
-  rate = c(0.05, 0.05),                               # monthly dropout rate
+  rate = c(0.05, 0.05),
   duration = c(12, 12)
 )
 
@@ -860,32 +884,43 @@ fixed_design <- sample_size_nbinom(
   accrual_rate = enroll_rate$rate,
   accrual_duration = enroll_rate$duration,
   trial_duration = 12,
+  # Subjects are censored at 6 months even if the
+  # trial continues; exposure and events beyond
+  # max_followup are excluded from the analysis
   max_followup = 6
 )
 
+# K = 3 analyses
 gs_design <- gsNBCalendar(
   fixed_design,
-  k = 3,                    # K = 3 analyses
+  k = 3,
   test.type = 4,
   analysis_times = c(4, 8, 12)
 )
 
-# n_sims = 50 is for illustration only; the GS verification vignette uses
-# 3,600 replicates for its cached operating-characteristic results.
+# n_sims = 50 is for illustration only; the GS verification
+# vignette uses 3,600 replicates for its cached results.
 sim_gs <- sim_gs_nbinom(
   n_sims = 50,
   enroll_rate = enroll_rate,
   fail_rate = fail_rate,
   dropout_rate = dropout_rate,
   max_followup = 6,
-  n_target = ceiling(utils::tail(gs_design$n_total, 1)),
+  n_target = ceiling(
+    utils::tail(gs_design$n_total, 1)
+  ),
   design = gs_design,
-  cuts = lapply(gs_design$T, function(t) list(planned_calendar = t)),
+  cuts = lapply(
+    gs_design$T,
+    function(t) list(planned_calendar = t)
+  ),
   seed = 20260413
 )
 
 oc <- summarize_gs_sim(
-  check_gs_bound(sim_gs, gs_design, info_col = "info_unblinded_ml")
+  check_gs_bound(
+    sim_gs, gs_design, info_col = "info_unblinded_ml"
+  )
 )
 
 oc$analysis_summary
@@ -971,7 +1006,11 @@ replicate controls, and cache-regeneration code.
 
 Three strategies were compared: (1) no adaptation, (2) blinded SSR, and (3) unblinded SSR, all
 using a group sequential design with Hwang--Shih--DeCani spending functions
-[@hwang1990group].
+[@hwang1990group]. In all cases, the SSR re-estimates nuisance parameters (event rates and
+dispersion) to update the required information, while holding the target treatment effect at its
+planned value. This is an information-based approach: the adapted sample size reflects updated
+nuisance parameters, not the observed interim effect size. Conditional-power-based SSR, which
+incorporates the interim treatment effect estimate, is outside the scope of this package.
 
 @tbl-simulation-reporting summarizes how the Monte Carlo evidence is divided between the manuscript
 and the package supplement. For a rejection probability $\hat p$ based on $B$ replicates, the Monte
@@ -983,7 +1022,7 @@ simulation summaries.
 | Fixed-design verification | Demonstrate agreement between NB planning formulas and simulated power | `verification-simulation`, `sample-size-nbinom` | Scenario-specific power, information, and Monte Carlo error checks |
 | Event-gap correction | Show where the Jensen correction changes sample size and power | `simulation-example`, `verification-simulation` | 64-scenario sweep; 3,500 or 10,000 replicates depending on table; corrected vs naive $n$ and power |
 | Wald versus score inference | Compare Wald and score tests under Wald- and score-sized designs | `score-vs-wald-simulation` | 27-scenario factorial grid; 20,000 null replicates and 3,500 power replicates per cell; Type I error, power, and null Z distributions |
-| SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
+| SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, Monte Carlo standard error (MCSE), mean $n$, and percent adapted |
 | SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled production cache uses 3,600 replicates per RR $<1$ scenario and 1,000 replicates per RR $>1$ scenario |
 | SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
 | Estimation diagnostics | Check whether ML, MoM, and fallback labels affect monitoring conclusions | `blinded-info-diagnostics`, `ssr-simulation-study` | Blinded/unblinded information paths, nuisance estimates, and estimator fallback labels |
@@ -1012,7 +1051,7 @@ should still be simulated for power and may need a modest information margin.
 **SSR Type I calibration.** @tbl-null-type1 summarizes the empirical one-sided Type I error under
 RR = 1.0 for the two null dispersion configurations at nominal $\alpha = 0.025$, comparing the
 Wald statistic with the score statistic under the same group sequential design. With $20{,}000$
-replicates per cell the Monte Carlo standard error is about $0.001$. The Wald statistic exhibits
+replicates per cell the Monte Carlo standard error (MCSE) is about $0.001$. The Wald statistic exhibits
 mild Type I error inflation, with empirical rejection rates ranging from 0.0279 to 0.0312. The score statistic
 is conservative in the same design, with empirical Type I error ranging from 0.0214 to 0.0232.
 Thus the preferred remedy is to align the analysis and simulation engine with the score test and
@@ -1037,8 +1076,12 @@ then verify power, rather than to lower alpha for a Wald analysis.
 (RR = 1.0), $20{,}000$ replicates per cell. Futility stopping is ignored in this non-binding
 calibration table so all trials continue unless they cross an efficacy boundary. {#tbl-null-type1}
 
-**Power recovery at the designed effect (RR = 0.7).** In the production score-test cache,
-no-adaptation power ranged from 0.698 to 0.896 across nuisance scenarios and averaged 0.807.
+**Power recovery at the designed effect (RR = 0.7).** When the true dispersion matches the
+planning assumption ($k = 0.5$), no-adaptation power is close to the 90% target. However, the
+sweep also includes scenarios where the true dispersion is higher than planned ($k = 1.0$), so
+that SSR can diagnose and compensate for nuisance-parameter misspecification. Averaging across
+all nuisance scenarios in the production score-test cache (varying $\lambda_1$, $k$, and accrual
+rate at fixed RR = 0.7), mean no-adaptation power was 0.807 (range 0.698--0.896).
 Blinded and unblinded SSR both ranged from about 0.880 to 0.903 and averaged 0.893. The recovery
 was most important under the higher-dispersion scenarios: for $k = 1.0$, mean no-adaptation power
 was 0.733, whereas blinded and unblinded SSR averaged 0.889. Because the score test is conservative,
