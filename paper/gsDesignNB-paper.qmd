@@ -48,7 +48,8 @@ abstract: |
   calendar-time-dependent applications. For fixed designs, the
   package extends the methods of @zhu2014sample and @friede2010blinded to handle piecewise accrual,
   piecewise exponential dropout, maximum follow-up truncation, and protocol-defined minimum
-  intervals between countable events (combining event duration and required symptom-free days). Because statistical information for the log rate ratio depends jointly on exposure, event
+  intervals between countable events (combining event duration and required symptom-free days). 
+  Because statistical information for the log rate ratio depends jointly on exposure, event
   rates, and dispersion, it is not generally proportional to raw event counts. We derive and
   implement a second-order delta-method correction for the Jensen-inequality bias in the event-gap
   effective-rate approximation; in a 64-scenario simulation sweep, the correction reduces
@@ -839,7 +840,7 @@ minimal example.
 library(gsDesignNB)
 
 enroll_rate <- data.frame(rate = 12, duration = 6)  # enrollment: 12 subjects/month for 6 months
-fail_rate <- data.frame(                             # event rates (fail_rate follows simtrial convention)
+fail_rate <- data.frame(                            # event rates (fail_rate follows simtrial convention)
   treatment = c("Control", "Experimental"),
   rate = c(0.6, 0.42),                               # NB event rate (events/month)
   dispersion = c(0.4, 0.4)                            # NB dispersion parameter k
