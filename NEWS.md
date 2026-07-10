@@ -84,7 +84,7 @@
 ## Manuscript
 
 - Converted the paper to the Quarto Journal of Statistical Software template,
-  added a semi-real recurrent-event group sequential design example with tables
+  added a recurrent-event group sequential design example with tables
   and a figure, added formal R package citations, and simplified the Jensen
   correction grid table so the formula-heavy entries no longer break the PDF.
 

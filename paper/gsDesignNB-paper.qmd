@@ -250,7 +250,7 @@ ex_design_summary <- data.frame(
 
 knitr::kable(
   ex_design_summary,
-  caption = "Summary of the semi-real recurrent-event design example."
+  caption = "Summary of the recurrent-event design example."
 )
 ```
 
