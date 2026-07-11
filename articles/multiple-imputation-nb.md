@@ -507,7 +507,7 @@ sessionInfo()
 #> [1] gsDesignNB_0.3.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6        TMB_1.9.21          xfun_0.59          
+#>  [1] gtable_0.3.6        TMB_1.9.21          xfun_0.60          
 #>  [4] bslib_0.11.0        ggplot2_4.0.3       htmlwidgets_1.6.4  
 #>  [7] lattice_0.22-9      numDeriv_2016.8-1.1 vctrs_0.7.3        
 #> [10] tools_4.6.1         Rdpack_2.6.6        generics_0.1.4     
@@ -517,7 +517,7 @@ sessionInfo()
 #> [22] gt_1.3.0            lifecycle_1.0.5     doFuture_1.2.2     
 #> [25] compiler_4.6.1      farver_2.1.2        textshaping_1.0.5  
 #> [28] codetools_0.2-20    htmltools_0.5.9     sass_0.4.10        
-#> [31] yaml_2.3.12         pkgdown_2.2.0       pillar_1.11.1      
+#> [31] yaml_2.3.12         pkgdown_2.2.1       pillar_1.11.1      
 #> [34] nloptr_2.2.1        gsDesign_3.10.0     jquerylib_0.1.4    
 #> [37] tidyr_1.3.2         MASS_7.3-65         cachem_1.1.0       
 #> [40] iterators_1.0.14    reformulas_0.4.4    foreach_1.5.2      

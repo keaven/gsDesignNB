@@ -507,10 +507,10 @@ sessionInfo()
 #> [40] doFuture_1.2.2      dplyr_1.2.1         globals_0.19.1     
 #> [43] vctrs_0.7.3         R6_2.6.1            lifecycle_1.0.5    
 #> [46] fs_2.1.0            htmlwidgets_1.6.4   ragg_1.5.2         
-#> [49] pkgconfig_2.0.3     desc_1.4.3          pkgdown_2.2.0      
+#> [49] pkgconfig_2.0.3     desc_1.4.3          pkgdown_2.2.1      
 #> [52] pillar_1.11.1       bslib_0.11.0        gtable_0.3.6       
 #> [55] glue_1.8.1          Rcpp_1.1.2          systemfonts_1.3.2  
-#> [58] xfun_0.59           tibble_3.3.1        tidyselect_1.2.1   
+#> [58] xfun_0.60           tibble_3.3.1        tidyselect_1.2.1   
 #> [61] knitr_1.51          farver_2.1.2        xtable_1.8-8       
 #> [64] htmltools_0.5.9     labeling_0.4.3      rmarkdown_2.31     
 #> [67] compiler_4.6.1      S7_0.2.2
