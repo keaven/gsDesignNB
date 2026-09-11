@@ -72,18 +72,18 @@ Default is \code{gsDesign::sfHSD}.}
 
 \item{testUpper}{Logical scalar or vector of length \code{k} specifying which
 analyses include an upper (efficacy) bound. \code{TRUE} (default) means all
-analyses. Where \code{FALSE}, the upper bound is set to \code{+20} (effectively
-\code{Inf}) and displayed as \code{NA}. Must be \code{TRUE} at the final analysis.}
+analyses. Where \code{FALSE}, the bound is inactive and displayed as \code{NA}.
+Must be \code{TRUE} at the final analysis.}
 
 \item{testLower}{Logical scalar or vector of length \code{k} specifying which
 analyses include a lower (futility) bound. \code{TRUE} (default) means all
-analyses. Where \code{FALSE}, the lower bound is set to \code{-20} (effectively
-\code{-Inf}) and displayed as \code{NA}. Ignored for test.type 1.}
+analyses. Where \code{FALSE}, the bound is inactive and displayed as \code{NA}.
+Ignored for test.type 1.}
 
 \item{testHarm}{Logical scalar or vector of length \code{k} specifying which
 analyses include a harm bound (test.type 7 or 8 only). \code{TRUE} (default)
-means all analyses. Where \code{FALSE}, the harm bound is set to \code{-20} and
-displayed as \code{NA}.}
+means all analyses. Where \code{FALSE}, the bound is inactive and displayed
+as \code{NA}.}
 
 \item{tol}{Tolerance for convergence. Default is 1e-06.}
 

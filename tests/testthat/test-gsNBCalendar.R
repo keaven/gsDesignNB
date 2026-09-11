@@ -93,7 +93,10 @@ test_that("gsNBCalendar supports harm-bound designs from gsDesign", {
   expect_s3_class(gs_design, "gsNB")
   expect_true(!is.null(gs_design$harm))
   expect_identical(gs_design$testHarm, c(FALSE, TRUE, TRUE))
-  expect_equal(gs_design$harm$bound[1], -20)
+  expect_lt(gs_design$harm$bound[1], 0)
+  expect_equal(gs_design$harm$spend[1], 0)
+  expect_equal(as.numeric(gs_design$harm$prob[1, ]), rep(0, length(gs_design$theta)))
+  expect_true(all(is.finite(gs_design$harm$bound[-1])))
   expect_true("Harm" %in% names(gsDesign::gsBoundSummary(gs_design)))
 })
 
@@ -265,13 +268,97 @@ test_that("update_gsNB preserves selective harm-bound settings", {
     testHarm = c(FALSE, TRUE, TRUE)
   )
 
+  original <- gs_design
   updated <- update_gsNB(gs_design, observed_info = gs_design$n.I[1])
 
+  expect_identical(gs_design, original)
   expect_identical(updated$design$testUpper, gs_design$testUpper)
   expect_identical(updated$design$testLower, gs_design$testLower)
   expect_identical(updated$design$testHarm, gs_design$testHarm)
-  expect_equal(updated$design$upper$bound[1], 20)
-  expect_equal(updated$design$harm$bound[1], -20)
+  expect_identical(updated$design$upper$bound[1], gs_design$upper$bound[1])
+  expect_identical(updated$design$harm$bound[1], gs_design$harm$bound[1])
+  expect_identical(updated$design$lower$bound[3], gs_design$lower$bound[3])
+  expect_equal(updated$design$upper$spend[1], 0)
+  expect_equal(updated$design$harm$spend[1], 0)
+  expect_s3_class(updated$bounds, "gsBoundSummary")
+  expect_equal(updated$bounds, gsDesign::gsBoundSummary(updated$design))
+  expect_named(updated$bounds, c("Analysis", "Value", "Harm", "Futility", "Efficacy"))
+  z_rows <- which(updated$bounds$Value == "Z")
+  expect_length(z_rows, gs_design$k)
+  expect_true(all(is.na(updated$bounds$Harm[z_rows[1]:(z_rows[2] - 1)])))
+  expect_true(all(is.na(updated$bounds$Efficacy[z_rows[1]:(z_rows[2] - 1)])))
+  expect_equal(
+    updated$bounds$Harm[z_rows[-1]],
+    round(updated$design$harm$bound[-1], 4)
+  )
+})
+
+test_that("update_gsNB retains the usual summary for active bounds", {
+  for (test_type in c(2, 4, 7, 8)) {
+    design <- gsDesign::gsDesign(
+      k = 3, test.type = test_type, astar = 0.025,
+      n.fix = 100, timing = c(0.35, 0.7, 1)
+    )
+    updated <- update_gsNB(design, observed_info = 0.35 * design$n.fix)
+
+    expect_equal(updated$bounds, gsDesign::gsBoundSummary(design))
+  }
+})
+
+test_that("update_gsNB summaries preserve harm designs with absent bounds", {
+  for (test_type in c(7, 8)) {
+    for (zero_spend in c(FALSE, TRUE)) {
+      args <- list(
+        k = 3, test.type = test_type, astar = 0.025,
+        n.fix = 100, timing = c(0.35, 0.7, 1)
+      )
+      if (zero_spend) {
+        # Zero spending also creates an absent bound when testHarm is TRUE.
+        args$sfharm <- gsDesign::sfPoints
+        args$sfharmparam <- c(0, 0.5, 1)
+        inactive <- 1L
+      } else {
+        args$testHarm <- c(FALSE, FALSE, TRUE)
+        inactive <- 1:2
+      }
+      design <- do.call(gsDesign::gsDesign, args)
+      original <- design
+      updated <- update_gsNB(design, observed_info = 0.35 * design$n.fix)
+
+      expect_identical(design, original)
+      components <- c("n.I", "theta", "upper", "lower", "harm", "testHarm")
+      expect_equal(updated$design[components], design[components])
+
+      bounds <- updated$bounds
+      expect_s3_class(bounds, "gsBoundSummary")
+      expect_false(any(bounds$Value %in% c("CP", "CP H1", "PP")))
+      analysis <- cumsum(bounds$Value == "Z")
+      expect_true(all(is.na(bounds$Harm[analysis %in% inactive])))
+      expect_true(all(is.finite(bounds$Harm[!analysis %in% inactive])))
+      active <- setdiff(seq_len(design$k), inactive)
+      expect_equal(
+        bounds$Harm[bounds$Value == "Z"][-inactive],
+        round(design$harm$bound[active], 4)
+      )
+      expect_equal(
+        bounds$Harm[bounds$Value == "p (1-sided)"][-inactive],
+        round(pnorm(design$harm$bound[active], lower.tail = FALSE), 4)
+      )
+      expect_equal(
+        bounds$Harm[bounds$Value == "~delta at bound"][-inactive],
+        round(gsDesign::gsDelta(design, z = design$harm$bound, i = 1:3)[active], 4)
+      )
+      for (j in seq_along(design$theta)) {
+        cross_rows <- bounds$Value == paste0("P(Cross) if delta=", design$theta[j] / design$delta)
+        for (bound in c("upper", "lower", "harm")) {
+          column <- c(upper = "Efficacy", lower = "Futility", harm = "Harm")[[bound]]
+          expected <- round(cumsum(design[[bound]]$prob[, j]), 4)
+          if (bound == "harm") expected[inactive] <- NA_real_
+          expect_equal(bounds[[column]][cross_rows], expected)
+        }
+      }
+    }
+  }
 })
 
 test_that("compute_info_at_time returns positive value", {

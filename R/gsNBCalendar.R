@@ -33,16 +33,16 @@
 #' @param sfharmparam Parameter for the harm spending function. Default is -2.
 #' @param testUpper Logical scalar or vector of length `k` specifying which
 #'   analyses include an upper (efficacy) bound. `TRUE` (default) means all
-#'   analyses. Where `FALSE`, the upper bound is set to `+20` (effectively
-#'   `Inf`) and displayed as `NA`. Must be `TRUE` at the final analysis.
+#'   analyses. Where `FALSE`, the bound is inactive and displayed as `NA`.
+#'   Must be `TRUE` at the final analysis.
 #' @param testLower Logical scalar or vector of length `k` specifying which
 #'   analyses include a lower (futility) bound. `TRUE` (default) means all
-#'   analyses. Where `FALSE`, the lower bound is set to `-20` (effectively
-#'   `-Inf`) and displayed as `NA`. Ignored for test.type 1.
+#'   analyses. Where `FALSE`, the bound is inactive and displayed as `NA`.
+#'   Ignored for test.type 1.
 #' @param testHarm Logical scalar or vector of length `k` specifying which
 #'   analyses include a harm bound (test.type 7 or 8 only). `TRUE` (default)
-#'   means all analyses. Where `FALSE`, the harm bound is set to `-20` and
-#'   displayed as `NA`.
+#'   means all analyses. Where `FALSE`, the bound is inactive and displayed
+#'   as `NA`.
 #' @param tol Tolerance for convergence. Default is 1e-06.
 #' @param r Integer controlling grid size for numerical integration.
 #'   Default is 18.
