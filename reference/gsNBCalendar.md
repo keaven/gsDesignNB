@@ -46,7 +46,7 @@ gsNBCalendar(
 - test.type:
 
   Test type as in
-  [`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign/reference/gsDesign.html):
+  [`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign//reference/gsDesign.html):
 
   1
 
@@ -104,7 +104,7 @@ gsNBCalendar(
 - sfu:
 
   Spending function for upper bound. Default is
-  [`gsDesign::sfHSD`](https://keaven.github.io/gsDesign/reference/sfHSD.html).
+  [`gsDesign::sfHSD`](https://keaven.github.io/gsDesign//reference/sfHSD.html).
 
 - sfupar:
 
@@ -113,7 +113,7 @@ gsNBCalendar(
 - sfl:
 
   Spending function for lower bound. Default is
-  [`gsDesign::sfHSD`](https://keaven.github.io/gsDesign/reference/sfHSD.html).
+  [`gsDesign::sfHSD`](https://keaven.github.io/gsDesign//reference/sfHSD.html).
 
 - sflpar:
 
@@ -122,7 +122,7 @@ gsNBCalendar(
 - sfharm:
 
   Spending function for the harm bound (test.type 7 or 8). Default is
-  [`gsDesign::sfHSD`](https://keaven.github.io/gsDesign/reference/sfHSD.html).
+  [`gsDesign::sfHSD`](https://keaven.github.io/gsDesign//reference/sfHSD.html).
 
 - sfharmparam:
 
@@ -132,22 +132,22 @@ gsNBCalendar(
 
   Logical scalar or vector of length `k` specifying which analyses
   include an upper (efficacy) bound. `TRUE` (default) means all
-  analyses. Where `FALSE`, the upper bound is set to `+20` (effectively
-  `Inf`) and displayed as `NA`. Must be `TRUE` at the final analysis.
+  analyses. Where `FALSE`, the bound is inactive and displayed as `NA`.
+  Must be `TRUE` at the final analysis.
 
 - testLower:
 
   Logical scalar or vector of length `k` specifying which analyses
   include a lower (futility) bound. `TRUE` (default) means all analyses.
-  Where `FALSE`, the lower bound is set to `-20` (effectively `-Inf`)
-  and displayed as `NA`. Ignored for test.type 1.
+  Where `FALSE`, the bound is inactive and displayed as `NA`. Ignored
+  for test.type 1.
 
 - testHarm:
 
   Logical scalar or vector of length `k` specifying which analyses
   include a harm bound (test.type 7 or 8 only). `TRUE` (default) means
-  all analyses. Where `FALSE`, the harm bound is set to `-20` and
-  displayed as `NA`.
+  all analyses. Where `FALSE`, the bound is inactive and displayed as
+  `NA`.
 
 - tol:
 
@@ -170,7 +170,7 @@ gsNBCalendar(
 
   Vector of calendar times for each analysis. Must have length k. These
   times are stored in the `T` element and displayed by
-  [`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign/reference/gsBoundSummary.html).
+  [`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign//reference/gsBoundSummary.html).
 
 ## Value
 
@@ -179,7 +179,7 @@ An object of class `gsNB` which inherits from `gsDesign` and
 planned total enrollment, interim analysis sample sizes are the expected
 number enrolled at the times specified in `analysis_times`. Output value
 contains all elements from
-[`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign/reference/gsDesign.html)
+[`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign//reference/gsDesign.html)
 plus:
 
 - nb_design:
@@ -281,8 +281,8 @@ gs_selective
 #> 
 #>                 ----Lower bounds----  ----Upper bounds-----
 #>   Analysis N    Z   Nominal p Spend+  Z   Nominal p Spend++
-#>          1 11 -0.24    0.4057 0.0148   NA        NA      NA
-#>          2 29  0.94    0.8266 0.0289 2.50    0.0062  0.0062
+#>          1 11 -0.24    0.4047 0.0148   NA        NA      NA
+#>          2 28  0.94    0.8257 0.0289 2.50    0.0062  0.0062
 #>          3 44    NA        NA     NA 1.99    0.0230  0.0188
 #>      Total                    0.0437                 0.0250 
 #> + lower bound beta spending (under H1):
@@ -297,11 +297,11 @@ gs_selective
 #>           Analysis
 #>    Theta 1      2      3  Total E{N}
 #>   0.0000 0 0.0062 0.0170 0.0233 25.4
-#>   0.5084 0 0.5945 0.3061 0.9006 34.0
+#>   0.5084 0 0.5931 0.3069 0.9000 34.0
 #> 
 #> Lower boundary (futility or Type II Error)
 #>           Analysis
 #>    Theta      1      2 3  Total
-#>   0.0000 0.4057 0.4290 0 0.8347
+#>   0.0000 0.4047 0.4291 0 0.8338
 #>   0.5084 0.0148 0.0289 0 0.0437
 ```

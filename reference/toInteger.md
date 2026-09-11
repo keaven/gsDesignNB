@@ -2,7 +2,7 @@
 
 Generic function to round sample sizes in a group sequential design to
 integers. This extends the
-[`gsDesign::toInteger()`](https://keaven.github.io/gsDesign/reference/toInteger.html)
+[`gsDesign::toInteger()`](https://keaven.github.io/gsDesign//reference/toInteger.html)
 function from the gsDesign package to work with `gsNB` objects.
 
 ## Usage
@@ -60,7 +60,7 @@ expected exposures.
 ## Methods (by class)
 
 - `toInteger(gsDesign)`: Method for `gsDesign` objects (calls
-  [`gsDesign::toInteger()`](https://keaven.github.io/gsDesign/reference/toInteger.html)).
+  [`gsDesign::toInteger()`](https://keaven.github.io/gsDesign//reference/toInteger.html)).
 
 - `toInteger(gsNB)`: Method for `gsNB` objects.
 

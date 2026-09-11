@@ -57,11 +57,11 @@ sample size calculations from <code><a href="sample_size_nbinom.html">sample_siz
 <span>  beta <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  astar <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  delta <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  sfu <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">sfHSD</a></span>,</span>
+<span>  sfu <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign//reference/sfHSD.html" class="external-link">sfHSD</a></span>,</span>
 <span>  sfupar <span class="op">=</span> <span class="op">-</span><span class="fl">4</span>,</span>
-<span>  sfl <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">sfHSD</a></span>,</span>
+<span>  sfl <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign//reference/sfHSD.html" class="external-link">sfHSD</a></span>,</span>
 <span>  sflpar <span class="op">=</span> <span class="op">-</span><span class="fl">2</span>,</span>
-<span>  sfharm <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">sfHSD</a></span>,</span>
+<span>  sfharm <span class="op">=</span> <span class="fu">gsDesign</span><span class="fu">::</span><span class="va"><a href="https://keaven.github.io/gsDesign//reference/sfHSD.html" class="external-link">sfHSD</a></span>,</span>
 <span>  sfharmparam <span class="op">=</span> <span class="op">-</span><span class="fl">2</span>,</span>
 <span>  testUpper <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  testLower <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -88,7 +88,7 @@ sample size calculations from <code><a href="sample_size_nbinom.html">sample_siz
 
 
 <dt id="arg-test-type">test.type<a class="anchor" aria-label="anchor" href="#arg-test-type"></a></dt>
-<dd><p>Test type as in <code><a href="https://keaven.github.io/gsDesign/reference/gsDesign.html" class="external-link">gsDesign::gsDesign()</a></code>:</p><dl><dt>1</dt>
+<dd><p>Test type as in <code><a href="https://keaven.github.io/gsDesign//reference/gsDesign.html" class="external-link">gsDesign::gsDesign()</a></code>:</p><dl><dt>1</dt>
 <dd><p>One-sided</p></dd>
 
 <dt>2</dt>
@@ -135,7 +135,7 @@ under the null. Default is 0 (set to <code>1 - alpha</code> internally when need
 
 
 <dt id="arg-sfu">sfu<a class="anchor" aria-label="anchor" href="#arg-sfu"></a></dt>
-<dd><p>Spending function for upper bound. Default is <code><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">gsDesign::sfHSD</a></code>.</p></dd>
+<dd><p>Spending function for upper bound. Default is <code><a href="https://keaven.github.io/gsDesign//reference/sfHSD.html" class="external-link">gsDesign::sfHSD</a></code>.</p></dd>
 
 
 <dt id="arg-sfupar">sfupar<a class="anchor" aria-label="anchor" href="#arg-sfupar"></a></dt>
@@ -143,7 +143,7 @@ under the null. Default is 0 (set to <code>1 - alpha</code> internally when need
 
 
 <dt id="arg-sfl">sfl<a class="anchor" aria-label="anchor" href="#arg-sfl"></a></dt>
-<dd><p>Spending function for lower bound. Default is <code><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">gsDesign::sfHSD</a></code>.</p></dd>
+<dd><p>Spending function for lower bound. Default is <code><a href="https://keaven.github.io/gsDesign//reference/sfHSD.html" class="external-link">gsDesign::sfHSD</a></code>.</p></dd>
 
 
 <dt id="arg-sflpar">sflpar<a class="anchor" aria-label="anchor" href="#arg-sflpar"></a></dt>
@@ -152,7 +152,7 @@ under the null. Default is 0 (set to <code>1 - alpha</code> internally when need
 
 <dt id="arg-sfharm">sfharm<a class="anchor" aria-label="anchor" href="#arg-sfharm"></a></dt>
 <dd><p>Spending function for the harm bound (test.type 7 or 8).
-Default is <code><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html" class="external-link">gsDesign::sfHSD</a></code>.</p></dd>
+Default is <code><a href="https://keaven.github.io/gsDesign//reference/sfHSD.html" class="external-link">gsDesign::sfHSD</a></code>.</p></dd>
 
 
 <dt id="arg-sfharmparam">sfharmparam<a class="anchor" aria-label="anchor" href="#arg-sfharmparam"></a></dt>
@@ -162,22 +162,22 @@ Default is <code><a href="https://keaven.github.io/gsDesign/reference/sfHSD.html
 <dt id="arg-testupper">testUpper<a class="anchor" aria-label="anchor" href="#arg-testupper"></a></dt>
 <dd><p>Logical scalar or vector of length <code>k</code> specifying which
 analyses include an upper (efficacy) bound. <code>TRUE</code> (default) means all
-analyses. Where <code>FALSE</code>, the upper bound is set to <code>+20</code> (effectively
-<code>Inf</code>) and displayed as <code>NA</code>. Must be <code>TRUE</code> at the final analysis.</p></dd>
+analyses. Where <code>FALSE</code>, the bound is inactive and displayed as <code>NA</code>.
+Must be <code>TRUE</code> at the final analysis.</p></dd>
 
 
 <dt id="arg-testlower">testLower<a class="anchor" aria-label="anchor" href="#arg-testlower"></a></dt>
 <dd><p>Logical scalar or vector of length <code>k</code> specifying which
 analyses include a lower (futility) bound. <code>TRUE</code> (default) means all
-analyses. Where <code>FALSE</code>, the lower bound is set to <code>-20</code> (effectively
-<code>-Inf</code>) and displayed as <code>NA</code>. Ignored for test.type 1.</p></dd>
+analyses. Where <code>FALSE</code>, the bound is inactive and displayed as <code>NA</code>.
+Ignored for test.type 1.</p></dd>
 
 
 <dt id="arg-testharm">testHarm<a class="anchor" aria-label="anchor" href="#arg-testharm"></a></dt>
 <dd><p>Logical scalar or vector of length <code>k</code> specifying which
 analyses include a harm bound (test.type 7 or 8 only). <code>TRUE</code> (default)
-means all analyses. Where <code>FALSE</code>, the harm bound is set to <code>-20</code> and
-displayed as <code>NA</code>.</p></dd>
+means all analyses. Where <code>FALSE</code>, the bound is inactive and displayed
+as <code>NA</code>.</p></dd>
 
 
 <dt id="arg-tol">tol<a class="anchor" aria-label="anchor" href="#arg-tol"></a></dt>
@@ -200,7 +200,7 @@ Default is 18.</p></dd>
 <dt id="arg-analysis-times">analysis_times<a class="anchor" aria-label="anchor" href="#arg-analysis-times"></a></dt>
 <dd><p>Vector of calendar times for each analysis.
 Must have length k. These times are stored in the <code>T</code>
-element and displayed by <code><a href="https://keaven.github.io/gsDesign/reference/gsBoundSummary.html" class="external-link">gsDesign::gsBoundSummary()</a></code>.</p></dd>
+element and displayed by <code><a href="https://keaven.github.io/gsDesign//reference/gsBoundSummary.html" class="external-link">gsDesign::gsBoundSummary()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -210,7 +210,7 @@ and <code>sample_size_nbinom_result</code>.
 While the final sample size would be planned total enrollment, interim analysis
 sample sizes are the expected number enrolled at the times specified in <code>analysis_times</code>.
 Output value contains all elements from
-<code><a href="https://keaven.github.io/gsDesign/reference/gsDesign.html" class="external-link">gsDesign::gsDesign()</a></code> plus:</p><dl><dt>nb_design</dt>
+<code><a href="https://keaven.github.io/gsDesign//reference/gsDesign.html" class="external-link">gsDesign::gsDesign()</a></code> plus:</p><dl><dt>nb_design</dt>
 <dd><p>The original <code>sample_size_nbinom_result</code> object</p></dd>
 
 <dt>n1</dt>
@@ -296,8 +296,8 @@ Boca Raton: Chapman and Hall.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ----Lower bounds----  ----Upper bounds-----</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Analysis N    Z   Nominal p Spend+  Z   Nominal p Spend++</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          1 11 -0.24    0.4057 0.0148   NA        NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          2 29  0.94    0.8266 0.0289 2.50    0.0062  0.0062</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          1 11 -0.24    0.4047 0.0148   NA        NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          2 28  0.94    0.8257 0.0289 2.50    0.0062  0.0062</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          3 44    NA        NA     NA 1.99    0.0230  0.0188</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Total                    0.0437                 0.0250 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> + lower bound beta spending (under H1):</span>
@@ -312,12 +312,12 @@ Boca Raton: Chapman and Hall.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Analysis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Theta 1      2      3  Total E{N}</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   0.0000 0 0.0062 0.0170 0.0233 25.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.5084 0 0.5945 0.3061 0.9006 34.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.5084 0 0.5931 0.3069 0.9000 34.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Lower boundary (futility or Type II Error)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Analysis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    Theta      1      2 3  Total</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.0000 0.4057 0.4290 0 0.8347</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.0000 0.4047 0.4291 0 0.8338</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   0.5084 0.0148 0.0289 0 0.0437</span>
 </code></pre></div>
     </div>

@@ -3,7 +3,7 @@
 Given a planned `gsNB` (or `gsDesign`) object and observed statistical
 information at one or more analyses, recompute the group sequential
 boundaries and return an updated design object together with a
-[`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign/reference/gsBoundSummary.html)-style
+[`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign//reference/gsBoundSummary.html)-style
 table.
 
 ## Usage
@@ -19,7 +19,7 @@ update_gsNB(design, observed_info, spending_time = NULL)
   A `gsNB` or `gsDesign` object produced by
   [`gsNBCalendar()`](https://keaven.github.io/gsDesignNB/reference/gsNBCalendar.md)
   (or
-  [`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign/reference/gsDesign.html)).
+  [`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign//reference/gsDesign.html)).
 
 - observed_info:
 
@@ -46,7 +46,7 @@ A list with components:
 - bounds:
 
   A data frame from
-  [`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign/reference/gsBoundSummary.html)
+  [`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign//reference/gsBoundSummary.html)
   showing Z-boundaries, nominal p-values, approximate treatment effects
   at the boundary, and cumulative crossing probabilities at each
   analysis.

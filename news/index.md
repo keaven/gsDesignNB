@@ -1,6 +1,20 @@
 # Changelog
 
-## gsDesignNB 0.3.2 (development)
+## gsDesignNB (development version)
+
+### gsDesign compatibility
+
+- Updated selective bound tests and documentation to support both the
+  finite absent bound values in gsDesign \<= 3.11.0 and the infinite
+  values in the upcoming release
+  ([\#47](https://github.com/keaven/gsDesignNB/issues/47)).
+- Added regression test coverage for
+  [`update_gsNB()`](https://keaven.github.io/gsDesignNB/reference/update_gsNB.md)
+  summaries with skipped and zero-spending harm bounds in binding and
+  non-binding designs
+  ([\#47](https://github.com/keaven/gsDesignNB/issues/47)).
+
+## gsDesignNB 0.3.2
 
 CRAN release: 2026-07-06
 
@@ -303,10 +317,10 @@ CRAN release: 2026-02-16
 ### Re-exports from gsDesign
 
 - Re-exports
-  [`gsDesign()`](https://keaven.github.io/gsDesign/reference/gsDesign.html),
-  [`gsBoundSummary()`](https://keaven.github.io/gsDesign/reference/gsBoundSummary.html),
+  [`gsDesign()`](https://keaven.github.io/gsDesign//reference/gsDesign.html),
+  [`gsBoundSummary()`](https://keaven.github.io/gsDesign//reference/gsBoundSummary.html),
   and common spending functions
-  ([`sfHSD()`](https://keaven.github.io/gsDesign/reference/sfHSD.html),
-  [`sfLDOF()`](https://keaven.github.io/gsDesign/reference/sfLDOF.html),
-  [`sfLDPocock()`](https://keaven.github.io/gsDesign/reference/sfLDOF.html),
+  ([`sfHSD()`](https://keaven.github.io/gsDesign//reference/sfHSD.html),
+  [`sfLDOF()`](https://keaven.github.io/gsDesign//reference/sfLDOF.html),
+  [`sfLDPocock()`](https://keaven.github.io/gsDesign//reference/sfLDOF.html),
   and more) for convenience.

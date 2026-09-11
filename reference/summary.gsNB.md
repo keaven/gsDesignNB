@@ -2,9 +2,9 @@
 
 Provides a textual summary of a group sequential design for negative
 binomial outcomes, similar to the summary provided by
-[`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign/reference/gsDesign.html).
+[`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign//reference/gsDesign.html).
 For tabular output, use
-[`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign/reference/gsBoundSummary.html)
+[`gsDesign::gsBoundSummary()`](https://keaven.github.io/gsDesign//reference/gsBoundSummary.html)
 directly on the gsNB object.
 
 ## Usage
