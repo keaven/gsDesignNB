@@ -266,11 +266,13 @@ summary_df$Rel_Diff_Pct <- 100 * summary_df$Difference / abs(summary_df$Theoreti
 # Group rows into categories; lt groups by a column value (not row conditions
 # like gt::tab_row_group()), so build an ordered factor and sort by it.
 summary_df$Group <- factor(
-  ifelse(summary_df$Metric == "Power", "Power",
-    ifelse(summary_df$Metric == "Variance of log(RR)", "Variance",
-      ifelse(summary_df$Metric == "Treatment Effect: log(RR)", "Treatment Effect",
-        ifelse(grepl("Events", summary_df$Metric), "Events",
-          ifelse(grepl("Exposure", summary_df$Metric), "Exposure", NA_character_))))),
+  fcase(
+    summary_df$Metric == "Power", "Power",
+    summary_df$Metric == "Variance of log(RR)", "Variance",
+    summary_df$Metric == "Treatment Effect: log(RR)", "Treatment Effect",
+    grepl("Events", summary_df$Metric), "Events",
+    grepl("Exposure", summary_df$Metric), "Exposure"
+  ),
   levels = c("Exposure", "Events", "Treatment Effect", "Variance", "Power")
 )
 summary_df <- summary_df[order(summary_df$Group), ]
@@ -290,8 +292,7 @@ summary_df |>
     Simulated = "Simulated",
     Difference = "Difference",
     Rel_Diff_Pct = "Rel. Diff (%)"
-  ) |>
-  lt_sub(missing = "—")
+  )
 ```
 
 **Notes:**
