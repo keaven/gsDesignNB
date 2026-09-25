@@ -19,7 +19,6 @@ library(gsDesignNB)
 library(gsDesign)
 library(data.table)
 library(ggplot2)
-library(gt)
 ```
 
 This vignette demonstrates how to simulate a group sequential design where an interim analysis is conducted based on a specific number of "completers" (subjects who have finished their follow-up).

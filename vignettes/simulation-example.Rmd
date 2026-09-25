@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
-library(gt)
+library(lt)
 library(scales)
 ```
 
@@ -112,17 +112,17 @@ summary_stats <- sim_dt[
   by = treatment
 ]
 summary_stats |>
-  gt() |>
-  tab_header(title = "Summary Statistics by Treatment") |>
-  cols_label(
+  lt() |>
+  lt_header(title = "Summary Statistics by Treatment") |>
+  lt_label(
     treatment = "Treatment",
     n_subjects = "N",
     total_events = "Events",
     total_followup = "Follow-up",
     observed_rate = "Rate"
   ) |>
-  fmt_number(columns = total_followup, decimals = 2) |>
-  fmt_number(columns = observed_rate, decimals = 3)
+  lt_format(columns = "total_followup", decimals = 2) |>
+  lt_format(columns = "observed_rate", decimals = 3)
 ```
 
 ### Inspect first ten records

@@ -25,7 +25,7 @@ library(data.table)
 library(MASS)
 library(ggplot2)
 library(dplyr)
-library(gt)
+library(lt)
 library(future)
 library(future.apply)
 ```
@@ -179,16 +179,16 @@ gsBoundSummary(gs_plan,
   digits = 4, ddigits = 2
 ) |>
   as.data.frame() |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Planned Group Sequential Design",
     subtitle = design_note
   ) |>
-  tab_footnote(
+  lt_note(
     "Cauchy futility spending gives planned futility near observed RR > 0.9 at IA1/IA2; lower bounds are non-binding."
   ) |>
-  tab_footnote(
-    footnote = sprintf(
+  lt_note(
+    sprintf(
       "Planned cumulative sample size: IA1 = %.0f, IA2 = %.0f, Final = %.0f.",
       gs_plan$n_total[1], gs_plan$n_total[2], gs_plan$n_total[3]
     )
@@ -322,20 +322,20 @@ for (a in 1:2) {
 }
 
 nuisance_grid |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Expected Information Fraction (%) at Planned Time of Each Interim",
     subtitle = design_note
   ) |>
-  cols_label(
+  lt_label(
     lambda1_true = "lambda1",
     k_true = "k",
     accrual_true = "Accrual (pts/mo)",
     IF_analysis_1 = paste0("IA 1 (mo ", analysis_times_plan[1], ")"),
     IF_analysis_2 = paste0("IA 2 (mo ", analysis_times_plan[2], ")")
   ) |>
-  tab_footnote(
-    footnote = paste(
+  lt_note(
+    paste(
       "Computed via compute_info_at_time() divided by planned final information.",
       "Accrual values (12/18/24) are effective enrollment rates used directly.",
       "Bold green = design assumptions.",
@@ -908,8 +908,8 @@ runtime_df <- data.frame(
 )
 
 runtime_df |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Simulation Runtime",
     subtitle = "Use precomputed summaries to avoid rerunning on pkgdown/CI/CRAN builds"
   )
@@ -956,8 +956,8 @@ for (test_label in c("Wald", "Score")) {
     )
 
   tab <- null_display |>
-    gt() |>
-    tab_header(
+    lt() |>
+    lt_header(
       title = paste0("Type I Error Under RR = 1.0: ", test_label, " Test"),
       subtitle = paste0(
         "Nominal one-sided alpha: 0.025 | ",
@@ -966,8 +966,8 @@ for (test_label in c("Wald", "Score")) {
         " | Runtime: ", rt_str
       )
     ) |>
-    tab_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
-    tab_footnote(
+    lt_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
+    lt_note(
       paste(
         "Futility stopping is ignored (non-binding) so all trials continue to",
         "the final analysis unless stopped for efficacy.",
@@ -1042,8 +1042,9 @@ if (sizing_sens_file == "") {
   setorder(sizing_sens_display, Metric, `Starting design`, Strategy)
 
   sizing_sens_display |>
-    gt(groupname_col = "Metric") |>
-    tab_header(
+    lt() |>
+    lt_group(~ Metric, sort = FALSE) |>
+    lt_header(
       title = "Supplemental SSR Starting-Size Sensitivity",
       subtitle = paste(
         "Score final test; Wald-sized GS N =",
@@ -1052,7 +1053,7 @@ if (sizing_sens_file == "") {
         min(sizing_sens_display$`GS N`)
       )
     ) |>
-    tab_footnote(
+    lt_note(
       paste(
         "This targeted sensitivity uses a lower-event stress setting and is",
         "intended to check the direction of the starting-size recommendation,",

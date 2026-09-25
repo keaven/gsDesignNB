@@ -8,6 +8,11 @@
 - Added regression test coverage for `update_gsNB()` summaries with skipped
   and zero-spending harm bounds in binding and non-binding designs (#47).
 
+## Dependencies
+
+- Replaced the `gt` dependency with the lightweight `lt` package for vignette
+  tables, reducing install weight (#48).
+
 # gsDesignNB 0.3.2
 
 ## Score-test sizing and inference guidance
