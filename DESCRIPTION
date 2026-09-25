@@ -41,7 +41,7 @@ Suggests:
     rmarkdown,
     ggplot2,
     dplyr,
-    gt,
+    lt (>= 0.4),
     scales,
     shiny,
     foreach,
