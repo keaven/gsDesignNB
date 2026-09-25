@@ -507,7 +507,7 @@ sessionInfo()
 #> [1] gsDesignNB_0.3.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6        TMB_1.9.25          xfun_0.60          
+#>  [1] gtable_0.3.6        TMB_1.9.25          xfun_0.61          
 #>  [4] bslib_0.12.0        ggplot2_4.0.3       htmlwidgets_1.6.4  
 #>  [7] lattice_0.22-9      numDeriv_2016.8-1.1 vctrs_0.7.3        
 #> [10] tools_4.6.1         Rdpack_2.6.6        generics_0.1.4     
@@ -516,14 +516,14 @@ sessionInfo()
 #> [19] RColorBrewer_1.1-3  S7_0.2.2            desc_1.4.3         
 #> [22] gt_1.3.0            lifecycle_1.0.5     doFuture_1.3.0     
 #> [25] compiler_4.6.1      farver_2.1.2        textshaping_1.0.5  
-#> [28] lt_0.4              codetools_0.2-20    htmltools_0.5.9    
+#> [28] lt_0.4.4            codetools_0.2-20    htmltools_0.5.9    
 #> [31] sass_0.4.10         yaml_2.3.12         pkgdown_2.2.1      
 #> [34] pillar_1.11.1       nloptr_2.2.1        gsDesign_3.11.0    
 #> [37] jquerylib_0.1.4     tidyr_1.3.2         MASS_7.3-65        
 #> [40] cachem_1.1.0        iterators_1.0.14    reformulas_0.4.4   
 #> [43] foreach_1.5.2       boot_1.3-32         parallelly_1.48.0  
 #> [46] nlme_3.1-169        r2rtf_1.3.1         tidyselect_1.2.1   
-#> [49] digest_0.6.39       mvtnorm_1.4-2       future_1.75.0      
+#> [49] digest_0.6.39       mvtnorm_1.4-2       future_1.76.0      
 #> [52] listenv_1.0.0       dplyr_1.2.1         purrr_1.2.2        
 #> [55] splines_4.6.1       fastmap_1.2.0       grid_4.6.1         
 #> [58] cli_3.6.6           magrittr_2.0.5      survival_3.8-6     

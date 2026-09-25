@@ -6,7 +6,7 @@ library(gsDesignNB)
 library(gsDesign)
 library(data.table)
 library(MASS)
-library(gt)
+library(lt)
 ```
 
 ## Introduction
@@ -109,8 +109,8 @@ gsBoundSummary(gs_plan,
     Nname = "Information",
     timename = "Month",
     digits = 4,
-    ddigits = 2) |> gt() |>
-  tab_header(
+    ddigits = 2) |> lt() |>
+  lt_header(
     title = "Group Sequential Design Bounds for Negative Binomial Outcome",
     subtitle = paste0(
       "N = ", ceiling(gs_plan$n_total[gs_plan$k]),
@@ -118,21 +118,6 @@ gsBoundSummary(gs_plan,
     )
   )
 ```
-
-| Group Sequential Design Bounds for Negative Binomial Outcome |  |  |  |
-|----|----|----|----|
-| N = 882, Expected events = 785.4 |  |  |  |
-| Analysis | Value | Efficacy | Futility |
-| IA 1: 41% | Z | 2.5791 | 0.6354 |
-| Information: 61.25 | p (1-sided) | 0.0050 | 0.2626 |
-| Month: 10 | ~RR at bound | 0.7192 | 0.9220 |
-|  | P(Cross) if RR=1 | 0.0050 | 0.7374 |
-|  | P(Cross) if RR=0.75 | 0.3714 | 0.0531 |
-| Final | Z | 2.0118 | 2.0118 |
-| Information: 149.77 | p (1-sided) | 0.0221 | 0.0221 |
-| Month: 24 | ~RR at bound | 0.8484 | 0.8484 |
-|  | P(Cross) if RR=1 | 0.0221 | 0.9779 |
-|  | P(Cross) if RR=0.75 | 0.9038 | 0.0962 |
 
 ## End-to-end helper workflow
 
@@ -168,20 +153,12 @@ sim_helper <- sim_ssr_nbinom(
 
 helper_summary <- summarize_ssr_sim(sim_helper, by = c("scenario", "strategy"))
 helper_summary$trial_summary |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "High-level SSR Simulation Summary",
     subtitle = "Expected participants with events and expected events observed are included directly"
   )
 ```
-
-| High-level SSR Simulation Summary |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| Expected participants with events and expected events observed are included directly |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| scenario | strategy | n_sims | rejection_rate | futility_rate | mean_n | sd_n | pct_adapted | expected_participants_with_events | expected_events_observed | pct_reach_ia1 | mean_if_ia1 | mean_ia1_time | mean_participants_with_events_ia1 | mean_events_observed_ia1 | n_fallback_ia1 | cross_ia1 | pct_futility_ia1 | pct_reach_final | mean_if_final | mean_final_time | mean_participants_with_events_final | mean_events_observed_final | n_fallback_final | cross_final | pct_futility_final | mean_adapt_cut_time | mean_adapt_enroll_pct | mean_adapt_months_to_close | pct_adapt_allowed | pct_adapt_applied |
-| Lower control rate, higher dispersion | Blinded SSR | 20 | 1 | 0 | 918.20 | 82.44462 | 25 | 413.55 | 969.95 | 100 | 0.4169721 | 24.79013 | 222.5 | 430.35 | 0 | 0.55 | 0 | 45 | 1.262133 | 72.00702 | 648.3333 | 1624.667 | 0 | 0.45 | 0 | 24.79013 | 56.20748 | 19.29705 | 100 | 25 |
-| Lower control rate, higher dispersion | No adaptation | 20 | 1 | 0 | 882.00 | 0.00000 | 0 | 389.10 | 906.50 | 100 | 0.4169721 | 24.79013 | 222.5 | 430.35 | 0 | 0.55 | 0 | 45 | 1.156964 | 67.92168 | 594.0000 | 1483.667 | 0 | 0.45 | 0 | 24.79013 | 56.20748 | 19.29705 | 100 | 0 |
-| Lower control rate, higher dispersion | Unblinded SSR | 20 | 1 | 0 | 915.55 | 77.12770 | 25 | 411.60 | 964.80 | 100 | 0.4169721 | 24.79013 | 222.5 | 430.35 | 0 | 0.55 | 0 | 45 | 1.252567 | 71.63922 | 644.0000 | 1613.222 | 0 | 0.45 | 0 | 24.79013 | 56.20748 | 19.29705 | 100 | 25 |
 
 The remainder of this vignette walks through the same ideas step by step
 on a single simulated trial so the mechanics remain transparent. For
@@ -469,29 +446,14 @@ gsBoundSummary(gs_update,
     Nname = "Information",
     timename = "Month",
     digits = 4,
-    ddigits = 2) |> gt() |>
-  tab_header(
+    ddigits = 2) |> lt() |>
+  lt_header(
     title = "Updated Group Sequential Design Bounds",
     subtitle = paste0(
       "Final Information = ", round(final_info, 2)
     )
   )
 ```
-
-| Updated Group Sequential Design Bounds |                     |          |
-|----------------------------------------|---------------------|----------|
-| Final Information = 71.51              |                     |          |
-| Analysis                               | Value               | Efficacy |
-| IA 1: 17%                              | Z                   | NA       |
-| Information: 12.06                     | p (1-sided)         | NA       |
-|                                        | ~RR at bound        | NA       |
-|                                        | P(Cross) if RR=1    | NA       |
-|                                        | P(Cross) if RR=2.72 | NA       |
-| Final                                  | Z                   | 1.9600   |
-| Information: 71.51                     | p (1-sided)         | 0.0250   |
-|                                        | ~RR at bound        | 1.0741   |
-|                                        | P(Cross) if RR=1    | 0.0250   |
-|                                        | P(Cross) if RR=2.72 | 1.0000   |
 
 ``` r
 

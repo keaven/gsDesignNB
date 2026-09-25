@@ -5,7 +5,7 @@
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
-library(gt)
+library(lt)
 ```
 
 ## Introduction
@@ -168,13 +168,13 @@ power_df <- data.frame(
 )
 
 power_df |>
-  gt() |>
-  tab_header(
-    title = md("**Power Comparison: Wald vs Score Test**"),
+  lt() |>
+  lt_header(
+    title = "Power Comparison: Wald vs Score Test",
     subtitle = paste0("Based on ", nrow(results), " simulated trials")
   ) |>
-  fmt_number(columns = c(Theoretical, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
-  cols_label(
+  lt_format(columns = c("Theoretical", "Empirical", "CI_Lower", "CI_Upper"), decimals = 4) |>
+  lt_label(
     Design = "Design",
     Test = "Test",
     Theoretical = "Target",
@@ -183,15 +183,6 @@ power_df |>
     CI_Upper = "95% CI Upper"
   )
 ```
-
-| **Power Comparison: Wald vs Score Test** |  |  |  |  |  |
-|----|----|----|----|----|----|
-| Based on 3600 simulated trials |  |  |  |  |  |
-| Design | Test | Target | Empirical | 95% CI Lower | 95% CI Upper |
-| Corrected (n = 436) | Wald | 0.9000 | 0.9122 | 0.9025 | 0.9213 |
-| Naive (n = 422) | Wald | 0.9000 | 0.9039 | 0.8938 | 0.9133 |
-| Corrected (n = 436) | Score | 0.9000 | 0.8964 | 0.8860 | 0.9062 |
-| Naive (n = 422) | Score | 0.9000 | 0.8872 | 0.8764 | 0.8974 |
 
 ### Summary of verification results (corrected design)
 
@@ -292,64 +283,37 @@ summary_df <- data.frame(
 summary_df$Difference <- summary_df$Simulated - summary_df$Theoretical
 summary_df$Rel_Diff_Pct <- 100 * summary_df$Difference / abs(summary_df$Theoretical)
 
+# Group rows into categories; lt groups by a column value (not row conditions
+# like gt::tab_row_group()), so build an ordered factor and sort by it.
+summary_df$Group <- factor(
+  fcase(
+    summary_df$Metric == "Power", "Power",
+    summary_df$Metric == "Variance of log(RR)", "Variance",
+    summary_df$Metric == "Treatment Effect: log(RR)", "Treatment Effect",
+    grepl("Events", summary_df$Metric), "Events",
+    grepl("Exposure", summary_df$Metric), "Exposure"
+  ),
+  levels = c("Exposure", "Events", "Treatment Effect", "Variance", "Power")
+)
+summary_df <- summary_df[order(summary_df$Group), ]
+
 summary_df |>
-  gt() |>
-  tab_header(
-    title = md("**Verification of sample_size_nbinom() Predictions**"),
+  lt() |>
+  lt_header(
+    title = "Verification of sample_size_nbinom() Predictions",
     subtitle = paste0("Based on ", n_sims, " simulated trials (n = ", n_sim_total, ")")
   ) |>
-  tab_row_group(
-    label = md("**Power**"),
-    rows = Metric == "Power"
-  ) |>
-  tab_row_group(
-    label = md("**Variance**"),
-    rows = Metric == "Variance of log(RR)"
-  ) |>
-  tab_row_group(
-    label = md("**Treatment Effect**"),
-    rows = Metric == "Treatment Effect: log(RR)"
-  ) |>
-  tab_row_group(
-    label = md("**Events**"),
-    rows = grepl("Events", Metric)
-  ) |>
-  tab_row_group(
-    label = md("**Exposure**"),
-    rows = grepl("Exposure", Metric)
-  ) |>
-  row_group_order(groups = c("**Exposure**", "**Events**", "**Treatment Effect**",
-                              "**Variance**", "**Power**")) |>
-  fmt_number(columns = c(Theoretical, Simulated, Difference), decimals = 4) |>
-  fmt_number(columns = Rel_Diff_Pct, decimals = 2) |>
-  cols_label(
+  lt_group(~ Group, sort = FALSE) |>
+  lt_format(columns = c("Theoretical", "Simulated", "Difference"), decimals = 4) |>
+  lt_format(columns = "Rel_Diff_Pct", decimals = 2) |>
+  lt_label(
     Metric = "",
     Theoretical = "Theoretical",
     Simulated = "Simulated",
     Difference = "Difference",
     Rel_Diff_Pct = "Rel. Diff (%)"
-  ) |>
-  sub_missing(missing_text = "—")
+  )
 ```
-
-| **Verification of sample_size_nbinom() Predictions** |  |  |  |  |
-|----|----|----|----|----|
-| Based on 3600 simulated trials (n = 436) |  |  |  |  |
-|  | Theoretical | Simulated | Difference | Rel. Diff (%) |
-| **Exposure** |  |  |  |  |
-| Total Exposure (months) - Control | 11.4195 | 11.4142 | −0.0053 | −0.05 |
-| Total Exposure (months) - Experimental | 11.4195 | 11.4134 | −0.0061 | −0.05 |
-| Exposure at Risk (months) - Control | 9.0417 | 9.2563 | 0.2146 | 2.37 |
-| Exposure at Risk (months) - Experimental | 9.5382 | 9.6883 | 0.1501 | 1.57 |
-| **Events** |  |  |  |  |
-| Events per Subject - Control | 3.3185 | 3.3788 | 0.0603 | 1.82 |
-| Events per Subject - Experimental | 2.6646 | 2.7013 | 0.0367 | 1.38 |
-| **Treatment Effect** |  |  |  |  |
-| Treatment Effect: log(RR) | −0.2877 | −0.2878 | −0.0001 | −0.03 |
-| **Variance** |  |  |  |  |
-| Variance of log(RR) | 0.0078 | 0.0075 | −0.0003 | −3.96 |
-| **Power** |  |  |  |  |
-| Power | 0.9000 | 0.9122 | 0.0122 | 1.36 |
 
 **Notes:**
 
@@ -479,19 +443,10 @@ comparison_log_rr <- data.frame(
   )
 )
 comparison_log_rr |>
-  gt() |>
-  tab_header(title = md("**Comparison of log(RR) Statistics**")) |>
-  fmt_number(columns = where(is.numeric), decimals = 4)
+  lt() |>
+  lt_header(title = "Comparison of log(RR) Statistics") |>
+  lt_format(columns = ~ . != "Metric", decimals = 4)
 ```
-
-| **Comparison of log(RR) Statistics** |             |           |            |
-|--------------------------------------|-------------|-----------|------------|
-| Metric                               | Theoretical | Simulated | Difference |
-| Mean                                 | −0.2877     | −0.2878   | −0.0001    |
-| SD                                   | 0.0886      | 0.0876    | −0.0010    |
-| Median                               | −0.2877     | −0.2874   | 0.0002     |
-| Skewness (trimmed)                   | 0.0000      | 0.0056    | 0.0056     |
-| Kurtosis (trimmed)                   | 3.0000      | 2.5476    | −0.4524    |
 
 ## Type I error: Wald vs score test
 
@@ -535,13 +490,13 @@ type1_df <- data.frame(
 )
 
 type1_df |>
-  gt() |>
-  tab_header(
-    title = md("**Type I Error: Wald vs Score Test Under RR = 1**"),
+  lt() |>
+  lt_header(
+    title = "Type I Error: Wald vs Score Test Under RR = 1",
     subtitle = paste0("Based on ", n_null, " simulated null trials (n = ", null_data$n_total, ")")
   ) |>
-  fmt_number(columns = c(Nominal, Empirical, CI_Lower, CI_Upper), decimals = 4) |>
-  cols_label(
+  lt_format(columns = c("Nominal", "Empirical", "CI_Lower", "CI_Upper"), decimals = 4) |>
+  lt_label(
     Test = "Test",
     Nominal = "Nominal α",
     Empirical = "Empirical",
@@ -549,13 +504,6 @@ type1_df |>
     CI_Upper = "95% CI Upper"
   )
 ```
-
-| **Type I Error: Wald vs Score Test Under RR = 1** |  |  |  |  |
-|----|----|----|----|----|
-| Based on 3600 simulated null trials (n = 436) |  |  |  |  |
-| Test | Nominal α | Empirical | 95% CI Lower | 95% CI Upper |
-| Wald (ML) | 0.0250 | 0.0258 | 0.0209 | 0.0316 |
-| Score (null model) | 0.0250 | 0.0200 | 0.0157 | 0.0251 |
 
 ``` r
 
@@ -627,13 +575,13 @@ sweep_display <- data.frame(
 )
 
 sweep_display |>
-  gt() |>
-  tab_header(
-    title = md("**Impact of Jensen Correction Across Scenarios**"),
+  lt() |>
+  lt_header(
+    title = "Impact of Jensen Correction Across Scenarios",
     subtitle = "10,000 replicates per scenario; power difference is paired (95% CI)"
   ) |>
-  fmt_number(columns = c(`Power (corrected)`, `Power (naive)`), decimals = 4) |>
-  cols_label(
+  lt_format(columns = c("Power (corrected)", "Power (naive)"), decimals = 4) |>
+  lt_label(
     Scenario = "Scenario",
     `n (corrected)` = "n (corr.)",
     `n (naive)` = "n (naive)",

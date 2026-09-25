@@ -8,7 +8,7 @@ library(data.table)
 library(MASS)
 library(ggplot2)
 library(dplyr)
-library(gt)
+library(lt)
 library(future)
 library(future.apply)
 ```
@@ -168,43 +168,21 @@ gsBoundSummary(gs_plan,
   digits = 4, ddigits = 2
 ) |>
   as.data.frame() |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Planned Group Sequential Design",
     subtitle = design_note
   ) |>
-  tab_footnote(
+  lt_note(
     "Cauchy futility spending gives planned futility near observed RR > 0.9 at IA1/IA2; lower bounds are non-binding."
   ) |>
-  tab_footnote(
-    footnote = sprintf(
+  lt_note(
+    sprintf(
       "Planned cumulative sample size: IA1 = %.0f, IA2 = %.0f, Final = %.0f.",
       gs_plan$n_total[1], gs_plan$n_total[2], gs_plan$n_total[3]
     )
   )
 ```
-
-| Planned Group Sequential Design |  |  |  |
-|----|----|----|----|
-| Design: lambda1=0.5, RR=0.7, k=0.5, planned accrual=26/mo, planned N=312, max follow-up=12 mo |  |  |  |
-| Analysis | Value | Efficacy | Futility |
-| IA 1: 41% | Z | 2.5732 | 0.7060 |
-| Information: 41.35 | p (1-sided) | 0.0050 | 0.2401 |
-| Month: 9 | ~RR at bound | 0.6701 | 0.8960 |
-|  | P(Cross) if RR=1 | 0.0050 | 0.7599 |
-|  | P(Cross) if RR=0.7 | 0.3897 | 0.0563 |
-| IA 2: 77% | Z | 2.2790 | 1.0491 |
-| Information: 76.87 | p (1-sided) | 0.0113 | 0.1471 |
-| Month: 14 | ~RR at bound | 0.7711 | 0.8872 |
-|  | P(Cross) if RR=1 | 0.0138 | 0.8940 |
-|  | P(Cross) if RR=0.7 | 0.7984 | 0.0636 |
-| Final | Z | 2.0877 | 2.0877 |
-| Information: 99.93 | p (1-sided) | 0.0184 | 0.0184 |
-| Month: 24 | ~RR at bound | 0.8115 | 0.8115 |
-|  | P(Cross) if RR=1 | 0.0221 | 0.9779 |
-|  | P(Cross) if RR=0.7 | 0.9018 | 0.0982 |
-| Cauchy futility spending gives planned futility near observed RR \> 0.9 at IA1/IA2; lower bounds are non-binding. |  |  |  |
-| Planned cumulative sample size: IA1 = 234, IA2 = 312, Final = 312. |  |  |  |
 
 ### Group sequential sample size under each nuisance scenario
 
@@ -334,20 +312,20 @@ for (a in 1:2) {
 }
 
 nuisance_grid |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Expected Information Fraction (%) at Planned Time of Each Interim",
     subtitle = design_note
   ) |>
-  cols_label(
+  lt_label(
     lambda1_true = "lambda1",
     k_true = "k",
     accrual_true = "Accrual (pts/mo)",
     IF_analysis_1 = paste0("IA 1 (mo ", analysis_times_plan[1], ")"),
     IF_analysis_2 = paste0("IA 2 (mo ", analysis_times_plan[2], ")")
   ) |>
-  tab_footnote(
-    footnote = paste(
+  lt_note(
+    paste(
       "Computed via compute_info_at_time() divided by planned final information.",
       "Accrual values (12/18/24) are effective enrollment rates used directly.",
       "Bold green = design assumptions.",
@@ -356,30 +334,6 @@ nuisance_grid |>
     )
   )
 ```
-
-| Expected Information Fraction (%) at Planned Time of Each Interim |  |  |  |  |
-|----|----|----|----|----|
-| Design: lambda1=0.5, RR=0.7, k=0.5, planned accrual=26/mo, planned N=312, max follow-up=12 mo |  |  |  |  |
-| lambda1 | k | Accrual (pts/mo) | IA 1 (mo 9) | IA 2 (mo 14) |
-| 0.3 | 0.5 | 12 | 15.2 | 29.4 |
-| 0.5 | 0.5 | 12 | 19.1 | 35.5 |
-| 0.8 | 0.5 | 12 | 22.4 | 40.3 |
-| 0.3 | 1.0 | 12 | 10.7 | 19.4 |
-| 0.5 | 1.0 | 12 | 12.5 | 21.9 |
-| 0.8 | 1.0 | 12 | 13.9 | 23.7 |
-| 0.3 | 0.5 | 18 | 22.8 | 44.2 |
-| 0.5 | 0.5 | 18 | 28.6 | 53.3 |
-| 0.8 | 0.5 | 18 | 33.6 | 60.4 |
-| 0.3 | 1.0 | 18 | 16.1 | 29.2 |
-| 0.5 | 1.0 | 18 | 18.8 | 32.9 |
-| 0.8 | 1.0 | 18 | 20.8 | 35.5 |
-| 0.3 | 0.5 | 24 | 30.4 | 58.9 |
-| 0.5 | 0.5 | 24 | 38.2 | 71.0 |
-| 0.8 | 0.5 | 24 | 44.8 | 80.5 |
-| 0.3 | 1.0 | 24 | 21.4 | 38.9 |
-| 0.5 | 1.0 | 24 | 25.1 | 43.9 |
-| 0.8 | 1.0 | 24 | 27.8 | 47.4 |
-| Computed via compute_info_at_time() divided by planned final information. Accrual values (12/18/24) are effective enrollment rates used directly. Bold green = design assumptions. With information-based timing, interims occur when blinded info reaches the target fraction, so the calendar time varies by scenario. |  |  |  |  |
 
 ## Scenario grid
 
@@ -969,23 +923,12 @@ runtime_df <- data.frame(
 )
 
 runtime_df |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Simulation Runtime",
     subtitle = "Use precomputed summaries to avoid rerunning on pkgdown/CI/CRAN builds"
   )
 ```
-
-| Simulation Runtime |  |
-|----|----|
-| Use precomputed summaries to avoid rerunning on pkgdown/CI/CRAN builds |  |
-| Metric | Value |
-| Simulation mode | Loaded precomputed summaries |
-| Workers | 11 |
-| Scenarios | 90 |
-| Replicates | 572400 |
-| Rows | 1717200 |
-| Wall time (minutes) | 281.73 |
 
 ``` r
 
@@ -1009,8 +952,8 @@ for (test_label in c("Wald", "Score")) {
     )
 
   tab <- null_display |>
-    gt() |>
-    tab_header(
+    lt() |>
+    lt_header(
       title = paste0("Type I Error Under RR = 1.0: ", test_label, " Test"),
       subtitle = paste0(
         "Nominal one-sided alpha: 0.025 | ",
@@ -1019,8 +962,8 @@ for (test_label in c("Wald", "Score")) {
         " | Runtime: ", rt_str
       )
     ) |>
-    tab_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
-    tab_footnote(
+    lt_spanner(label = "Efficacy crossing at", columns = c("IA1", "IA2", "Final")) |>
+    lt_note(
       paste(
         "Futility stopping is ignored (non-binding) so all trials continue to",
         "the final analysis unless stopped for efficacy.",
@@ -1039,11 +982,7 @@ for (test_label in c("Wald", "Score")) {
 
 ### Type I error table: Wald test, alpha = 0.025
 
-[TABLE]
-
 ### Type I error table: Score test, alpha = 0.025
-
-[TABLE]
 
 ### Starting sample-size sensitivity
 
@@ -1104,8 +1043,9 @@ if (sizing_sens_file == "") {
   setorder(sizing_sens_display, Metric, `Starting design`, Strategy)
 
   sizing_sens_display |>
-    gt(groupname_col = "Metric") |>
-    tab_header(
+    lt() |>
+    lt_group(~ Metric, sort = FALSE) |>
+    lt_header(
       title = "Supplemental SSR Starting-Size Sensitivity",
       subtitle = paste(
         "Score final test; Wald-sized GS N =",
@@ -1114,7 +1054,7 @@ if (sizing_sens_file == "") {
         min(sizing_sens_display$`GS N`)
       )
     ) |>
-    tab_footnote(
+    lt_note(
       paste(
         "This targeted sensitivity uses a lower-event stress setting and is",
         "intended to check the direction of the starting-size recommendation,",
@@ -1123,26 +1063,6 @@ if (sizing_sens_file == "") {
     )
 }
 ```
-
-| Supplemental SSR Starting-Size Sensitivity |  |  |  |  |  |  |  |
-|----|----|----|----|----|----|----|----|
-| Score final test; Wald-sized GS N = 472 vs score-sized GS N = 464 |  |  |  |  |  |  |  |
-| Starting design | Strategy | Fixed N | GS N | Estimate | MCSE | Mean N | SSR applied (%) |
-| Power (RR = 0.7) |  |  |  |  |  |  |  |
-| Score | Blinded SSR | 384 | 464 | 0.9083 | 0.0053 | 466.9 | 10.5 |
-| Score | No adaptation | 384 | 464 | 0.8997 | 0.0055 | 461.3 | 0.0 |
-| Score | Unblinded SSR | 384 | 464 | 0.9110 | 0.0052 | 468.0 | 11.2 |
-| Wald | Blinded SSR | 390 | 472 | 0.9050 | 0.0054 | 474.7 | 10.5 |
-| Wald | No adaptation | 390 | 472 | 0.8977 | 0.0055 | 469.6 | 0.0 |
-| Wald | Unblinded SSR | 390 | 472 | 0.9067 | 0.0053 | 475.6 | 11.3 |
-| Type I error (RR = 1.0; non-binding futility) |  |  |  |  |  |  |  |
-| Score | Blinded SSR | 384 | 464 | 0.0266 | 0.0023 | 473.0 | 25.8 |
-| Score | No adaptation | 384 | 464 | 0.0260 | 0.0023 | 464.0 | 0.0 |
-| Score | Unblinded SSR | 384 | 464 | 0.0258 | 0.0022 | 490.3 | 51.6 |
-| Wald | Blinded SSR | 390 | 472 | 0.0252 | 0.0022 | 478.9 | 21.5 |
-| Wald | No adaptation | 390 | 472 | 0.0258 | 0.0022 | 472.0 | 0.0 |
-| Wald | Unblinded SSR | 390 | 472 | 0.0252 | 0.0022 | 494.5 | 48.1 |
-| This targeted sensitivity uses a lower-event stress setting and is intended to check the direction of the starting-size recommendation, not to replace the full SSR production grid. |  |  |  |  |  |  |  |
 
 In this stress setting, the score-test Type I estimates remain close to
 nominal for both starting-size rules: 0.0252–0.0258 with the Wald-sized

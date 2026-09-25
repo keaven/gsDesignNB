@@ -14,6 +14,12 @@
   non-binding designs
   ([\#47](https://github.com/keaven/gsDesignNB/issues/47)).
 
+### Dependencies
+
+- Replaced the `gt` dependency with the lightweight `lt` package for
+  vignette tables, reducing install weight
+  ([\#48](https://github.com/keaven/gsDesignNB/issues/48)).
+
 ## gsDesignNB 0.3.2
 
 CRAN release: 2026-07-06

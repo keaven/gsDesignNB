@@ -6,7 +6,6 @@ library(gsDesignNB)
 library(gsDesign)
 library(data.table)
 library(ggplot2)
-library(gt)
 ```
 
 This vignette demonstrates how to simulate a group sequential design

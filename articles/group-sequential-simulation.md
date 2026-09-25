@@ -6,7 +6,7 @@ library(gsDesign)
 library(gsDesignNB)
 library(data.table)
 library(ggplot2)
-library(gt)
+library(lt)
 ```
 
 This vignette demonstrates how to create a group sequential design for
@@ -148,8 +148,8 @@ gs_nb |>
     digits = 4,
     ddigits = 2
   ) |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Group Sequential Design Bounds for Negative Binomial Outcome",
     subtitle = paste0(
       "N = ", ceiling(gs_nb$n_total[gs_nb$k]),
@@ -157,26 +157,6 @@ gs_nb |>
     )
   )
 ```
-
-| Group Sequential Design Bounds for Negative Binomial Outcome |  |  |  |
-|----|----|----|----|
-| N = 376, Expected events = 408 |  |  |  |
-| Analysis | Value | Efficacy | Futility |
-| IA 1: 42% | Z | 2.8070 | -1.0128 |
-| Information: 27.03 | p (1-sided) | 0.0025 | 0.8444 |
-| Month: 10 | ~RR at bound | 0.5828 | 1.2151 |
-|  | P(Cross) if RR=1 | 0.0025 | 0.1556 |
-|  | P(Cross) if RR=0.67 | 0.2422 | 0.0009 |
-| IA 2: 91% | Z | 2.8158 | 1.4448 |
-| Information: 58.96 | p (1-sided) | 0.0024 | 0.0743 |
-| Month: 18 | ~RR at bound | 0.6930 | 0.8285 |
-|  | P(Cross) if RR=1 | 0.0045 | 0.9254 |
-|  | P(Cross) if RR=0.67 | 0.6340 | 0.0477 |
-| Final | Z | 1.9815 | 1.9796 |
-| Information: 64.98 | p (1-sided) | 0.0238 | 0.0239 |
-| Month: 24 | ~RR at bound | 0.7820 | 0.7822 |
-|  | P(Cross) if RR=1 | 0.0245 | 0.9754 |
-|  | P(Cross) if RR=0.67 | 0.8997 | 0.1000 |
 
 ## Simulation study
 
@@ -322,12 +302,12 @@ planning_comparison$Info_Diff <- planning_comparison$Mean_Unblinded_Info -
   planning_comparison$Planned_Info
 
 planning_comparison |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Design Planning Quantities vs Simulation Means",
     subtitle = sprintf("Based on %d simulated trials", n_sims)
   ) |>
-  cols_label(
+  lt_label(
     Analysis = "Analysis",
     Month = "Month",
     Planned_N = "Planned N",
@@ -343,26 +323,18 @@ planning_comparison |>
     Event_Diff = "Event diff.",
     Info_Diff = "Information diff."
   ) |>
-  fmt_number(
+  lt_format(
     columns = c(
-      Planned_N, Mean_N,
-      Planned_Total_Exposure, Mean_Total_Exposure,
-      Planned_At_Risk_Exposure, Mean_At_Risk_Exposure,
-      Planned_Events, Mean_Events,
-      Planned_Info, Mean_Unblinded_Info,
-      Event_Diff, Info_Diff
+      "Planned_N", "Mean_N",
+      "Planned_Total_Exposure", "Mean_Total_Exposure",
+      "Planned_At_Risk_Exposure", "Mean_At_Risk_Exposure",
+      "Planned_Events", "Mean_Events",
+      "Planned_Info", "Mean_Unblinded_Info",
+      "Event_Diff", "Info_Diff"
     ),
     decimals = 1
   )
 ```
-
-| Design Planning Quantities vs Simulation Means |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| Based on 3600 simulated trials |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| Analysis | Month | Planned N | Mean N | Planned total exposure | Mean total exposure | Planned at-risk exposure | Mean at-risk exposure | Planned events | Mean events | Planned information | Mean unblinded information | Event diff. | Information diff. |
-| 1 | 10 | 313.3 | 313.8 | 1,544.6 | 1,546.6 | 1,445.9 | 1,456.2 | 145.6 | 147.2 | 27.0 | 28.3 | 1.6 | 1.2 |
-| 2 | 18 | 376.0 | 376.0 | 3,857.8 | 3,855.3 | 3,611.3 | 3,622.9 | 363.6 | 365.3 | 59.0 | 60.8 | 1.7 | 1.8 |
-| 3 | 24 | 376.0 | 376.0 | 4,398.2 | 4,395.9 | 4,117.2 | 4,130.1 | 414.6 | 416.3 | 65.0 | 66.8 | 1.7 | 1.8 |
 
 ### Overall operating characteristics
 
@@ -396,28 +368,20 @@ crossing_summary <- data.frame(
 )
 
 crossing_summary |>
-  gt() |>
-  tab_header(
+  lt() |>
+  lt_header(
     title = "Power Comparison: Simulation vs Design",
     subtitle = sprintf("Based on %d simulated trials", n_sims)
   ) |>
-  cols_label(
+  lt_label(
     Analysis = "Analysis",
     Analysis_Time = "Month",
     Sim_Power = "Incremental Power (Sim)",
     Sim_Cum_Power = "Cumulative Power (Sim)",
     Design_Cum_Power = "Cumulative Power (Design)"
   ) |>
-  fmt_percent(columns = c(Sim_Power, Sim_Cum_Power, Design_Cum_Power), decimals = 1)
+  lt_format(columns = c("Sim_Power", "Sim_Cum_Power", "Design_Cum_Power"), decimals = 1, percent = TRUE)
 ```
-
-| Power Comparison: Simulation vs Design |  |  |  |  |
-|----|----|----|----|----|
-| Based on 3600 simulated trials |  |  |  |  |
-| Analysis | Month | Incremental Power (Sim) | Cumulative Power (Sim) | Cumulative Power (Design) |
-| 1 | 10 | 25.7% | 25.7% | 24.2% |
-| 2 | 18 | 40.1% | 65.7% | 63.4% |
-| 3 | 24 | 24.1% | 89.9% | 90.0% |
 
 ### Visualization of Z-statistics
 
