@@ -413,7 +413,7 @@ comparison_log_rr <- data.frame(
 comparison_log_rr |>
   lt() |>
   lt_header(title = "Comparison of log(RR) Statistics") |>
-  lt_format(columns = c("Theoretical", "Simulated", "Difference"), decimals = 4)
+  lt_format(columns = ~ . != "Metric", decimals = 4)
 ```
 
 ## Type I error: Wald vs score test
