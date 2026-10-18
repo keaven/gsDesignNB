@@ -22,6 +22,7 @@ contributes:
       include-in-header:
         text: |
           \usepackage{thumbpdf,lmodern}
+          \usepackage{orcidlink}
 
           \newcommand{\class}[1]{`\code{#1}'}
           \newcommand{\fct}[1]{\code{#1()}}

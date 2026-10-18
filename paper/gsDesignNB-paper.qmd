@@ -7,12 +7,14 @@ author:
     affiliation:
       name: Merck & Co., Inc., Rahway, NJ, USA
     email: keaven_anderson@merck.com
+    orcid: 0000-0003-3218-1363
   - name: Hongtao Zhang
     affiliation:
-      name: Merck & Co., Inc., Rahway, NJ, USA
+      name: CSL Behring, King of Prussia, PA 19406
+    orcid: 0000-0001-8008-4053
   - name: Nan Xiao
     affiliation:
-      name: Genentech, Inc., South San Francisco, CA, USA
+      name: Independent researcher
   - name: Andrea Maes
     affiliation:
       name: Merck & Co., Inc., Rahway, NJ, USA
@@ -1206,5 +1208,11 @@ that the manuscript highlights the core software interface while the installed p
 extensive executable workflows. For local exploratory use, the package also provides
 `run_ssr_shiny()` as an interactive front end to the SSR engine and `preview_pkgdown_site()` for
 documentation preview.
+
+For a single entry point, `Rscript data-raw/reproduce-paper.R` recreates the worked design,
+Jensen-correction table, and both 50-replicate workflow examples, writing their outputs to
+`paper/replication-output/`. The script also records the commands used to regenerate the
+production-scale Monte Carlo caches; these are not run by default because several studies use up
+to 20,000 replicates per scenario.
 
 ## References {.unnumbered}

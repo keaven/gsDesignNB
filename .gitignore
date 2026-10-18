@@ -22,6 +22,7 @@ paper/gsDesignNB-paper_files/
 paper/jss.bst
 paper/jss.cls
 paper/jsslogo.jpg
+paper/replication-output/
 data-raw/*.log
 data-raw/*.pid
 inst/extdata/score_sweep_results.rds
