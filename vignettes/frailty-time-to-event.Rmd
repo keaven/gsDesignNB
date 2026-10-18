@@ -1,0 +1,934 @@
+---
+title: "From negative binomial counts to time-to-event models"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+bibliography: time-to-event.bib
+vignette: >
+  %\VignetteIndexEntry{From negative binomial counts to time-to-event models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, comment = "#>", fig.width = 8, fig.height = 4,
+  out.width = "100%", dpi = 120
+)
+library(ggplot2)
+```
+
+## Scope and main messages
+
+The gamma-Poisson construction behind `gsDesignNB::nb_sim()` also implies a
+model for **time to the first event**. This provides a useful bridge between
+negative binomial (NB) recurrent-event methods and survival analysis. It does
+not make their estimands, sample-size formulas, or monitoring information
+interchangeable.
+
+This vignette develops that bridge, reproduces marginal-hazard plots, and
+compares alternative models for cancer and prevention studies. The numerical
+examples are illustrative, not fitted clinical data or recommended clinical
+parameters. All times are in years. The calculations are analytical and require
+no Monte Carlo simulation.
+
+The central distinctions are:
+
+1. Constant individual hazards need not produce constant population hazards.
+2. A constant treatment hazard ratio conditional on frailty need not remain
+   constant after averaging over survivors.
+3. Changing treatment dispersion is different from applying the same
+   multiplicative treatment effect to every individual's rate.
+4. A useful parametric model may have a semiparametric counterpart, but not
+   necessarily the simple partial likelihood and score test of Cox regression.
+
+This is a methodological extension of the
+[sample-size vignette](sample-size-nbinom.html), not an implementation of new
+survival-analysis functions in `gsDesignNB`.
+
+## Gamma frailty: recurrent counts and the first event
+
+Let $g=C,T$ denote control and treatment. Write
+
+$$
+Z_i\sim\operatorname{Gamma}(1/k,\ \text{scale}=k),\qquad
+E(Z_i)=1,\quad \operatorname{Var}(Z_i)=k,
+\qquad \Lambda_{ig}=\lambda_g Z_i.
+$$
+
+For $k=0$, interpret $Z_i=1$ deterministically. Conditional on $Z_i$, assume a
+homogeneous Poisson process with rate $\Lambda_{ig}$. At a fixed follow-up $t$,
+
+$$
+E\{N_g(t)\}=\lambda_g t,\qquad
+\operatorname{Var}\{N_g(t)\}=\lambda_g t+k(\lambda_g t)^2.
+$$
+
+Thus $k$ is exactly the package's NB dispersion, not its reciprocal.
+A distribution for counts at a single time does not by itself specify an event
+process; the conditional Poisson-process assumption supplies that additional
+structure. A minimum gap imposed **after** an event does not change time to the
+first event, but changes the subsequent recurrent-event process.
+
+Let $T_1$ denote time to the first event. Gamma integration gives
+
+$$
+\begin{aligned}
+S_g(t)&=E\{\exp(-\lambda_g Z_i t)\}
+       =(1+k\lambda_g t)^{-1/k},\\
+h_g(t)&=-\frac{d}{dt}\log S_g(t)
+       =\frac{\lambda_g}{1+k\lambda_g t},\\
+E(Z_i\mid T_1>t,g)&=\frac{1}{1+k\lambda_g t}.
+\end{aligned}
+$$
+
+The limits at $k=0$ are exponential survival and constant hazard. For $k>0$,
+this is the Lomax (Pareto type II) survival distribution. Its hazard decreases
+because high-rate individuals experience events earlier and leave the
+first-event risk set, not because their individual rates decline. This is the
+selection mechanism central to frailty models [@vaupel1979heterogeneity].
+The unconditional recurrent-event rate remains $\lambda_g$ when observation
+continues after events under the same process.
+
+There is direct literature on this connection: @siri2012firstevent developed
+an NB-derived first-event regression model and applied it to multiple sclerosis
+relapses. @claggett2018comparison studied first-event and recurrent-event
+analyses in cardiovascular trials, including attenuation of Cox estimates
+relative to a common patient-level effect under risk heterogeneity. Their
+comparisons also show why conclusions about power depend on assumptions such
+as treatment discontinuation after an event.
+
+### Constant conditional effects, changing marginal effects
+
+With a common $k$ and $\lambda_T=r\lambda_C$, the same-frailty conditional
+treatment hazard ratio is $r$. The marginal hazard ratio is instead
+
+$$
+\operatorname{HR}_m(t)
+=r\frac{1+k\lambda_Ct}{1+kr\lambda_Ct}.
+$$
+
+For $r<1$ and $k>0$, it increases from $r$ toward 1. In contrast,
+$S_T(t)=S_C(rt)$: this particular marginal model is also accelerated failure
+time (AFT), with treatment multiplying survival-time quantiles by $1/r$.
+That AFT interpretation is specific to the time structure; conditional PH
+with an arbitrary baseline does not generally imply marginal AFT.
+
+On a log-hazard axis, a constant marginal hazard ratio would appear as a
+constant **vertical separation**. The curves need not be straight.
+
+```{r plot-helpers}
+# Local vignette helpers; no new exported package functions.
+gamma_survival <- function(H, k) {
+  if (k == 0) exp(-H) else exp(-log1p(k * H) / k)
+}
+gamma_hazard <- function(h, H, k) h / (1 + k * H)
+
+arm_levels <- c("Control", "Treatment r = 0.7", "Treatment r = 0.5")
+arm_colours <- setNames(c("#223C57", "#078477", "#C46723"), arm_levels)
+arm_lines <- setNames(c("solid", "longdash", "dotdash"), arm_levels)
+plot_style <- list(
+  scale_colour_manual(values = arm_colours),
+  scale_linetype_manual(values = arm_lines),
+  theme_minimal(base_size = 11),
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom", legend.title = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+)
+
+common <- expand.grid(
+  time = seq(0, 5, length.out = 301),
+  k = c(0, 0.5, 1), r = c(1, 0.7, 0.5)
+)
+common$arm <- factor(common$r, levels = c(1, 0.7, 0.5),
+                     labels = arm_levels)
+common$panel <- factor(common$k, labels = c("k = 0", "k = 0.5", "k = 1"))
+common$hazard <- with(common, gamma_hazard(r, r * time, k))
+common$hr <- with(common, hazard / gamma_hazard(1, time, k))
+```
+
+```{r common-dispersion, fig.cap="Common gamma dispersion. Control mean individual rate is 1/year; treatment mean rates are 0.7 and 0.5/year. Equal scales are used across panels."}
+ggplot(common, aes(time, hazard, colour = arm, linetype = arm)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(~panel, nrow = 1) +
+  scale_y_log10(breaks = c(0.15, 0.2, 0.3, 0.5, 0.7, 1)) +
+  labs(x = "Time (years)", y = "Marginal hazard (/year; log scale)") +
+  plot_style
+```
+
+### A first-event likelihood that resembles NB regression
+
+For independent right censoring, observe $X_i=\min(T_{1i},C_i)>0$ and
+$\delta_i=I(T_{1i}\le C_i)$. Omitting the censoring likelihood,
+
+$$
+L_i(\lambda_i,k)
+=h_i(X_i)^{\delta_i}S_i(X_i)
+=\lambda_i^{\delta_i}
+ (1+k\lambda_iX_i)^{-1/k-\delta_i}.
+$$
+
+An NB mass at $y_i=\delta_i\in\{0,1\}$ with mean $\lambda_iX_i$ equals this
+likelihood times $X_i^{\delta_i}$. That factor is parameter-free. Consequently,
+an NB likelihood with an offset $\log X_i$ can reproduce this parametric
+first-event likelihood, including its dependence on $k$.
+
+This is a **likelihood identity**, not a claim that the binary indicator is NB
+conditional on its event-dependent exposure. Exposure must stop at the first
+event. Plugging the binary indicator into an NB model with full administrative
+follow-up is a different analysis. Moreover, fixed-exposure NB information,
+software diagnostics, and recurrent-event group sequential calibrations do not
+automatically transfer to this observation scheme.
+
+In particular, equal likelihood maximizers do not justify blindly reusing
+fixed-exposure GLM standard errors. For $\eta_i=\log\lambda_i$ and
+$\mu_i=\lambda_iX_i$, the observed first-event information for $\eta_i$,
+holding $k$ fixed, is
+
+$$
+J_{\eta_i\eta_i}
+=\frac{\mu_i(1+k\delta_i)}{(1+k\mu_i)^2},
+$$
+
+whereas the fixed-exposure NB GLM weight is $\mu_i/(1+k\mu_i)$.
+Use the appropriate first-event likelihood information; if $k$ is estimated,
+its nuisance-parameter contribution must also be included.
+
+## Treatment changes the dispersion as well as the mean
+
+Now allow
+
+$$
+\Lambda_g\sim\operatorname{Gamma}
+ \left(1/k_g,\ \text{scale}=k_g\lambda_g\right),\quad
+\operatorname{Var}(\Lambda_g)=k_g\lambda_g^2.
+$$
+
+The resulting expressions are
+
+$$
+h_g(t)=\frac{\lambda_g}{1+k_g\lambda_g t},\qquad
+\operatorname{HR}_m(t)
+=r\frac{1+k_C\lambda_Ct}{1+k_T r\lambda_Ct}.
+$$
+
+Here $r=\lambda_T/\lambda_C$ is the ratio of **mean underlying individual
+rates**, also the initial marginal hazard ratio. It is no longer a common
+individual treatment HR. Two arm-specific rate distributions alone do not
+specify paired individual potential outcomes or who benefits.
+
+The following three-by-three display retains $\lambda_C=1$/year and
+$k_C=0,0.5,1$ across columns. Rows set $k_T=fk_C$ for $f=1,0.5,0.2$:
+no, moderate (50%), and high (80%) reduction in normalized frailty variance.
+For $k_C>0$, the absolute rate-variance ratio is $fr^2$, not $f$.
+
+```{r dispersion-data}
+impact <- expand.grid(
+  time = seq(0, 5, length.out = 301),
+  kC = c(0, 0.5, 1), f = c(1, 0.5, 0.2), r = c(1, 0.7, 0.5)
+)
+impact$k_arm <- with(impact, ifelse(r == 1, kC, f * kC))
+impact$hazard <- with(impact, gamma_hazard(r, r * time, k_arm))
+impact$hr <- with(impact, hazard / gamma_hazard(1, time, kC))
+impact$arm <- factor(impact$r, levels = c(1, 0.7, 0.5), labels = arm_levels)
+impact$control <- factor(
+  impact$kC, levels = c(0, 0.5, 1),
+  labels = c("Control k = 0", "Control k = 0.5", "Control k = 1")
+)
+impact$change <- factor(
+  impact$f, levels = c(1, 0.5, 0.2),
+  labels = c("No reduction", "50% reduction", "80% reduction")
+)
+```
+
+```{r dispersion-hazards, fig.height=7, fig.cap="Treatment changes normalized frailty dispersion. The control curve is unchanged down each column. All panels share the same axes; the zero-dispersion column repeats because multiplying zero dispersion still gives zero."}
+ggplot(impact, aes(time, hazard, colour = arm, linetype = arm)) +
+  geom_line(linewidth = 0.8) +
+  facet_grid(change ~ control) +
+  scale_y_log10(breaks = c(0.15, 0.2, 0.3, 0.5, 0.7, 1)) +
+  labs(x = "Time (years)", y = "Marginal hazard (/year; log scale)") +
+  plot_style
+```
+
+```{r dispersion-ratios, fig.height=7, fig.cap="Marginal hazard ratios for the same scenarios. The dotted horizontal line denotes equal hazards, not equal survival probabilities."}
+ggplot(subset(impact, r < 1),
+       aes(time, hr, colour = arm, linetype = arm)) +
+  geom_hline(yintercept = 1, linetype = "dotted", colour = "grey50") +
+  geom_line(linewidth = 0.8) +
+  facet_grid(change ~ control) +
+  scale_y_log10(breaks = c(0.5, 0.7, 1, 1.5, 2, 2.5)) +
+  labs(x = "Time (years)", y = "Marginal treatment/control HR (log scale)") +
+  plot_style
+```
+
+For positive $k_C,k_T$, the limiting HR is $k_C/k_T$. If $r<1$ and
+$k_T<k_C$, the marginal HR crosses 1 at
+
+$$
+t_{\rm cross}=\frac{1-r}{r\lambda_C(k_C-k_T)}.
+$$
+
+For example, $r=0.7$, $k_C=1$, and $k_T=0.5$ give a crossing at about
+0.86 years. This is not treatment wearing off within a patient: every
+individual rate in this example is constant. A hazard crossing does not
+identify a survival-curve crossing. For $r<1$ and $k_T<k_C$ here, survival
+ordering eventually reverses too, later than the hazard crossing and possibly
+far beyond the observed follow-up.
+Late hazards should always be interpreted alongside survival and numbers
+remaining at risk.
+
+The direction of dispersion change is a scientific assumption, not a default
+property of treatment. If treatment increases dispersion, then
+
+$$
+\operatorname{sign}\{\operatorname{HR}_m'(t)\}
+=\operatorname{sign}(k_C-rk_T).
+$$
+
+In particular, $k_T=k_C/r$ gives a constant marginal HR $r$ despite different
+dispersion; $k_T>k_C/r$ makes the HR decrease. If $k_T=0<k_C$, treatment has
+constant marginal hazard and the HR grows without bound. The zero-dispersion
+limits must therefore be handled separately from the ratio $k_C/k_T$.
+
+## Which marginal hazard shapes are possible?
+
+### Why exponential mixtures cannot produce a hump
+
+For any mixture of fixed nonnegative exponential rates, where the required
+moments exist,
+
+$$
+h_m(t)=E(\Lambda\mid T_1>t),\qquad
+h_m'(t)=-\operatorname{Var}(\Lambda\mid T_1>t)\le0.
+$$
+
+Thus changing the mixing distribution cannot make a fixed-exponential-rate
+mixture increase and then decrease. To obtain that shape, allow individual
+hazards to change over time, or use a different survival model.
+
+### A time-varying baseline with gamma frailty
+
+Let $h(t\mid Z,r)=Zr h_0(t)$ and $H_0(t)=\int_0^t h_0(u)\,du$. Then
+
+$$
+S_r(t)=\{1+krH_0(t)\}^{-1/k},\qquad
+h_{m,r}(t)=\frac{r h_0(t)}{1+krH_0(t)}.
+$$
+
+For $r=1$,
+
+$$
+h_m'(t)=
+\frac{h_0'(t)\{1+kH_0(t)\}-k h_0(t)^2}
+     {\{1+kH_0(t)\}^2}.
+$$
+
+The numerator separates increasing within-person risk from depletion of
+high-risk individuals. Three instructive examples are:
+
+| Individual baseline | Marginal behavior under gamma frailty |
+|:--|:--|
+| Exponential: $h_0(t)=a$ | Decreases for $k>0$; constant for $k=0$. |
+| Weibull: $H_0(t)=at^p$ | For $p>1,k>0$, rises then falls, peaking at $\{(p-1)/(ka)\}^{1/p}$. With $k=0$ it keeps increasing. |
+| Gompertz: $h_0(t)=ae^{bt}$, $b>0$ | For $k>0$, increases if $b>ka$, is constant if $b=ka$, and decreases if $b<ka$; its limit is $b/k$. |
+
+The Weibull-gamma marginal survival $(1+kat^p)^{-1/k}$ is a Burr-type
+distribution; at $k=1$ it is log-logistic. Gamma-Gompertz mortality
+deceleration is discussed by @bohnstedt2021deceleration. Notably, an
+exponentially growing individual hazard gives a plateau, not automatically
+a marginal downturn.
+
+The next example uses baselines with a common initial hazard of 1/year:
+constant, linear increasing, and Gompertz increasing. The linear baseline
+provides a nonzero starting hazard and a subsequent marginal peak.
+
+```{r shape-data}
+shapes <- expand.grid(
+  time = seq(0, 5, length.out = 401), r = c(1, 0.7, 0.5),
+  shape = c("Constant", "Linear increase", "Gompertz increase")
+)
+shapes$h0 <- with(shapes, ifelse(
+  shape == "Constant", 1,
+  ifelse(shape == "Linear increase", 1 + 2 * time, exp(time))
+))
+shapes$H0 <- with(shapes, ifelse(
+  shape == "Constant", time,
+  ifelse(shape == "Linear increase", time + time^2, expm1(time))
+))
+shapes$hazard <- with(shapes, gamma_hazard(r * h0, r * H0, 0.5))
+shapes$arm <- factor(shapes$r, levels = c(1, 0.7, 0.5), labels = arm_levels)
+```
+
+```{r hazard-shapes, fig.cap="Three marginal shapes from different individual baselines, all with k = 0.5 and initial control hazard 1/year. These are illustrative mathematical models."}
+ggplot(shapes, aes(time, hazard, colour = arm, linetype = arm)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(~shape, nrow = 1) +
+  scale_y_log10(breaks = c(0.15, 0.3, 0.5, 1, 2)) +
+  labs(x = "Time (years)", y = "Marginal hazard (/year; log scale)") +
+  plot_style
+```
+
+## Biological interpretation in cancer
+
+Two selection processes should not be conflated. Chemotherapy can remove
+sensitive cells while resistant subclones persist and expand **within a
+patient**. Separately, patients with faster progression leave the
+progression-free risk set earlier, changing its composition **across
+patients**. Genomic evidence for treatment-associated clonal selection includes
+paired acute myeloid leukaemia diagnosis/relapse samples [@ding2012clonal] and
+single-cell studies of triple-negative breast cancer during neoadjuvant
+chemotherapy [@kim2018chemoresistance].
+
+These observations motivate, but do not uniquely identify, the following
+phenomenological model for low initial progression risk followed by regrowth:
+
+$$
+q(t)=\epsilon+b(t-\tau)_+,\qquad
+Q(t)=\epsilon t+\frac b2(t-\tau)_+^2,\qquad
+h_m(t)=\frac{q(t)}{1+kQ(t)}.
+$$
+
+Here $\tau$ is a modeled delay and $b$ is a rate of increase in the individual
+baseline hazard, not a directly measured clone growth rate. After $\tau$, the
+marginal hazard initially rises if
+$b(1+k\epsilon\tau)>k\epsilon^2$. It ultimately decreases as $2/(kt)$ for
+$k>0$, even though every individual hazard $Zq(t)$ keeps increasing.
+
+```{r cancer-example, fig.cap="An illustrative post-treatment progression model: epsilon = 0.1/year, delay = 1 year, slope = 0.5/year squared, k = 0.5. Rising individual risk and falling marginal risk can coexist. The right panel exposes how few patients remain progression-free late."}
+cancer <- data.frame(time = seq(0, 10, length.out = 501))
+cancer$q <- with(cancer, 0.1 + 0.5 * pmax(time - 1, 0))
+cancer$Q <- with(cancer, 0.1 * time + 0.25 * pmax(time - 1, 0)^2)
+cancer$hazard <- with(cancer, gamma_hazard(q, Q, 0.5))
+cancer$survival <- gamma_survival(cancer$Q, 0.5)
+par_old <- par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+plot(cancer$time, cancer$q, type = "l", log = "y", col = "#223C57",
+     xlab = "Time (years)", ylab = "Hazard (/year; log scale)", lwd = 2)
+lines(cancer$time, cancer$hazard, col = "#078477", lwd = 2, lty = 2)
+legend("topleft", c("Individual, Z = 1", "Marginal"),
+       col = c("#223C57", "#078477"), lty = c(1, 2), lwd = 2, bty = "n")
+plot(cancer$time, cancer$survival, type = "l", col = "#078477", lwd = 2,
+     ylim = c(0, 1), xlab = "Time (years)", ylab = "Progression-free probability")
+par(par_old)
+```
+
+This is not a clone-level mechanistic model or proof that a fitted hump is
+caused by resistance. Longitudinal tumor burden, circulating tumor DNA,
+resistance markers, and treatment history would help distinguish mechanisms.
+If drug activity genuinely wanes, allow an arm-specific baseline $q_g(t)$ or
+time-varying individual effect $r(t)$. The cumulative treatment hazard must then
+use $\int_0^t r(u)q_C(u)\,du$, not $r(t)Q_C(t)$.
+
+Also, $h_m(t)\to0$ does **not** imply cure: in this example $Q(t)\to\infty$
+and $S(t)\to0$. Durable cure requires a different structural assumption.
+Progression-specific hazards, progression-free survival (which often includes
+death), and overall survival are different endpoints. A death competing with
+progression is not simply independent loss to follow-up; background mortality
+must also be considered before interpreting a late decline as cure.
+
+## Other parametric survival models
+
+An arm-specific distribution is a convenient statistical description; its
+parameters need not correspond to biological compartments. The following
+families are useful starting points, with $a,p,b>0$ and
+$z=(\log t-\mu)/\sigma$.
+
+| Model | Survival or hazard | Shapes and treatment interpretation |
+|:--|:--|:--|
+| Exponential | $S(t)=e^{-at}$ | Constant hazard. A rate ratio is also a PH effect; a time ratio gives an AFT interpretation. |
+| Weibull | $S(t)=e^{-at^p}$ | Increasing for $p>1$, constant for $p=1$, decreasing for $p<1$. Common shape gives both PH and AFT representations; arm-specific shapes allow non-PH. |
+| Gompertz | $h(t)=ae^{bt}$ | Increasing for $b>0$; useful for increasing age-related risk. Gamma mixing can produce deceleration or a plateau. |
+| Log-logistic | $S(t)=(1+at^p)^{-1}$ | Decreasing hazard for $p\le1$, hump-shaped for $p>1$. Common shape gives AFT and proportional event odds, not generally PH. |
+| Lognormal | $S(t)=1-\Phi(z)$, $h(t)=\phi(z)/\{\sigma t[1-\Phi(z)]\}$ | A hump-shaped hazard; a common log-time scale gives AFT. No frailty mixture is required. |
+| Generalized gamma | A flexible family containing Weibull, gamma, and lognormal cases/limits | Separates location, scale, and shape; permits a broader range of hazards and sensitivity analyses [@prentice1974loggamma]. |
+| Piecewise exponential | $h_g(t)=a_{gj}$ in prespecified intervals | Transparent delayed or waning effects; requires choices of cutpoints and treatment contrasts. |
+| Flexible parametric splines | For example, $\log H_g(t)=s(\log t)+\beta g+g\,s_T(\log t)$ | Smooth baseline and time-varying effects; $s_T=0$ is PH on this scale [@royston2002flexible]. |
+
+For log-logistic survival, event odds $(1-S)/S=at^p$. For lognormal and
+generalized gamma models, the AFT interpretation requires common non-location
+parameters across arms. Freeing shape or scale trades a simple treatment
+summary for greater flexibility. Likewise, spline models with a fixed finite
+number of coefficients are **flexible parametric**, not automatically
+semiparametric Cox models.
+
+Royston--Parmar models allow modeling on cumulative-hazard, odds, or other
+transformation scales; their original paper includes prognostic modeling and
+treatment-effect estimation. Smooth fit within follow-up is not assurance of
+correct extrapolation beyond it. Tail behavior, especially a cure fraction,
+should be checked against clinical knowledge and follow-up support.
+
+### Cancer: cure versus postponement
+
+A mixture-cure model explicitly separates a fraction $\pi_g$ that will never
+experience the specified cancer event from the susceptible distribution:
+
+$$
+S_g(t)=\pi_g+(1-\pi_g)S_{u,g}(t),\qquad
+h_g(t)=\frac{(1-\pi_g)S_{u,g}(t)h_{u,g}(t)}
+                  {\pi_g+(1-\pi_g)S_{u,g}(t)}.
+$$
+
+Boag's early cancer work is a foundational example [@boag1949cure].
+@gamel1994adjuvant fitted parametric models, including lognormal models, to
+five adjuvant breast-cancer trials to distinguish estimated cure probabilities
+from recurrence-free time among uncured patients. These are model-dependent
+distinctions between preventing and postponing recurrence.
+
+Short follow-up can make a cure fraction difficult to distinguish from a
+long susceptible tail. Cure from a cancer event does not mean immortality:
+overall survival must include other-cause mortality. If $S_u$ specifically
+models cancer-related death among uncured patients, with independent
+background survival $S_b(t)$, an illustrative overall-survival formulation is
+$S_{\rm overall}(t)=S_b(t)\{\pi+(1-\pi)S_u(t)\}$, whose overall hazard adds
+background mortality to the mixture's cancer-death hazard. If $S_u$ instead
+models recurrence, this product describes recurrence-or-death-free survival,
+not overall survival.
+
+### Lipid lowering and cardiovascular prevention
+
+A useful actual parametric application is @yourman2021statins: their
+meta-analysis fitted Weibull survival curves to annual arm-level event data
+from eight statin primary-prevention trials, allowing shape and scale to
+differ between arms. They estimated the follow-up required to reach specified
+absolute risk-reduction thresholds. This was a parametric reanalysis, not
+necessarily the analysis model used by each original trial.
+
+An increasing absolute benefit over time is not itself evidence of a delayed
+biological onset. Even an immediate constant HR $r<1$ produces
+
+$$
+S_T(t)-S_C(t)=e^{-rH_C(t)}-e^{-H_C(t)},
+$$
+
+which starts at zero and initially grows. A threshold-based "time to benefit"
+and a treatment-effect lag are therefore different quantities.
+If a genuine lag, gradual benefit, or waning is scientifically plausible,
+piecewise effects, splines, or arm-specific Weibull shapes provide
+sensitivity models. For example,
+
+$$
+h_T(t)=r(t)h_C(t),\qquad
+r(t)=
+\begin{cases}
+1,&t<\tau,\\
+r_\infty,&t\ge\tau,
+\end{cases}
+$$
+
+is an explicit delayed-effect assumption, not something implied by a
+Weibull distribution or by a positive time-to-benefit estimate. Smooth
+alternatives can avoid a discontinuous onset.
+
+### Infection prevention: exposure, response, and waning
+
+In an infection-prevention study, an illustrative conditional hazard is
+
+$$
+h_i(t)=Z_i\,\lambda_{\rm exposure}(c_i+t)\{1-\operatorname{VE}_i(t)\},
+$$
+
+where $c_i$ is calendar time of entry and $t$ is time since vaccination.
+Calendar-time force of infection, time since vaccination, and individual
+exposure/susceptibility are different components.
+
+For homogeneous exposure with cumulative hazard $B(t)$, compare two idealized
+vaccines having protection $e$:
+
+$$
+\begin{aligned}
+S_{\rm leaky}(t)&=\exp\{-(1-e)B(t)\},\\
+S_{\rm all\ or\ none}(t)&=e+(1-e)\exp\{-B(t)\}.
+\end{aligned}
+$$
+
+The first reduces everyone's infection hazard by the same fraction. The
+second completely protects fraction $e$ and leaves the remainder unchanged.
+They have the same initial average hazard reduction, but different later
+risk sets. Permanent protection in the second expression is an explicit
+idealization; waning protection needs additional structure.
+
+@longini1996vaccine developed a frailty-mixture model with heterogeneous
+response and a mass at zero, applying it to measles-outbreak data.
+@white2010heterogeneity distinguished exposure heterogeneity, heterogeneous
+vaccine responses, and true waning in malaria-vaccine efficacy interpretation.
+An increasing marginal HR can reflect depletion of susceptible controls even
+when individual vaccine protection is unchanged.
+
+For a more biological parametric example, @white2015vaccine linked a biphasic
+antibody-decay model to protection and event-time analyses in an RTS,S malaria
+vaccine trial, accounting for exposure and immunity. The exponential
+components described **antibody decay**, not exponentially distributed event
+times. First infection, first clinical disease, and recurrent infections also
+require distinct endpoint definitions.
+
+## Anderson's VLDAFT model
+
+The reference is **Keaven M. Anderson (1991), Biometrics 47(1), 281--288,
+"A nonproportional hazards Weibull accelerated failure time regression model"**
+[@anderson1991vldaft]. It analyzed Framingham heart-disease incidence over
+32 years using risk factors measured before age 50. The model allowed
+log-time dispersion to depend on location and was estimated by maximum
+likelihood.
+
+VLDAFT denotes **varying location and dispersion accelerated failure time**.
+Using the explicit restatement in @mannan2010weibull, its linked
+location--dispersion formulation is
+
+$$
+\log T_i=\mu_i+\sigma_i\varepsilon_i,\qquad
+\mu_i=x_i^\top\beta,\qquad
+\log\sigma_i=\theta_0+\theta_1\mu_i,
+$$
+
+where $\varepsilon_i$ has minimum extreme-value distribution,
+$F_\varepsilon(u)=1-\exp\{-\exp(u)\}$. Thus
+
+$$
+S_i(t)=\exp\left[-\exp\left\{\frac{\log t-\mu_i}{\sigma_i}\right\}\right].
+$$
+
+Here $\sigma_i$ is **log-time dispersion**, not gamma frailty variance $k$.
+The Weibull shape is $p_i=1/\sigma_i$ and time scale is
+$\eta_i=\exp(\mu_i)$. The link above is more restrictive than separately
+modeling $\log\sigma_i=z_i^\top\gamma$.
+
+The following consequences are obtained directly from this survival function:
+
+$$
+h_i(t)=\frac{1}{\sigma_i}e^{-\mu_i/\sigma_i}t^{1/\sigma_i-1},\qquad
+\operatorname{HR}_{1:0}(t)=
+\frac{\sigma_0}{\sigma_1}
+e^{-\mu_1/\sigma_1+\mu_0/\sigma_0}
+t^{1/\sigma_1-1/\sigma_0}.
+$$
+
+With constant $\sigma$, ordinary Weibull AFT and PH coincide. With different
+$\sigma$ values, the log HR is linear in log time, and the quantile ratio is
+
+$$
+\frac{Q_1(u)}{Q_0(u)}
+=e^{\mu_1-\mu_0}\{-\log(1-u)\}^{\sigma_1-\sigma_0},
+\qquad 0<u<1.
+$$
+
+Hence the name does not imply a single constant acceleration factor when
+dispersion varies. Each profile-specific Weibull hazard is still monotone;
+the original VLDAFT model does not itself produce a hump.
+Unequal-shape Weibull HRs can move toward 1 over a follow-up interval and
+cross it, but their infinite-time limit is 0 or infinity, not generally 1.
+This differs from common-shape gamma-frailty attenuation.
+
+```{r vldaft-example, fig.cap="Illustrative Weibull location/dispersion effects, not estimates from Anderson's Framingham analysis. Control has time scale 2 and shape 2. Both treatment scenarios have time scale 3; fixed log-time dispersion keeps shape 2, while the linked VLDAFT example has shape 3."}
+vldaft <- data.frame(time = seq(0.05, 8, length.out = 401))
+vldaft$control <- dweibull(vldaft$time, shape = 2, scale = 2) /
+  pweibull(vldaft$time, shape = 2, scale = 2, lower.tail = FALSE)
+vldaft$fixed <- (2 / 3) * (vldaft$time / 3)
+vldaft$linked <- (3 / 3) * (vldaft$time / 3)^2
+# Linked example: mu_C = log(2), mu_T = log(3),
+# theta_0 = 0, theta_1 = -1, so sigma = exp(-mu).
+par_old <- par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+matplot(vldaft$time, vldaft[c("control", "fixed", "linked")],
+        type = "l", log = "y", lty = c(1, 2, 3), lwd = 2,
+        col = c("#223C57", "#078477", "#C46723"),
+        xlab = "Time (years)", ylab = "Hazard (/year; log scale)")
+legend("bottomright", c("Control", "Fixed dispersion", "Linked dispersion"),
+       col = c("#223C57", "#078477", "#C46723"),
+       lty = c(1, 2, 3), lwd = 2, bty = "n", cex = 0.8)
+matplot(vldaft$time, vldaft[c("fixed", "linked")] / vldaft$control,
+        type = "l", log = "y", lty = c(2, 3), lwd = 2,
+        col = c("#078477", "#C46723"),
+        xlab = "Time (years)", ylab = "Treatment/control HR (log scale)")
+abline(h = 1, lty = 3, col = "grey50")
+par(par_old)
+```
+
+One possible extension is to add gamma frailty to these Weibull individual
+hazards. Writing $H_i(t)=A_it^{p_i}$, where
+$A_i=e^{-p_i\mu_i}$, gives
+
+$$
+h_{m,i}(t)=\frac{p_iA_it^{p_i-1}}{1+kA_it^{p_i}}.
+$$
+
+For $p_i>1,k>0$ this is hump-shaped. With common positive $k$, its late
+hazard ratio tends to $p_1/p_0$, not necessarily 1. This is a
+**derived frailty extension**, not an attribution to Anderson's original
+model.
+
+## Semiparametric modeling and testing
+
+### What is analogous to Cox regression?
+
+Cox's model leaves the baseline hazard unspecified while estimating a
+constant log HR through partial likelihood [@cox1972regression]. For a
+two-arm comparison without tied event times, its score test at zero treatment
+effect is the ordinary logrank test. Let $A=1$ denote treatment and $A=0$ control.
+Several alternatives also leave a
+baseline distribution unspecified, but differ in treatment interpretation and
+estimation:
+
+| Framework | Unspecified component and treatment parameter | Inference route |
+|:--|:--|:--|
+| Cox PH: $h(t\mid A)=h_0(t)e^{\beta A}$ | Baseline hazard; constant log HR $\beta$ | Partial likelihood; score/logrank, Wald, or likelihood-ratio inference |
+| Gamma transformation / generalized odds-rate | Baseline cumulative hazard; effect on transformed survival | Semiparametric likelihood or estimating equations; requires a specified or identifiable link |
+| AFT: $\log T=\alpha+\beta A+\varepsilon$ | Error distribution; constant log time ratio | Censored rank estimating equations and resampling [@jin2003rank] |
+| Location--scale AFT extension | Error distribution; effects on log-time location and dispersion | Joint rank equations and joint/component tests [@burke2020multiparameter] |
+| Time-varying additive hazards: $h(t\mid A)=\alpha_0(t)+A\alpha_1(t)$ | Baseline and coefficient functions; instantaneous hazard difference | Estimating equations for cumulative coefficients [@aalen1989linear] |
+
+For binary treatment alone, time-varying additive hazards can represent any
+two arm hazards by setting $\alpha_0=h_C$ and $\alpha_1=h_T-h_C$.
+A constant additive coefficient would impose a much stronger restriction.
+General covariate models must still respect nonnegative hazards.
+
+### A direct gamma-frailty transformation model
+
+Define
+
+$$
+G_k(s)=
+\begin{cases}
+(s^{-k}-1)/k,&k>0,\\
+-\log s,&k=0.
+\end{cases}
+$$
+
+The gamma-frailty model with common dispersion and an unspecified baseline satisfies
+
+$$
+G_k\{S(t\mid A)\}=e^{\beta A}H_0(t).
+$$
+
+Thus $k=0$ gives PH, $k=1$ gives proportional **failure odds** $(1-S)/S$,
+and other fixed values give a transformation model. Semiparametric frailty
+inference with an unspecified baseline has an established literature
+[@kosorok2004frailty]. @choi2012transformation also allow transformation-link
+parameters to depend on covariates, making it a particularly relevant
+starting point for treatment effects on dispersion.
+
+However, estimating both an unrestricted baseline and frailty parameters
+requires identification checks. With no covariate effect, any common $k$
+can be absorbed into
+$H_0^{(k)}(t)=G_k\{S(t)\}$. The common variance is then unidentified.
+@song2009identifiability explicitly treat this nonstandard testing problem.
+It is not resolved simply by using a more flexible optimizer.
+
+Arm-specific dispersion adds another possible nonidentifiability: when
+$k_T r=k_C$, a continuum of frailty/baseline specifications can yield the
+same PH pair of marginal survival curves. A covariate-dependent link is
+therefore a promising framework, not an automatic identifiable fit for
+arbitrary two-arm data. In contrast, fixing the conditional baseline to
+be exponential imposes the parametric structure that identifies each arm's
+Lomax distribution parameters.
+
+The boundary $k=0$ is a separate issue. Standard chi-square likelihood-ratio
+calibration should not be assumed for variance-component tests
+[@self1987nonstandard]. Even the familiar one-variance-component mixture
+reference requires appropriate regularity; it does not automatically apply
+to joint dispersion tests or unidentified nuisance parameters.
+
+### A semiparametric counterpart to VLDAFT already exists
+
+@burke2020multiparameter develop a location--scale model for log survival
+time with a completely unspecified common error distribution, covariates
+in both location and scale, and joint rank-based estimating equations.
+The paper provides resampling-based uncertainty estimates and component
+and joint tests; its application uses observational lung-cancer data.
+
+With reference location and scale normalized to identify the error
+distribution, treatment can enter as
+
+$$
+\log T=\beta A+\exp(\gamma A)\varepsilon.
+$$
+
+Under the paper's regularity conditions, testing $\gamma=0$ assesses
+constant acceleration, and jointly testing $(\beta,\gamma)=(0,0)$ assesses
+both treatment components. This is a close analogue of "model plus
+corresponding test," although not Cox partial likelihood or a single
+ordinary logrank statistic.
+
+In an unspecified-error model, constant dispersion implies AFT, **not**
+generally PH. For Weibull event times (minimum extreme-value log-time errors),
+constant dispersion also gives PH.
+Also, fitting free location and scale intercepts alongside an unrestricted
+error distribution would require additional normalization.
+Anderson's linked specification introduces its own issue in a treatment-only
+model: when the treatment location contrast is zero, the linking slope
+$\theta_1$ cannot be separately learned from the common scale. Separate
+treatment coefficients in location and log scale give a clearer joint
+treatment-testing formulation.
+
+The distinction from gamma mixing remains important: a location--scale
+model describes a distribution of log event times, while a frailty model
+specifies latent hazards. One need not have the other model's biological
+interpretation.
+
+### Logrank validity, weights, and the null being tested
+
+Non-PH under the alternative does **not** invalidate the ordinary logrank
+test of equal survival curves under independent censoring. It changes power;
+crossing hazards can make contributions cancel. A single fitted Cox
+hazard ratio under non-PH does not describe the instantaneous HR throughout follow-up, and a
+robust covariance estimate does not restore proportional hazards
+[@lin1989robust].
+
+For the gamma model with prespecified common $k$, differentiating the marginal log HR at
+$\beta=\log r=0$ gives
+
+$$
+\log\operatorname{HR}_m(t)
+\simeq \frac{\beta}{1+kH_0(t)}
+=\beta S_0(t)^k.
+$$
+
+This gives a local-efficiency motivation for an early-weighted
+Fleming--Harrington statistic with
+$w(t)=\widehat S_{\rm pooled}(t-)^k$, the FH$(k,0)$ weight
+[@harrington1982rank]. It is not a guarantee of best power, particularly
+when treatment changes dispersion or effects are delayed.
+Weights should be prespecified, or selection/combination should be
+calibrated; choosing the smallest observed $p$-value across weights is
+not valid without adjustment. Equality of survival curves is also different
+from a one-sided null that treatment survival is nowhere better; weighted
+tests require care about that distinction [@magirr2019weighted].
+
+The estimand matters even more if $k_T\ne k_C$. Setting $r=1$ then does
+not make survival curves equal. A logrank rejection can indicate a first-event
+distribution difference without any difference in the mean individual rate.
+In the parametric two-arm gamma-exponential model, the equal-survival null is
+$r=1$ **and** $k_T=k_C$, not just equality of mean rates.
+
+### Model-light treatment summaries
+
+Kaplan--Meier survival probabilities at prespecified times and restricted
+mean survival time (RMST) offer interpretable marginal contrasts without PH:
+
+$$
+\Delta_{\rm RMST}(\tau)
+=\int_0^\tau\{S_T(t)-S_C(t)\}\,dt.
+$$
+
+RMST measures additional event-free time through a chosen horizon, not a
+latent rate ratio [@royston2013rmst]. Choose $\tau$ before examining treatment
+differences and within adequate follow-up support. A zero RMST difference
+is not equivalent to equal survival curves, and crossing curves can cancel
+in the integral as well. Competing-risk endpoints require corresponding
+cumulative-incidence or restricted-time estimands, rather than treating a
+competing event as ordinary censoring in Kaplan--Meier.
+
+## Implications for gsDesignNB and future work
+
+The package's existing NB workflows answer recurrent-event rate questions.
+The first-event bridge offers useful simulation scenarios and sensitivity
+analyses, but does not yet provide a validated first-event design engine.
+In particular:
+
+- Specify whether the estimand is a recurrent-event rate ratio, conditional
+  hazard ratio, time ratio, survival difference, or restricted mean
+  event-free time difference.
+- Separate changes in mean rate, dispersion, baseline time trend, and
+  treatment activity. Similar-looking hazards can arise from different
+  assumptions and imply different estimands.
+- Use survival curves and risk-set sizes alongside hazards; late hazards
+  can be unstable or scientifically unrepresentative of the original population.
+- For a new test or adaptive design, derive its information and validate
+  Type I error, power, censoring sensitivity, and monitoring behavior under
+  the actual observation scheme. Reusing NB count information is not enough.
+
+An immediately useful extension would be a **scenario-generation layer**:
+gamma-exponential, gamma-Weibull, arm-specific dispersion, delayed/waning
+piecewise effects, and cure sensitivity. It could compare prespecified
+logrank/weighted-logrank analyses with model-based and restricted-mean
+analyses before adding a specialized design formula.
+
+## Reproducibility checks
+
+The following inexpensive checks run when this vignette is built. They verify
+the zero-dispersion limit, survival derivatives, numerical gamma mixing,
+the first-event/NB likelihood identity, and hazard-ratio crossing times.
+They are mathematical checks, not clinical validation.
+
+```{r mathematical-checks}
+stopifnot(
+  max(abs(gamma_survival(c(0, 0.2, 2), 0) -
+            exp(-c(0, 0.2, 2)))) < 1e-12,
+  max(abs(gamma_survival(c(0.2, 2), 1e-8) -
+            exp(-c(0.2, 2)))) < 1e-8,
+  all(common$hazard[common$k == 0] == common$r[common$k == 0])
+)
+
+checks <- expand.grid(k = c(0.2, 0.5, 1, 2),
+                      lambda = c(0.4, 1, 2), time = c(0.1, 1, 3))
+for (j in seq_len(nrow(checks))) {
+  k <- checks$k[j]
+  lambda <- checks$lambda[j]
+  time <- checks$time[j]
+  integrated <- integrate(
+    function(z) exp(-lambda * time * z) *
+      dgamma(z, shape = 1 / k, scale = k),
+    lower = 0, upper = Inf, rel.tol = 1e-9
+  )$value
+  stopifnot(abs(integrated - gamma_survival(lambda * time, k)) < 1e-8)
+  delta <- c(0, 1)
+  loglik <- delta * log(lambda) -
+    (1 / k + delta) * log1p(k * lambda * time)
+  nb_loglik <- dnbinom(delta, size = 1 / k, mu = lambda * time, log = TRUE)
+  stopifnot(max(abs(nb_loglik - loglik - delta * log(time))) < 1e-10)
+  eps <- 1e-5
+  derivative <- -(
+    log(gamma_survival(lambda * (time + eps), k)) -
+      log(gamma_survival(lambda * (time - eps), k))
+  ) / (2 * eps)
+  stopifnot(abs(derivative - gamma_hazard(lambda, lambda * time, k)) < 1e-8)
+}
+
+crossings <- expand.grid(kC = c(0.5, 1), f = c(0.5, 0.2), r = c(0.7, 0.5))
+crossings$kT <- with(crossings, f * kC)
+crossings$time <- with(crossings, (1 - r) / (r * (kC - kT)))
+crossing_hr <- with(crossings, r * (1 + kC * time) / (1 + kT * r * time))
+stopifnot(max(abs(crossing_hr - 1)) < 1e-12)
+
+# Gamma-Weibull peak and the increasing gamma-Gompertz example.
+p <- 2
+a <- 0.4
+k <- 0.5
+peak <- ((p - 1) / (k * a))^(1 / p)
+weibull_marginal <- function(t) {
+  gamma_hazard(p * a * t^(p - 1), a * t^p, k)
+}
+stopifnot(
+  weibull_marginal(peak) > weibull_marginal(peak - 0.01),
+  weibull_marginal(peak) > weibull_marginal(peak + 0.01)
+)
+gompertz <- subset(shapes, shape == "Gompertz increase" & r == 1)
+stopifnot(all(diff(gompertz$hazard) > 0), max(gompertz$hazard) < 2)
+
+# VLDAFT parameterization, time-varying HR, and survival quantiles.
+mu <- log(c(2, 3))
+sigma <- exp(-mu)
+time <- c(0.1, 1, 4.5, 8)
+vldaft_survival <- function(t, mu, sigma) {
+  exp(-exp((log(t) - mu) / sigma))
+}
+for (j in seq_along(mu)) {
+  stopifnot(max(abs(
+    vldaft_survival(time, mu[j], sigma[j]) -
+      pweibull(time, shape = 1 / sigma[j], scale = exp(mu[j]),
+               lower.tail = FALSE)
+  )) < 1e-12)
+}
+hr_vldaft <- sigma[1] / sigma[2] *
+  exp(-mu[2] / sigma[2] + mu[1] / sigma[1]) *
+  time^(1 / sigma[2] - 1 / sigma[1])
+stopifnot(max(abs(hr_vldaft - 2 * time / 9)) < 1e-12)
+probs <- c(0.1, 0.5, 0.9)
+qr <- qweibull(probs, shape = 3, scale = 3) /
+  qweibull(probs, shape = 2, scale = 2)
+stopifnot(max(abs(
+  qr - exp(mu[2] - mu[1]) * (-log1p(-probs))^(sigma[2] - sigma[1])
+)) < 1e-12)
+cat("All analytical and numerical checks passed.\n")
+```
+
+## References

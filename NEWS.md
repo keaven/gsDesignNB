@@ -1,5 +1,14 @@
 # gsDesignNB (development version)
 
+## Time-to-event modeling vignette
+
+- Added a methodological vignette connecting gamma-Poisson recurrent events
+  with first-event survival, including log-hazard panels for treatment effects
+  on frailty dispersion, biological interpretations, alternative parametric
+  models, Anderson's VLDAFT model, and semiparametric testing options.
+- Included reproducible analytical figures and numerical checks without
+  adding simulation cost or new package dependencies.
+
 ## gsDesign compatibility
 
 - Updated selective bound tests and documentation to support both the finite

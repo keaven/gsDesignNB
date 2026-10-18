@@ -78,6 +78,11 @@ $$
 
 This connects the event rate $\lambda$ (hypothesis testing framework) with the expected count $\mu$ (negative binomial parameterization).
 
+The [time-to-event vignette](frailty-time-to-event.html) develops the implied
+first-event survival model, explains why marginal hazards need not be
+proportional, and compares alternative parametric and semiparametric models.
+First-event and recurrent-event information formulas are not interchangeable.
+
 ### Graphical illustration
 
 The following panel illustrates the distribution of event counts with mean $\mu = 5$ for dispersion parameters $k \in \{0, 0.5, 1\}$.

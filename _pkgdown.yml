@@ -114,6 +114,7 @@ articles:
     contents:
       - sample-size-nbinom
       - non-inferiority-example
+      - frailty-time-to-event
 
   - title: "Simulation and validation"
     contents:
