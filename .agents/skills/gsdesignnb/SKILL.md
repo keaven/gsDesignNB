@@ -232,7 +232,6 @@ sample_size_nbinom() → gsNBCalendar() → sim_gs_nbinom() or sim_ssr_nbinom() 
 | Function | Purpose |
 |:---------|:--------|
 | `run_ssr_shiny()` | Interactive Shiny interface for SSR exploration |
-| `preview_pkgdown_site()` | Serve docs locally with correct CSS (not `pkgdown::preview_site()`) |
 
 ### Re-exported from gsDesign
 
@@ -350,7 +349,7 @@ If units are mixed, fix that first.
 - `mutze_test()` may fall back to Poisson based on `poisson_threshold`; this is defensive, not a model choice.
 - `event_gap` changes both counted events and at-risk exposure; it is not cosmetic.
 - `check_gs_bound()` accepts `info_col` to select the information column; use that rather than renaming.
-- For pkgdown preview, use `gsDesignNB::preview_pkgdown_site()`, not `pkgdown::preview_site()`.
+- For pkgdown preview, use `xfun::serve_dir("docs")`, not `pkgdown::preview_site()`.
 
 ## Disease-area calibration
 

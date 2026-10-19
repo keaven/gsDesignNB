@@ -10,6 +10,8 @@
 
 ## Dependencies
 
+- Removed the exported `preview_pkgdown_site()` (a maintainer-only helper) and
+  the `httpuv` suggestion; use `xfun::serve_dir("docs")` to preview the site.
 - Replaced the `gt` dependency with the lightweight `lt` package for vignette
   tables, reducing install weight (#48).
 
