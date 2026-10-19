@@ -48,7 +48,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="dependencies-development-version">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-development-version"></a></h3>
-<ul><li>Replaced the <code>gt</code> dependency with the lightweight <code>lt</code> package for vignette tables, reducing install weight (<a href="https://github.com/keaven/gsDesignNB/issues/48" class="external-link">#48</a>).</li>
+<ul><li>Removed the exported <code>preview_pkgdown_site()</code> (a maintainer-only helper) and the <code>httpuv</code> suggestion; use <code>xfun::serve_dir("docs")</code> to preview the site.</li>
+<li>Replaced the <code>gt</code> dependency with the lightweight <code>lt</code> package for vignette tables, reducing install weight (<a href="https://github.com/keaven/gsDesignNB/issues/48" class="external-link">#48</a>).</li>
 </ul></div>
 </div>
     <div class="section level2">

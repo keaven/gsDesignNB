@@ -32,9 +32,7 @@ with the `gsDesign` package to support group sequential designs.
 - **Testing**: Run tests with `devtools::test()`.
 - **Documentation**: Generate documentation with `devtools::document()`.
   The site is built with `pkgdown`. For a correctly styled local
-  preview, use
-  [`gsDesignNB::preview_pkgdown_site()`](https://keaven.github.io/gsDesignNB/reference/preview_pkgdown_site.md)
-  after
+  preview, use `xfun::serve_dir("docs")` after
   [`pkgdown::build_site()`](https://pkgdown.r-lib.org/reference/build_site.html)
   (not
   [`pkgdown::preview_site()`](https://pkgdown.r-lib.org/reference/preview_site.html),
