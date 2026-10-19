@@ -1206,8 +1206,7 @@ Carlo objects are kept outside the CRAN build and can be regenerated or archived
 auditing. The two code examples in this paper are deliberately small extracts of those vignettes so
 that the manuscript highlights the core software interface while the installed package retains more
 extensive executable workflows. For local exploratory use, the package also provides
-`run_ssr_shiny()` as an interactive front end to the SSR engine and `preview_pkgdown_site()` for
-documentation preview.
+`run_ssr_shiny()` as an interactive front end to the SSR engine.
 
 For a single entry point, `Rscript data-raw/reproduce-paper.R` recreates the worked design,
 Jensen-correction table, and both 50-replicate workflow examples, writing their outputs to

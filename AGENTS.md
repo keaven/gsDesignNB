@@ -20,7 +20,7 @@
 - **Package management**: Standard R package structure.
 - **Build & reload**: Use `devtools::load_all()` for interactive development.
 - **Testing**: Run tests with `devtools::test()`.
-- **Documentation**: Generate documentation with `devtools::document()`. The site is built with `pkgdown`. For a correctly styled local preview, use `gsDesignNB::preview_pkgdown_site()` after `pkgdown::build_site()` (not `pkgdown::preview_site()`, which uses `file://` and often loads without CSS).
+- **Documentation**: Generate documentation with `devtools::document()`. The site is built with `pkgdown`. For a correctly styled local preview, use `xfun::serve_dir("docs")` after `pkgdown::build_site()` (not `pkgdown::preview_site()`, which uses `file://` and often loads without CSS).
 
 ## Coding standards & patterns
 
