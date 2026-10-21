@@ -1,0 +1,6 @@
+/* pkgdown's bootstrap CSS sets `display: block` on <table>, which makes
+   lt tables always full width; restore natural table layout. */
+table.lt-table {
+  display: table;
+  th { font-weight: 500; }
+}
