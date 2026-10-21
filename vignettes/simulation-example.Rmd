@@ -3,7 +3,7 @@ title: "Simulating recurrent events"
 output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
 vignette: >
-  %\VignetteIndexEntry{Simulation of recurrent events}
+  %\VignetteIndexEntry{Simulating recurrent events}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
