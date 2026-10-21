@@ -54,6 +54,8 @@ with the `gsDesign` package to support group sequential designs.
   - Use `@importFrom` to manage dependencies explicitly.
 - **Error handling**: Validate inputs early in exported functions (e.g.,
   check for positive rates, valid probabilities).
+- **NEWS.md**: Write each news item as a single line. Do not hard-wrap
+  items at a fixed column; no continuation lines.
 
 ## Testing guidelines
 
