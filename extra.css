@@ -1,15 +1,5 @@
-@media (min-width: 992px) {
-  /* Move the article TOC to the left side to avoid overlap */
-  .template-article > .row {
-    flex-direction: row-reverse;
-  }
-
-  .template-article > .row > main#main {
-    padding-left: 1.25rem;
-    padding-right: 0.5rem;
-  }
-
-  .template-article > .row > aside {
-    padding-right: 1rem;
-  }
+/* pkgdown's bootstrap CSS sets `display: block` on <table>, which makes
+   lt tables always full width; restore natural table layout. */
+table.lt-table {
+  display: table;
 }
