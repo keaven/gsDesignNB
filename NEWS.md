@@ -1,7 +1,7 @@
 # gsDesignNB 0.5.0
 
-- Now requires gsDesign >= 3.11.0, so the harm-bound arguments (`sfharm`, `sfharmparam`, `testUpper`, `testLower`, `testHarm`) are passed to `gsDesign::gsDesign()` unconditionally.
-- Switched the test suite from testthat to testit, removing the testthat dependency.
+- Now requires gsDesign >= 3.11.0, so the harm-bound arguments (`sfharm`, `sfharmparam`, `testUpper`, `testLower`, `testHarm`) are passed to `gsDesign::gsDesign()` unconditionally (#53).
+- Switched the test suite from testthat to testit, removing the testthat dependency (#53).
 
 # gsDesignNB 0.4.0
 
