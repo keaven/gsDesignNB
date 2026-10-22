@@ -15,20 +15,20 @@ assert("summarize_gs_sim returns correct structure", {
   result <- summarize_gs_sim(sim_df)
 
   (is.list(result))
-  (all(c("n_sim", "power", "futility", "analysis_summary") %in% names(result)))
+  (c("n_sim", "power", "futility", "analysis_summary") %in% names(result))
 
   # 3 simulations
- (is_equal(result$n_sim, 3))
+ (all.equal(result$n_sim, 3))
 
   # Power: sims 1 and 2 cross upper
-  (is_equal(result$power, 2 / 3))
+  (all.equal(result$power, 2 / 3))
 
   # Futility: sim 3 crosses lower but not upper
-  (is_equal(result$futility, 1 / 3))
+  (all.equal(result$futility, 1 / 3))
 
   # Analysis summary should be a data frame with 2 rows
   (is.data.frame(result$analysis_summary))
-  (is_equal(nrow(result$analysis_summary), 2))
+  (all.equal(nrow(result$analysis_summary), 2))
 
   # Check cumulative probability column exists
   ("cum_prob_upper" %in% names(result$analysis_summary))
@@ -58,8 +58,8 @@ assert("summarize_gs_sim handles all successes", {
   )
 
   result <- summarize_gs_sim(sim_df)
-  (is_equal(result$power, 1.0))
-  (is_equal(result$futility, 0.0))
+  (all.equal(result$power, 1.0))
+  (all.equal(result$futility, 0.0))
 })
 
 assert("summarize_gs_sim handles no crossings", {
@@ -76,8 +76,8 @@ assert("summarize_gs_sim handles no crossings", {
   )
 
   result <- summarize_gs_sim(sim_df)
-  (is_equal(result$power, 0.0))
-  (is_equal(result$futility, 0.0))
+  (all.equal(result$power, 0.0))
+  (all.equal(result$futility, 0.0))
 })
 
 assert("summarize_gs_sim summarizes optional columns and robust information", {
@@ -101,6 +101,6 @@ assert("summarize_gs_sim summarizes optional columns and robust information", {
 
   ("n_ctrl" %in% names(result$analysis_summary))
   ("exposure_total_ctrl" %in% names(result$analysis_summary))
-  (is_equal(result$analysis_summary$n_ctrl, c(15.5, 30.5)))
-  (is_equal(result$analysis_summary$info_blinded, c(40, 80)))
+  (all.equal(result$analysis_summary$n_ctrl, c(15.5, 30.5)))
+  (all.equal(result$analysis_summary$info_blinded, c(40, 80)))
 })

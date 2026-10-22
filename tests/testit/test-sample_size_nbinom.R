@@ -9,12 +9,12 @@ assert("sample_size_nbinom calculates correctly", {
   )
   (is.list(res))
   (inherits(res, "sample_size_nbinom_result"))
-  (is_equal(res$inputs$lambda1, 0.5))
-  (is_equal(res$inputs$power, 0.8))
+  (all.equal(res$inputs$lambda1, 0.5))
+  (all.equal(res$inputs$power, 0.8))
   (res$n1 > 0)
   (res$n2 > 0)
-  (is_equal(res$n_total, res$n1 + res$n2))
-  (is_equal(res$exposure[1], 1))
+  (all.equal(res$n_total, res$n1 + res$n2))
+  (all.equal(res$exposure[1], 1))
 
   # Check Poisson limit (dispersion = 0)
   res_nb_0 <- sample_size_nbinom(
@@ -33,14 +33,14 @@ assert("sample_size_nbinom calculates correctly", {
   den <- (log(mu1 / mu2))^2
   n_poisson <- ceiling(num / den)
 
-  (is_equal(res_nb_0$n1, n_poisson))
+  (all.equal(res_nb_0$n1, n_poisson))
 
   # Check ratio
   res_ratio <- sample_size_nbinom(
     lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, ratio = 2,
     accrual_rate = 10, accrual_duration = 2, trial_duration = 2
   )
-  (is_equal(res_ratio$n2, 2 * res_ratio$n1))
+  (all.equal(res_ratio$n2, 2 * res_ratio$n1))
 
   # Check vector dispersion
   res_vec_disp <- sample_size_nbinom(
@@ -61,7 +61,7 @@ assert("sample_size_nbinom calculates correctly", {
     lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
     accrual_rate = 10, accrual_duration = 10, trial_duration = 10
   )
-  (is_equal(res_accrual$exposure[1], 5))
+  (all.equal(res_accrual$exposure[1], 5))
 
   # Case 2: Piecewise accrual
   # Rate 10 for 5 units, Rate 20 for 5 units. Trial duration 15.
@@ -72,7 +72,7 @@ assert("sample_size_nbinom calculates correctly", {
     lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.8,
     accrual_rate = c(10, 20), accrual_duration = c(5, 5), trial_duration = 15
   )
-  (is_equal(res_piecewise$exposure[1], 1375 / 150))
+  (all.equal(res_piecewise$exposure[1], 1375 / 150))
 
   # Error checks for accrual
   (has_error(sample_size_nbinom(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, accrual_rate = 10, trial_duration = 10))) # Missing duration
@@ -80,7 +80,7 @@ assert("sample_size_nbinom calculates correctly", {
   
   # Accrual > Trial is now allowed (truncated)
   res_trunc <- sample_size_nbinom(lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = NULL, accrual_rate = 10, accrual_duration = 11, trial_duration = 10)
-  (is_equal(res_trunc$n_total, 100)) # 10 * 10
+  (all.equal(res_trunc$n_total, 100)) # 10 * 10
 })
 
 # Test Exposure Reporting with Event Gap
@@ -104,11 +104,11 @@ assert("Event gap results in correct exposure reporting", {
   exp1_expected <- exp_cal / (1 + lambda1 * gap)
   exp2_expected <- exp_cal / (1 + lambda2 * gap)
 
-  (is_equal(res$exposure_at_risk_n1, exp1_expected))
-  (is_equal(res$exposure_at_risk_n2, exp2_expected))
+  (all.equal(res$exposure_at_risk_n1, exp1_expected))
+  (all.equal(res$exposure_at_risk_n2, exp2_expected))
 
   # Check method name remains "zhu"
-  # (is_equal(res$inputs$method, "zhu")) # Method removed
+  # (all.equal(res$inputs$method, "zhu")) # Method removed
 })
 
 assert("Jensen correction for event gap increases sample size", {
@@ -161,7 +161,7 @@ assert("Jensen correction for event gap increases sample size", {
 
   # Verify that with k=0, no correction is applied (correction factor = 1)
   correction_k0 <- 1 - 0 * lambda1 * gap / (1 + lambda1 * gap)^2
-  (is_equal(correction_k0, 1))
+  (all.equal(correction_k0, 1))
 })
 
 assert("sample_size_nbinom matches published results", {
@@ -180,27 +180,27 @@ assert("sample_size_nbinom matches published results", {
   # Example 1: Moderate Rates
   # L1=0.5, L2=0.3, k=0.1, Power=0.8, Alpha=0.025 -> n=167
   res_zhu_1 <- calc_fixed_exp(0.5, 0.3, 0.1, 0.8, 0.025)
-  (is_equal(res_zhu_1$n1, 167))
-  (is_equal(res_zhu_1$n2, 167))
+  (all.equal(res_zhu_1$n1, 167))
+  (all.equal(res_zhu_1$n2, 167))
 
   # Example 2: High Rates
   # L1=1.0, L2=0.5, k=0.5, Power=0.9, Alpha=0.025 -> n=88
   res_zhu_2 <- calc_fixed_exp(1.0, 0.5, 0.5, 0.9, 0.025)
-  (is_equal(res_zhu_2$n1, 88))
-  (is_equal(res_zhu_2$n2, 88))
+  (all.equal(res_zhu_2$n1, 88))
+  (all.equal(res_zhu_2$n2, 88))
 
   # Friede and Schmidli (2010)
   # Example 1: Standard Scenario
   # L1=0.6, L2=0.3, k=0.4, Power=0.8, Alpha=0.025 -> n=95
   res_friede_1 <- calc_fixed_exp(0.6, 0.3, 0.4, 0.8, 0.025)
-  (is_equal(res_friede_1$n1, 95))
-  (is_equal(res_friede_1$n2, 95))
+  (all.equal(res_friede_1$n1, 95))
+  (all.equal(res_friede_1$n2, 95))
 
   # Example 2: High Dispersion
   # L1=1.0, L2=0.5, k=0.5, Power=0.8, Alpha=0.025 -> n=66
   res_friede_2 <- calc_fixed_exp(1.0, 0.5, 0.5, 0.8, 0.025)
-  (is_equal(res_friede_2$n1, 66))
-  (is_equal(res_friede_2$n2, 66))
+  (all.equal(res_friede_2$n1, 66))
+  (all.equal(res_friede_2$n2, 66))
 })
 
 assert("sample_size_nbinom handles vector dropout_rate", {
@@ -218,9 +218,9 @@ assert("sample_size_nbinom handles vector dropout_rate", {
     dropout_rate = c(0.05, 0.05), max_followup = 12
   )
 
-  (is_equal(res_scalar$n_total, res_vector$n_total))
-  (is_equal(res_scalar$exposure[1], res_vector$exposure[1]))
-  (is_equal(res_scalar$exposure[2], res_vector$exposure[2]))
+  (all.equal(res_scalar$n_total, res_vector$n_total))
+  (all.equal(res_scalar$exposure[1], res_vector$exposure[1]))
+  (all.equal(res_scalar$exposure[2], res_vector$exposure[2]))
 
   # Case 2: Different dropout rates
   # Group 1 has higher dropout, so exposure should be lower
@@ -265,7 +265,7 @@ assert("sample_size_nbinom handles non-inferiority (rr0 != 1)", {
     accrual_rate = 10, accrual_duration = 2, trial_duration = 2
   )
   (res$n_total > 0)
-  (is_equal(res$inputs$rr0, 1.1))
+  (all.equal(res$inputs$rr0, 1.1))
 })
 
 assert("score sizing reports null variance on final-analysis scale", {
@@ -277,8 +277,8 @@ assert("score sizing reports null variance on final-analysis scale", {
 
   mu0 <- mean(c(0.5, 0.3)) * res$exposure[1]
   v0 <- (1 / mu0) * 2
-  (is_equal(res$exposure[1], 1))
-  (is_equal(res$variance_null, v0 / res$n1))
+  (all.equal(res$exposure[1], 1))
+  (all.equal(res$variance_null, v0 / res$n1))
 })
 
 assert("sample_size_nbinom handles max_followup with split case", {
@@ -464,9 +464,9 @@ assert("piecewise dropout with one piece matches scalar dropout", {
     dropout_rate = data.frame(rate = 0.05, duration = Inf)
   )
 
-  (is_equal(res_scalar$n_total, res_pw$n_total))
-  (is_equal(res_scalar$exposure, res_pw$exposure, tolerance = 1e-10))
-  (is_equal(res_scalar$variance, res_pw$variance, tolerance = 1e-10))
+  (all.equal(res_scalar$n_total, res_pw$n_total))
+  (all.equal(res_scalar$exposure, res_pw$exposure, tolerance = 1e-10))
+  (all.equal(res_scalar$variance, res_pw$variance, tolerance = 1e-10))
 })
 
 assert("piecewise dropout with treatment column matches per-group scalar", {
@@ -486,8 +486,8 @@ assert("piecewise dropout with treatment column matches per-group scalar", {
     )
   )
 
-  (is_equal(res_vec$n_total, res_pw$n_total))
-  (is_equal(res_vec$exposure, res_pw$exposure, tolerance = 1e-10))
+  (all.equal(res_vec$n_total, res_pw$n_total))
+  (all.equal(res_vec$exposure, res_pw$exposure, tolerance = 1e-10))
 })
 
 assert("piecewise dropout higher early rate reduces exposure", {
@@ -523,8 +523,8 @@ assert("piecewise dropout with zero rate matches no dropout", {
     dropout_rate = data.frame(rate = c(0, 0), duration = c(5, Inf))
   )
 
-  (is_equal(res_none$n_total, res_pw_zero$n_total))
-  (is_equal(res_none$exposure, res_pw_zero$exposure, tolerance = 1e-10))
+  (all.equal(res_none$n_total, res_pw_zero$n_total))
+  (all.equal(res_none$exposure, res_pw_zero$exposure, tolerance = 1e-10))
 })
 
 assert("piecewise dropout with max_followup works correctly", {

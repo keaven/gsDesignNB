@@ -32,13 +32,13 @@ assert("cut_data_by_date applies fixed gap correctly", {
 
   # Check ID 1
   r1 <- res[res$id == 1, ]
-  (is_equal(r1$events, 3))
-  (is_equal(r1$tte, 0.7))
+  (all.equal(r1$events, 3))
+  (all.equal(r1$tte, 0.7))
 
   # Check ID 2
   r2 <- res[res$id == 2, ]
-  (is_equal(r2$events, 1))
-  (is_equal(r2$tte, 0.95))
+  (all.equal(r2$events, 1))
+  (all.equal(r2$tte, 0.95))
 })
 
 assert("cut_data_by_date applies random gap correctly", {
@@ -64,8 +64,8 @@ assert("cut_data_by_date applies random gap correctly", {
 
   res <- cut_data_by_date(d, cut_date = 1.0, event_gap = gap_fun)
 
-  (is_equal(res$events, 1))
-  (is_equal(res$tte, 0.8))
+  (all.equal(res$events, 1))
+  (all.equal(res$tte, 0.8))
 })
 
 assert("cut_data_by_date uses default gap (0)", {
@@ -87,6 +87,6 @@ assert("cut_data_by_date uses default gap (0)", {
 
   res <- cut_data_by_date(d, cut_date = 1.0)
 
-  (is_equal(res$events, 2))
-  (is_equal(res$tte, 1.0))
+  (all.equal(res$events, 2))
+  (all.equal(res$tte, 1.0))
 })

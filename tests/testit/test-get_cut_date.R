@@ -8,7 +8,7 @@ assert("get_cut_date returns planned_calendar when no other criteria", {
   sim_data <- nb_sim(enroll_rate, fail_rate, max_followup = 2, n = 30)
 
   result <- get_cut_date(sim_data, planned_calendar = 0.5, event_gap = 0)
-  (is_equal(result, 0.5))
+  (all.equal(result, 0.5))
 })
 
 assert("get_cut_date returns max of multiple criteria", {
@@ -62,7 +62,7 @@ assert("get_cut_date returns max_date when no criteria", {
 
   # No criteria provided
   result <- get_cut_date(sim_data, max_date = 3.0)
-  (is_equal(result, 3.0))
+  (all.equal(result, 3.0))
 })
 
 assert("get_cut_date errors when lambda missing for target_info", {
@@ -176,5 +176,5 @@ assert("get_cut_date target_info unreachable returns max_date", {
     max_date = 1.5
   )
 
-  (is_equal(result, 1.5))
+  (all.equal(result, 1.5))
 })

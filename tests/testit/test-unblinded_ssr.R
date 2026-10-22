@@ -22,9 +22,9 @@ assert("unblinded_ssr estimates parameters and re-estimates sample size", {
   )
 
   # Check output names
-  (all(c("n_total_unblinded", "dispersion_unblinded",
-         "lambda1_unblinded", "lambda2_unblinded",
-         "info_fraction", "unblinded_info", "target_info") %in% names(res)))
+  (c("n_total_unblinded", "dispersion_unblinded",
+    "lambda1_unblinded", "lambda2_unblinded",
+    "info_fraction", "unblinded_info", "target_info") %in% names(res))
 
   # Re-estimated control rate should be near 0.5
   (res$lambda1_unblinded > 0.2 && res$lambda1_unblinded < 1.0)

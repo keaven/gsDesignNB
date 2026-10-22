@@ -70,6 +70,6 @@ assert("thin_interevent_gap enforces minimum spacing between counted events", {
     out
   }
   t <- c(0, 5, 10, 12, 35)
-  (is_equal(thin(t, delta = 20), c(0, 35)))
-  (is_equal(thin(c(100), delta = 20), 100))
+  (all.equal(thin(t, delta = 20), c(0, 35)))
+  (all.equal(thin(c(100), delta = 20), 100))
 })

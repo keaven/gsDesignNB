@@ -11,7 +11,7 @@ if (sum(sim$event == 1) >= 5) assert("get_analysis_date returns correct time", {
   target_time <- events_df$calendar_time[5]
 
   res <- get_analysis_date(sim, planned_events = 5, event_gap = 0)
-  (is_equal(res, target_time))
+  (all.equal(res, target_time))
 })
 
 assert("get_analysis_date handles insufficient events", {
@@ -28,5 +28,5 @@ assert("get_analysis_date handles insufficient events", {
     sprintf("Only %d events in trial", total_events)
   ))
 
-  (is_equal(res, max(sim$calendar_time)))
+  (all.equal(res, max(sim$calendar_time)))
 })

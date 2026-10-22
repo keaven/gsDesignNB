@@ -6,13 +6,13 @@ assert("nb_sim respects block randomization vector", {
   # Test with block vector c("A", "B") and n=10 (Balanced)
   sim_balanced <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 10, block = c("A", "B"))
   counts_bal <- table(unique(sim_balanced[, c("id", "treatment")])$treatment)
-  (is_equal(as.vector(counts_bal), c(5, 5)))
+  (all.equal(as.vector(counts_bal), c(5, 5)))
 
   # Test with block vector c("A", "A", "B") and n=12 (Unbalanced 2:1)
   # 4 blocks of 3 = 12 subjects. Expect 8 A, 4 B.
   sim_unbal <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 12, block = c("A", "A", "B"))
   counts_unbal <- table(unique(sim_unbal[, c("id", "treatment")])$treatment)
-  (is_equal(as.vector(counts_unbal), c(8, 4)))
+  (all.equal(as.vector(counts_unbal), c(8, 4)))
 
   # Test validation
   (has_error(
@@ -46,7 +46,7 @@ assert("nb_sim uses default block when block=NULL", {
   # Case 1: Call without block argument (uses default c("Control"x2, "Experimental"x2))
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 4)
   counts <- table(unique(sim[, c("id", "treatment")])$treatment)
-  (is_equal(as.vector(counts), c(2, 2)))
+  (all.equal(as.vector(counts), c(2, 2)))
 
   # Case 2: Call with block=NULL (uses simple randomization)
   # Hard to test stochasticity in one run, but at least it runs.

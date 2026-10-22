@@ -40,19 +40,19 @@ assert("sim_gs_nbinom runs basic simulation", {
                      "blinded_info", "unblinded_info",
                      "info_unblinded_ml", "info_blinded_ml",
                      "info_unblinded_mom", "info_blinded_mom")
-  (all(expected_cols %in% names(sim_results)))
+  (expected_cols %in% names(sim_results))
 
   # 2 sims x 2 analyses = 4 rows
-  (is_equal(nrow(sim_results), 4))
+  (all.equal(nrow(sim_results), 4))
 
   # Sim IDs should be 1 and 2
-  (is_equal(sort(unique(sim_results$sim)), c(1, 2)))
+  (all.equal(sort(unique(sim_results$sim)), c(1, 2)))
 
   # Analysis IDs should be 1 and 2
-  (is_equal(sort(unique(sim_results$analysis)), c(1, 2)))
+  (all.equal(sort(unique(sim_results$analysis)), c(1, 2)))
 
   # Analysis times should be non-decreasing within each sim
-  (all(tapply(sim_results$analysis_time, sim_results$sim, function(x) all(diff(x) >= 0))))
+  (tapply(sim_results$analysis_time, sim_results$sim, function(x) all(diff(x) >= 0)))
 })
 
 assert("sim_gs_nbinom errors without design", {
@@ -125,7 +125,7 @@ assert("sim_gs_nbinom accepts analysis_times", {
   )
 
   (is.data.frame(sim_results))
-  (is_equal(nrow(sim_results), 4))
+  (all.equal(nrow(sim_results), 4))
 })
 
 assert("sim_gs_nbinom is reproducible with seed", {

@@ -42,10 +42,10 @@ assert("nb_sim generates Negative Binomial data with correct dispersion", {
   estimated_k <- (observed_var - observed_mean) / (observed_mean^2)
 
   # Check Mean (Standard Error ~ sqrt(Var/n) = sqrt(4/5000) approx 0.028)
-  (is_equal(observed_mean, target_mean, tolerance = 0.1))
+  (all.equal(observed_mean, target_mean, tolerance = 0.1))
 
   # Check Dispersion
   # The variance of the variance estimator is high, so we need a loose tolerance or larger N.
   # With N=5000, it should be reasonably close.
-  (is_equal(estimated_k, target_k, tolerance = 0.1))
+  (all.equal(estimated_k, target_k, tolerance = 0.1))
 })

@@ -19,20 +19,20 @@ assert("nb_sim_seasonal returns correct structure", {
   # Check required columns
   expected_cols <- c("id", "treatment", "season", "enroll_time",
                      "start", "end", "event")
-  (all(expected_cols %in% names(sim)))
+  (expected_cols %in% names(sim))
 
   # All events should be 0 or 1
 
-  (all(sim$event %in% c(0, 1)))
+  (sim$event %in% c(0, 1))
 
   # All treatments should be from assigned set
-  (all(sim$treatment %in% c("Control", "Experimental")))
+  (sim$treatment %in% c("Control", "Experimental"))
 
   # All seasons should be valid
-  (all(sim$season %in% c("Winter", "Spring", "Summer", "Fall")))
+  (sim$season %in% c("Winter", "Spring", "Summer", "Fall"))
 
   # Start should be <= end for each row
-  (all(sim$start <= sim$end + 1e-10))
+  (sim$start <= sim$end + 1e-10)
 })
 
 assert("nb_sim_seasonal errors without start date", {

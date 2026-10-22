@@ -32,7 +32,7 @@ assert("calculate_blinded_info uses subject-level tte (not just an average)", {
   # the exposure distribution differs, even though mean(tte) is the same.
   (is.finite(res_a$blinded_info))
   (is.finite(res_b$blinded_info))
-  (!is_equal(res_a$blinded_info, res_b$blinded_info, tolerance = 1e-12))
+  (not_equal(res_a$blinded_info, res_b$blinded_info, tolerance = 1e-12))
 })
 
 assert("calculate_blinded_info blends allocation into Fisher weights", {
@@ -71,7 +71,7 @@ assert("calculate_blinded_info returns zero for all-zero exposure", {
   res <- calculate_blinded_info(
     df, ratio = 1, lambda1_planning = 0.5, lambda2_planning = 0.3
   )
-  (is_equal(res$blinded_info, 0))
+  (all.equal(res$blinded_info, 0))
   (is.na(res$dispersion_blinded))
 })
 
@@ -90,7 +90,7 @@ assert("calculate_blinded_info handles event_gap adjustment", {
   (is.finite(res_no_gap$blinded_info))
   (is.finite(res_gap$blinded_info))
   # The gap-adjusted rate ratio differs, so information may change
-  (!is_equal(res_no_gap$blinded_info, res_gap$blinded_info))
+  (not_equal(res_no_gap$blinded_info, res_gap$blinded_info))
 })
 
 assert("calculate_blinded_info falls back when NB fails and reports the path used", {
@@ -125,5 +125,5 @@ assert("calculate_blinded_info returns fallback label on ML success", {
   res <- calculate_blinded_info(
     df, ratio = 1, lambda1_planning = 0.5, lambda2_planning = 0.3
   )
-  (is_equal(res$fallback, "ml"))
+  (all.equal(res$fallback, "ml"))
 })

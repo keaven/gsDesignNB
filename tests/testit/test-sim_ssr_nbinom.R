@@ -58,17 +58,17 @@ assert("sim_ssr_nbinom returns expected structure", {
   )
 
   (inherits(res, "sim_ssr_nbinom"))
-  (all(c("trial_results", "analysis_results", "settings") %in% names(res)))
+  (c("trial_results", "analysis_results", "settings") %in% names(res))
   (inherits(res$trial_results, "data.frame"))
   (inherits(res$analysis_results, "data.frame"))
-  (is_equal(nrow(res$trial_results), 6))
-  (all(c(
+  (all.equal(nrow(res$trial_results), 6))
+  (c(
     "participants_with_events_stop",
     "events_observed_stop",
     "participants_with_events_ia1",
     "events_observed_final",
     "adapt_cut_time"
-  ) %in% names(res$trial_results)))
+  ) %in% names(res$trial_results))
 })
 
 assert("sim_ssr_nbinom is reproducible with fixed seed", {
@@ -120,12 +120,12 @@ assert("summarize_ssr_sim reports expected participants and events", {
 
   (inherits(sm$trial_summary, "data.frame"))
   (inherits(sm$analysis_summary, "data.frame"))
-  (all(c(
+  (c(
     "expected_participants_with_events",
     "expected_events_observed",
     "mean_participants_with_events_ia1",
     "mean_events_observed_final"
-  ) %in% names(sm$trial_summary)))
+  ) %in% names(sm$trial_summary))
 })
 
 assert("check_gs_bound accepts explicit information column", {
@@ -145,7 +145,7 @@ assert("check_gs_bound accepts explicit information column", {
 
   (res_default[, c("cross_upper", "cross_lower", "cross_harm")] %==% res_explicit[, c("cross_upper", "cross_lower", "cross_harm")])
   (inherits(res_custom, "data.frame"))
-  (is_equal(nrow(res_custom), nrow(sim_df)))
+  (all.equal(nrow(res_custom), nrow(sim_df)))
 })
 
 assert("sim_ssr_nbinom errors on bad design", {
@@ -279,7 +279,7 @@ assert("sim_ssr_nbinom handles different bound_info", {
       seed = 444
     )
   })
-  (all(vapply(res_list, inherits, logical(1), "sim_ssr_nbinom")))
+  (vapply(res_list, inherits, logical(1), "sim_ssr_nbinom"))
 })
 
 assert("sim_ssr_nbinom handles all three strategies", {
@@ -299,7 +299,7 @@ assert("sim_ssr_nbinom handles all three strategies", {
 
   (inherits(res, "sim_ssr_nbinom"))
   # Should have results for all 3 strategies
-  (all(c("No adaptation", "Blinded SSR", "Unblinded SSR") %in% res$trial_results$strategy))
+  (c("No adaptation", "Blinded SSR", "Unblinded SSR") %in% res$trial_results$strategy)
 })
 
 # --- Internal helper tests ---
@@ -307,8 +307,8 @@ assert("sim_ssr_nbinom handles all three strategies", {
 assert(".ssr_metadata_df handles named list", {
   result <- .ssr_metadata_df(list(scenario = "A", label = "test"))
   (inherits(result, "data.frame"))
-  (is_equal(nrow(result), 1))
-  (is_equal(result$scenario, "A"))
+  (all.equal(nrow(result), 1))
+  (all.equal(result$scenario, "A"))
 })
 
 assert(".ssr_metadata_df errors on multi-row data frame", {
@@ -335,25 +335,25 @@ assert(".ssr_select_info falls back to unblinded_ml", {
 
   # blinded_ml is NA -> should fall back
 
-(is_equal(.ssr_select_info(metrics, "blinded_ml"), 50))
+(all.equal(.ssr_select_info(metrics, "blinded_ml"), 50))
   # unblinded_mom is 0 -> should fall back
-  (is_equal(.ssr_select_info(metrics, "unblinded_mom"), 50))
+  (all.equal(.ssr_select_info(metrics, "unblinded_mom"), 50))
   # blinded_mom is negative -> should fall back
-  (is_equal(.ssr_select_info(metrics, "blinded_mom"), 50))
+  (all.equal(.ssr_select_info(metrics, "blinded_mom"), 50))
   # unblinded_ml is valid -> should return directly
-  (is_equal(.ssr_select_info(metrics, "unblinded_ml"), 50))
+  (all.equal(.ssr_select_info(metrics, "unblinded_ml"), 50))
 })
 
 assert(".ssr_stage_label_from_suffix works", {
-  (is_equal(.ssr_stage_label_from_suffix("final"), "Final"))
-  (is_equal(.ssr_stage_label_from_suffix("ia1"), "IA1"))
-  (is_equal(.ssr_stage_label_from_suffix("ia2"), "IA2"))
+  (all.equal(.ssr_stage_label_from_suffix("final"), "Final"))
+  (all.equal(.ssr_stage_label_from_suffix("ia1"), "IA1"))
+  (all.equal(.ssr_stage_label_from_suffix("ia2"), "IA2"))
 })
 
 assert(".ssr_stage_suffixes_from_trial_results extracts suffixes", {
   dt <- data.table::data.table(if_ia1 = 0.5, if_ia2 = 0.8, if_final = 1.0, x = 1)
   result <- .ssr_stage_suffixes_from_trial_results(dt)
-  (is_equal(sort(result), c("final", "ia1", "ia2")))
+  (all.equal(sort(result), c("final", "ia1", "ia2")))
 })
 
 assert(".ssr_dynamic_bounds returns bounds", {
@@ -425,7 +425,7 @@ assert(".ssr_extract_info_metrics returns all info types", {
   )
 
   (is.list(metrics))
-  (all(c("z_value", "info_unblinded_ml", "info_blinded_ml") %in% names(metrics)))
+  (c("z_value", "info_unblinded_ml", "info_blinded_ml") %in% names(metrics))
   (is.finite(metrics$z_value))
   (is.finite(metrics$info_unblinded_ml))
 })
@@ -464,11 +464,11 @@ assert(".ssr_long_from_trial_results reshapes correctly", {
   long <- .ssr_long_from_trial_results(res$trial_results)
   (is.data.frame(long))
   (nrow(long) > 0)
-  (all(c("analysis", "analysis_stage", "analysis_time",
-                     "z_value", "info_value", "info_fraction",
-                     "cross_upper", "cross_lower") %in% names(long)))
+  (c("analysis", "analysis_stage", "analysis_time",
+    "z_value", "info_value", "info_fraction",
+    "cross_upper", "cross_lower") %in% names(long))
   # For k=3 design: ia1, ia2, final -> 3 rows per sim per strategy
-  (is_equal(nrow(long), 2 * 3))
+  (all.equal(nrow(long), 2 * 3))
 })
 
 assert("summarize_ssr_sim works on raw trial_results data frame", {
@@ -569,7 +569,7 @@ assert("sim_ssr_nbinom uses event_gap from design inputs", {
   )
 
   # event_gap should be extracted from design
-  (is_equal(res$settings$event_gap, 0.5))
+  (all.equal(res$settings$event_gap, 0.5))
 })
 
 assert("sim_ssr_nbinom with adapt parameters triggers adaptation checks", {
@@ -649,7 +649,7 @@ assert(".ssr_extract_info_metrics computes all four info types", {
 assert(".ssr_long_from_trial_results handles empty suffixes", {
   dt <- data.frame(sim = 1, strategy = "No adaptation", reject = FALSE)
   result <- .ssr_long_from_trial_results(dt)
-  (is_equal(nrow(result), 0))
+  (all.equal(nrow(result), 0))
 })
 
 assert(".ssr_long_from_trial_results handles missing required columns", {

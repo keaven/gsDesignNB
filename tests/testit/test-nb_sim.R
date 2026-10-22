@@ -8,19 +8,19 @@ assert("nb_sim generates correct structure", {
   sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup, n = 100, block = c("A", "B"))
 
   (inherits(sim, "data.frame"))
-  (all(c("id", "treatment", "enroll_time", "tte", "event", "calendar_time") %in% names(sim)))
-  (is_equal(length(unique(sim$id)), 100))
+  (c("id", "treatment", "enroll_time", "tte", "event", "calendar_time") %in% names(sim))
+  (all.equal(length(unique(sim$id)), 100))
 
   # Check max followup
   # tte should never exceed max_followup (approx, allow for floating point)
-  (all(sim$tte <= max_followup + 1e-5))
+  (sim$tte <= max_followup + 1e-5)
 
   # Check censoring rows exist
   censored <- sim[sim$event == 0, ]
-  (is_equal(nrow(censored), 100)) # Each subject should have exactly one censoring row
+  (all.equal(nrow(censored), 100)) # Each subject should have exactly one censoring row
 
   # Check calendar_time calculation
-  (is_equal(sim$calendar_time, sim$enroll_time + sim$tte))
+  (all.equal(sim$calendar_time, sim$enroll_time + sim$tte))
 })
 
 assert("nb_sim handles dropout", {
@@ -44,5 +44,5 @@ assert("nb_sim respects n argument", {
 
   # Force n=50
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 50, block = "A")
-  (is_equal(length(unique(sim$id)), 50))
+  (all.equal(length(unique(sim$id)), 50))
 })

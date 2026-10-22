@@ -109,9 +109,9 @@ if (requireNamespace("future.apply", quietly = TRUE)) assert("sim_gs_nbinom retu
   )
 
   (inherits(res, "data.frame"))
-  (is_equal(nrow(res), n_sims * length(args$cuts)))
-  (all(c("sim", "analysis", "z_stat", "estimate") %in% names(res)))
-  (is_equal(sort(unique(res$sim)), seq_len(n_sims)))
+  (all.equal(nrow(res), n_sims * length(args$cuts)))
+  (c("sim", "analysis", "z_stat", "estimate") %in% names(res))
+  (all.equal(sort(unique(res$sim)), seq_len(n_sims)))
 })
 
 if (requireNamespace("future.apply", quietly = TRUE) && requireNamespace("future", quietly = TRUE) && tolower(Sys.getenv("CI")) == "true") assert("sim_gs_nbinom parallel results match sequential results", {
@@ -159,9 +159,8 @@ if (requireNamespace("future.apply", quietly = TRUE) && requireNamespace("future
   num_cols <- c("z_stat", "estimate", "se", "blinded_info", "unblinded_info",
                 "info_unblinded_ml", "info_blinded_ml",
                 "info_unblinded_mom", "info_blinded_mom")
-  (all(vapply(num_cols, function(col) {
-    is_equal(res_seq[[col]], res_par[[col]], tolerance = 1e-3)
-  }, logical(1))))
+  for (col in num_cols)
+    (all.equal(res_seq[[col]], res_par[[col]], tolerance = 1e-3))
 })
 
 if (requireNamespace("future.apply", quietly = TRUE)) assert("sim_gs_nbinom different seeds give different results", {

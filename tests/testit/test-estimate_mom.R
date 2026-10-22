@@ -16,7 +16,7 @@ assert("estimate_nb_mom works for blinded data", {
   # For Poisson, dispersion should be close to 0
   (res$dispersion < 0.2)
   # Rate should be close to 0.5
-  (is_equal(res$lambda, sum(events)/sum(tte)))
+  (all.equal(res$lambda, sum(events)/sum(tte)))
   
   # Synthetic data: NB (k=1)
   # Rate = 0.5, k = 1 => Variance = mu + mu^2
@@ -48,8 +48,8 @@ assert("estimate_nb_mom works for unblinded data", {
   (names(res$lambda) %==% c("A", "B"))
   
   # Check rates
-  (is_equal(unname(res$lambda["A"]), sum(events[group=="A"])/sum(tte[group=="A"])))
-  (is_equal(unname(res$lambda["B"]), sum(events[group=="B"])/sum(tte[group=="B"])))
+  (all.equal(unname(res$lambda["A"]), sum(events[group=="A"])/sum(tte[group=="A"])))
+  (all.equal(unname(res$lambda["B"]), sum(events[group=="B"])/sum(tte[group=="B"])))
   
   # Check dispersion (should be close to 0.5)
   (abs(res$dispersion - 0.5) < 0.3)
@@ -59,14 +59,14 @@ assert("estimate_nb_mom handles edge cases", {
   # Zero events
   df <- data.frame(events = c(0, 0), tte = c(1, 1))
   res <- estimate_nb_mom(df)
-  (is_equal(res$lambda, 0))
-  (is_equal(res$dispersion, 0))
+  (all.equal(res$lambda, 0))
+  (all.equal(res$dispersion, 0))
   
   # Zero tte (should be filtered)
   df2 <- data.frame(events = c(1, 2), tte = c(0, 1))
   # Only row 2 is used
   res2 <- estimate_nb_mom(df2)
-  (is_equal(res2$lambda, 2/1))
+  (all.equal(res2$lambda, 2/1))
   
   # Filtered to empty
   df3 <- data.frame(events = c(1), tte = c(0))

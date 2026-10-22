@@ -6,7 +6,7 @@ assert("mutze_test runs on cut data", {
   cut <- cut_data_by_date(sim, cut_date = 1)
   res <- mutze_test(cut)
   (is.list(res))
-  (all(c("estimate", "se", "z", "p_value", "rate_ratio") %in% names(res)))
+  (c("estimate", "se", "z", "p_value", "rate_ratio") %in% names(res))
   (is.finite(res$estimate))
   (nrow(res$group_summary) == 2)
 })
@@ -58,7 +58,7 @@ assert("mutze_test two-sided p-value", {
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = 1, n = 40)
   cut <- cut_data_by_date(sim, cut_date = 0.8)
   res <- mutze_test(cut, sided = 2)
-  (is_equal(res$sided, 2))
+  (all.equal(res$sided, 2))
   (res$p_value >= 0 && res$p_value <= 1)
 })
 
@@ -171,7 +171,7 @@ assert("score test returns valid mutze_test object", {
   res <- mutze_test(cut, test_type = "score")
 
   (inherits(res, "mutze_test"))
-  (is_equal(res$test_type, "score"))
+  (all.equal(res$test_type, "score"))
   (is.finite(res$z))
   (is.finite(res$p_value))
   (is.finite(res$se))
@@ -190,7 +190,7 @@ assert("wald test returns test_type field", {
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = 1, n = 30)
   cut <- cut_data_by_date(sim, cut_date = 0.8)
   res <- mutze_test(cut, test_type = "wald")
-  (is_equal(res$test_type, "wald"))
+  (all.equal(res$test_type, "wald"))
 })
 
 assert("score test with method='poisson' works", {
@@ -202,10 +202,10 @@ assert("score test with method='poisson' works", {
   res <- mutze_test(cut, test_type = "score", method = "poisson")
 
   (inherits(res, "mutze_test"))
-  (is_equal(res$test_type, "score"))
+  (all.equal(res$test_type, "score"))
   (has_match(res$method, "Poisson score"))
-  (is_equal(res$fallback, "poisson"))
-  (is_equal(res$dispersion, Inf))
+  (all.equal(res$fallback, "poisson"))
+  (all.equal(res$dispersion, Inf))
 })
 
 assert("score and wald z-statistics have the same sign", {
@@ -219,7 +219,7 @@ assert("score and wald z-statistics have the same sign", {
   wald_res <- mutze_test(cut, test_type = "wald")
   score_res <- mutze_test(cut, test_type = "score")
 
-  (is_equal(sign(wald_res$z), sign(score_res$z)))
+  (all.equal(sign(wald_res$z), sign(score_res$z)))
 })
 
 assert("score test two-sided p-value", {
@@ -233,10 +233,10 @@ assert("score test two-sided p-value", {
   res1 <- mutze_test(cut, test_type = "score", sided = 1)
   res2 <- mutze_test(cut, test_type = "score", sided = 2)
 
-  (is_equal(res1$sided, 1))
-  (is_equal(res2$sided, 2))
+  (all.equal(res1$sided, 1))
+  (all.equal(res2$sided, 2))
   # Two-sided p-value relates to one-sided for the same z
-  (is_equal(res2$p_value, 2 * pnorm(-abs(res1$z)), tolerance = 1e-10))
+  (all.equal(res2$p_value, 2 * pnorm(-abs(res1$z)), tolerance = 1e-10))
 })
 
 assert("score test falls back to Poisson on near-Poisson data", {
@@ -272,10 +272,10 @@ assert("score test z=0 when both groups have 0 events", {
     tte = rep(1, 20)
   )
   res <- mutze_test(df, test_type = "score")
-  (is_equal(res$z, 0))
-  (is_equal(res$estimate, 0))
-  (is_equal(res$rate_ratio, 1))
-  (is_equal(res$p_value, 0.5))  # one-sided, z=0
+  (all.equal(res$z, 0))
+  (all.equal(res$estimate, 0))
+  (all.equal(res$rate_ratio, 1))
+  (all.equal(res$p_value, 0.5))  # one-sided, z=0
 })
 
 assert("score test handles 0 events in one group", {
@@ -288,7 +288,7 @@ assert("score test handles 0 events in one group", {
   res <- mutze_test(df, test_type = "score")
   (is.finite(res$z))
   (res$z < 0)  # treatment has fewer events
-  (is_equal(res$estimate, -Inf))
+  (all.equal(res$estimate, -Inf))
 
   # Experimental has events, control has none → est = +Inf, z finite
   df2 <- data.frame(
@@ -299,5 +299,5 @@ assert("score test handles 0 events in one group", {
   res2 <- mutze_test(df2, test_type = "score")
   (is.finite(res2$z))
   (res2$z > 0)  # treatment has more events
-  (is_equal(res2$estimate, Inf))
+  (all.equal(res2$estimate, Inf))
 })

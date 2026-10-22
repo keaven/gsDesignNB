@@ -8,8 +8,8 @@ assert("sample_size_nbinom truncates accrual correctly", {
     accrual_rate = 10, accrual_duration = 10, trial_duration = 5
   )
   
-  (is_equal(res1$n_total, 50))
-  (is_equal(res1$accrual_duration, 5))
+  (all.equal(res1$n_total, 50))
+  (all.equal(res1$accrual_duration, 5))
   
   # Case 2: Trial duration < Accrual duration (vector)
   # Accrual: 10/month for 5 months, then 20/month for 5 months.
@@ -20,8 +20,8 @@ assert("sample_size_nbinom truncates accrual correctly", {
     accrual_rate = c(10, 20), accrual_duration = c(5, 5), trial_duration = 8
   )
   
-  (is_equal(res2$n_total, 110))
-  (is_equal(res2$accrual_duration, c(5, 3)))
+  (all.equal(res2$n_total, 110))
+  (all.equal(res2$accrual_duration, c(5, 3)))
   
   # Case 3: Trial duration exactly at a breakpoint
   # Trial ends at 5 months.
@@ -31,8 +31,8 @@ assert("sample_size_nbinom truncates accrual correctly", {
     accrual_rate = c(10, 20), accrual_duration = c(5, 5), trial_duration = 5
   )
   
-  (is_equal(res3$n_total, 50))
-  (is_equal(res3$accrual_duration, 5))
+  (all.equal(res3$n_total, 50))
+  (all.equal(res3$accrual_duration, 5))
   
   # Case 4: Trial duration > Total accrual duration
   # Trial ends at 12 months.
@@ -42,6 +42,6 @@ assert("sample_size_nbinom truncates accrual correctly", {
     accrual_rate = c(10, 20), accrual_duration = c(5, 5), trial_duration = 12
   )
   
-  (is_equal(res4$n_total, 150))
-  (is_equal(res4$accrual_duration, c(5, 5)))
+  (all.equal(res4$n_total, 150))
+  (all.equal(res4$accrual_duration, c(5, 5)))
 })

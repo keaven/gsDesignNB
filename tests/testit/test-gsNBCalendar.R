@@ -22,11 +22,11 @@ assert("gsNBCalendar creates valid gsNB object", {
   (length(gs_design$n_total) == 3)
 
   # Cumulative sample sizes should increase
-  (all(diff(gs_design$n1) > 0))
-  (all(diff(gs_design$n2) > 0))
+  (diff(gs_design$n1) > 0)
+  (diff(gs_design$n2) > 0)
 
   # Final sample sizes should match original (approximately, due to inflation)
-  (is_equal(
+  (all.equal(
     gs_design$n1[3] + gs_design$n2[3],
     gs_design$n_total[3]
   ))
@@ -51,7 +51,7 @@ assert("gsNBCalendar respects allocation ratio", {
   gs_design <- gsNBCalendar(nb_ss, k = 2, analysis_times = c(12, 24))
 
   # Check ratio is preserved
-  (is_equal(gs_design$n2[2] / gs_design$n1[2], 2))
+  (all.equal(gs_design$n2[2] / gs_design$n1[2], 2))
 })
 
 assert("gsNBCalendar works with different test types", {
@@ -93,9 +93,9 @@ if ("testHarm" %in% names(formals(gsDesign::gsDesign)))
     (!is.null(gs_design$harm))
     (gs_design$testHarm %==% c(FALSE, TRUE, TRUE))
     (gs_design$harm$bound[1] < 0)
-    (is_equal(gs_design$harm$spend[1], 0))
-    (is_equal(as.numeric(gs_design$harm$prob[1, ]), rep(0, length(gs_design$theta))))
-    (all(is.finite(gs_design$harm$bound[-1])))
+    (all.equal(gs_design$harm$spend[1], 0))
+    (all.equal(as.numeric(gs_design$harm$prob[1, ]), rep(0, length(gs_design$theta))))
+    (is.finite(gs_design$harm$bound[-1]))
     ("Harm" %in% names(gsDesign::gsBoundSummary(gs_design)))
   })
 
@@ -163,10 +163,10 @@ assert("toInteger.gsNB rounds final sample size", {
 
   # Final sample size should be integer (within rounding)
   k <- gs_int$k
-  (is_equal(gs_int$n_total[k], round(gs_int$n_total[k])))
+  (all.equal(gs_int$n_total[k], round(gs_int$n_total[k])))
 
   # n1 + n2 should equal n_total
-  (is_equal(gs_int$n1[k] + gs_int$n2[k], gs_int$n_total[k]))
+  (all.equal(gs_int$n1[k] + gs_int$n2[k], gs_int$n_total[k]))
 })
 
 assert("toInteger.gsNB respects ratio", {
@@ -180,7 +180,7 @@ assert("toInteger.gsNB respects ratio", {
   gs_int <- toInteger(gs_design)
 
   # Final total should be divisible by (ratio + 1) = 3
-  (is_equal(gs_int$n_total[2] %% 3, 0))
+  (all.equal(gs_int$n_total[2] %% 3, 0))
 })
 
 assert("toInteger.gsNB preserves calendar enrollment at interim analyses", {
@@ -196,8 +196,8 @@ assert("toInteger.gsNB preserves calendar enrollment at interim analyses", {
   expected_n <- gs_int$n_total[gs_int$k] *
     pmin(analysis_times, nb_ss$accrual_duration) / nb_ss$accrual_duration
 
-  (is_equal(gs_int$n_total, expected_n, tolerance = 1e-8))
-  (all(diff(gs_int$n.I) > 0))
+  (all.equal(gs_int$n_total, expected_n, tolerance = 1e-8))
+  (diff(gs_int$n.I) > 0)
 })
 
 assert("toInteger.gsNB preserves piecewise accrual shape", {
@@ -238,7 +238,7 @@ assert("toInteger.gsNB preserves piecewise accrual shape", {
     numeric(1)
   )
 
-  (is_equal(gs_int$n_total, expected_n, tolerance = 1e-8))
+  (all.equal(gs_int$n_total, expected_n, tolerance = 1e-8))
   (gs_int$n_total[gs_int$k] < 1.05 * gs_design$n_total[gs_design$k])
 })
 
@@ -276,16 +276,16 @@ if ("testHarm" %in% names(formals(gsDesign::gsDesign)))
     (updated$design$upper$bound[1] %==% gs_design$upper$bound[1])
     (updated$design$harm$bound[1] %==% gs_design$harm$bound[1])
     (updated$design$lower$bound[3] %==% gs_design$lower$bound[3])
-    (is_equal(updated$design$upper$spend[1], 0))
-    (is_equal(updated$design$harm$spend[1], 0))
+    (all.equal(updated$design$upper$spend[1], 0))
+    (all.equal(updated$design$harm$spend[1], 0))
     (inherits(updated$bounds, "gsBoundSummary"))
-    (is_equal(updated$bounds, gsDesign::gsBoundSummary(updated$design)))
+    (all.equal(updated$bounds, gsDesign::gsBoundSummary(updated$design)))
     (names(updated$bounds) %==% c("Analysis", "Value", "Harm", "Futility", "Efficacy"))
     z_rows <- which(updated$bounds$Value == "Z")
     (length(z_rows) == gs_design$k)
-    (all(is.na(updated$bounds$Harm[z_rows[1]:(z_rows[2] - 1)])))
-    (all(is.na(updated$bounds$Efficacy[z_rows[1]:(z_rows[2] - 1)])))
-    (is_equal(
+    (is.na(updated$bounds$Harm[z_rows[1]:(z_rows[2] - 1)]))
+    (is.na(updated$bounds$Efficacy[z_rows[1]:(z_rows[2] - 1)]))
+    (all.equal(
       updated$bounds$Harm[z_rows[-1]],
       round(updated$design$harm$bound[-1], 4)
     ))
@@ -299,7 +299,7 @@ assert("update_gsNB retains the usual summary for active bounds", {
     )
     updated <- update_gsNB(design, observed_info = 0.35 * design$n.fix)
 
-    (is_equal(updated$bounds, gsDesign::gsBoundSummary(design)))
+    (all.equal(updated$bounds, gsDesign::gsBoundSummary(design)))
   }
 })
 
@@ -325,24 +325,24 @@ assert("update_gsNB summaries preserve harm designs with absent bounds", {
 
       (design %==% original)
       components <- c("n.I", "theta", "upper", "lower", "harm", "testHarm")
-      (is_equal(updated$design[components], design[components]))
+      (all.equal(updated$design[components], design[components]))
 
       bounds <- updated$bounds
       (inherits(bounds, "gsBoundSummary"))
       (!any(bounds$Value %in% c("CP", "CP H1", "PP")))
       analysis <- cumsum(bounds$Value == "Z")
-      (all(is.na(bounds$Harm[analysis %in% inactive])))
-      (all(is.finite(bounds$Harm[!analysis %in% inactive])))
+      (is.na(bounds$Harm[analysis %in% inactive]))
+      (is.finite(bounds$Harm[!analysis %in% inactive]))
       active <- setdiff(seq_len(design$k), inactive)
-      (is_equal(
+      (all.equal(
         bounds$Harm[bounds$Value == "Z"][-inactive],
         round(design$harm$bound[active], 4)
       ))
-      (is_equal(
+      (all.equal(
         bounds$Harm[bounds$Value == "p (1-sided)"][-inactive],
         round(pnorm(design$harm$bound[active], lower.tail = FALSE), 4)
       ))
-      (is_equal(
+      (all.equal(
         bounds$Harm[bounds$Value == "~delta at bound"][-inactive],
         round(gsDesign::gsDelta(design, z = design$harm$bound, i = 1:3)[active], 4)
       ))
@@ -352,7 +352,7 @@ assert("update_gsNB summaries preserve harm designs with absent bounds", {
           column <- c(upper = "Efficacy", lower = "Futility", harm = "Harm")[[bound]]
           expected <- round(cumsum(design[[bound]]$prob[, j]), 4)
           if (bound == "harm") expected[inactive] <- NA_real_
-          (is_equal(bounds[[column]][cross_rows], expected))
+          (all.equal(bounds[[column]][cross_rows], expected))
         }
       }
     }

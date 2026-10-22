@@ -33,7 +33,7 @@ assert("cut_completers and cut_date_for_completers work as expected", {
 
   # Verify output structure
   (is.data.frame(cut_data))
-  (all(c("id", "treatment", "enroll_time", "tte", "events") %in% names(cut_data)))
+  (c("id", "treatment", "enroll_time", "tte", "events") %in% names(cut_data))
 
   # Verify that subjects randomized before cut_date are included (even if not completers)
   # In this simulation, everyone is randomized quickly (rate 10, duration 10 -> 100 subjects? No n=20)
@@ -43,24 +43,24 @@ assert("cut_completers and cut_date_for_completers work as expected", {
 
   included_ids <- cut_data$id
   # Check that we have at least the completers
-  (all(completers_dt[is_completer == TRUE & completion_time <= date_5, id] %in% included_ids))
+  (completers_dt[is_completer == TRUE & completion_time <= date_5, id] %in% included_ids)
 
   # Check that we have non-completers (or those who complete later) if they were randomized
   randomized_before_cut <- unique(sim$id[sim$enroll_time < date_5])
-  (all(randomized_before_cut %in% included_ids))
+  (randomized_before_cut %in% included_ids)
 
   # Verify tte is correct (<= cut_date - enroll_time)
   # For included subjects, tte should be min(max_followup, cut_date - enroll_time) - gaps
   # Just check it's positive and reasonable
-  (all(cut_data$tte > 0))
+  (cut_data$tte > 0)
 
   # 3. Test edge case: target > n completers
   (has_message(date_high <- cut_date_for_completers(sim, n + 10), "Only .* completers in trial", fixed = FALSE))
-  (is_equal(date_high, max(sim$calendar_time)))
+  (all.equal(date_high, max(sim$calendar_time)))
 
   # 4. Test cut_completers with date 0 (no one completed)
   cut_empty <- cut_completers(sim, 0)
-  (is_equal(nrow(cut_empty), 0))
+  (all.equal(nrow(cut_empty), 0))
 })
 
 assert("cut_date_for_completers works with nb_sim_seasonal output", {
