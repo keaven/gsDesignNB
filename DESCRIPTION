@@ -1,5 +1,5 @@
 Package: gsDesignNB
-Version: 0.3.2
+Version: 0.4.0
 Title: Sample Size and Simulation for Negative Binomial Outcomes
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),

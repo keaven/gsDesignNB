@@ -1,4 +1,4 @@
-# gsDesignNB (development version)
+# gsDesignNB 0.4.0
 
 ## gsDesign compatibility
 
