@@ -34,9 +34,7 @@ assert("blinded_ssr estimates dispersion and rate", {
   (res$n_total_blinded > 0)
 
   # Check information output
-  ("blinded_info" %in% names(res))
-  ("target_info" %in% names(res))
-  ("info_fraction" %in% names(res))
+  (c("blinded_info", "target_info", "info_fraction") %in% names(res))
   (res$blinded_info > 0)
   (res$info_fraction > 0)
 })

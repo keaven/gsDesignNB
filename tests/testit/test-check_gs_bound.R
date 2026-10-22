@@ -11,9 +11,7 @@ assert("check_gs_bound returns correct structure", {
   result <- check_gs_bound(sim_df, design)
 
   (is.data.frame(result))
-  ("cross_upper" %in% names(result))
-  ("cross_lower" %in% names(result))
-  ("cross_harm" %in% names(result))
+  (c("cross_upper", "cross_lower", "cross_harm") %in% names(result))
 
   # Same number of rows
  (nrow(result) == nrow(sim_df))

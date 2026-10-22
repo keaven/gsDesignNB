@@ -99,8 +99,7 @@ assert("summarize_gs_sim summarizes optional columns and robust information", {
 
   result <- summarize_gs_sim(sim_df, info_trim = 0)
 
-  ("n_ctrl" %in% names(result$analysis_summary))
-  ("exposure_total_ctrl" %in% names(result$analysis_summary))
+  (c("n_ctrl", "exposure_total_ctrl") %in% names(result$analysis_summary))
   (all.equal(result$analysis_summary$n_ctrl, c(15.5, 30.5)))
   (all.equal(result$analysis_summary$info_blinded, c(40, 80)))
 })

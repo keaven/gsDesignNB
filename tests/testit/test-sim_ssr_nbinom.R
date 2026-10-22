@@ -258,8 +258,7 @@ assert("sim_ssr_nbinom handles metadata", {
   )
 
   (inherits(res, "sim_ssr_nbinom"))
-  ("scenario" %in% names(res$trial_results))
-  ("label" %in% names(res$trial_results))
+  (c("scenario", "label") %in% names(res$trial_results))
 })
 
 assert("sim_ssr_nbinom handles different bound_info", {
@@ -594,8 +593,7 @@ assert("sim_ssr_nbinom with adapt parameters triggers adaptation checks", {
   (inherits(res, "sim_ssr_nbinom"))
   tr <- res$trial_results
   # Should have adapt-related columns
-  ("adapt_allowed" %in% names(tr))
-  ("adapt_applied" %in% names(tr))
+  (c("adapt_allowed", "adapt_applied") %in% names(tr))
   # adapt_analysis = 2 means ia2 columns should exist
   ("ia2_adapt_cut_time" %in% names(tr))
 })
@@ -642,8 +640,7 @@ assert(".ssr_extract_info_metrics computes all four info types", {
   (is.finite(metrics$info_unblinded_ml))
   (is.finite(metrics$info_blinded_ml))
   # MoM estimates may or may not be finite depending on data
-  ("info_unblinded_mom" %in% names(metrics))
-  ("info_blinded_mom" %in% names(metrics))
+  (c("info_unblinded_mom", "info_blinded_mom") %in% names(metrics))
 })
 
 assert(".ssr_long_from_trial_results handles empty suffixes", {
