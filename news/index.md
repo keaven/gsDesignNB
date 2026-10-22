@@ -1,6 +1,8 @@
 # Changelog
 
-## gsDesignNB (development version)
+## gsDesignNB 0.4.0
+
+CRAN release: 2026-10-22
 
 ### gsDesign compatibility
 
