@@ -1,3 +1,6 @@
+# gsDesignNB 0.5.0
+
+
 # gsDesignNB 0.4.0
 
 ## gsDesign compatibility
