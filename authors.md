@@ -20,13 +20,13 @@ Source:
 [`DESCRIPTION`](https://github.com/keaven/gsDesignNB/blob/main/DESCRIPTION)
 
 Anderson K, Zhang H, Maes A (2026). *gsDesignNB: Sample Size and
-Simulation for Negative Binomial Outcomes*. R package version 0.4.0,
+Simulation for Negative Binomial Outcomes*. R package version 0.4.1,
 <https://keaven.github.io/gsDesignNB/>.
 
     @Manual{,
       title = {gsDesignNB: Sample Size and Simulation for Negative Binomial Outcomes},
       author = {Keaven Anderson and Hongtao Zhang and Andrea Maes},
       year = {2026},
-      note = {R package version 0.4.0},
+      note = {R package version 0.4.1},
       url = {https://keaven.github.io/gsDesignNB/},
     }

@@ -489,7 +489,7 @@ sessionInfo()
 #> 
 #> other attached packages:
 #> [1] MASS_7.3-65         ggplot2_4.0.3       data.table_1.18.6.1
-#> [4] gsDesignNB_0.4.0   
+#> [4] gsDesignNB_0.4.1   
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gt_1.4.0            sass_0.4.10         future_1.80.0      
