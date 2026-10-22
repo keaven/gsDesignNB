@@ -114,8 +114,8 @@ assert("check_gs_bound handles NA z_stat gracefully", {
   )
 
   result <- check_gs_bound(sim_df, design)
-  (!any(result$cross_upper))
-  (!any(result$cross_lower))
+  (!result$cross_upper)
+  (!result$cross_lower)
 })
 
 assert("check_gs_bound works with multiple simulations", {

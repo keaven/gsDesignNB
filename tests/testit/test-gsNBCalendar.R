@@ -327,7 +327,7 @@ assert("update_gsNB summaries preserve harm designs with absent bounds", {
 
       bounds <- updated$bounds
       (inherits(bounds, "gsBoundSummary"))
-      (!any(bounds$Value %in% c("CP", "CP H1", "PP")))
+      (!bounds$Value %in% c("CP", "CP H1", "PP"))
       analysis <- cumsum(bounds$Value == "Z")
       (is.na(bounds$Harm[analysis %in% inactive]))
       (is.finite(bounds$Harm[!analysis %in% inactive]))
