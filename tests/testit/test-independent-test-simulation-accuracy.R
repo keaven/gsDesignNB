@@ -1,6 +1,6 @@
 # Monte Carlo vs analytical expected events (nSurv $d) — regression on simulation accuracy
 
-test_that("Monte Carlo mean total events matches nSurv expected d (scalar hazards)", {
+assert("Monte Carlo mean total events matches nSurv expected d (scalar hazards)", {
   simulate_lf_total_events <- function(x, n_subj = NULL, seed = 1L) {
     if (is.null(n_subj)) {
       n_subj <- round(x$n)
@@ -51,12 +51,12 @@ test_that("Monte Carlo mean total events matches nSurv expected d (scalar hazard
   mc_se <- stats::sd(vals) / sqrt(nsim)
   d <- unname(x$d)
   # Within ~4 MC standard errors of analytical expectation (very likely under correct model)
-  expect_true(abs(m - d) < 4 * max(mc_se, 1e-6))
+  (abs(m - d) < 4 * max(mc_se, 1e-6))
   # Relative error small (design-dependent scale)
-  expect_true(abs(m - d) < 0.02 * d)
+  (abs(m - d) < 0.02 * d)
 })
 
-test_that("thin_interevent_gap enforces minimum spacing between counted events", {
+assert("thin_interevent_gap enforces minimum spacing between counted events", {
   thin <- function(times, delta) {
     if (length(times) == 0L) {
       return(numeric(0))
@@ -70,6 +70,6 @@ test_that("thin_interevent_gap enforces minimum spacing between counted events",
     out
   }
   t <- c(0, 5, 10, 12, 35)
-  expect_equal(thin(t, delta = 20), c(0, 35))
-  expect_equal(thin(c(100), delta = 20), 100)
+  (is_equal(thin(t, delta = 20), c(0, 35)))
+  (is_equal(thin(c(100), delta = 20), 100))
 })

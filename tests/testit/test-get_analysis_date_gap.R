@@ -1,4 +1,4 @@
-test_that("get_analysis_date respects event gaps", {
+assert("get_analysis_date respects event gaps", {
   # ID 1: Events at 0.1, 0.15, 0.3. Gap 0.1.
   # Valid: 0.1 (gap ends 0.2). 0.15 skipped. 0.3 valid.
   # Total valid: 2.
@@ -26,15 +26,15 @@ test_that("get_analysis_date respects event gaps", {
   class(d) <- c("nb_sim_data", "data.frame")
 
   res <- get_analysis_date(d, planned_events = 3, event_gap = 0.1)
-  expect_equal(res, 0.3)
+  (is_equal(res, 0.3))
 
   # Target: 2 events. Sorted valid: 0.1, 0.2. Date should be 0.2.
   res2 <- get_analysis_date(d, planned_events = 2, event_gap = 0.1)
-  expect_equal(res2, 0.2)
+  (is_equal(res2, 0.2))
 
   # With gap = 0, all 4 events valid.
   # Sorted: 0.1, 0.15, 0.2, 0.3.
   # Target 3 -> 0.2.
   res3 <- get_analysis_date(d, planned_events = 3, event_gap = 0)
-  expect_equal(res3, 0.2)
+  (is_equal(res3, 0.2))
 })

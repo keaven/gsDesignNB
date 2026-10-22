@@ -1,6 +1,4 @@
-test_that("SSR Shiny prototype sources successfully", {
-  skip_if_not_installed("shiny")
-
+if (requireNamespace("shiny", quietly = TRUE)) assert("SSR Shiny prototype sources successfully", {
   app_path <- system.file(
     "shiny-examples",
     "ssr-prototype",
@@ -11,8 +9,8 @@ test_that("SSR Shiny prototype sources successfully", {
     app_path <- file.path("inst", "shiny-examples", "ssr-prototype", "app.R")
   }
 
-  expect_true(file.exists(app_path))
+  (file.exists(app_path))
 
   app_obj <- source(app_path, local = new.env(parent = baseenv()))$value
-  expect_s3_class(app_obj, "shiny.appobj")
+  (inherits(app_obj, "shiny.appobj"))
 })

@@ -1,5 +1,6 @@
 # gsDesignNB 0.5.0
 
+- Switched the test suite from testthat to testit, removing the testthat dependency.
 
 # gsDesignNB 0.4.0
 

@@ -1,4 +1,4 @@
-test_that("blinded_ssr estimates dispersion and rate", {
+assert("blinded_ssr estimates dispersion and rate", {
   # Simulate data with known k and rate
   # Control: 0.5, Exp: 0.3. Ratio 1:1.
   # Pooled rate approx 0.4. k = 0.5.
@@ -25,18 +25,18 @@ test_that("blinded_ssr estimates dispersion and rate", {
 
   # Since data is Poisson, k should be near 0, but mixture effect might inflate it slightly
   # Allow more noise
-  expect_true(res$dispersion_blinded < 0.5)
+  (res$dispersion_blinded < 0.5)
 
   # Pooled rate should be between 0.3 and 0.5
-  expect_true(res$lambda_blinded > 0.3 && res$lambda_blinded < 0.5)
+  (res$lambda_blinded > 0.3 && res$lambda_blinded < 0.5)
 
   # N total should be calculated
-  expect_true(res$n_total_blinded > 0)
+  (res$n_total_blinded > 0)
 
   # Check information output
-  expect_true("blinded_info" %in% names(res))
-  expect_true("target_info" %in% names(res))
-  expect_true("info_fraction" %in% names(res))
-  expect_true(res$blinded_info > 0)
-  expect_true(res$info_fraction > 0)
+  ("blinded_info" %in% names(res))
+  ("target_info" %in% names(res))
+  ("info_fraction" %in% names(res))
+  (res$blinded_info > 0)
+  (res$info_fraction > 0)
 })

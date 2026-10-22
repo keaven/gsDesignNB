@@ -1,4 +1,4 @@
-test_that("calculate_blinded_info uses subject-level tte (not just an average)", {
+assert("calculate_blinded_info uses subject-level tte (not just an average)", {
   # Access internal helper via ::: (defined inside calculate_blinded_info())
   # To keep the test stable, we test the exported function behavior by
   # crafting data with deterministic tte patterns and large event counts.
@@ -30,12 +30,12 @@ test_that("calculate_blinded_info uses subject-level tte (not just an average)",
 
   # With the subject-level formula, these should generally differ because
   # the exposure distribution differs, even though mean(tte) is the same.
-  expect_true(is.finite(res_a$blinded_info))
-  expect_true(is.finite(res_b$blinded_info))
-  expect_false(isTRUE(all.equal(res_a$blinded_info, res_b$blinded_info, tolerance = 1e-12)))
+  (is.finite(res_a$blinded_info))
+  (is.finite(res_b$blinded_info))
+  (!is_equal(res_a$blinded_info, res_b$blinded_info, tolerance = 1e-12))
 })
 
-test_that("calculate_blinded_info blends allocation into Fisher weights", {
+assert("calculate_blinded_info blends allocation into Fisher weights", {
   # Different allocation ratio should scale information via p1/p2 weighting.
   df <- data.frame(tte = c(0.5, 1.0, 1.5, 2.0), events = c(1, 2, 3, 4))
 
@@ -53,29 +53,29 @@ test_that("calculate_blinded_info blends allocation into Fisher weights", {
     lambda2_planning = 0.5
   ))
 
-  expect_true(is.finite(res_equal$blinded_info))
-  expect_true(is.finite(res_two_to_one$blinded_info))
-  expect_gt(res_equal$blinded_info, res_two_to_one$blinded_info)
+  (is.finite(res_equal$blinded_info))
+  (is.finite(res_two_to_one$blinded_info))
+  (res_equal$blinded_info > res_two_to_one$blinded_info)
 })
 
-test_that("calculate_blinded_info errors on missing columns", {
+assert("calculate_blinded_info errors on missing columns", {
   bad <- data.frame(x = 1, y = 2)
-  expect_error(
+  (has_error(
     calculate_blinded_info(bad, lambda1_planning = 0.5, lambda2_planning = 0.3),
-    "events.*tte"
-  )
+    "events.*tte", fixed = FALSE
+  ))
 })
 
-test_that("calculate_blinded_info returns zero for all-zero exposure", {
+assert("calculate_blinded_info returns zero for all-zero exposure", {
   df <- data.frame(events = c(0, 0), tte = c(0, 0))
   res <- calculate_blinded_info(
     df, ratio = 1, lambda1_planning = 0.5, lambda2_planning = 0.3
   )
-  expect_equal(res$blinded_info, 0)
-  expect_true(is.na(res$dispersion_blinded))
+  (is_equal(res$blinded_info, 0))
+  (is.na(res$dispersion_blinded))
 })
 
-test_that("calculate_blinded_info handles event_gap adjustment", {
+assert("calculate_blinded_info handles event_gap adjustment", {
   df <- data.frame(tte = rep(1, 50), events = rpois(50, 2))
 
   res_no_gap <- calculate_blinded_info(
@@ -87,24 +87,24 @@ test_that("calculate_blinded_info handles event_gap adjustment", {
     event_gap = 0.3
   )
 
-  expect_true(is.finite(res_no_gap$blinded_info))
-  expect_true(is.finite(res_gap$blinded_info))
+  (is.finite(res_no_gap$blinded_info))
+  (is.finite(res_gap$blinded_info))
   # The gap-adjusted rate ratio differs, so information may change
-  expect_false(isTRUE(all.equal(res_no_gap$blinded_info, res_gap$blinded_info)))
+  (!is_equal(res_no_gap$blinded_info, res_gap$blinded_info))
 })
 
-test_that("calculate_blinded_info falls back when NB fails and reports the path used", {
+assert("calculate_blinded_info falls back when NB fails and reports the path used", {
   # Very few observations, NB fit may fail; MoM should pick it up instead of
   # silently assuming Poisson.
   df <- data.frame(events = c(0, 0, 1), tte = c(0.01, 0.01, 0.01))
   res <- suppressWarnings(
     calculate_blinded_info(df, ratio = 1, lambda1_planning = 0.5, lambda2_planning = 0.3)
   )
-  expect_true(is.numeric(res$blinded_info))
-  expect_true(res$fallback %in% c("ml", "mom", "poisson"))
+  (is.numeric(res$blinded_info))
+  (res$fallback %in% c("ml", "mom", "poisson"))
 })
 
-test_that("calculate_blinded_info MoM fallback reports nonnegative k", {
+assert("calculate_blinded_info MoM fallback reports nonnegative k", {
   # Craft a small dataset with nonzero empirical overdispersion where
   # MASS::glm.nb tends to struggle. Repeat with fixed seed to keep stable.
   set.seed(7)
@@ -115,15 +115,15 @@ test_that("calculate_blinded_info MoM fallback reports nonnegative k", {
   res <- suppressWarnings(
     calculate_blinded_info(df, ratio = 1, lambda1_planning = 0.5, lambda2_planning = 0.3)
   )
-  expect_true(is.finite(res$dispersion_blinded))
-  expect_gte(res$dispersion_blinded, 0)
+  (is.finite(res$dispersion_blinded))
+  (res$dispersion_blinded >= 0)
 })
 
-test_that("calculate_blinded_info returns fallback label on ML success", {
+assert("calculate_blinded_info returns fallback label on ML success", {
   set.seed(3)
   df <- data.frame(events = rpois(80, 2), tte = rep(1, 80))
   res <- calculate_blinded_info(
     df, ratio = 1, lambda1_planning = 0.5, lambda2_planning = 0.3
   )
-  expect_equal(res$fallback, "ml")
+  (is_equal(res$fallback, "ml"))
 })

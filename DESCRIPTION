@@ -35,7 +35,7 @@ Imports:
     MASS
 Suggests:
     glmmTMB,
-    testthat (>= 3.0.0),
+    testit,
     knitr,
     rmarkdown,
     ggplot2,
@@ -49,6 +49,5 @@ Suggests:
     future.apply,
     gridExtra
 VignetteBuilder: knitr
-Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

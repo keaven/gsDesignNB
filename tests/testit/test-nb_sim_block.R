@@ -1,4 +1,4 @@
-test_that("nb_sim respects block randomization vector", {
+assert("nb_sim respects block randomization vector", {
   enroll_rate <- data.frame(rate = 10, duration = 1)
   fail_rate <- data.frame(treatment = c("A", "B"), rate = c(0.5, 0.5))
   max_followup <- 1
@@ -6,22 +6,22 @@ test_that("nb_sim respects block randomization vector", {
   # Test with block vector c("A", "B") and n=10 (Balanced)
   sim_balanced <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 10, block = c("A", "B"))
   counts_bal <- table(unique(sim_balanced[, c("id", "treatment")])$treatment)
-  expect_equal(as.vector(counts_bal), c(5, 5))
+  (is_equal(as.vector(counts_bal), c(5, 5)))
 
   # Test with block vector c("A", "A", "B") and n=12 (Unbalanced 2:1)
   # 4 blocks of 3 = 12 subjects. Expect 8 A, 4 B.
   sim_unbal <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 12, block = c("A", "A", "B"))
   counts_unbal <- table(unique(sim_unbal[, c("id", "treatment")])$treatment)
-  expect_equal(as.vector(counts_unbal), c(8, 4))
+  (is_equal(as.vector(counts_unbal), c(8, 4)))
 
   # Test validation
-  expect_error(
+  (has_error(
     nb_sim(enroll_rate, fail_rate, max_followup = 1, n = 10, block = c("A", "C")),
     "Elements of 'block' must match treatment names"
-  )
+  ))
 })
 
-test_that("nb_sim uses default block when block=NULL", {
+assert("nb_sim uses default block when block=NULL", {
   enroll_rate <- data.frame(rate = 10, duration = 1)
   # Standard names "Control", "Experimental"
   fail_rate <- data.frame(treatment = c("Control", "Experimental"), rate = c(0.5, 0.5))
@@ -46,10 +46,10 @@ test_that("nb_sim uses default block when block=NULL", {
   # Case 1: Call without block argument (uses default c("Control"x2, "Experimental"x2))
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 4)
   counts <- table(unique(sim[, c("id", "treatment")])$treatment)
-  expect_equal(as.vector(counts), c(2, 2))
+  (is_equal(as.vector(counts), c(2, 2)))
 
   # Case 2: Call with block=NULL (uses simple randomization)
   # Hard to test stochasticity in one run, but at least it runs.
   sim_null <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 4, block = NULL)
-  expect_true(nrow(sim_null) > 0)
+  (nrow(sim_null) > 0)
 })

@@ -1,4 +1,4 @@
-test_that("nb_sim generates Negative Binomial data with correct dispersion", {
+assert("nb_sim generates Negative Binomial data with correct dispersion", {
   # This test verifies that the variance of the simulated counts matches
   # the theoretical Negative Binomial variance: Var = mean + k * mean^2
 
@@ -32,8 +32,7 @@ test_that("nb_sim generates Negative Binomial data with correct dispersion", {
   # But nb_sim returns multiple rows: events + 1 censoring.
   # We want to sum(event) per id.
 
-  library(data.table)
-  dt <- as.data.table(sim)
+  dt <- data.table::as.data.table(sim)
   per_subj <- dt[, .(events = sum(event)), by = id]
 
   observed_mean <- mean(per_subj$events)
@@ -43,10 +42,10 @@ test_that("nb_sim generates Negative Binomial data with correct dispersion", {
   estimated_k <- (observed_var - observed_mean) / (observed_mean^2)
 
   # Check Mean (Standard Error ~ sqrt(Var/n) = sqrt(4/5000) approx 0.028)
-  expect_equal(observed_mean, target_mean, tolerance = 0.1)
+  (is_equal(observed_mean, target_mean, tolerance = 0.1))
 
   # Check Dispersion
   # The variance of the variance estimator is high, so we need a loose tolerance or larger N.
   # With N=5000, it should be reasonably close.
-  expect_equal(estimated_k, target_k, tolerance = 0.1)
+  (is_equal(estimated_k, target_k, tolerance = 0.1))
 })

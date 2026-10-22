@@ -1,4 +1,4 @@
-test_that("unblinded_ssr estimates parameters and re-estimates sample size", {
+assert("unblinded_ssr estimates parameters and re-estimates sample size", {
 
   # Simulate data with known parameters
   enroll_rate <- data.frame(rate = 100, duration = 1)
@@ -22,30 +22,30 @@ test_that("unblinded_ssr estimates parameters and re-estimates sample size", {
   )
 
   # Check output names
-  expect_true(all(c("n_total_unblinded", "dispersion_unblinded",
-                     "lambda1_unblinded", "lambda2_unblinded",
-                     "info_fraction", "unblinded_info", "target_info") %in% names(res)))
+  (all(c("n_total_unblinded", "dispersion_unblinded",
+         "lambda1_unblinded", "lambda2_unblinded",
+         "info_fraction", "unblinded_info", "target_info") %in% names(res)))
 
   # Re-estimated control rate should be near 0.5
-  expect_true(res$lambda1_unblinded > 0.2 && res$lambda1_unblinded < 1.0)
+  (res$lambda1_unblinded > 0.2 && res$lambda1_unblinded < 1.0)
 
   # Re-estimated experimental rate should be near 0.3
-  expect_true(res$lambda2_unblinded > 0.1 && res$lambda2_unblinded < 0.8)
+  (res$lambda2_unblinded > 0.1 && res$lambda2_unblinded < 0.8)
 
   # Dispersion should be near 0 for Poisson data
 
-  expect_true(res$dispersion_unblinded >= 0 && res$dispersion_unblinded < 0.5)
+  (res$dispersion_unblinded >= 0 && res$dispersion_unblinded < 0.5)
 
   # Sample size should be positive
-  expect_true(res$n_total_unblinded > 0)
+  (res$n_total_unblinded > 0)
 
   # Information fraction should be positive
-  expect_true(res$info_fraction > 0)
-  expect_true(res$unblinded_info > 0)
-  expect_true(res$target_info > 0)
+  (res$info_fraction > 0)
+  (res$unblinded_info > 0)
+  (res$target_info > 0)
 })
 
-test_that("unblinded_ssr preserves planned effect size", {
+assert("unblinded_ssr preserves planned effect size", {
   # Generate data where control rate is lower than planned
   enroll_rate <- data.frame(rate = 100, duration = 1)
   fail_rate <- data.frame(treatment = c("Control", "Experimental"),
@@ -73,10 +73,10 @@ test_that("unblinded_ssr preserves planned effect size", {
   # The re-estimated lambda2 should reflect the planned RR applied to observed control rate
   # lambda2_calc = lambda1_est * (0.3/0.5)
   # But the RETURNED lambda2_unblinded is the OBSERVED one (not the calc one)
-  expect_true(res$n_total_unblinded > 0)
+  (res$n_total_unblinded > 0)
 })
 
-test_that("unblinded_ssr handles unequal allocation", {
+assert("unblinded_ssr handles unequal allocation", {
   enroll_rate <- data.frame(rate = 100, duration = 1)
   fail_rate <- data.frame(treatment = c("Control", "Experimental"),
                           rate = c(0.5, 0.3))
@@ -97,13 +97,13 @@ test_that("unblinded_ssr handles unequal allocation", {
     trial_duration = 10
   )
 
-  expect_true(res$n_total_unblinded > 0)
-  expect_true(res$unblinded_info > 0)
+  (res$n_total_unblinded > 0)
+  (res$unblinded_info > 0)
 })
 
-test_that("unblinded_ssr errors on bad data", {
+assert("unblinded_ssr errors on bad data", {
   bad_data <- data.frame(events = c(0), tte = c(0.1), treatment = c("Control"))
-  expect_error(
+  (has_error(
     unblinded_ssr(
       bad_data,
       ratio = 1,
@@ -115,5 +115,5 @@ test_that("unblinded_ssr errors on bad data", {
       accrual_duration = 1,
       trial_duration = 10
     )
-  )
+  ))
 })

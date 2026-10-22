@@ -365,4 +365,4 @@ Published NB trial parameters for reference:
 ## Dependencies
 
 - **Runtime:** gsDesign (≥ 3.9.0), data.table, simtrial, MASS, stats
-- **Suggested:** ggplot2, dplyr, gt, DT, shiny, foreach, doFuture, future, testthat, knitr
+- **Suggested:** ggplot2, dplyr, gt, DT, shiny, foreach, doFuture, future, testit, knitr
