@@ -177,21 +177,13 @@ gsNBCalendar <- function(
     tol = tol,
     r = r,
     usTime = usTime,
-    lsTime = lsTime
+    lsTime = lsTime,
+    sfharm = sfharm,
+    sfharmparam = sfharmparam,
+    testUpper = testUpper,
+    testLower = testLower,
+    testHarm = testHarm
   )
-
-  gs_formals <- names(formals(gsDesign::gsDesign))
-  if ("sfharm" %in% gs_formals) {
-    gs_args$sfharm <- sfharm
-    gs_args$sfharmparam <- sfharmparam
-  }
-  if ("testUpper" %in% gs_formals) {
-    gs_args$testUpper <- testUpper
-    gs_args$testLower <- testLower
-  }
-  if ("testHarm" %in% gs_formals) {
-    gs_args$testHarm <- testHarm
-  }
 
   gs <- do.call(gsDesign::gsDesign, gs_args)
 
@@ -885,16 +877,9 @@ update_gsNB <- function(design, observed_info, spending_time = NULL) {
     gs_args$sfharm     <- design$harm$sf
     gs_args$sfharmparam <- design$harm$param
   }
-  gs_formals <- names(formals(gsDesign::gsDesign))
-  if ("testUpper" %in% gs_formals && !is.null(design$testUpper)) {
-    gs_args$testUpper <- design$testUpper
-  }
-  if ("testLower" %in% gs_formals && !is.null(design$testLower)) {
-    gs_args$testLower <- design$testLower
-  }
-  if ("testHarm" %in% gs_formals && !is.null(design$testHarm)) {
-    gs_args$testHarm <- design$testHarm
-  }
+  if (!is.null(design$testUpper)) gs_args$testUpper <- design$testUpper
+  if (!is.null(design$testLower)) gs_args$testLower <- design$testLower
+  if (!is.null(design$testHarm)) gs_args$testHarm <- design$testHarm
 
   updated <- do.call(gsDesign::gsDesign, gs_args)
 

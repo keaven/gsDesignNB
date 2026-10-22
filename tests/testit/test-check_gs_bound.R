@@ -47,27 +47,26 @@ assert("check_gs_bound detects lower crossings for test.type >= 2", {
   (result$cross_lower[1])
 })
 
-if ("testHarm" %in% names(formals(gsDesign::gsDesign)))
-  assert("check_gs_bound detects harm crossings for harm-bound designs", {
-    design <- gsDesign::gsDesign(
-      k = 2,
-      n.fix = 100,
-      test.type = 8,
-      astar = 0.025,
-      timing = c(0.5, 1)
-    )
-    sim_df <- data.frame(
-      sim = c(1, 1),
-      analysis = c(1, 2),
-      z_stat = c(-5.0, NA),
-      blinded_info = c(50, 100),
-      unblinded_info = c(50, 100)
-    )
+assert("check_gs_bound detects harm crossings for harm-bound designs", {
+  design <- gsDesign::gsDesign(
+    k = 2,
+    n.fix = 100,
+    test.type = 8,
+    astar = 0.025,
+    timing = c(0.5, 1)
+  )
+  sim_df <- data.frame(
+    sim = c(1, 1),
+    analysis = c(1, 2),
+    z_stat = c(-5.0, NA),
+    blinded_info = c(50, 100),
+    unblinded_info = c(50, 100)
+  )
 
-    result <- check_gs_bound(sim_df, design)
-    (result$cross_harm[1])
-    (!result$cross_lower[1])
-  })
+  result <- check_gs_bound(sim_df, design)
+  (result$cross_harm[1])
+  (!result$cross_lower[1])
+})
 
 assert("check_gs_bound errors on bad design", {
   sim_df <- data.frame(

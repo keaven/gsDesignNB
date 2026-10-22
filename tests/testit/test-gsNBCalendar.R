@@ -73,31 +73,30 @@ assert("gsNBCalendar works with different test types", {
   (inherits(gs4, "gsNB"))
 })
 
-if ("testHarm" %in% names(formals(gsDesign::gsDesign)))
-  assert("gsNBCalendar supports harm-bound designs from gsDesign", {
-    nb_ss <- sample_size_nbinom(
-      lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
-      accrual_rate = 10, accrual_duration = 20, trial_duration = 24
-    )
+assert("gsNBCalendar supports harm-bound designs from gsDesign", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
 
-    gs_design <- gsNBCalendar(
-      nb_ss,
-      k = 3,
-      test.type = 8,
-      astar = 0.025,
-      analysis_times = c(10, 18, 24),
-      testHarm = c(FALSE, TRUE, TRUE)
-    )
+  gs_design <- gsNBCalendar(
+    nb_ss,
+    k = 3,
+    test.type = 8,
+    astar = 0.025,
+    analysis_times = c(10, 18, 24),
+    testHarm = c(FALSE, TRUE, TRUE)
+  )
 
-    (inherits(gs_design, "gsNB"))
-    (!is.null(gs_design$harm))
-    (gs_design$testHarm %==% c(FALSE, TRUE, TRUE))
-    (gs_design$harm$bound[1] < 0)
-    (all.equal(gs_design$harm$spend[1], 0))
-    (all.equal(as.numeric(gs_design$harm$prob[1, ]), rep(0, length(gs_design$theta))))
-    (is.finite(gs_design$harm$bound[-1]))
-    ("Harm" %in% names(gsDesign::gsBoundSummary(gs_design)))
-  })
+  (inherits(gs_design, "gsNB"))
+  (!is.null(gs_design$harm))
+  (gs_design$testHarm %==% c(FALSE, TRUE, TRUE))
+  (gs_design$harm$bound[1] < 0)
+  (all.equal(gs_design$harm$spend[1], 0))
+  (all.equal(as.numeric(gs_design$harm$prob[1, ]), rep(0, length(gs_design$theta))))
+  (is.finite(gs_design$harm$bound[-1]))
+  ("Harm" %in% names(gsDesign::gsBoundSummary(gs_design)))
+})
 
 assert("gsNBCalendar works with custom spending functions", {
   nb_ss <- sample_size_nbinom(
@@ -248,48 +247,47 @@ assert("toInteger.gsDesign dispatches correctly", {
   (inherits(gs_int, "gsDesign"))
 })
 
-if ("testHarm" %in% names(formals(gsDesign::gsDesign)))
-  assert("update_gsNB preserves selective harm-bound settings", {
-    nb_ss <- sample_size_nbinom(
-      lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
-      accrual_rate = 10, accrual_duration = 20, trial_duration = 24
-    )
+assert("update_gsNB preserves selective harm-bound settings", {
+  nb_ss <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
 
-    gs_design <- gsNBCalendar(
-      nb_ss,
-      k = 3,
-      test.type = 8,
-      astar = 0.025,
-      analysis_times = c(10, 18, 24),
-      testUpper = c(FALSE, TRUE, TRUE),
-      testLower = c(TRUE, TRUE, FALSE),
-      testHarm = c(FALSE, TRUE, TRUE)
-    )
+  gs_design <- gsNBCalendar(
+    nb_ss,
+    k = 3,
+    test.type = 8,
+    astar = 0.025,
+    analysis_times = c(10, 18, 24),
+    testUpper = c(FALSE, TRUE, TRUE),
+    testLower = c(TRUE, TRUE, FALSE),
+    testHarm = c(FALSE, TRUE, TRUE)
+  )
 
-    original <- gs_design
-    updated <- update_gsNB(gs_design, observed_info = gs_design$n.I[1])
+  original <- gs_design
+  updated <- update_gsNB(gs_design, observed_info = gs_design$n.I[1])
 
-    (gs_design %==% original)
-    (updated$design$testUpper %==% gs_design$testUpper)
-    (updated$design$testLower %==% gs_design$testLower)
-    (updated$design$testHarm %==% gs_design$testHarm)
-    (updated$design$upper$bound[1] %==% gs_design$upper$bound[1])
-    (updated$design$harm$bound[1] %==% gs_design$harm$bound[1])
-    (updated$design$lower$bound[3] %==% gs_design$lower$bound[3])
-    (all.equal(updated$design$upper$spend[1], 0))
-    (all.equal(updated$design$harm$spend[1], 0))
-    (inherits(updated$bounds, "gsBoundSummary"))
-    (all.equal(updated$bounds, gsDesign::gsBoundSummary(updated$design)))
-    (names(updated$bounds) %==% c("Analysis", "Value", "Harm", "Futility", "Efficacy"))
-    z_rows <- which(updated$bounds$Value == "Z")
-    (length(z_rows) == gs_design$k)
-    (is.na(updated$bounds$Harm[z_rows[1]:(z_rows[2] - 1)]))
-    (is.na(updated$bounds$Efficacy[z_rows[1]:(z_rows[2] - 1)]))
-    (all.equal(
-      updated$bounds$Harm[z_rows[-1]],
-      round(updated$design$harm$bound[-1], 4)
-    ))
-  })
+  (gs_design %==% original)
+  (updated$design$testUpper %==% gs_design$testUpper)
+  (updated$design$testLower %==% gs_design$testLower)
+  (updated$design$testHarm %==% gs_design$testHarm)
+  (updated$design$upper$bound[1] %==% gs_design$upper$bound[1])
+  (updated$design$harm$bound[1] %==% gs_design$harm$bound[1])
+  (updated$design$lower$bound[3] %==% gs_design$lower$bound[3])
+  (all.equal(updated$design$upper$spend[1], 0))
+  (all.equal(updated$design$harm$spend[1], 0))
+  (inherits(updated$bounds, "gsBoundSummary"))
+  (all.equal(updated$bounds, gsDesign::gsBoundSummary(updated$design)))
+  (names(updated$bounds) %==% c("Analysis", "Value", "Harm", "Futility", "Efficacy"))
+  z_rows <- which(updated$bounds$Value == "Z")
+  (length(z_rows) == gs_design$k)
+  (is.na(updated$bounds$Harm[z_rows[1]:(z_rows[2] - 1)]))
+  (is.na(updated$bounds$Efficacy[z_rows[1]:(z_rows[2] - 1)]))
+  (all.equal(
+    updated$bounds$Harm[z_rows[-1]],
+    round(updated$design$harm$bound[-1], 4)
+  ))
+})
 
 assert("update_gsNB retains the usual summary for active bounds", {
   for (test_type in c(2, 4, 7, 8)) {
