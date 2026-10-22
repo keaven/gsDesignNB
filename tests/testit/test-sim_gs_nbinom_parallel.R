@@ -29,9 +29,7 @@ setup_sim_args <- function() {
   )
 }
 
-test_that("sim_gs_nbinom is reproducible with seed = TRUE (sequential)", {
-  skip_if_not_installed("future.apply")
-
+if (requireNamespace("future.apply", quietly = TRUE)) assert("sim_gs_nbinom is reproducible with seed = TRUE (sequential)", {
   args <- setup_sim_args()
 
   set.seed(42)
@@ -60,12 +58,10 @@ test_that("sim_gs_nbinom is reproducible with seed = TRUE (sequential)", {
     seed = TRUE
   )
 
-  expect_identical(res1, res2)
+  (res1 %==% res2)
 })
 
-test_that("sim_gs_nbinom is reproducible with integer seed", {
-  skip_if_not_installed("future.apply")
-
+if (requireNamespace("future.apply", quietly = TRUE)) assert("sim_gs_nbinom is reproducible with integer seed", {
   args <- setup_sim_args()
 
   res1 <- sim_gs_nbinom(
@@ -92,12 +88,10 @@ test_that("sim_gs_nbinom is reproducible with integer seed", {
     seed = 12345
   )
 
-  expect_identical(res1, res2)
+  (res1 %==% res2)
 })
 
-test_that("sim_gs_nbinom returns correct structure with seed", {
-  skip_if_not_installed("future.apply")
-
+if (requireNamespace("future.apply", quietly = TRUE)) assert("sim_gs_nbinom returns correct structure with seed", {
   args <- setup_sim_args()
   n_sims <- 3
 
@@ -114,17 +108,13 @@ test_that("sim_gs_nbinom returns correct structure with seed", {
     seed = TRUE
   )
 
-  expect_s3_class(res, "data.frame")
-  expect_equal(nrow(res), n_sims * length(args$cuts))
-  expect_true(all(c("sim", "analysis", "z_stat", "estimate") %in% names(res)))
-  expect_equal(sort(unique(res$sim)), seq_len(n_sims))
+  (inherits(res, "data.frame"))
+  (all.equal(nrow(res), n_sims * length(args$cuts)))
+  (c("sim", "analysis", "z_stat", "estimate") %in% names(res))
+  (all.equal(sort(unique(res$sim)), seq_len(n_sims)))
 })
 
-test_that("sim_gs_nbinom parallel results match sequential results", {
-  skip_if_not_installed("future.apply")
-  skip_if_not_installed("future")
-  skip_on_cran()
-
+if (requireNamespace("future.apply", quietly = TRUE) && requireNamespace("future", quietly = TRUE) && tolower(Sys.getenv("CI")) == "true") assert("sim_gs_nbinom parallel results match sequential results", {
   args <- setup_sim_args()
 
   # Run sequentially
@@ -161,7 +151,7 @@ test_that("sim_gs_nbinom parallel results match sequential results", {
   # Integer/count columns should be identical (same RNG streams)
   int_cols <- c("sim", "analysis", "n_enrolled", "n_ctrl", "n_exp",
                 "events_total", "events_ctrl", "events_exp")
-  expect_identical(res_seq[, int_cols], res_par[, int_cols])
+  (res_seq[, int_cols] %==% res_par[, int_cols])
 
   # Floating-point columns match within tolerance (iterative optimization
 
@@ -169,15 +159,11 @@ test_that("sim_gs_nbinom parallel results match sequential results", {
   num_cols <- c("z_stat", "estimate", "se", "blinded_info", "unblinded_info",
                 "info_unblinded_ml", "info_blinded_ml",
                 "info_unblinded_mom", "info_blinded_mom")
-  for (col in num_cols) {
-    expect_equal(res_seq[[col]], res_par[[col]], tolerance = 1e-3,
-                 label = paste("Column", col))
-  }
+  for (col in num_cols)
+    (all.equal(res_seq[[col]], res_par[[col]], tolerance = 1e-3))
 })
 
-test_that("sim_gs_nbinom different seeds give different results", {
-  skip_if_not_installed("future.apply")
-
+if (requireNamespace("future.apply", quietly = TRUE)) assert("sim_gs_nbinom different seeds give different results", {
   args <- setup_sim_args()
 
   res1 <- sim_gs_nbinom(
@@ -204,5 +190,5 @@ test_that("sim_gs_nbinom different seeds give different results", {
     seed = 222
   )
 
-  expect_false(identical(res1$z_stat, res2$z_stat))
+  (!identical(res1$z_stat, res2$z_stat))
 })

@@ -1,5 +1,5 @@
 Package: gsDesignNB
-Version: 0.4.1
+Version: 0.4.2
 Title: Sample Size and Simulation for Negative Binomial Outcomes
 Authors@R: c(
     person("Keaven", "Anderson", email = "keaven_anderson@merck.com", role = c("aut", "cre")),
@@ -29,13 +29,13 @@ Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
-    gsDesign (>= 3.10.0),
+    gsDesign (>= 3.11.0),
     simtrial,
     stats,
     MASS
 Suggests:
     glmmTMB,
-    testthat (>= 3.0.0),
+    testit,
     knitr,
     rmarkdown,
     ggplot2,
@@ -49,6 +49,5 @@ Suggests:
     future.apply,
     gridExtra
 VignetteBuilder: knitr
-Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

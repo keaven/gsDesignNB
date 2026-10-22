@@ -1,4 +1,4 @@
-test_that("cut_data_by_date applies fixed gap correctly", {
+assert("cut_data_by_date applies fixed gap correctly", {
   # ID 1: Enroll 0. Events: 0.1, 0.15, 0.3, 0.4. Cut 1.0. Gap 0.1.
   # Events expected:
   # - 0.1 (valid). Gap [0.1, 0.2].
@@ -32,16 +32,16 @@ test_that("cut_data_by_date applies fixed gap correctly", {
 
   # Check ID 1
   r1 <- res[res$id == 1, ]
-  expect_equal(r1$events, 3)
-  expect_equal(r1$tte, 0.7)
+  (all.equal(r1$events, 3))
+  (all.equal(r1$tte, 0.7))
 
   # Check ID 2
   r2 <- res[res$id == 2, ]
-  expect_equal(r2$events, 1)
-  expect_equal(r2$tte, 0.95)
+  (all.equal(r2$events, 1))
+  (all.equal(r2$tte, 0.95))
 })
 
-test_that("cut_data_by_date applies random gap correctly", {
+assert("cut_data_by_date applies random gap correctly", {
   # ID 1: Enroll 0. Events: 0.1, 0.15. Cut 1.0.
   # Gap function: returns 0.2 always (mocked).
   # Event 0.1. Gap [0.1, 0.3].
@@ -64,11 +64,11 @@ test_that("cut_data_by_date applies random gap correctly", {
 
   res <- cut_data_by_date(d, cut_date = 1.0, event_gap = gap_fun)
 
-  expect_equal(res$events, 1)
-  expect_equal(res$tte, 0.8)
+  (all.equal(res$events, 1))
+  (all.equal(res$tte, 0.8))
 })
 
-test_that("cut_data_by_date uses default gap (0)", {
+assert("cut_data_by_date uses default gap (0)", {
   # Default gap is now 0
   # Event at 0.1. Next event at 0.11.
   # With gap=0, both events should count.
@@ -87,6 +87,6 @@ test_that("cut_data_by_date uses default gap (0)", {
 
   res <- cut_data_by_date(d, cut_date = 1.0)
 
-  expect_equal(res$events, 2)
-  expect_equal(res$tte, 1.0)
+  (all.equal(res$events, 2))
+  (all.equal(res$tte, 1.0))
 })

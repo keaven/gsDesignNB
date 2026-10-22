@@ -45,11 +45,11 @@ jobs:
           disable_search: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Show testthat output
+      - name: Show test output
         if: always()
         run: |
           ## --------------------------------------------------------------------
-          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+          find '${{ runner.temp }}/package' -name 'test-all.Rout*' -exec cat '{}' \; || true
         shell: bash
 
       - name: Upload test results

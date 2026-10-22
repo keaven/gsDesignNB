@@ -1,4 +1,4 @@
-test_that("sample_size_nbinom adjusts for event_gap", {
+assert("sample_size_nbinom adjusts for event_gap", {
   # Fixed design parameters for testing
   acc_r <- 1
   acc_d <- 1
@@ -25,9 +25,9 @@ test_that("sample_size_nbinom adjusts for event_gap", {
     accrual_rate = acc_r, accrual_duration = acc_d, trial_duration = trial_d,
     event_gap = gap
   )
-  expect_equal(res2$inputs$event_gap, gap)
+  (all.equal(res2$inputs$event_gap, gap))
 
-  expect_true(res2$n_total > res1$n_total)
+  (res2$n_total > res1$n_total)
 
   # Manually check effective rates
   eff_l1 <- l1 / (1 + l1 * gap)
@@ -39,9 +39,9 @@ test_that("sample_size_nbinom adjusts for event_gap", {
   )
 
   # res2 should be smaller than res3 (effect size logic)
-  expect_true(res2$n_total < res3$n_total)
+  (res2$n_total < res3$n_total)
 
   # Calculated events should match
   mu1_eff <- eff_l1 * res2$exposure[1]
-  expect_equal(res2$events_n1, res2$n1 * mu1_eff)
+  (all.equal(res2$events_n1, res2$n1 * mu1_eff))
 })

@@ -1,4 +1,4 @@
-test_that("summarize_gs_sim returns correct structure", {
+assert("summarize_gs_sim returns correct structure", {
   # Create mock data that check_gs_bound would produce
   sim_df <- data.frame(
     sim = c(1, 1, 2, 2, 3, 3),
@@ -14,36 +14,37 @@ test_that("summarize_gs_sim returns correct structure", {
 
   result <- summarize_gs_sim(sim_df)
 
-  expect_true(is.list(result))
-  expect_true(all(c("n_sim", "power", "futility", "analysis_summary") %in% names(result)))
+  (is.list(result))
+  (c("n_sim", "power", "futility", "analysis_summary") %in% names(result))
 
   # 3 simulations
- expect_equal(result$n_sim, 3)
+ (all.equal(result$n_sim, 3))
 
   # Power: sims 1 and 2 cross upper
-  expect_equal(result$power, 2 / 3)
+  (all.equal(result$power, 2 / 3))
 
   # Futility: sim 3 crosses lower but not upper
-  expect_equal(result$futility, 1 / 3)
+  (all.equal(result$futility, 1 / 3))
 
   # Analysis summary should be a data frame with 2 rows
-  expect_true(is.data.frame(result$analysis_summary))
-  expect_equal(nrow(result$analysis_summary), 2)
+  (is.data.frame(result$analysis_summary))
+  (nrow(result$analysis_summary) %==% 2L)
 
   # Check cumulative probability column exists
-  expect_true("cum_prob_upper" %in% names(result$analysis_summary))
+  ("cum_prob_upper" %in% names(result$analysis_summary))
 })
 
-test_that("summarize_gs_sim errors without required columns", {
+assert("summarize_gs_sim errors without required columns", {
   bad_df <- data.frame(sim = 1, analysis = 1, z_stat = 1.5)
 
-  expect_error(
+  (has_error(
     summarize_gs_sim(bad_df),
-    "cross_upper.*cross_lower"
-  )
+    "cross_upper.*cross_lower",
+    fixed = FALSE
+  ))
 })
 
-test_that("summarize_gs_sim handles all successes", {
+assert("summarize_gs_sim handles all successes", {
   sim_df <- data.frame(
     sim = c(1, 1, 2, 2),
     analysis = c(1, 2, 1, 2),
@@ -57,11 +58,11 @@ test_that("summarize_gs_sim handles all successes", {
   )
 
   result <- summarize_gs_sim(sim_df)
-  expect_equal(result$power, 1.0)
-  expect_equal(result$futility, 0.0)
+  (all.equal(result$power, 1.0))
+  (all.equal(result$futility, 0.0))
 })
 
-test_that("summarize_gs_sim handles no crossings", {
+assert("summarize_gs_sim handles no crossings", {
   sim_df <- data.frame(
     sim = c(1, 1),
     analysis = c(1, 2),
@@ -75,11 +76,11 @@ test_that("summarize_gs_sim handles no crossings", {
   )
 
   result <- summarize_gs_sim(sim_df)
-  expect_equal(result$power, 0.0)
-  expect_equal(result$futility, 0.0)
+  (all.equal(result$power, 0.0))
+  (all.equal(result$futility, 0.0))
 })
 
-test_that("summarize_gs_sim summarizes optional columns and robust information", {
+assert("summarize_gs_sim summarizes optional columns and robust information", {
   sim_df <- data.frame(
     sim = c(1, 1, 2, 2),
     analysis = c(1, 2, 1, 2),
@@ -98,8 +99,7 @@ test_that("summarize_gs_sim summarizes optional columns and robust information",
 
   result <- summarize_gs_sim(sim_df, info_trim = 0)
 
-  expect_true("n_ctrl" %in% names(result$analysis_summary))
-  expect_true("exposure_total_ctrl" %in% names(result$analysis_summary))
-  expect_equal(result$analysis_summary$n_ctrl, c(15.5, 30.5))
-  expect_equal(result$analysis_summary$info_blinded, c(40, 80))
+  (c("n_ctrl", "exposure_total_ctrl") %in% names(result$analysis_summary))
+  (all.equal(result$analysis_summary$n_ctrl, c(15.5, 30.5)))
+  (all.equal(result$analysis_summary$info_blinded, c(40, 80)))
 })

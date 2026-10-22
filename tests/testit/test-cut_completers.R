@@ -1,4 +1,4 @@
-test_that("cut_completers and cut_date_for_completers work as expected", {
+assert("cut_completers and cut_date_for_completers work as expected", {
   # Setup simulation
   enroll_rate <- data.frame(rate = 10, duration = 10) # fast enrollment
   fail_rate <- data.frame(treatment = c("A", "B"), rate = c(0.5, 0.5))
@@ -13,8 +13,8 @@ test_that("cut_completers and cut_date_for_completers work as expected", {
   # Find date for 5 completers
   date_5 <- cut_date_for_completers(sim, 5)
 
-  expect_true(is.numeric(date_5))
-  expect_length(date_5, 1)
+  (is.numeric(date_5))
+  (length(date_5) %==% 1L)
 
   # Verify that at least 5 subjects have completed by this date
   # Completer definition: reached max_followup (max(tte) in sim)
@@ -26,14 +26,14 @@ test_that("cut_completers and cut_date_for_completers work as expected", {
   ), by = id]
 
   n_completed_at_date <- sum(completers_dt$is_completer & completers_dt$completion_time <= date_5 + 1e-8)
-  expect_gte(n_completed_at_date, 5)
+  (n_completed_at_date >= 5)
 
   # 2. Test cut_completers
   cut_data <- cut_completers(sim, date_5)
 
   # Verify output structure
-  expect_true(is.data.frame(cut_data))
-  expect_true(all(c("id", "treatment", "enroll_time", "tte", "events") %in% names(cut_data)))
+  (is.data.frame(cut_data))
+  (c("id", "treatment", "enroll_time", "tte", "events") %in% names(cut_data))
 
   # Verify that subjects randomized before cut_date are included (even if not completers)
   # In this simulation, everyone is randomized quickly (rate 10, duration 10 -> 100 subjects? No n=20)
@@ -43,27 +43,27 @@ test_that("cut_completers and cut_date_for_completers work as expected", {
 
   included_ids <- cut_data$id
   # Check that we have at least the completers
-  expect_true(all(completers_dt[is_completer == TRUE & completion_time <= date_5, id] %in% included_ids))
+  (completers_dt[is_completer == TRUE & completion_time <= date_5, id] %in% included_ids)
 
   # Check that we have non-completers (or those who complete later) if they were randomized
   randomized_before_cut <- unique(sim$id[sim$enroll_time < date_5])
-  expect_true(all(randomized_before_cut %in% included_ids))
+  (randomized_before_cut %in% included_ids)
 
   # Verify tte is correct (<= cut_date - enroll_time)
   # For included subjects, tte should be min(max_followup, cut_date - enroll_time) - gaps
   # Just check it's positive and reasonable
-  expect_true(all(cut_data$tte > 0))
+  (cut_data$tte > 0)
 
   # 3. Test edge case: target > n completers
-  expect_message(date_high <- cut_date_for_completers(sim, n + 10), "Only .* completers in trial")
-  expect_equal(date_high, max(sim$calendar_time))
+  (has_message(date_high <- cut_date_for_completers(sim, n + 10), "Only .* completers in trial", fixed = FALSE))
+  (all.equal(date_high, max(sim$calendar_time)))
 
   # 4. Test cut_completers with date 0 (no one completed)
   cut_empty <- cut_completers(sim, 0)
-  expect_equal(nrow(cut_empty), 0)
+  (nrow(cut_empty) %==% 0L)
 })
 
-test_that("cut_date_for_completers works with nb_sim_seasonal output", {
+assert("cut_date_for_completers works with nb_sim_seasonal output", {
   enroll_rate <- data.frame(rate = 50, duration = 0.2)
   fail_rate <- data.frame(
     treatment = rep(c("Control", "Experimental"), each = 4),
@@ -81,16 +81,16 @@ test_that("cut_date_for_completers works with nb_sim_seasonal output", {
 
   # Should not error even though nb_sim_seasonal doesn't have `tte`
   d10 <- cut_date_for_completers(sim, target_completers = 10)
-  expect_true(is.numeric(d10))
-  expect_true(is.finite(d10))
+  (is.numeric(d10))
+  (is.finite(d10))
 })
 
-test_that("cut_date_for_completers errors on missing columns", {
+assert("cut_date_for_completers errors on missing columns", {
   # Missing follow-up column
   bad1 <- data.frame(id = 1, treatment = "A", enroll_time = 0)
-  expect_error(cut_date_for_completers(bad1, 1), "follow-up time column")
+  (has_error(cut_date_for_completers(bad1, 1), "follow-up time column"))
 
   # Missing id column
   bad2 <- data.frame(tte = 1, treatment = "A", enroll_time = 0)
-  expect_error(cut_date_for_completers(bad2, 1), "id")
+  (has_error(cut_date_for_completers(bad2, 1), "id"))
 })

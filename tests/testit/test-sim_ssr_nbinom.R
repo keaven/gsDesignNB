@@ -32,7 +32,7 @@ setup_ssr_args <- function() {
     sflpar = 1,
     analysis_times = c(2.5, 5, 8)
   ) |>
-    gsDesignNB::toInteger()
+    toInteger()
 
   list(
     enroll_rate = enroll_rate,
@@ -42,7 +42,7 @@ setup_ssr_args <- function() {
   )
 }
 
-test_that("sim_ssr_nbinom returns expected structure", {
+assert("sim_ssr_nbinom returns expected structure", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -57,21 +57,21 @@ test_that("sim_ssr_nbinom returns expected structure", {
     seed = 123
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
-  expect_true(all(c("trial_results", "analysis_results", "settings") %in% names(res)))
-  expect_s3_class(res$trial_results, "data.frame")
-  expect_s3_class(res$analysis_results, "data.frame")
-  expect_equal(nrow(res$trial_results), 6)
-  expect_true(all(c(
+  (inherits(res, "sim_ssr_nbinom"))
+  (c("trial_results", "analysis_results", "settings") %in% names(res))
+  (inherits(res$trial_results, "data.frame"))
+  (inherits(res$analysis_results, "data.frame"))
+  (nrow(res$trial_results) %==% 6L)
+  (c(
     "participants_with_events_stop",
     "events_observed_stop",
     "participants_with_events_ia1",
     "events_observed_final",
     "adapt_cut_time"
-  ) %in% names(res$trial_results)))
+  ) %in% names(res$trial_results))
 })
 
-test_that("sim_ssr_nbinom is reproducible with fixed seed", {
+assert("sim_ssr_nbinom is reproducible with fixed seed", {
   args <- setup_ssr_args()
 
   res1 <- sim_ssr_nbinom(
@@ -98,10 +98,10 @@ test_that("sim_ssr_nbinom is reproducible with fixed seed", {
     seed = 456
   )
 
-  expect_identical(res1$trial_results, res2$trial_results)
+  (res1$trial_results %==% res2$trial_results)
 })
 
-test_that("summarize_ssr_sim reports expected participants and events", {
+assert("summarize_ssr_sim reports expected participants and events", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -118,17 +118,17 @@ test_that("summarize_ssr_sim reports expected participants and events", {
 
   sm <- summarize_ssr_sim(res, by = "strategy")
 
-  expect_s3_class(sm$trial_summary, "data.frame")
-  expect_s3_class(sm$analysis_summary, "data.frame")
-  expect_true(all(c(
+  (inherits(sm$trial_summary, "data.frame"))
+  (inherits(sm$analysis_summary, "data.frame"))
+  (c(
     "expected_participants_with_events",
     "expected_events_observed",
     "mean_participants_with_events_ia1",
     "mean_events_observed_final"
-  ) %in% names(sm$trial_summary)))
+  ) %in% names(sm$trial_summary))
 })
 
-test_that("check_gs_bound accepts explicit information column", {
+assert("check_gs_bound accepts explicit information column", {
   design <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 2, timing = c(0.5, 1))
   sim_df <- data.frame(
     sim = c(1, 1),
@@ -143,16 +143,13 @@ test_that("check_gs_bound accepts explicit information column", {
   res_explicit <- check_gs_bound(sim_df, design, info_col = "unblinded_info")
   res_custom <- check_gs_bound(sim_df, design, info_col = "info_unblinded_mom")
 
-  expect_identical(
-    res_default[, c("cross_upper", "cross_lower", "cross_harm")],
-    res_explicit[, c("cross_upper", "cross_lower", "cross_harm")]
-  )
-  expect_s3_class(res_custom, "data.frame")
-  expect_equal(nrow(res_custom), nrow(sim_df))
+  (res_default[, c("cross_upper", "cross_lower", "cross_harm")] %==% res_explicit[, c("cross_upper", "cross_lower", "cross_harm")])
+  (inherits(res_custom, "data.frame"))
+  (nrow(res_custom) %==% nrow(sim_df))
 })
 
-test_that("sim_ssr_nbinom errors on bad design", {
-  expect_error(
+assert("sim_ssr_nbinom errors on bad design", {
+  (has_error(
     sim_ssr_nbinom(
       n_sims = 1,
       enroll_rate = data.frame(rate = 10, duration = 4),
@@ -163,12 +160,12 @@ test_that("sim_ssr_nbinom errors on bad design", {
       strategies = "No adaptation"
     ),
     "gsNB"
-  )
+  ))
 })
 
-test_that("sim_ssr_nbinom errors on bad strategies", {
+assert("sim_ssr_nbinom errors on bad strategies", {
   args <- setup_ssr_args()
-  expect_error(
+  (has_error(
     sim_ssr_nbinom(
       n_sims = 1,
       enroll_rate = args$enroll_rate,
@@ -179,10 +176,10 @@ test_that("sim_ssr_nbinom errors on bad strategies", {
       strategies = "Invalid Strategy"
     ),
     "strategies must be chosen from"
-  )
+  ))
 })
 
-test_that("sim_ssr_nbinom works with Unblinded SSR strategy", {
+assert("sim_ssr_nbinom works with Unblinded SSR strategy", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -197,11 +194,11 @@ test_that("sim_ssr_nbinom works with Unblinded SSR strategy", {
     seed = 999
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
-  expect_true(nrow(res$trial_results) > 0)
+  (inherits(res, "sim_ssr_nbinom"))
+  (nrow(res$trial_results) > 0)
 })
 
-test_that("summarize_ssr_sim works without by argument", {
+assert("summarize_ssr_sim works without by argument", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -218,12 +215,12 @@ test_that("summarize_ssr_sim works without by argument", {
 
   sm <- summarize_ssr_sim(res)
 
-  expect_s3_class(sm$trial_summary, "data.frame")
-  expect_s3_class(sm$analysis_summary, "data.frame")
-  expect_true(nrow(sm$trial_summary) > 0)
+  (inherits(sm$trial_summary, "data.frame"))
+  (inherits(sm$analysis_summary, "data.frame"))
+  (nrow(sm$trial_summary) > 0)
 })
 
-test_that("sim_ssr_nbinom handles ignore_futility", {
+assert("sim_ssr_nbinom handles ignore_futility", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -239,11 +236,11 @@ test_that("sim_ssr_nbinom handles ignore_futility", {
     seed = 222
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
-  expect_true(nrow(res$trial_results) > 0)
+  (inherits(res, "sim_ssr_nbinom"))
+  (nrow(res$trial_results) > 0)
 })
 
-test_that("sim_ssr_nbinom handles metadata", {
+assert("sim_ssr_nbinom handles metadata", {
   args <- setup_ssr_args()
 
   meta <- data.frame(scenario = "base", label = "test")
@@ -260,16 +257,15 @@ test_that("sim_ssr_nbinom handles metadata", {
     seed = 333
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
-  expect_true("scenario" %in% names(res$trial_results))
-  expect_true("label" %in% names(res$trial_results))
+  (inherits(res, "sim_ssr_nbinom"))
+  (c("scenario", "label") %in% names(res$trial_results))
 })
 
-test_that("sim_ssr_nbinom handles different bound_info", {
+assert("sim_ssr_nbinom handles different bound_info", {
   args <- setup_ssr_args()
 
-  for (bi in c("blinded_ml", "unblinded_mom", "blinded_mom")) {
-    res <- sim_ssr_nbinom(
+  res_list <- lapply(c("blinded_ml", "unblinded_mom", "blinded_mom"), function(bi) {
+    sim_ssr_nbinom(
       n_sims = 2,
       enroll_rate = args$enroll_rate,
       fail_rate = args$fail_rate,
@@ -281,11 +277,11 @@ test_that("sim_ssr_nbinom handles different bound_info", {
       bound_info = bi,
       seed = 444
     )
-    expect_s3_class(res, "sim_ssr_nbinom")
-  }
+  })
+  (vapply(res_list, inherits, logical(1), "sim_ssr_nbinom"))
 })
 
-test_that("sim_ssr_nbinom handles all three strategies", {
+assert("sim_ssr_nbinom handles all three strategies", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -300,35 +296,35 @@ test_that("sim_ssr_nbinom handles all three strategies", {
     seed = 555
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
+  (inherits(res, "sim_ssr_nbinom"))
   # Should have results for all 3 strategies
-  expect_true(all(c("No adaptation", "Blinded SSR", "Unblinded SSR") %in% res$trial_results$strategy))
+  (c("No adaptation", "Blinded SSR", "Unblinded SSR") %in% res$trial_results$strategy)
 })
 
 # --- Internal helper tests ---
 
-test_that(".ssr_metadata_df handles named list", {
-  result <- gsDesignNB:::.ssr_metadata_df(list(scenario = "A", label = "test"))
-  expect_s3_class(result, "data.frame")
-  expect_equal(nrow(result), 1)
-  expect_equal(result$scenario, "A")
+assert(".ssr_metadata_df handles named list", {
+  result <- .ssr_metadata_df(list(scenario = "A", label = "test"))
+  (inherits(result, "data.frame"))
+  (nrow(result) %==% 1L)
+  (all.equal(result$scenario, "A"))
 })
 
-test_that(".ssr_metadata_df errors on multi-row data frame", {
-  expect_error(
-    gsDesignNB:::.ssr_metadata_df(data.frame(scenario = c("A", "B"))),
+assert(".ssr_metadata_df errors on multi-row data frame", {
+  (has_error(
+    .ssr_metadata_df(data.frame(scenario = c("A", "B"))),
     "exactly one row"
-  )
+  ))
 })
 
-test_that(".ssr_metadata_df errors on bad input", {
-  expect_error(
-    gsDesignNB:::.ssr_metadata_df("bad input"),
+assert(".ssr_metadata_df errors on bad input", {
+  (has_error(
+    .ssr_metadata_df("bad input"),
     "named list or one-row data frame"
-  )
+  ))
 })
 
-test_that(".ssr_select_info falls back to unblinded_ml", {
+assert(".ssr_select_info falls back to unblinded_ml", {
   metrics <- list(
     info_unblinded_ml = 50,
     info_blinded_ml = NA_real_,
@@ -338,32 +334,32 @@ test_that(".ssr_select_info falls back to unblinded_ml", {
 
   # blinded_ml is NA -> should fall back
 
-expect_equal(gsDesignNB:::.ssr_select_info(metrics, "blinded_ml"), 50)
+(all.equal(.ssr_select_info(metrics, "blinded_ml"), 50))
   # unblinded_mom is 0 -> should fall back
-  expect_equal(gsDesignNB:::.ssr_select_info(metrics, "unblinded_mom"), 50)
+  (all.equal(.ssr_select_info(metrics, "unblinded_mom"), 50))
   # blinded_mom is negative -> should fall back
-  expect_equal(gsDesignNB:::.ssr_select_info(metrics, "blinded_mom"), 50)
+  (all.equal(.ssr_select_info(metrics, "blinded_mom"), 50))
   # unblinded_ml is valid -> should return directly
-  expect_equal(gsDesignNB:::.ssr_select_info(metrics, "unblinded_ml"), 50)
+  (all.equal(.ssr_select_info(metrics, "unblinded_ml"), 50))
 })
 
-test_that(".ssr_stage_label_from_suffix works", {
-  expect_equal(gsDesignNB:::.ssr_stage_label_from_suffix("final"), "Final")
-  expect_equal(gsDesignNB:::.ssr_stage_label_from_suffix("ia1"), "IA1")
-  expect_equal(gsDesignNB:::.ssr_stage_label_from_suffix("ia2"), "IA2")
+assert(".ssr_stage_label_from_suffix works", {
+  (all.equal(.ssr_stage_label_from_suffix("final"), "Final"))
+  (all.equal(.ssr_stage_label_from_suffix("ia1"), "IA1"))
+  (all.equal(.ssr_stage_label_from_suffix("ia2"), "IA2"))
 })
 
-test_that(".ssr_stage_suffixes_from_trial_results extracts suffixes", {
+assert(".ssr_stage_suffixes_from_trial_results extracts suffixes", {
   dt <- data.table::data.table(if_ia1 = 0.5, if_ia2 = 0.8, if_final = 1.0, x = 1)
-  result <- gsDesignNB:::.ssr_stage_suffixes_from_trial_results(dt)
-  expect_equal(sort(result), c("final", "ia1", "ia2"))
+  result <- .ssr_stage_suffixes_from_trial_results(dt)
+  (all.equal(sort(result), c("final", "ia1", "ia2")))
 })
 
-test_that(".ssr_dynamic_bounds returns bounds", {
+assert(".ssr_dynamic_bounds returns bounds", {
   design <- gsDesign::gsDesign(k = 3, test.type = 4, n.fix = 100,
                                 timing = c(0.33, 0.67, 1))
 
-  bounds <- gsDesignNB:::.ssr_dynamic_bounds(
+  bounds <- .ssr_dynamic_bounds(
     analysis_index = 1,
     n_analyses = 3,
     observed_if = c(0.35, NA, NA),
@@ -372,15 +368,15 @@ test_that(".ssr_dynamic_bounds returns bounds", {
     design = design
   )
 
-  expect_true(is.finite(bounds$upper_bound))
-  expect_true(is.finite(bounds$lower_bound))
+  (is.finite(bounds$upper_bound))
+  (is.finite(bounds$lower_bound))
 })
 
-test_that(".ssr_dynamic_bounds handles final analysis", {
+assert(".ssr_dynamic_bounds handles final analysis", {
   design <- gsDesign::gsDesign(k = 2, test.type = 4, n.fix = 100,
                                 timing = c(0.5, 1))
 
-  bounds <- gsDesignNB:::.ssr_dynamic_bounds(
+  bounds <- .ssr_dynamic_bounds(
     analysis_index = 2,
     n_analyses = 2,
     observed_if = c(0.5, 1.0),
@@ -389,15 +385,15 @@ test_that(".ssr_dynamic_bounds handles final analysis", {
     design = design
   )
 
-  expect_true(is.finite(bounds$upper_bound))
-  expect_true(is.finite(bounds$lower_bound))
+  (is.finite(bounds$upper_bound))
+  (is.finite(bounds$lower_bound))
 })
 
-test_that(".ssr_dynamic_bounds returns NA on bad input", {
+assert(".ssr_dynamic_bounds returns NA on bad input", {
   design <- gsDesign::gsDesign(k = 2, test.type = 4, n.fix = 100,
                                 timing = c(0.5, 1))
 
-  bounds <- gsDesignNB:::.ssr_dynamic_bounds(
+  bounds <- .ssr_dynamic_bounds(
     analysis_index = 1,
     n_analyses = 2,
     observed_if = c(NA_real_, NA_real_),
@@ -406,11 +402,11 @@ test_that(".ssr_dynamic_bounds returns NA on bad input", {
     design = design
   )
 
-  expect_true(is.na(bounds$upper_bound))
-  expect_true(is.na(bounds$lower_bound))
+  (is.na(bounds$upper_bound))
+  (is.na(bounds$lower_bound))
 })
 
-test_that(".ssr_extract_info_metrics returns all info types", {
+assert(".ssr_extract_info_metrics returns all info types", {
   enroll_rate <- data.frame(rate = 50, duration = 1)
   fail_rate <- data.frame(
     treatment = c("Control", "Experimental"),
@@ -419,7 +415,7 @@ test_that(".ssr_extract_info_metrics returns all info types", {
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = 3, n = 100)
   cut <- cut_data_by_date(sim, cut_date = 2)
 
-  metrics <- gsDesignNB:::.ssr_extract_info_metrics(
+  metrics <- .ssr_extract_info_metrics(
     cut_data = cut,
     ratio_plan = 1,
     lambda1_plan = 0.5,
@@ -427,19 +423,19 @@ test_that(".ssr_extract_info_metrics returns all info types", {
     event_gap = 0
   )
 
-  expect_true(is.list(metrics))
-  expect_true(all(c("z_value", "info_unblinded_ml", "info_blinded_ml") %in% names(metrics)))
-  expect_true(is.finite(metrics$z_value))
-  expect_true(is.finite(metrics$info_unblinded_ml))
+  (is.list(metrics))
+  (c("z_value", "info_unblinded_ml", "info_blinded_ml") %in% names(metrics))
+  (is.finite(metrics$z_value))
+  (is.finite(metrics$info_unblinded_ml))
 })
 
-test_that(".ssr_extract_info_metrics handles insufficient data", {
+assert(".ssr_extract_info_metrics handles insufficient data", {
   cut <- data.frame(
     id = 1:2, treatment = c("Control", "Experimental"),
     events = c(0, 0), tte = c(0.01, 0.01), enroll_time = c(0, 0)
   )
 
-  metrics <- gsDesignNB:::.ssr_extract_info_metrics(
+  metrics <- .ssr_extract_info_metrics(
     cut_data = cut,
     ratio_plan = 1,
     lambda1_plan = 0.5,
@@ -447,10 +443,10 @@ test_that(".ssr_extract_info_metrics handles insufficient data", {
     event_gap = 0
   )
 
-  expect_true(is.na(metrics$z_value))
+  (is.na(metrics$z_value))
 })
 
-test_that(".ssr_long_from_trial_results reshapes correctly", {
+assert(".ssr_long_from_trial_results reshapes correctly", {
   args <- setup_ssr_args()
   res <- sim_ssr_nbinom(
     n_sims = 2,
@@ -464,17 +460,17 @@ test_that(".ssr_long_from_trial_results reshapes correctly", {
     seed = 666
   )
 
-  long <- gsDesignNB:::.ssr_long_from_trial_results(res$trial_results)
-  expect_true(is.data.frame(long))
-  expect_true(nrow(long) > 0)
-  expect_true(all(c("analysis", "analysis_stage", "analysis_time",
-                     "z_value", "info_value", "info_fraction",
-                     "cross_upper", "cross_lower") %in% names(long)))
+  long <- .ssr_long_from_trial_results(res$trial_results)
+  (is.data.frame(long))
+  (nrow(long) > 0)
+  (c("analysis", "analysis_stage", "analysis_time",
+    "z_value", "info_value", "info_fraction",
+    "cross_upper", "cross_lower") %in% names(long))
   # For k=3 design: ia1, ia2, final -> 3 rows per sim per strategy
-  expect_equal(nrow(long), 2 * 3)
+  (nrow(long) %==% 6L)
 })
 
-test_that("summarize_ssr_sim works on raw trial_results data frame", {
+assert("summarize_ssr_sim works on raw trial_results data frame", {
   args <- setup_ssr_args()
   res <- sim_ssr_nbinom(
     n_sims = 3,
@@ -490,11 +486,11 @@ test_that("summarize_ssr_sim works on raw trial_results data frame", {
 
   # Pass raw trial_results data frame, not the sim_ssr_nbinom object
   sm <- summarize_ssr_sim(res$trial_results)
-  expect_true(is.data.frame(sm$trial_summary))
-  expect_true(nrow(sm$trial_summary) > 0)
+  (is.data.frame(sm$trial_summary))
+  (nrow(sm$trial_summary) > 0)
 })
 
-test_that("summarize_ssr_sim works with by = NULL", {
+assert("summarize_ssr_sim works with by = NULL", {
   args <- setup_ssr_args()
   res <- sim_ssr_nbinom(
     n_sims = 3,
@@ -509,16 +505,16 @@ test_that("summarize_ssr_sim works with by = NULL", {
   )
 
   sm <- summarize_ssr_sim(res, by = "nonexistent_col")
-  expect_true(is.data.frame(sm$trial_summary))
-  expect_true(nrow(sm$trial_summary) == 1)
+  (is.data.frame(sm$trial_summary))
+  (nrow(sm$trial_summary) %==% 1L)
 })
 
-test_that("sim_ssr_nbinom errors on design with k < 2", {
+assert("sim_ssr_nbinom errors on design with k < 2", {
   # Create a gsNB-like object with k=1 to trigger the error
   fake_design <- list(k = 1)
   class(fake_design) <- c("gsNB", "gsDesign")
 
-  expect_error(
+  (has_error(
     sim_ssr_nbinom(
       n_sims = 1,
       enroll_rate = data.frame(rate = 10, duration = 4),
@@ -528,13 +524,13 @@ test_that("sim_ssr_nbinom errors on design with k < 2", {
       strategies = "No adaptation"
     ),
     "at least one interim"
-  )
+  ))
 })
 
-test_that("sim_ssr_nbinom errors on bad adapt_analysis", {
+assert("sim_ssr_nbinom errors on bad adapt_analysis", {
   args <- setup_ssr_args()
 
-  expect_error(
+  (has_error(
     sim_ssr_nbinom(
       n_sims = 1,
       enroll_rate = args$enroll_rate,
@@ -545,10 +541,10 @@ test_that("sim_ssr_nbinom errors on bad adapt_analysis", {
       adapt_analysis = 10
     ),
     "adapt_analysis must identify an interim"
-  )
+  ))
 })
 
-test_that("sim_ssr_nbinom uses event_gap from design inputs", {
+assert("sim_ssr_nbinom uses event_gap from design inputs", {
   fixed_design <- sample_size_nbinom(
     lambda1 = 0.5, lambda2 = 0.35, dispersion = 0.3,
     power = 0.8, alpha = 0.025,
@@ -572,10 +568,10 @@ test_that("sim_ssr_nbinom uses event_gap from design inputs", {
   )
 
   # event_gap should be extracted from design
-  expect_equal(res$settings$event_gap, 0.5)
+  (all.equal(res$settings$event_gap, 0.5))
 })
 
-test_that("sim_ssr_nbinom with adapt parameters triggers adaptation checks", {
+assert("sim_ssr_nbinom with adapt parameters triggers adaptation checks", {
   args <- setup_ssr_args()
 
   res <- sim_ssr_nbinom(
@@ -594,21 +590,20 @@ test_that("sim_ssr_nbinom with adapt parameters triggers adaptation checks", {
     seed = 2345
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
+  (inherits(res, "sim_ssr_nbinom"))
   tr <- res$trial_results
   # Should have adapt-related columns
-  expect_true("adapt_allowed" %in% names(tr))
-  expect_true("adapt_applied" %in% names(tr))
+  (c("adapt_allowed", "adapt_applied") %in% names(tr))
   # adapt_analysis = 2 means ia2 columns should exist
-  expect_true("ia2_adapt_cut_time" %in% names(tr))
+  ("ia2_adapt_cut_time" %in% names(tr))
 })
 
-test_that(".ssr_dynamic_bounds handles non-monotone timing", {
+assert(".ssr_dynamic_bounds handles non-monotone timing", {
   design <- gsDesign::gsDesign(k = 3, test.type = 4, n.fix = 100,
                                 timing = c(0.33, 0.67, 1))
 
   # Decreasing observed IFs should trigger monotonicity correction
-  bounds <- gsDesignNB:::.ssr_dynamic_bounds(
+  bounds <- .ssr_dynamic_bounds(
     analysis_index = 2,
     n_analyses = 3,
     observed_if = c(0.5, 0.4, NA),
@@ -618,11 +613,11 @@ test_that(".ssr_dynamic_bounds handles non-monotone timing", {
   )
 
   # Even after correction, should produce numeric bounds (may be NA if gsDesign fails)
-  expect_true(is.numeric(bounds$upper_bound))
-  expect_true(is.numeric(bounds$lower_bound))
+  (is.numeric(bounds$upper_bound))
+  (is.numeric(bounds$lower_bound))
 })
 
-test_that(".ssr_extract_info_metrics computes all four info types", {
+assert(".ssr_extract_info_metrics computes all four info types", {
   set.seed(42)
   enroll_rate <- data.frame(rate = 50, duration = 1)
   fail_rate <- data.frame(
@@ -633,7 +628,7 @@ test_that(".ssr_extract_info_metrics computes all four info types", {
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = 3, n = 100)
   cut <- cut_data_by_date(sim, cut_date = 2)
 
-  metrics <- gsDesignNB:::.ssr_extract_info_metrics(
+  metrics <- .ssr_extract_info_metrics(
     cut_data = cut,
     ratio_plan = 1,
     lambda1_plan = 0.6,
@@ -642,32 +637,31 @@ test_that(".ssr_extract_info_metrics computes all four info types", {
   )
 
   # Should have all fields
-  expect_true(is.finite(metrics$info_unblinded_ml))
-  expect_true(is.finite(metrics$info_blinded_ml))
+  (is.finite(metrics$info_unblinded_ml))
+  (is.finite(metrics$info_blinded_ml))
   # MoM estimates may or may not be finite depending on data
-  expect_true("info_unblinded_mom" %in% names(metrics))
-  expect_true("info_blinded_mom" %in% names(metrics))
+  (c("info_unblinded_mom", "info_blinded_mom") %in% names(metrics))
 })
 
-test_that(".ssr_long_from_trial_results handles empty suffixes", {
+assert(".ssr_long_from_trial_results handles empty suffixes", {
   dt <- data.frame(sim = 1, strategy = "No adaptation", reject = FALSE)
-  result <- gsDesignNB:::.ssr_long_from_trial_results(dt)
-  expect_equal(nrow(result), 0)
+  result <- .ssr_long_from_trial_results(dt)
+  (nrow(result) %==% 0L)
 })
 
-test_that(".ssr_long_from_trial_results handles missing required columns", {
+assert(".ssr_long_from_trial_results handles missing required columns", {
   # Create a data frame that has if_ columns but not all required stage cols
   dt <- data.frame(
     sim = 1, strategy = "No adaptation", reject = FALSE,
     if_ia1 = 0.5, if_final = 1.0,
     ia1_time = 5, final_time = 10
   )
-  result <- gsDesignNB:::.ssr_long_from_trial_results(dt)
+  result <- .ssr_long_from_trial_results(dt)
   # Should return empty or skip incomplete stages
-  expect_true(nrow(result) == 0)
+  (nrow(result) %==% 0L)
 })
 
-test_that("sim_ssr_nbinom SSR adaptation is applied with favorable design", {
+assert("sim_ssr_nbinom SSR adaptation is applied with favorable design", {
   # Use a design with much lower power so SSR re-estimation
   # will want to increase the sample size
   fixed_design <- sample_size_nbinom(
@@ -703,9 +697,9 @@ test_that("sim_ssr_nbinom SSR adaptation is applied with favorable design", {
     seed = 9999
   )
 
-  expect_s3_class(res, "sim_ssr_nbinom")
+  (inherits(res, "sim_ssr_nbinom"))
   tr <- res$trial_results
-  expect_true("adapt_allowed" %in% names(tr))
+  ("adapt_allowed" %in% names(tr))
   # At least some sims should have adaptation allowed
-  expect_true(any(tr$adapt_allowed))
+  (any(tr$adapt_allowed))
 })
