@@ -9,7 +9,7 @@ assert("nb_sim generates correct structure", {
 
   (inherits(sim, "data.frame"))
   (c("id", "treatment", "enroll_time", "tte", "event", "calendar_time") %in% names(sim))
-  (all.equal(length(unique(sim$id)), 100))
+  (length(unique(sim$id)) %==% 100L)
 
   # Check max followup
   # tte should never exceed max_followup (approx, allow for floating point)
@@ -17,7 +17,7 @@ assert("nb_sim generates correct structure", {
 
   # Check censoring rows exist
   censored <- sim[sim$event == 0, ]
-  (all.equal(nrow(censored), 100)) # Each subject should have exactly one censoring row
+  (nrow(censored) %==% 100L) # Each subject should have exactly one censoring row
 
   # Check calendar_time calculation
   (all.equal(sim$calendar_time, sim$enroll_time + sim$tte))
@@ -44,5 +44,5 @@ assert("nb_sim respects n argument", {
 
   # Force n=50
   sim <- nb_sim(enroll_rate, fail_rate, max_followup = max_followup, n = 50, block = "A")
-  (all.equal(length(unique(sim$id)), 50))
+  (length(unique(sim$id)) %==% 50L)
 })

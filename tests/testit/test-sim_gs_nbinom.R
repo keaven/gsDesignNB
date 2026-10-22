@@ -43,7 +43,7 @@ assert("sim_gs_nbinom runs basic simulation", {
   (expected_cols %in% names(sim_results))
 
   # 2 sims x 2 analyses = 4 rows
-  (all.equal(nrow(sim_results), 4))
+  (nrow(sim_results) %==% 4L)
 
   # Sim IDs should be 1 and 2
   (all.equal(sort(unique(sim_results$sim)), c(1, 2)))
@@ -125,7 +125,7 @@ assert("sim_gs_nbinom accepts analysis_times", {
   )
 
   (is.data.frame(sim_results))
-  (all.equal(nrow(sim_results), 4))
+  (nrow(sim_results) %==% 4L)
 })
 
 assert("sim_gs_nbinom is reproducible with seed", {

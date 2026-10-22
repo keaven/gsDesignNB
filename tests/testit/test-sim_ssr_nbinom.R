@@ -61,7 +61,7 @@ assert("sim_ssr_nbinom returns expected structure", {
   (c("trial_results", "analysis_results", "settings") %in% names(res))
   (inherits(res$trial_results, "data.frame"))
   (inherits(res$analysis_results, "data.frame"))
-  (all.equal(nrow(res$trial_results), 6))
+  (nrow(res$trial_results) %==% 6L)
   (c(
     "participants_with_events_stop",
     "events_observed_stop",
@@ -145,7 +145,7 @@ assert("check_gs_bound accepts explicit information column", {
 
   (res_default[, c("cross_upper", "cross_lower", "cross_harm")] %==% res_explicit[, c("cross_upper", "cross_lower", "cross_harm")])
   (inherits(res_custom, "data.frame"))
-  (all.equal(nrow(res_custom), nrow(sim_df)))
+  (nrow(res_custom) %==% nrow(sim_df))
 })
 
 assert("sim_ssr_nbinom errors on bad design", {
@@ -306,7 +306,7 @@ assert("sim_ssr_nbinom handles all three strategies", {
 assert(".ssr_metadata_df handles named list", {
   result <- .ssr_metadata_df(list(scenario = "A", label = "test"))
   (inherits(result, "data.frame"))
-  (all.equal(nrow(result), 1))
+  (nrow(result) %==% 1L)
   (all.equal(result$scenario, "A"))
 })
 
@@ -467,7 +467,7 @@ assert(".ssr_long_from_trial_results reshapes correctly", {
     "z_value", "info_value", "info_fraction",
     "cross_upper", "cross_lower") %in% names(long))
   # For k=3 design: ia1, ia2, final -> 3 rows per sim per strategy
-  (all.equal(nrow(long), 2 * 3))
+  (nrow(long) %==% 6L)
 })
 
 assert("summarize_ssr_sim works on raw trial_results data frame", {
@@ -506,7 +506,7 @@ assert("summarize_ssr_sim works with by = NULL", {
 
   sm <- summarize_ssr_sim(res, by = "nonexistent_col")
   (is.data.frame(sm$trial_summary))
-  (nrow(sm$trial_summary) == 1)
+  (nrow(sm$trial_summary) %==% 1L)
 })
 
 assert("sim_ssr_nbinom errors on design with k < 2", {
@@ -646,7 +646,7 @@ assert(".ssr_extract_info_metrics computes all four info types", {
 assert(".ssr_long_from_trial_results handles empty suffixes", {
   dt <- data.frame(sim = 1, strategy = "No adaptation", reject = FALSE)
   result <- .ssr_long_from_trial_results(dt)
-  (all.equal(nrow(result), 0))
+  (nrow(result) %==% 0L)
 })
 
 assert(".ssr_long_from_trial_results handles missing required columns", {
@@ -658,7 +658,7 @@ assert(".ssr_long_from_trial_results handles missing required columns", {
   )
   result <- .ssr_long_from_trial_results(dt)
   # Should return empty or skip incomplete stages
-  (nrow(result) == 0)
+  (nrow(result) %==% 0L)
 })
 
 assert("sim_ssr_nbinom SSR adaptation is applied with favorable design", {

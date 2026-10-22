@@ -8,7 +8,7 @@ assert("mutze_test runs on cut data", {
   (is.list(res))
   (c("estimate", "se", "z", "p_value", "rate_ratio") %in% names(res))
   (is.finite(res$estimate))
-  (nrow(res$group_summary) == 2)
+  (nrow(res$group_summary) %==% 2L)
 })
 
 assert("mutze_test handles poisson option", {

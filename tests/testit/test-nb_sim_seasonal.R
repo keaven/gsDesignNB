@@ -66,7 +66,7 @@ assert("nb_sim_seasonal handles dispersion", {
 
   (inherits(sim, "nb_sim_seasonal"))
   # Should have data for all subjects
-  (length(unique(sim$id)) == 30)
+  (length(unique(sim$id)) %==% 30L)
 })
 
 assert("nb_sim_seasonal validates inputs", {

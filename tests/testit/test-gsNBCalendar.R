@@ -17,9 +17,9 @@ assert("gsNBCalendar creates valid gsNB object", {
   (gs_design$nb_design %==% nb_ss)
 
   # Check sample size vectors
-  (length(gs_design$n1) == 3)
-  (length(gs_design$n2) == 3)
-  (length(gs_design$n_total) == 3)
+  (length(gs_design$n1) %==% 3L)
+  (length(gs_design$n2) %==% 3L)
+  (length(gs_design$n_total) %==% 3L)
 
   # Cumulative sample sizes should increase
   (diff(gs_design$n1) > 0)
@@ -280,7 +280,7 @@ assert("update_gsNB preserves selective harm-bound settings", {
   (all.equal(updated$bounds, gsDesign::gsBoundSummary(updated$design)))
   (names(updated$bounds) %==% c("Analysis", "Value", "Harm", "Futility", "Efficacy"))
   z_rows <- which(updated$bounds$Value == "Z")
-  (length(z_rows) == gs_design$k)
+  (length(z_rows) %==% gs_design$k)
   (is.na(updated$bounds$Harm[z_rows[1]:(z_rows[2] - 1)]))
   (is.na(updated$bounds$Efficacy[z_rows[1]:(z_rows[2] - 1)]))
   (all.equal(

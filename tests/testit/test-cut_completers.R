@@ -14,7 +14,7 @@ assert("cut_completers and cut_date_for_completers work as expected", {
   date_5 <- cut_date_for_completers(sim, 5)
 
   (is.numeric(date_5))
-  (length(date_5) == 1)
+  (length(date_5) %==% 1L)
 
   # Verify that at least 5 subjects have completed by this date
   # Completer definition: reached max_followup (max(tte) in sim)
@@ -60,7 +60,7 @@ assert("cut_completers and cut_date_for_completers work as expected", {
 
   # 4. Test cut_completers with date 0 (no one completed)
   cut_empty <- cut_completers(sim, 0)
-  (all.equal(nrow(cut_empty), 0))
+  (nrow(cut_empty) %==% 0L)
 })
 
 assert("cut_date_for_completers works with nb_sim_seasonal output", {

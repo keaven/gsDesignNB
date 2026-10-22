@@ -28,7 +28,7 @@ assert("summarize_gs_sim returns correct structure", {
 
   # Analysis summary should be a data frame with 2 rows
   (is.data.frame(result$analysis_summary))
-  (all.equal(nrow(result$analysis_summary), 2))
+  (nrow(result$analysis_summary) %==% 2L)
 
   # Check cumulative probability column exists
   ("cum_prob_upper" %in% names(result$analysis_summary))

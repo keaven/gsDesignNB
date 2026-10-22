@@ -14,7 +14,7 @@ assert("cut_data_by_date truncates follow-up", {
   sim <- nb_sim(enroll_rate, fail_rate, dropout_rate, max_followup = 2, n = 5, block = "A")
   cut <- cut_data_by_date(sim, cut_date = 0.5)
   eligible_ids <- unique(sim$id[sim$enroll_time < 0.5])
-  (all.equal(nrow(cut), length(eligible_ids)))
+  (nrow(cut) %==% length(eligible_ids))
   (cut$tte <= 0.5)
   (cut$events >= 0)
 })
@@ -42,7 +42,7 @@ assert("cut_data_by_date.nb_sim_data returns empty for early cut", {
 
   # Cut before anyone enrolls
   cut <- cut_data_by_date(sim, cut_date = 0)
-  (all.equal(nrow(cut), 0))
+  (nrow(cut) %==% 0L)
   (c("id", "treatment", "enroll_time", "tte", "tte_total", "events") %in% names(cut))
 })
 
@@ -114,7 +114,7 @@ assert("cut_data_by_date.nb_sim_seasonal returns empty for early cut", {
   )
 
   cut <- cut_data_by_date(sim, cut_date = 0)
-  (all.equal(nrow(cut), 0))
+  (nrow(cut) %==% 0L)
   ("season" %in% names(cut))
 })
 

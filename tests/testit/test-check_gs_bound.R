@@ -14,7 +14,7 @@ assert("check_gs_bound returns correct structure", {
   (c("cross_upper", "cross_lower", "cross_harm") %in% names(result))
 
   # Same number of rows
- (nrow(result) == nrow(sim_df))
+ (nrow(result) %==% nrow(sim_df))
 })
 
 assert("check_gs_bound detects upper crossings", {
@@ -129,7 +129,7 @@ assert("check_gs_bound works with multiple simulations", {
   )
 
   result <- check_gs_bound(sim_df, design)
-  (nrow(result) == 6)
+  (nrow(result) %==% 6L)
 
   # Sim 1: crosses upper at analysis 1
   (result$cross_upper[result$sim == 1 & result$analysis == 1])

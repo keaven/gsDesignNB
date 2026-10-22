@@ -231,7 +231,7 @@ assert("sample_size_nbinom handles vector dropout_rate", {
   )
 
   (res_diff$exposure[1] < res_diff$exposure[2])
-  (length(res_diff$exposure) == 2)
+  (length(res_diff$exposure) %==% 2L)
 })
 
 assert("sample_size_nbinom input validation errors", {
