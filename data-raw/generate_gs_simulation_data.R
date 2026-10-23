@@ -84,6 +84,13 @@ cat("\n=== Summary by Analysis ===\n")
 print(analysis_summary)
 
 # Save data for vignette
+# Round doubles to 7 significant digits to keep the shipped .rds small
+round_sig7 <- function(d) {
+  d[] <- lapply(d, function(x) if (is.double(x)) signif(x, 7) else x)
+  d
+}
+sim_res <- round_sig7(sim_res)
+results <- round_sig7(results)
 save_list <- list(
   nb_ss = nb_ss,
   gs_nb_calendar = gs_nb_calendar,
@@ -103,5 +110,5 @@ save_list <- list(
   )
 )
 
-saveRDS(save_list, "inst/extdata/gs_simulation_results.rds")
+saveRDS(save_list, "inst/extdata/gs_simulation_results.rds", compress = "xz")
 cat("\nResults saved to inst/extdata/gs_simulation_results.rds\n")
