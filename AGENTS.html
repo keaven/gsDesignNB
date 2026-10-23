@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gsDesignNB</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
 <li>
 <strong>Build &amp; reload</strong>: Use <code>devtools::load_all()</code> for interactive development.</li>
 <li>
-<strong>Testing</strong>: Run tests with <code>devtools::test()</code>.</li>
+<strong>Testing</strong>: Run tests with <code><a href="https://rdrr.io/pkg/testit/man/test_pkg.html" class="external-link">testit::test_pkg()</a></code> (or <code>Rscript tests/test-all.R</code>).</li>
 <li>
 <strong>Documentation</strong>: Generate documentation with <code>devtools::document()</code>. The site is built with <code>pkgdown</code>. For a correctly styled local preview, use <code>xfun::serve_dir("docs")</code> after <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> (not <code><a href="https://pkgdown.r-lib.org/reference/preview_site.html" class="external-link">pkgdown::preview_site()</a></code>, which uses <code>file://</code> and often loads without CSS).</li>
 </ul></div>
@@ -93,20 +93,20 @@
 <li>
 <strong>Error handling</strong>: Validate inputs early in exported functions (e.g., check for positive rates, valid probabilities).</li>
 <li>
-<strong>NEWS.md</strong>: The first section is always the dev version; add news items for dev changes there (do not create a new section or edit released sections). Write each news item as a single line. Do not hard-wrap items at a fixed column; no continuation lines.</li>
+<strong>NEWS.md</strong>: The first section is always the dev version; add news items for dev changes there (do not create a new section or edit released sections). Write each news item as a single line. Do not hard-wrap items at a fixed column; no continuation lines. End each item with the issue or PR number it relates to, e.g. <code>(#53)</code>.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="testing-guidelines">Testing guidelines<a class="anchor" aria-label="anchor" href="#testing-guidelines"></a></h2>
 <ul><li>
-<strong>Framework</strong>: Uses <code>testthat</code> (Edition 3).</li>
+<strong>Framework</strong>: Uses <code>testit</code> (<code>assert()</code> with <code>()</code> checks, <code>has_error()</code>, <code>%==%</code>).</li>
 <li>
-<strong>Structure</strong>: Tests are located in <code>tests/testthat/</code> and prefixed with <code>test-</code>.</li>
+<strong>Structure</strong>: Tests are located in <code>tests/testit/</code> and prefixed with <code>test-</code>.</li>
 <li>
 <strong>Best practices</strong>:
 <ul><li>Test against known theoretical results (e.g., Poisson limit when dispersion is 0).</li>
 <li>Verify S3 class structures and return types.</li>
-<li>Use <code>expect_error</code> to verify input validation.</li>
-<li>Example: See <code>tests/testthat/test-sample_size_nbinom.R</code> for testing calculation logic.</li>
+<li>Use <code>has_error()</code> to verify input validation.</li>
+<li>Example: See <code>tests/testit/test-sample_size_nbinom.R</code> for testing calculation logic.</li>
 </ul></li>
 </ul></div>
 <div class="section level2">
@@ -115,7 +115,7 @@
 <strong>Adding a new simulation feature</strong>:
 <ol style="list-style-type: decimal"><li>Update <code>nb_sim.R</code> or <code>nb_sim_seasonal.R</code> to generate the new data structure.</li>
 <li>Update <code>sim_gs_nbinom.R</code> to handle the new data in the simulation loop.</li>
-<li>Add a test case in <code>tests/testthat/</code>.</li>
+<li>Add a test case in <code>tests/testit/</code>.</li>
 </ol></li>
 <li>
 <strong>Modifying sample size logic</strong>:

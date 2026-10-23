@@ -504,7 +504,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] gsDesignNB_0.4.1
+#> [1] gsDesignNB_0.4.2
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6        TMB_1.9.25          xfun_0.62          

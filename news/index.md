@@ -2,6 +2,15 @@
 
 ## gsDesignNB 0.5.0
 
+- Now requires gsDesign \>= 3.11.0, so the harm-bound arguments
+  (`sfharm`, `sfharmparam`, `testUpper`, `testLower`, `testHarm`) are
+  passed to
+  [`gsDesign::gsDesign()`](https://keaven.github.io/gsDesign//reference/gsDesign.html)
+  unconditionally
+  ([\#53](https://github.com/keaven/gsDesignNB/issues/53)).
+- Switched the test suite from testthat to testit, removing the testthat
+  dependency ([\#53](https://github.com/keaven/gsDesignNB/issues/53)).
+
 ## gsDesignNB 0.4.0
 
 CRAN release: 2026-10-22

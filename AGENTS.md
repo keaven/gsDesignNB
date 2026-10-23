@@ -29,7 +29,9 @@ with the `gsDesign` package to support group sequential designs.
 - **Package management**: Standard R package structure.
 - **Build & reload**: Use `devtools::load_all()` for interactive
   development.
-- **Testing**: Run tests with `devtools::test()`.
+- **Testing**: Run tests with
+  [`testit::test_pkg()`](https://rdrr.io/pkg/testit/man/test_pkg.html)
+  (or `Rscript tests/test-all.R`).
 - **Documentation**: Generate documentation with `devtools::document()`.
   The site is built with `pkgdown`. For a correctly styled local
   preview, use `xfun::serve_dir("docs")` after
@@ -57,19 +59,21 @@ with the `gsDesign` package to support group sequential designs.
 - **NEWS.md**: The first section is always the dev version; add news
   items for dev changes there (do not create a new section or edit
   released sections). Write each news item as a single line. Do not
-  hard-wrap items at a fixed column; no continuation lines.
+  hard-wrap items at a fixed column; no continuation lines. End each
+  item with the issue or PR number it relates to, e.g. `(#53)`.
 
 ## Testing guidelines
 
-- **Framework**: Uses `testthat` (Edition 3).
-- **Structure**: Tests are located in `tests/testthat/` and prefixed
-  with `test-`.
+- **Framework**: Uses `testit` (`assert()` with `()` checks,
+  `has_error()`, `%==%`).
+- **Structure**: Tests are located in `tests/testit/` and prefixed with
+  `test-`.
 - **Best practices**:
   - Test against known theoretical results (e.g., Poisson limit when
     dispersion is 0).
   - Verify S3 class structures and return types.
-  - Use `expect_error` to verify input validation.
-  - Example: See `tests/testthat/test-sample_size_nbinom.R` for testing
+  - Use `has_error()` to verify input validation.
+  - Example: See `tests/testit/test-sample_size_nbinom.R` for testing
     calculation logic.
 
 ## Common tasks
@@ -79,7 +83,7 @@ with the `gsDesign` package to support group sequential designs.
       structure.
   2.  Update `sim_gs_nbinom.R` to handle the new data in the simulation
       loop.
-  3.  Add a test case in `tests/testthat/`.
+  3.  Add a test case in `tests/testit/`.
 - **Modifying sample size logic**:
   1.  Edit `sample_size_nbinom.R`.
   2.  Verify against published literature examples if possible
