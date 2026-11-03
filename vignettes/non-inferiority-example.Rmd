@@ -1,5 +1,6 @@
 ---
 title: "Non-inferiority and super-superiority designs"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Non-inferiority and super-superiority designs}
   %\VignetteEngine{litedown::vignette}

@@ -1,6 +1,7 @@
 ---
 title: "Sample size calculation for negative binomial outcomes"
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Sample size calculation for negative binomial outcomes}
   %\VignetteEngine{litedown::vignette}

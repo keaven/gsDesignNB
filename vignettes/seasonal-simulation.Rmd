@@ -1,5 +1,6 @@
 ---
 title: "Seasonal event simulation"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Seasonal event simulation}
   %\VignetteEngine{litedown::vignette}

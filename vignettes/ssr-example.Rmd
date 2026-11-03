@@ -1,6 +1,7 @@
 ---
 title: "Sample size re-estimation example"
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Sample size re-estimation example}
   %\VignetteEngine{litedown::vignette}

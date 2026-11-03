@@ -1,5 +1,6 @@
 ---
 title: "AI-assisted gsDesignNB workflows"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{AI-assisted gsDesignNB workflows}
   %\VignetteEngine{litedown::vignette}

@@ -3,6 +3,7 @@ title: "SSR simulation study"
 css: "@tabsets"
 js: "@tabsets"
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{SSR simulation study}
   %\VignetteEngine{litedown::vignette}

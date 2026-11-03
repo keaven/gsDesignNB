@@ -1,5 +1,6 @@
 ---
 title: "Score vs Wald tests and sample-size recommendations"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Score vs Wald tests and sample-size recommendations}
   %\VignetteEngine{litedown::vignette}

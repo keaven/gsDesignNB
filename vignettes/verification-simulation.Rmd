@@ -1,5 +1,6 @@
 ---
 title: "Verification of sample size calculation via simulation"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Verification of sample size calculation via simulation}
   %\VignetteEngine{litedown::vignette}

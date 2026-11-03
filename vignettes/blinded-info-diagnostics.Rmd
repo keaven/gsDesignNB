@@ -1,5 +1,6 @@
 ---
 title: "Diagnosing Blinded Information Calculation Issues"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Diagnosing Blinded Information Calculation Issues}
   %\VignetteEngine{litedown::vignette}

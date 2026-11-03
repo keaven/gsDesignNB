@@ -1,6 +1,7 @@
 ---
 title: "Published sample-size examples with the gsDesignNB AI skill"
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Published sample-size examples with the gsDesignNB AI skill}
   %\VignetteEngine{litedown::vignette}

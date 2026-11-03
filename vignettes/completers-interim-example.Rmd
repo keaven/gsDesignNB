@@ -1,5 +1,6 @@
 ---
 title: "Group sequential simulation with completers analysis"
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Group sequential simulation with completers analysis}
   %\VignetteEngine{litedown::vignette}
