@@ -15,6 +15,7 @@ litedown::reactor(
 
 ```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
+library(lt)
 library(data.table)
 library(ggplot2)
 ```
@@ -128,11 +129,9 @@ base_display <- base_grid[, .(
   `Wald - Score` = n_wald - n_score
 )]
 
-knitr::kable(
-  base_display,
-  caption = "Base scenario grid with sample sizes by method",
-  digits = 2
-)
+lt(base_display) |>
+  lt_header("Base scenario grid with sample sizes by method") |>
+  lt_format(~ ., decimals = 2)
 ```
 
 ## Type I error comparison
@@ -175,11 +174,9 @@ type1_summary <- null_long[, .(
   `Below nominal beyond MC error` = sum(below_nominal_95)
 ), by = .(`Sizing` = sizing, `Test` = test)]
 
-knitr::kable(
-  type1_summary[order(Sizing, Test)],
-  caption = "Type I error synopsis across the scenario grid",
-  digits = 4
-)
+lt(type1_summary[order(Sizing, Test)]) |>
+  lt_header("Type I error synopsis across the scenario grid") |>
+  lt_format(~ ., decimals = 4)
 ```
 
 ```{r}
@@ -196,14 +193,12 @@ null_display <- null_long[order(lambda1, k, gap_days, sizing, test),
   )
 ]
 
-knitr::kable(
-  null_display,
-  caption = sprintf(
+lt(null_display) |>
+  lt_header(sprintf(
     "Type I error rate: nominal alpha = %.3f, %s null sims/scenario",
     config$alpha,
     format(config$n_sims_null, big.mark = ",")
-  )
-)
+  ))
 ```
 
 ```{r, fig.width=8, fig.height=6}
@@ -264,11 +259,9 @@ power_summary <- power_long[, .(
   `Below 90%` = sum(power < config$power_target)
 ), by = .(`Sizing` = sizing, `Test` = test)]
 
-knitr::kable(
-  power_summary[order(Sizing, Test)],
-  caption = "Power synopsis across the scenario grid",
-  digits = 4
-)
+lt(power_summary[order(Sizing, Test)]) |>
+  lt_header("Power synopsis across the scenario grid") |>
+  lt_format(~ ., decimals = 4)
 ```
 
 ```{r}
@@ -285,14 +278,12 @@ power_display <- power_long[order(lambda1, k, gap_days, sizing, test),
   )
 ]
 
-knitr::kable(
-  power_display,
-  caption = sprintf(
+lt(power_display) |>
+  lt_header(sprintf(
     "Power: RR = %.2f, %s power sims/scenario",
     config$rr_power,
     format(config$n_sims_power, big.mark = ",")
-  )
-)
+  ))
 ```
 
 ```{r, fig.width=8, fig.height=6}
@@ -394,11 +385,9 @@ fb_display <- null_fb[, .(
   `MoM (Score)` = round(pct_fallback_mom_score, 1)
 )]
 
-knitr::kable(
-  fb_display,
-  caption = "Fallback method frequency (%, null sims)",
-  digits = 1
-)
+lt(fb_display) |>
+  lt_header("Fallback method frequency (%, null sims)") |>
+  lt_format(~ ., decimals = 1)
 ```
 
 ## Summary

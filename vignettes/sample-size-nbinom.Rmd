@@ -16,6 +16,7 @@ litedown::reactor(
 
 ```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
+library(lt)
 ```
 
 This vignette describes the methodology used in the `sample_size_nbinom()` function for calculating sample sizes when comparing two
@@ -350,11 +351,13 @@ params$pct_reduction <- round(100 * (1 - params$correction), 2)
 # Show a subset
 subset_df <- params[params$pct_reduction > 0.5, ]
 subset_df <- subset_df[order(-subset_df$pct_reduction), ]
-knitr::kable(
-  head(subset_df[, c("lambda", "k", "gap", "naive_eff", "corrected_eff", "pct_reduction")], 12),
-  digits = 4, row.names = FALSE,
-  col.names = c("lambda", "k", "gap", "Naive eff. rate", "Corrected eff. rate", "Reduction (%)")
-)
+lt(head(subset_df[, c("lambda", "k", "gap", "naive_eff", "corrected_eff", "pct_reduction")], 12)) |>
+  lt_format(~ ., decimals = 4) |>
+  lt_label(
+    naive_eff = "Naive eff. rate",
+    corrected_eff = "Corrected eff. rate",
+    pct_reduction = "Reduction (%)"
+  )
 ```
 
 ### Simulation verification of average exposure
