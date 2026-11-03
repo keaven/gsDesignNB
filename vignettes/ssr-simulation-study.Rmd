@@ -1,17 +1,17 @@
 ---
 title: "SSR simulation study"
-output: rmarkdown::html_vignette
+css: "@tabsets"
+js: "@tabsets"
 bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{SSR simulation study}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
+litedown::reactor(
   collapse = TRUE,
-  comment = "#>",
   fig.width = 10,
   fig.height = 7
 )

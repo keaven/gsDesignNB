@@ -1,16 +1,14 @@
 ---
 title: "Non-inferiority and super-superiority designs"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Non-inferiority and super-superiority designs}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 

@@ -1,16 +1,14 @@
 ---
 title: "Score vs Wald tests and sample-size recommendations"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Score vs Wald tests and sample-size recommendations}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 

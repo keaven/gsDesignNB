@@ -37,7 +37,7 @@ Suggests:
     glmmTMB,
     testit,
     knitr,
-    rmarkdown,
+    litedown,
     ggplot2,
     dplyr,
     lt (>= 0.5),
@@ -48,6 +48,6 @@ Suggests:
     future,
     future.apply,
     gridExtra
-VignetteBuilder: knitr
+VignetteBuilder: litedown
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

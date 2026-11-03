@@ -1,17 +1,15 @@
 ---
 title: "Sample size calculation for negative binomial outcomes"
-output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{Sample size calculation for negative binomial outcomes}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 

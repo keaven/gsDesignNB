@@ -1,17 +1,15 @@
 ---
 title: "Multiple imputation for longitudinal negative binomial counts"
-output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{Multiple imputation for longitudinal negative binomial counts}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
+litedown::reactor(
   collapse = TRUE,
-  comment  = "#>",
   fig.width  = 7,
   fig.height = 4
 )

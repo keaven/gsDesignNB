@@ -1,16 +1,14 @@
 ---
 title: "Diagnosing Blinded Information Calculation Issues"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Diagnosing Blinded Information Calculation Issues}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
+litedown::reactor(
   collapse = TRUE,
-  comment = "#>",
   fig.width = 7,
   fig.height = 5
 )

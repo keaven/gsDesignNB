@@ -1,17 +1,15 @@
 ---
 title: "Published sample-size examples with the gsDesignNB AI skill"
-output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{Published sample-size examples with the gsDesignNB AI skill}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 

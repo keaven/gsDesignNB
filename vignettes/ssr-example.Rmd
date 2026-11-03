@@ -1,17 +1,15 @@
 ---
 title: "Sample size re-estimation example"
-output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
 vignette: >
   %\VignetteIndexEntry{Sample size re-estimation example}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 

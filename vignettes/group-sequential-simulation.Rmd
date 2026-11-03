@@ -1,16 +1,14 @@
 ---
 title: "Group sequential design and simulation"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Group sequential design and simulation}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 
