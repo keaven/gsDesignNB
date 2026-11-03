@@ -35,4 +35,6 @@ score_sweep.log
 # litedown site: only the config is tracked
 site/*.html
 site/doc/
-site/playground/
+site/playground/*
+!site/playground/_default.Rmd
+!site/playground/setup.R
