@@ -36,6 +36,9 @@ site:
 output:
   html:
     meta:
+      css: "@pkgdown-like"
       include_after: "_footer.md"
     options:
       number_sections: true
+      toc:
+        class: side side-right
