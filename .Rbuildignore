@@ -6,6 +6,7 @@
 ^data-raw$
 ^LICENSE\.md$
 ^docs$
+^site$
 ^\.\.Rcheck$
 ^\.Rhistory$
 \.DS_Store$

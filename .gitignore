@@ -31,3 +31,8 @@ papers/
 CRAN-SUBMISSION
 llms.txt
 score_sweep.log
+
+# litedown site: only the config is tracked
+site/*.html
+site/doc/
+site/playground/
