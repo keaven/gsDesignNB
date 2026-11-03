@@ -301,8 +301,7 @@ lt(comparison) |>
   lt_header("Wald vs score sizing with randomized-sample inflation.")
 ```
 
-For this non-inferiority design with equal planned rates ($\lambda_1 =
-\lambda_2 = 3.0$), score sizing is slightly smaller than Wald sizing. That is
+For this non-inferiority design with equal planned rates ($\lambda_1 = \lambda_2 = 3.0$), score sizing is slightly smaller than Wald sizing. That is
 not a general rule; it depends on the null margin, rates, dispersion, and the
 variance reference used by the formula. The skill asks the analyst to compare
 both rules rather than assume one is always more conservative.

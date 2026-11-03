@@ -399,6 +399,6 @@ The `usTime = c(0.1, 0.18, 1)` specification provides conservative alpha spendin
 at early analyses, preserving most of the Type I error for later analyses when
 more information is available.
 
-With `r n_sims` simulations, the standard error for the power estimate is approximately 0.5%.
-The observed power of `r sprintf("%.1f%%", summary_gs$power * 100)` is close to the design
+With `{r} n_sims` simulations, the standard error for the power estimate is approximately 0.5%.
+The observed power of `{r} sprintf("%.1f%%", summary_gs$power * 100)` is close to the design
 target of 90%, validating the sample size calculation methodology.

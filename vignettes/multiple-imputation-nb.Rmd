@@ -80,8 +80,7 @@ The strategies differ only in how $\hat\mu_i$ is determined:
 
 - **MAR**: $\hat\mu_i = \hat\mu_i^{\text{BLUP}}$ — predicted mean including
   subject random effects.
-- **MNAR reference-based**: $\hat\mu_i = \hat\mu_i^{\text{FE, ref}} \times
-  \dfrac{\hat\mu_i^{\text{BLUP}}}{\hat\mu_i^{\text{FE}}}$ — counterfactual
+- **MNAR reference-based**: $\hat\mu_i = \hat\mu_i^{\text{FE, ref}} \times \dfrac{\hat\mu_i^{\text{BLUP}}}{\hat\mu_i^{\text{FE}}}$ — counterfactual
   mean under the reference treatment, adjusted by each subject's estimated
   random effect. The ratio $\hat\mu_i^{\text{BLUP}} / \hat\mu_i^{\text{FE}}$
   is the multiplicative random-effect "BLUP multiplier" computed from the

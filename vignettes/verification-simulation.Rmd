@@ -90,7 +90,7 @@ print(design)
 
 ## Simulation results
 
-We simulated 3,600 trials at the corrected sample size ($n = `r design$n_total`$).
+We simulated 3,600 trials at the corrected sample size ($n = `{r} design$n_total`$).
 For each trial, we also analyzed the first $n = 422$ subjects to provide a comparison with the 
 naive (uncorrected) sample size.
 This number of simulations achieves a standard error for the power estimate 

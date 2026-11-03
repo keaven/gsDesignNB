@@ -396,12 +396,12 @@ lt(fb_display) |>
   this grid. Wald and score sample sizes differ by at most four subjects, while the null rejection
   pattern changes materially when the test statistic changes.
 - The Wald test is mildly anti-conservative in several finite-sample scenarios. Across the grid,
-  its empirical Type I error ranges from `r round(min(null_long[test == "Wald"]$rejection_rate), 4)`
-  to `r round(max(null_long[test == "Wald"]$rejection_rate), 4)`, and many Wald cells are above
+  its empirical Type I error ranges from `{r} round(min(null_long[test == "Wald"]$rejection_rate), 4)`
+  to `{r} round(max(null_long[test == "Wald"]$rejection_rate), 4)`, and many Wald cells are above
   nominal beyond Monte Carlo error.
 - The score test provides better Type I protection. Its empirical Type I error ranges from
-  `r round(min(null_long[test == "Score"]$rejection_rate), 4)` to
-  `r round(max(null_long[test == "Score"]$rejection_rate), 4)`; no score-test cell is above
+  `{r} round(min(null_long[test == "Score"]$rejection_rate), 4)` to
+  `{r} round(max(null_long[test == "Score"]$rejection_rate), 4)`; no score-test cell is above
   nominal beyond Monte Carlo error, although several are conservatively below nominal.
 - Use the Zhu--Lakkis / Friede--Schmidli / Mutze Wald formula when the planned primary analysis is
   the Wald log-rate-ratio test. It is also a reasonable practical baseline when the planned primary
