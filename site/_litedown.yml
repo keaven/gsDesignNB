@@ -36,7 +36,7 @@ site:
 output:
   html:
     meta:
-      css: "@pkgdown-like"
+      css: ["@pkgdown-like", "/theme.css"]
       include_after: "_footer.md"
     options:
       number_sections: true

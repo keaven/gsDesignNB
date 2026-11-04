@@ -1,0 +1,14 @@
+/* gsDesign2-like teal theme: variables of pkgdown-like.css, plus navbar text color */
+:root {
+  --pk-primary: #00857c;
+  --pk-nav-bg: var(--pk-primary);
+  --pk-nav-fg: #fff;
+}
+.site-nav { color: var(--pk-nav-fg); }
+/* the dark scheme inverts the page: pre-invert colors so they render as above */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pk-primary: #ff7a83;
+    --pk-nav-fg: #000;
+  }
+}
