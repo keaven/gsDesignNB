@@ -1051,5 +1051,3 @@ below summarizes what the skill handled well and where challenges arose.
 For group sequential designs and SSR studies, see the
 `group-sequential-simulation`, `ssr-example`, and
 `ssr-simulation-study` vignettes.
-
-## References

@@ -657,5 +657,3 @@ sample_size_nbinom(
 ```
 
 In this example, even though the calendar time is the same for both groups, the effective at-risk exposure is lower for Group 1 because they have more events and thus more gap time.
-
-## References

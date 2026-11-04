@@ -1555,5 +1555,3 @@ For reference, the local 11-worker production cache was generated with
 checkpointed chunks and took an overnight run; resumed runs report only the
 wall-clock time since restart, not the cumulative time spent on previously
 cached chunks.
-
-## References

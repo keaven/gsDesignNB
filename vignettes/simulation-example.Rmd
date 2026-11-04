@@ -393,5 +393,3 @@ ggplot(plot_data, aes(x = events, y = prop, fill = type)) +
   ) +
   theme_minimal()
 ```
-
-## References
