@@ -1,6 +1,5 @@
 ---
 title: "Sample size re-estimation example"
-bibliography: gsDesignNB.bib
 knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Sample size re-estimation example}
@@ -386,5 +385,3 @@ if (z_stat > gs_update$upper$bound[2]) {
   cat("Fail to Reject Null Hypothesis\n")
 }
 ```
-
-## References

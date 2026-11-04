@@ -1,6 +1,5 @@
 ---
 title: "Multiple imputation for longitudinal negative binomial counts"
-bibliography: gsDesignNB.bib
 knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Multiple imputation for longitudinal negative binomial counts}
