@@ -1,17 +1,18 @@
 ---
 title: "SSR simulation study"
-output: rmarkdown::html_vignette
+css: "@tabsets"
+js: "@tabsets"
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{SSR simulation study}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
+litedown::reactor(
   collapse = TRUE,
-  comment = "#>",
   fig.width = 10,
   fig.height = 7,
   dpi = 72
@@ -168,10 +169,10 @@ the power results should be read as score-test power after SSR rather than as
 Wald-test power.
 
 The group sequential inflation factor is
-`r round(gs_inflation, 3)`, giving a planned sample size of
-`r n_planned` (up from the fixed-design
-`r round(design_plan$n_total)`) with an effective accrual rate of
-`r round(accrual_rate_plan_eff, 1)` patients per month.
+`{r} round(gs_inflation, 3)`, giving a planned sample size of
+`{r} n_planned` (up from the fixed-design
+`{r} round(design_plan$n_total)`) with an effective accrual rate of
+`{r} round(accrual_rate_plan_eff, 1)` patients per month.
 
 ```{r gs_bound_summary}
 gsBoundSummary(gs_plan,
@@ -204,8 +205,8 @@ dispersion $k$.
 Since the sample size does not depend on the enrollment pace (accrual rate
 only scales enrollment duration), we show two lines -- one per $k$ value --
 with $\lambda_1$ on the horizontal axis.
-The planned design assumptions ($\lambda_1 = `r lambda1_plan`$,
-$k = `r k_plan`$) are marked with a dashed line.
+The planned design assumptions ($\lambda_1 = `{r} lambda1_plan`$,
+$k = `{r} k_plan`$) are marked with a dashed line.
 
 ```{r gs_n_by_scenario, fig.width=9, fig.height=4.5}
 lambda1_seq <- seq(0.2, 1.0, by = 0.1)
@@ -279,8 +280,8 @@ gridExtra::grid.arrange(plot_n, plot_rate, ncol = 2,
 
 Across the range of $\lambda_1$ and $k$ values considered, the required
 group sequential sample size ranges from
-`r min(gs_n_grid$GS_N, na.rm = TRUE)` to
-`r max(gs_n_grid$GS_N, na.rm = TRUE)`.
+`{r} min(gs_n_grid$GS_N, na.rm = TRUE)` to
+`{r} max(gs_n_grid$GS_N, na.rm = TRUE)`.
 Higher dispersion ($k = 1.0$) consistently requires more subjects than
 $k = 0.5$, while higher control rates reduce the required N because each
 subject contributes more information.
@@ -292,7 +293,7 @@ when nuisance parameters are uncertain.
 This table shows the expected information fraction at each planned interim
 calendar time under each nuisance scenario. Under the approximate design assumptions
 (bold green row), the information fractions match the GS design reasonably well
-(`r paste(round(100 * planned_timing[1:2], 1), collapse = "%, ")`%).
+(`{r} paste(round(100 * planned_timing[1:2], 1), collapse = "%, ")`%).
 
 ```{r info_fractions}
 nuisance_grid <- expand.grid(
@@ -465,9 +466,8 @@ Interim analyses are information-based and use dynamic spending:
    and spending.
 3. **SSR at IA2 only**: nuisance estimates for adaptation use an IA2
    adaptation cutoff time at
-   $\min(\text{IA2 time},\; \text{predicted enrollment close} -
-   `r min_months_to_close_for_adapt` \text{ months})$, enforcing at least
-   `r min_months_to_close_for_adapt` months of operational lead-time.
+   $\min(\text{IA2 time},\; \text{predicted enrollment close} - `{r} min_months_to_close_for_adapt` \text{ months})$, enforcing at least
+   `{r} min_months_to_close_for_adapt` months of operational lead-time.
    The enrollment-fraction cap is set in the scenario setup.
 
 At each analysis, bounds are recalculated from observed information and
@@ -1506,25 +1506,24 @@ or premature decisions.
 
 In this update, IA2 remains information-based while adaptation uses a
 lead-time cutoff of at least
-`r min_months_to_close_for_adapt` months before predicted enrollment close.
+`{r} min_months_to_close_for_adapt` months before predicted enrollment close.
 
 ### Futility at low information
 
 Futility assessment is deferred when the observed information fraction is below
-`r 100 * min_if_futility`%. The spending function approach uses
+`{r} 100 * min_if_futility`%. The spending function approach uses
 $\text{usTime} = \text{lsTime} = \min(t_{\text{planned}}, t_{\text{actual}})$
 to cap spending.
 
 IA1 includes efficacy/futility monitoring but does not permit SSR.
 SSR is attempted only at IA2. For operational feasibility, SSR uses an
 adaptation cutoff at
-$\min(\text{IA2 time},\; \text{predicted enrollment close} -
-`r min_months_to_close_for_adapt` \text{ months})$, with enrollment fraction at or
-below `r 100 * max_enrollment_frac_for_ia2`%.
+$\min(\text{IA2 time},\; \text{predicted enrollment close} - `{r} min_months_to_close_for_adapt` \text{ months})$, with enrollment fraction at or
+below `{r} 100 * max_enrollment_frac_for_ia2`%.
 
 When a trial stops early for futility, the reported final sample size includes
 subjects enrolled by the stop analysis date plus
-`r analysis_lag_months` months to reflect enrollment that continues during
+`{r} analysis_lag_months` months to reflect enrollment that continues during
 analysis/decision implementation.
 
 Futility and efficacy crossing percentages are reported separately for IA1 and
@@ -1557,5 +1556,3 @@ For reference, the local 11-worker production cache was generated with
 checkpointed chunks and took an overnight run; resumed runs report only the
 wall-clock time since restart, not the cumulative time spent on previously
 cached chunks.
-
-## References

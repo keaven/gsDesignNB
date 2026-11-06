@@ -1,17 +1,15 @@
 ---
 title: "Sample size re-estimation example"
-output: rmarkdown::html_vignette
-bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Sample size re-estimation example}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 
@@ -225,7 +223,7 @@ Calculated assuming a common rate and dispersion, often used for monitoring with
 **Unblinded Information:**
 Calculated using the observed rates and dispersion in each group. This is the true Fisher information for the log rate ratio.
 
-$$ \mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}_{trt})} \right) $$
+$$\mathcal{I} = \left( \frac{1}{\text{Var}(\hat{\beta}_{trt})} \right)$$
 
 ```{r info_calc}
 # Blinded SSR
@@ -259,15 +257,15 @@ cat("Unblinded SSR N:", ceiling(ssr_res$n_total_unblinded), "\n")
 print(ssr_res)
 ```
 
-The estimated control rate is `r round(ssr_res$lambda1_unblinded, 3)`, which is lower than the planned `r lambda1_plan`.
-The information fraction is `r round(ssr_res$info_fraction, 3)`.
+The estimated control rate is `{r} round(ssr_res$lambda1_unblinded, 3)`, which is lower than the planned `{r} lambda1_plan`.
+The information fraction is `{r} round(ssr_res$info_fraction, 3)`.
 
 ### Sample size re-estimation
 
 Since the control rate is lower and dispersion is higher, the information accumulates slower than planned. 
 To maintain power, we need to increase the sample size or follow-up.
 
-The `unblinded_ssr` function estimates the required total sample size to be `r ceiling(ssr_res$n_total_unblinded)`. We ensure the sample size is at least as large as the planned sample size.
+The `unblinded_ssr` function estimates the required total sample size to be `{r} ceiling(ssr_res$n_total_unblinded)`. We ensure the sample size is at least as large as the planned sample size.
 
 ```{r update_design}
 n_planned <- ceiling(design_plan$n_total)
@@ -299,7 +297,7 @@ if (n_final > n_planned) {
 
 ## Final analysis
 
-We proceed to the final analysis at Month `r round(new_trial_dur, 1)`. We include the additional patients if the sample size was increased.
+We proceed to the final analysis at Month `{r} round(new_trial_dur, 1)`. We include the additional patients if the sample size was increased.
 
 ```{r final_analysis}
 # Update the dataset to include the additional patients
@@ -387,5 +385,3 @@ if (z_stat > gs_update$upper$bound[2]) {
   cat("Fail to Reject Null Hypothesis\n")
 }
 ```
-
-## References

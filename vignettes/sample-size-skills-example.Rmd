@@ -1,22 +1,22 @@
 ---
 title: "Published sample-size examples with the gsDesignNB AI skill"
-output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Published sample-size examples with the gsDesignNB AI skill}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 
 ```{r, message=FALSE, warning=FALSE}
 library(gsDesignNB)
+library(lt)
 ```
 
 ## Purpose
@@ -233,7 +233,9 @@ data.frame(
                         "Dropout via exposure integral",
                         "Protocol target"),
   N                = c(n_inflated, ceiling(wald_exposure$n_total), 3332)
-) |> knitr::kable(caption = "Sample size comparison: two dropout approaches vs protocol.")
+) |>
+  lt() |>
+  lt_header("Sample size comparison: two dropout approaches vs protocol.")
 ```
 
 The protocol's 3332 falls between the two approaches and is closer to the
@@ -295,13 +297,11 @@ comparison <- data.frame(
   events        = round(c(wald_evaluable$total_events, score_evaluable$total_events, NA), 1)
 )
 
-knitr::kable(comparison,
-  caption = "Wald vs score sizing with randomized-sample inflation."
-)
+lt(comparison) |>
+  lt_header("Wald vs score sizing with randomized-sample inflation.")
 ```
 
-For this non-inferiority design with equal planned rates ($\lambda_1 =
-\lambda_2 = 3.0$), score sizing is slightly smaller than Wald sizing. That is
+For this non-inferiority design with equal planned rates ($\lambda_1 = \lambda_2 = 3.0$), score sizing is slightly smaller than Wald sizing. That is
 not a general rule; it depends on the null margin, rates, dispersion, and the
 variance reference used by the formula. The skill asks the analyst to compare
 both rules rather than assume one is always more conservative.
@@ -336,9 +336,9 @@ data.frame(
   Formula   = c("No gap (FLAME protocol)", "28-day gap (Jensen-corrected)"),
   N         = c(n_inflated, n_gap_inflated),
   delta_n   = c(0, n_gap_inflated - n_inflated)
-) |> knitr::kable(
-  caption = "Impact of a hypothetical 28-day event gap on the FLAME sample size."
-)
+) |>
+  lt() |>
+  lt_header("Impact of a hypothetical 28-day event gap on the FLAME sample size.")
 ```
 
 #### Verify by simulation (fixed design)
@@ -396,7 +396,9 @@ data.frame(
   Value  = c(sprintf("%.1f%%", power * 100),
              sprintf("%.1f%%", empirical_power * 100),
              n_sims)
-) |> knitr::kable(caption = "Fixed-design simulation verification.")
+) |>
+  lt() |>
+  lt_header("Fixed-design simulation verification.")
 ```
 
 At 5,000 replicates, the Monte Carlo standard error near 95% power is about
@@ -458,7 +460,9 @@ data.frame(
              "N total (this comparison)", "Protocol target (comparison)"),
   Value  = c(ceiling(impact_wald$n1), ceiling(impact_wald$n2),
              ceiling(impact_wald$n_total), "2,000 + 4,000 = 6,000")
-) |> knitr::kable(caption = "IMPACT: FF/UMEC/VI vs UMEC/VI.")
+) |>
+  lt() |>
+  lt_header("IMPACT: FF/UMEC/VI vs UMEC/VI.")
 ```
 
 The protocol's 10,000-patient total also powers the FF/UMEC/VI vs FF/VI
@@ -487,7 +491,9 @@ impact_ffvi <- sample_size_nbinom(
 data.frame(
   Metric = c("N per arm (FF/UMEC/VI vs FF/VI)", "N total", "Protocol target"),
   Value  = c(ceiling(impact_ffvi$n1), ceiling(impact_ffvi$n_total), "4,000 + 4,000 = 8,000")
-) |> knitr::kable(caption = "IMPACT: FF/UMEC/VI vs FF/VI (12% reduction).")
+) |>
+  lt() |>
+  lt_header("IMPACT: FF/UMEC/VI vs FF/VI (12% reduction).")
 ```
 
 ### Sensitivity to dispersion
@@ -551,7 +557,9 @@ data.frame(
   Design      = c("No event gap", "28-day gap (Jensen-corrected)"),
   N           = c(ceiling(impact_nogap$n_total), ceiling(impact_wald$n_total)),
   Delta       = c(0, ceiling(impact_wald$n_total) - ceiling(impact_nogap$n_total))
-) |> knitr::kable(caption = "Impact of the 28-day event gap on IMPACT sample size.")
+) |>
+  lt() |>
+  lt_header("Impact of the 28-day event gap on IMPACT sample size.")
 ```
 
 
@@ -602,9 +610,8 @@ opera_results <- lapply(opera_k_vals, function(k) {
 opera_df <- do.call(rbind, opera_results)
 opera_df$Protocol <- 400
 
-knitr::kable(opera_df,
-  caption = "OPERA sample size for varying dispersion k (84% power, RR = 0.50)."
-)
+lt(opera_df) |>
+  lt_header("OPERA sample size for varying dispersion k (84% power, RR = 0.50).")
 ```
 
 With a 50% rate reduction, this NB calculation gives fewer than 400 subjects per
@@ -675,17 +682,15 @@ friede_results <- mapply(function(theta, pwr) {
 
 published_n0 <- c(147, 370, 196, 496)
 
-knitr::kable(
-  data.frame(
+lt(data.frame(
     theta     = friede_scenarios$theta,
     power     = friede_scenarios$power,
     published = published_n0,
     gsDesignNB = friede_results,
     difference = friede_results - published_n0,
     within_one = ifelse(abs(friede_results - published_n0) <= 1, "Yes", "No")
-  ),
-  caption = "Friede & Schmidli (2010) Table 1: fixed-design validation."
-)
+  )) |>
+  lt_header("Friede & Schmidli (2010) Table 1: fixed-design validation.")
 ```
 
 The replicated values match the published table exactly or within one subject
@@ -781,10 +786,8 @@ mutze_hf_results <- mapply(function(lam, theta, kappa, pwr) {
 mutze_hf$k <- 1 / mutze_hf$kappa
 mutze_hf$n1_gsDesignNB <- mutze_hf_results
 
-knitr::kable(
-  mutze_hf[, c("lambda_annual", "theta", "k", "power", "n1_gsDesignNB")],
-  caption = "Mutze et al. (2019): HF fixed-design n₁ (κ=2, k=0.5)."
-)
+lt(mutze_hf[, c("lambda_annual", "theta", "k", "power", "n1_gsDesignNB")]) |>
+  lt_header("Mutze et al. (2019): HF fixed-design n₁ (κ=2, k=0.5).")
 ```
 
 **MS scenarios** (Table 5): fixed 6-month follow-up, monthly CUAL rates.
@@ -822,10 +825,8 @@ mutze_ms_results <- mapply(function(lam, theta, kappa, pwr) {
 mutze_ms$k <- 1 / mutze_ms$kappa
 mutze_ms$n1_gsDesignNB <- mutze_ms_results
 
-knitr::kable(
-  mutze_ms[, c("lambda_annual", "theta", "k", "power", "n1_gsDesignNB")],
-  caption = "Mutze et al. (2019): MS fixed-design n₁ (κ=2, k=0.5)."
-)
+lt(mutze_ms[, c("lambda_annual", "theta", "k", "power", "n1_gsDesignNB")]) |>
+  lt_header("Mutze et al. (2019): MS fixed-design n₁ (κ=2, k=0.5).")
 ```
 
 ### Real-data reverse engineering: CHARM-Preserved
@@ -867,7 +868,9 @@ data.frame(
              "Required N (90% power)", "CHARM-Preserved actual N"),
   Value  = c(round(rate_placebo, 3), round(rr_observed, 3),
              ceiling(charm$n_total), 3023)
-) |> knitr::kable(caption = "Design from CHARM-Preserved observed data.")
+) |>
+  lt() |>
+  lt_header("Design from CHARM-Preserved observed data.")
 ```
 
 
@@ -917,9 +920,9 @@ data.frame(
   Test  = c("Wald", "Score"),
   N_per_arm = c(ceiling(bold_wald$n1), ceiling(bold_score$n1)),
   N_total   = c(ceiling(bold_wald$n_total), ceiling(bold_score$n_total))
-) |> knitr::kable(
-  caption = "BOLD trial sizing: Wald vs Score (RR = 0.30, high rate)."
-)
+) |>
+  lt() |>
+  lt_header("BOLD trial sizing: Wald vs Score (RR = 0.30, high rate).")
 ```
 
 At these small sample sizes, the score test is recommended for the
@@ -964,9 +967,9 @@ data.frame(
                    "Cox time-to-first (protocol)"),
   N           = c(ceiling(paradigm_nb$n_total), 7980),
   Endpoint    = c("Recurrent HF hospitalizations", "CV death or first HF hosp.")
-) |> knitr::kable(
-  caption = "PARADIGM-HF: NB recurrent-event sizing vs actual protocol."
-)
+) |>
+  lt() |>
+  lt_header("PARADIGM-HF: NB recurrent-event sizing vs actual protocol.")
 ```
 
 This illustrates a key trade-off: time-to-first-event designs require
@@ -1048,5 +1051,3 @@ below summarizes what the skill handled well and where challenges arose.
 For group sequential designs and SSR studies, see the
 `group-sequential-simulation`, `ssr-example`, and
 `ssr-simulation-study` vignettes.
-
-## References

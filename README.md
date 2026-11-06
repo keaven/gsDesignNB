@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/gsDesignNB)](https://CRAN.R-project.org/package=gsDesignNB)
 [![Codecov test coverage](https://codecov.io/gh/keaven/gsDesignNB/graph/badge.svg)](https://app.codecov.io/gh/keaven/gsDesignNB)
-[![pkgdown](https://github.com/keaven/gsDesignNB/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/keaven/gsDesignNB/actions/workflows/pkgdown.yaml)
+[![litedown](https://github.com/keaven/gsDesignNB/actions/workflows/litedown-site.yml/badge.svg)](https://github.com/keaven/gsDesignNB/actions/workflows/litedown-site.yml)
 [![R-CMD-check](https://github.com/keaven/gsDesignNB/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/keaven/gsDesignNB/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 

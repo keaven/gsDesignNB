@@ -1,0 +1,53 @@
+---
+title: Hello gsDesignNB
+---
+
+**gsDesignNB** designs and simulates clinical trials with negative binomial
+(recurrent event) outcomes. Run the code below, then change the inputs to try
+your own design.
+
+## Sample size
+
+Size a fixed design for a 30% rate reduction, with overdispersed events,
+staggered accrual, and dropout:
+
+```{r}
+library(gsDesignNB)
+
+x = sample_size_nbinom(
+  lambda1 = 1.0, lambda2 = 0.7, dispersion = 0.5, power = 0.9,
+  accrual_rate = 10, accrual_duration = 12, trial_duration = 24,
+  dropout_rate = 0.05, max_followup = 12
+)
+x
+```
+
+## Simulate a trial
+
+Generate data for one trial with `nb_sim()`, truncate it at month 18, and test
+the treatment effect with a Wald test:
+
+```{r}
+set.seed(1)
+enroll_rate = data.frame(rate = 20, duration = 12)
+fail_rate = data.frame(
+  treatment = c("Control", "Experimental"),
+  rate = c(1, 0.7), dispersion = 0.5
+)
+d = nb_sim(enroll_rate, fail_rate, max_followup = 12, n = 200)
+cut = cut_data_by_date(d, cut_date = 18)
+mutze_test(cut)
+```
+
+## Group sequential design
+
+Extend the fixed design to three analyses with spending-function boundaries:
+
+```{r}
+gsNBCalendar(
+  x, k = 3, test.type = 4, sfu = sfHSD, sfupar = -4,
+  analysis_times = c(12, 18, 24)
+)
+```
+
+Learn more at <https://keaven.github.io/gsDesignNB/>.

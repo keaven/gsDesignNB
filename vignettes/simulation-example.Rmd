@@ -1,17 +1,16 @@
 ---
 title: "Simulating recurrent events"
-output: rmarkdown::html_vignette
 bibliography: gsDesignNB.bib
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Simulating recurrent events}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 
@@ -317,7 +316,7 @@ sim_nb <- nb_sim(
 We can verify that the simulated data reflects the input dispersion parameter by estimating it back from the data. 
 We use the Method of Moments (MoM) estimator:
 
-$$ \hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2} $$
+$$\hat{k} = \frac{Var(Y) - \bar{Y}}{\bar{Y}^2}$$
 
 ```{r}
 # Count events per subject
@@ -394,5 +393,3 @@ ggplot(plot_data, aes(x = events, y = prop, fill = type)) +
   ) +
   theme_minimal()
 ```
-
-## References

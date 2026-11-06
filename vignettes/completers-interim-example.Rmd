@@ -1,16 +1,15 @@
 ---
 title: "Group sequential simulation with completers analysis"
-output: rmarkdown::html_vignette
+knit: litedown:::knit
 vignette: >
   %\VignetteIndexEntry{Group sequential simulation with completers analysis}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{litedown::vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+litedown::reactor(
+  collapse = TRUE
 )
 ```
 

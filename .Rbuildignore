@@ -1,11 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.github$
-^_pkgdown\.yml$
-^pkgdown$
 ^data-raw$
 ^LICENSE\.md$
 ^docs$
+^site$
 ^\.\.Rcheck$
 ^\.Rhistory$
 \.DS_Store$
