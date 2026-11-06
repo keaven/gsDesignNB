@@ -13,7 +13,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 10,
-  fig.height = 7
+  fig.height = 7,
+  dpi = 72
 )
 design_note <- "Design summary computed below"
 ```

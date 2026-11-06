@@ -184,6 +184,13 @@ results_naive <- rbindlist(lapply(results_list, function(x) as.data.frame(x$naiv
 cat("Completed", nrow(results_full), "replicates.\n")
 
 # 4. Save Results
+# Round doubles to 7 significant digits to keep the shipped .rds small
+round_sig7 <- function(d) {
+  d[, names(d)[vapply(d, is.double, NA)] := lapply(.SD, signif, 7), .SDcols = is.double]
+  d
+}
+results_full <- round_sig7(results_full)
+results_naive <- round_sig7(results_naive)
 output_path <- file.path("inst", "extdata", "simulation_results.rds")
 saveRDS(list(
   design = design,
@@ -202,7 +209,7 @@ saveRDS(list(
     trial_duration = trial_duration,
     event_gap = event_gap
   )
-), file = output_path)
+), file = output_path, compress = "xz")
 
 cat("Simulation completed. Results saved to", output_path, "\n")
 cat("  results (n=", n_full, "):", nrow(results_full), "rows\n")
@@ -276,7 +283,7 @@ saveRDS(list(
   alpha = alpha,
   lambda_null = lambda1,
   dispersion = dispersion
-), file = null_output_path)
+), file = null_output_path, compress = "xz")
 
 cat("Null simulation completed.", nrow(results_null), "replicates saved to", null_output_path, "\n")
 cat("  Wald Type I error: ", mean(results_null$p_value_wald < alpha, na.rm = TRUE), "\n")
