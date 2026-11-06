@@ -483,7 +483,7 @@ rules.
 ``` r
 
 sessionInfo()
-#> R version 4.6.1 (2026-06-24)
+#> R version 4.6.2 (2026-10-29)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.5 LTS
 #> 
@@ -509,27 +509,27 @@ sessionInfo()
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6        TMB_1.9.25          xfun_0.62          
 #>  [4] bslib_0.12.0        ggplot2_4.0.3       htmlwidgets_1.6.4  
-#>  [7] lattice_0.22-9      numDeriv_2016.8-1.1 vctrs_0.7.3        
-#> [10] tools_4.6.1         Rdpack_2.6.6        generics_0.1.4     
-#> [13] parallel_4.6.1      sandwich_3.1-3      tibble_3.3.1       
-#> [16] pkgconfig_2.0.3     Matrix_1.7-5        data.table_1.18.6.1
+#>  [7] lattice_0.23-1      numDeriv_2016.8-1.1 vctrs_0.7.3        
+#> [10] tools_4.6.2         Rdpack_2.6.6        generics_0.1.4     
+#> [13] parallel_4.6.2      sandwich_3.1-3      tibble_3.3.1       
+#> [16] pkgconfig_2.0.3     Matrix_1.7-6        data.table_1.18.6.1
 #> [19] RColorBrewer_1.1-3  S7_0.2.2            desc_1.4.3         
 #> [22] gt_1.4.0            doFuture_1.4.0      lifecycle_1.0.5    
-#> [25] compiler_4.6.1      farver_2.1.2        textshaping_1.0.5  
+#> [25] compiler_4.6.2      farver_2.1.2        textshaping_1.0.5  
 #> [28] lt_0.5              codetools_0.2-20    htmltools_0.5.9    
 #> [31] sass_0.4.10         yaml_2.3.12         pkgdown_2.2.1      
 #> [34] pillar_1.11.1       nloptr_2.2.1        gsDesign_3.11.0    
 #> [37] jquerylib_0.1.4     RTMB_2.0            tidyr_1.3.2        
-#> [40] MASS_7.3-65         cachem_1.1.0        iterators_1.0.14   
+#> [40] MASS_7.3-66         cachem_1.1.0        iterators_1.0.14   
 #> [43] reformulas_0.4.4    foreach_1.5.2       boot_1.3-32        
-#> [46] parallelly_1.48.0   nlme_3.1-169        r2rtf_1.3.1        
+#> [46] parallelly_1.50.0   nlme_3.1-171        r2rtf_1.3.1        
 #> [49] tidyselect_1.2.1    digest_0.6.39       mvtnorm_1.4-2      
-#> [52] future_1.80.0       listenv_1.1.0       dplyr_1.2.1        
-#> [55] purrr_1.2.2         splines_4.6.1       fastmap_1.2.0      
-#> [58] grid_4.6.1          cli_3.6.6           magrittr_2.0.5     
-#> [61] survival_3.8-6      future.apply_1.21.0 scales_1.4.0       
+#> [52] future_1.82.0       listenv_1.1.0       dplyr_1.2.1        
+#> [55] purrr_1.2.2         splines_4.6.2       fastmap_1.2.0      
+#> [58] grid_4.6.2          cli_3.6.6           magrittr_2.0.5     
+#> [61] survival_3.8-12     future.apply_1.21.0 scales_1.4.0       
 #> [64] simtrial_1.1.0      rmarkdown_2.32      globals_0.20.0     
-#> [67] otel_0.2.0          lme4_2.0-6          ragg_1.5.2         
+#> [67] otel_0.2.0          lme4_2.1-0          ragg_1.5.2         
 #> [70] zoo_1.9-1           evaluate_1.0.5      knitr_1.52         
 #> [73] glmmTMB_1.1.15.2    rbibutils_2.4.1     mgcv_1.9-4         
 #> [76] rlang_1.3.0         Rcpp_1.1.2          xtable_1.8-8       
