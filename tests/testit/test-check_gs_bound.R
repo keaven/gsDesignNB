@@ -32,6 +32,23 @@ assert("check_gs_bound detects upper crossings", {
   (result$cross_upper[1])
 })
 
+assert("check_gs_bound supports efficacy-only designs", {
+  design <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 1,
+                               timing = c(0.5, 1))
+  sim_df <- data.frame(
+    sim = c(1, 1, 2, 2),
+    analysis = c(1, 2, 1, 2),
+    z_stat = c(5, NA, 0.5, 2.5),
+    blinded_info = c(50, 100, 50, 100),
+    unblinded_info = c(50, 100, 50, 100)
+  )
+
+  result <- check_gs_bound(sim_df, design)
+  (result$cross_upper[result$sim == 1 & result$analysis == 1])
+  (result$cross_upper[result$sim == 2 & result$analysis == 2])
+  (!any(result$cross_lower))
+})
+
 assert("check_gs_bound detects lower crossings for test.type >= 2", {
   design <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 4, timing = c(0.5, 1))
   # Very negative z should cross lower bound

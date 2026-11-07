@@ -96,13 +96,14 @@ Default is 18.}
 
 \item{analysis_times}{Vector of calendar times for each analysis.
 Must have length k. These times are stored in the \code{T}
-element and displayed by \code{\link[gsDesign:gsBoundSummary]{gsDesign::gsBoundSummary()}}.}
+element and displayed by \code{\link[gsDesign:gsBoundSummary]{gsDesign::gsBoundSummary()}}. Required.}
 }
 \value{
 An object of class \code{gsNB} which inherits from \code{gsDesign}
 and \code{sample_size_nbinom_result}.
 While the final sample size would be planned total enrollment, interim analysis
-sample sizes are the expected number enrolled at the times specified in \code{analysis_times}.
+sample sizes are the expected number enrolled at the supplied or solved
+calendar times.
 Output value contains all elements from
 \code{\link[gsDesign:gsDesign]{gsDesign::gsDesign()}} plus:
 \describe{
@@ -117,7 +118,7 @@ Output value contains all elements from
 \item{exposure_at_risk1}{A vector with expected at-risk exposure per analysis for group 1}
 \item{exposure_at_risk2}{A vector with expected at-risk exposure per analysis for group 2}
 \item{variance}{A vector with variance of log rate ratio per analysis}
-\item{T}{Calendar time at each analysis (if \code{analysis_times} provided)}
+\item{T}{Supplied or solved calendar time at each analysis}
 \item{testUpper}{Logical vector indicating which analyses have an efficacy bound}
 \item{testLower}{Logical vector indicating which analyses have a futility bound}
 \item{testHarm}{Logical vector indicating which analyses have a harm bound
@@ -128,7 +129,8 @@ at each analysis.
 }
 \description{
 Creates a group sequential design for negative binomial outcomes based on
-sample size calculations from \code{\link[=sample_size_nbinom]{sample_size_nbinom()}}.
+sample size calculations from \code{\link[=sample_size_nbinom]{sample_size_nbinom()}} and specified calendar
+analysis times. Use \code{\link[=gsNB]{gsNB()}} to plan analyses by expected information fractions.
 }
 \examples{
 # First create a sample size calculation
@@ -156,4 +158,7 @@ gs_selective
 Jennison, C. and Turnbull, B.W. (2000),
 \emph{Group Sequential Methods with Applications to Clinical Trials}.
 Boca Raton: Chapman and Hall.
+}
+\seealso{
+\code{\link[=gsNB]{gsNB()}} for expected-information timing.
 }

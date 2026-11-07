@@ -1,7 +1,8 @@
 #' Group sequential design for negative binomial outcomes
 #'
 #' Creates a group sequential design for negative binomial outcomes based on
-#' sample size calculations from [sample_size_nbinom()].
+#' sample size calculations from [sample_size_nbinom()] and specified calendar
+#' analysis times. Use [gsNB()] to plan analyses by expected information fractions.
 #'
 #' @param x An object of class `sample_size_nbinom_result` from
 #'   [sample_size_nbinom()].
@@ -50,12 +51,13 @@
 #' @param lsTime Spending time for lower bound (optional).
 #' @param analysis_times Vector of calendar times for each analysis.
 #'   Must have length k. These times are stored in the `T`
-#'   element and displayed by [gsDesign::gsBoundSummary()].
+#'   element and displayed by [gsDesign::gsBoundSummary()]. Required.
 #'
 #' @return An object of class `gsNB` which inherits from `gsDesign`
 #'   and `sample_size_nbinom_result`. 
 #'   While the final sample size would be planned total enrollment, interim analysis
-#'   sample sizes are the expected number enrolled at the times specified in `analysis_times`.
+#'   sample sizes are the expected number enrolled at the supplied or solved
+#'   calendar times.
 #' Output value contains all elements from
 #'   [gsDesign::gsDesign()] plus:
 #'   \describe{
@@ -70,7 +72,7 @@
 #'     \item{exposure_at_risk1}{A vector with expected at-risk exposure per analysis for group 1}
 #'     \item{exposure_at_risk2}{A vector with expected at-risk exposure per analysis for group 2}
 #'     \item{variance}{A vector with variance of log rate ratio per analysis}
-#'     \item{T}{Calendar time at each analysis (if `analysis_times` provided)}
+#'     \item{T}{Supplied or solved calendar time at each analysis}
 #'     \item{testUpper}{Logical vector indicating which analyses have an efficacy bound}
 #'     \item{testLower}{Logical vector indicating which analyses have a futility bound}
 #'     \item{testHarm}{Logical vector indicating which analyses have a harm bound
@@ -87,6 +89,8 @@
 #' Jennison, C. and Turnbull, B.W. (2000),
 #' _Group Sequential Methods with Applications to Clinical Trials_.
 #' Boca Raton: Chapman and Hall.
+#'
+#' @seealso [gsNB()] for expected-information timing.
 #'
 #' @examples
 #' # First create a sample size calculation
@@ -132,17 +136,119 @@ gsNBCalendar <- function(
   lsTime = NULL,
   analysis_times = NULL
 ) {
+  .gsNB(
+    x = x, k = k, test.type = test.type, alpha = alpha, beta = beta,
+    astar = astar, delta = delta, sfu = sfu, sfupar = sfupar,
+    sfl = sfl, sflpar = sflpar, sfharm = sfharm, sfharmparam = sfharmparam,
+    testUpper = testUpper, testLower = testLower, testHarm = testHarm,
+    tol = tol, r = r, usTime = usTime, lsTime = lsTime,
+    analysis_times = analysis_times
+  )
+}
+
+#' Group sequential negative binomial design with information-fraction timing
+#'
+#' Creates a group sequential design from [sample_size_nbinom()] using expected
+#' information fractions for interim analyses and a calendar-timed final analysis.
+#'
+#' @inheritParams gsNBCalendar
+#' @param timing Information fractions, specified as in [gsDesign::gsDesign()].
+#'   Supply `k - 1` interim fractions, or `k` fractions ending in `1`.
+#'   The default, `0`, uses equally spaced information fractions. Calendar times
+#'   are solved using expected information from [sample_size_nbinom()], with the
+#'   final analysis fixed at `x$inputs$trial_duration`.
+#'
+#' @details
+#' Information-fraction timing is based on planned, not observed, information.
+#' Interim calendar times solve \eqn{I(t) / I(T) = \mathrm{timing}}, where
+#' \eqn{T} is the fixed design's trial duration. The calculation retains its
+#' piecewise accrual pattern, dropout, dispersion, follow-up caps, and event
+#' gaps. Multiplying all accrual rates by the same constant changes information
+#' and sample size but not these calendar times. Spending and the required
+#' information inflation are determined by [gsDesign::gsDesign()], including
+#' `usTime` and `lsTime` when supplied.
+#'
+#' @inherit gsNBCalendar return references
+#' @seealso [gsNBCalendar()] for explicitly specified calendar analysis times.
+#' @export
+#'
+#' @examples
+#' nb_ss <- sample_size_nbinom(
+#'   lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+#'   accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+#' )
+#' gs_info <- gsNB(nb_ss, k = 3, timing = c(0.5, 0.75))
+#' gs_info$T
+#' gs_info$timing
+gsNB <- function(
+  x,
+  k = 3,
+  timing = 0,
+  test.type = 4,
+  alpha = 0.025,
+  beta = 0.1,
+  astar = 0,
+  delta = 0,
+  sfu = gsDesign::sfHSD,
+  sfupar = -4,
+  sfl = gsDesign::sfHSD,
+  sflpar = -2,
+  sfharm = gsDesign::sfHSD,
+  sfharmparam = -2,
+  testUpper = TRUE,
+  testLower = TRUE,
+  testHarm = TRUE,
+  tol = 1e-06,
+  r = 18,
+  usTime = NULL,
+  lsTime = NULL
+) {
+  .gsNB(
+    x = x, k = k, test.type = test.type, alpha = alpha, beta = beta,
+    astar = astar, delta = delta, sfu = sfu, sfupar = sfupar,
+    sfl = sfl, sflpar = sflpar, sfharm = sfharm, sfharmparam = sfharmparam,
+    testUpper = testUpper, testLower = testLower, testHarm = testHarm,
+    tol = tol, r = r, usTime = usTime, lsTime = lsTime,
+    timing = timing, information_timing = TRUE
+  )
+}
+
+.gsNB <- function(
+  x,
+  k = 3,
+  test.type = 4,
+  alpha = 0.025,
+  beta = 0.1,
+  astar = 0,
+  delta = 0,
+  sfu = gsDesign::sfHSD,
+  sfupar = -4,
+  sfl = gsDesign::sfHSD,
+  sflpar = -2,
+  sfharm = gsDesign::sfHSD,
+  sfharmparam = -2,
+  testUpper = TRUE,
+  testLower = TRUE,
+  testHarm = TRUE,
+  tol = 1e-06,
+  r = 18,
+  usTime = NULL,
+  lsTime = NULL,
+  analysis_times = NULL,
+  timing = 0,
+  information_timing = FALSE
+) {
   # Validate input
 
   if (!inherits(x, "sample_size_nbinom_result")) {
     stop("x must be an object of class 'sample_size_nbinom_result'")
   }
 
-  if (is.null(analysis_times)) {
-    stop("analysis_times must be provided")
+  if (!information_timing && is.null(analysis_times)) {
+    stop("analysis_times must be provided", call. = FALSE)
   }
 
-  if (length(analysis_times) != k) {
+  if (!information_timing && length(analysis_times) != k) {
     stop("analysis_times must have length k (", k, ")")
   }
 
@@ -162,6 +268,7 @@ gsNBCalendar <- function(
   # still use non-harm-bound designs.
   gs_args <- list(
     k = k,
+    timing = if (is.null(timing)) 0 else timing,
     test.type = test.type,
     alpha = alpha,
     beta = beta,
@@ -186,6 +293,41 @@ gsNBCalendar <- function(
   )
 
   gs <- do.call(gsDesign::gsDesign, gs_args)
+
+  if (information_timing) {
+    final_time <- x$inputs$trial_duration
+    if (length(final_time) != 1L || !is.finite(final_time) || final_time <= 0) {
+      stop("x must have a positive finite trial_duration.", call. = FALSE)
+    }
+    expected_info <- function(time) {
+      if (time == 0) return(0)
+      compute_info_at_time(
+        analysis_time = time,
+        accrual_rate = x$accrual_rate,
+        accrual_duration = x$accrual_duration,
+        lambda1 = x$inputs$lambda1,
+        lambda2 = x$inputs$lambda2,
+        dispersion = x$inputs$dispersion,
+        ratio = x$inputs$ratio,
+        dropout_rate = x$inputs$dropout_rate,
+        event_gap = x$inputs$event_gap,
+        max_followup = x$inputs$max_followup
+      )
+    }
+    final_info <- expected_info(final_time)
+    if (!is.finite(final_info) || final_info <= 0) {
+      stop("Expected final information must be positive and finite.", call. = FALSE)
+    }
+    analysis_times <- c(
+      vapply(gs$timing[-k], function(fraction) {
+        stats::uniroot(
+          function(time) expected_info(time) / final_info - fraction,
+          interval = c(0, final_time), tol = tol
+        )$root
+      }, numeric(1)),
+      final_time
+    )
+  }
 
   # Calculate sample sizes per analysis based on information fraction
   # gs$n.I contains the statistical information at each analysis
@@ -582,7 +724,7 @@ toInteger.gsDesign <- function(x, ratio = x$ratio, roundUpFinal = TRUE, ...) {
 #' sample sizes remain expected enrollment counts at those calendar times after
 #' rescaling the accrual rate to the rounded final sample size.
 #'
-#' When `analysis_times` were provided to [gsNBCalendar()],
+#' For supplied or solved calendar times from [gsNBCalendar()],
 #' expected events, exposure, and statistical information (`n.I`) are recomputed
 #' at each analysis time based on the new sample size and expected exposures.
 #'
