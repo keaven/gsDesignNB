@@ -1,3 +1,54 @@
+assert("sim_gs_nbinom uses planned information dates without moving the final", {
+  fixed <- sample_size_nbinom(
+    lambda1 = 0.8, lambda2 = 0.5, dispersion = 0.2, power = NULL,
+    accrual_rate = 60, accrual_duration = 1, trial_duration = 4,
+    max_followup = 3
+  )
+  design <- toInteger(gsNB(fixed, k = 3, timing = c(0.4, 0.7)))
+  n_target <- utils::tail(design$n_total, 1)
+  expected_info <- vapply(design$T, function(time) {
+    compute_info_at_time(
+      analysis_time = time, accrual_rate = n_target, accrual_duration = 1,
+      lambda1 = 0.8, lambda2 = 0.5, dispersion = 0.2, max_followup = 3
+    )
+  }, numeric(1))
+  (all.equal(expected_info, design$n.I, tolerance = 1e-6))
+  sim_args <- list(
+    n_sims = 2, enroll_rate = data.frame(rate = n_target, duration = 1),
+    fail_rate = data.frame(
+      treatment = c("Control", "Experimental"),
+      rate = c(0.8, 0.5), dispersion = 0.2
+    ),
+    max_followup = 3, n_target = n_target, design = design, seed = 55
+  )
+  inherited <- do.call(sim_gs_nbinom, sim_args)
+  explicit_args <- sim_args
+  explicit_args$analysis_times <- design$T
+  explicit <- do.call(sim_gs_nbinom, explicit_args)
+  (inherited %==% explicit)
+  (all.equal(inherited$analysis_time, rep(design$T, 2)))
+  (all.equal(inherited$planned_info, rep(design$n.I, 2)))
+  (all.equal(inherited$planned_info_fraction, rep(design$timing, 2)))
+  (all.equal(inherited$planned_final_info, rep(design$n.I[3], 6)))
+  for (metric in c("unblinded_ml", "blinded_ml", "unblinded_mom", "blinded_mom")) {
+    (all.equal(inherited[[paste0("info_fraction_", metric)]],
+               inherited[[paste0("info_", metric)]] / design$n.I[3]))
+  }
+
+  low_args <- sim_args
+  low_args$fail_rate$rate <- c(0.08, 0.05)
+  low <- do.call(sim_gs_nbinom, low_args)
+  high_args <- sim_args
+  high_args$fail_rate$rate <- c(4, 2.5)
+  high <- do.call(sim_gs_nbinom, high_args)
+  (all.equal(low$analysis_time, inherited$analysis_time))
+  (all.equal(high$analysis_time, inherited$analysis_time))
+  (low$analysis_time[low$analysis == 3] == 4)
+  (high$analysis_time[high$analysis == 3] == 4)
+  (low$info_fraction_blinded_ml[low$analysis == 3] < 1)
+  (high$info_fraction_blinded_ml[high$analysis == 3] > 1)
+})
+
 assert("sim_gs_nbinom runs basic simulation", {
   set.seed(123)
   enroll_rate <- data.frame(rate = 10, duration = 3)

@@ -386,16 +386,29 @@ assert("compute_info_at_time increases with analysis time", {
   (info_late > info_early)
 })
 
-assert("gsNBCalendar errors without analysis_times", {
+assert("gsNB defaults to gsDesign information fractions", {
   nb_ss <- sample_size_nbinom(
     lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
     accrual_rate = 10, accrual_duration = 20, trial_duration = 24
   )
 
-  (has_error(
-    gsNBCalendar(nb_ss, k = 3),
-    "analysis_times must be provided"
-  ))
+  design <- gsNB(nb_ss, k = 3)
+  (inherits(design, "gsNB"))
+  (inherits(design, "gsDesign"))
+  (inherits(design, "sample_size_nbinom_result"))
+  (design$nb_design %==% nb_ss)
+  (all.equal(design$timing, c(1 / 3, 2 / 3, 1), tolerance = 1e-6))
+  (design$T[3] %==% 24)
+  (diff(design$T) > 0)
+  (has_error(gsNBCalendar(nb_ss), "analysis_times must be provided"))
+  (has_error(gsNB(list(n_total = 100)), "must be an object of class"))
+  (has_error(gsNBCalendar(nb_ss, analysis_times = c(12, 18, 24),
+                         timing = c(0.4, 0.7)), "unused argument"))
+  (has_error(gsNB(nb_ss, analysis_times = c(12, 18, 24)), "unused argument"))
+  calendar <- gsNBCalendar(nb_ss, analysis_times = design$T)
+  (all.equal(calendar$T, design$T))
+  (all.equal(calendar$n_total, design$n_total, tolerance = 1e-6))
+  (all.equal(calendar$n.I, design$n.I, tolerance = 1e-6))
 })
 
 assert("gsNBCalendar errors when analysis_times length != k", {
@@ -408,4 +421,94 @@ assert("gsNBCalendar errors when analysis_times length != k", {
     gsNBCalendar(nb_ss, k = 3, analysis_times = c(12, 24)),
     "analysis_times must have length k"
   ))
+})
+
+assert("information timing retains expected information and gsDesign spending", {
+  nb_args <- list(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = c(0.1, 0.2),
+    power = NULL, ratio = 2,
+    accrual_rate = c(5, 10), accrual_duration = c(4, 16),
+    trial_duration = 24, max_followup = c(12, 10), event_gap = 0.02,
+    dropout_rate = data.frame(rate = c(0.01, 0.03), duration = c(6, Inf))
+  )
+  fixed <- do.call(sample_size_nbinom, nb_args)
+  fractions <- c(0.4, 0.7, 1)
+  design <- gsNB(fixed, k = 3, timing = fractions[-3],
+                 usTime = c(0.2, 0.6, 1), lsTime = c(0.3, 0.65, 1))
+  full <- gsNB(fixed, k = 3, timing = fractions,
+               usTime = c(0.2, 0.6, 1), lsTime = c(0.3, 0.65, 1))
+  reference <- gsDesign::gsDesign(
+    k = 3, test.type = 4, n.fix = 1 / fixed$variance,
+    delta1 = log(0.6), delta0 = 0, timing = fractions,
+    usTime = c(0.2, 0.6, 1), lsTime = c(0.3, 0.65, 1)
+  )
+  (all.equal(design$T, full$T))
+  (all.equal(design$timing, fractions, tolerance = 1e-6))
+  (all.equal(design$n.I, reference$n.I, tolerance = 1e-6))
+  (all.equal(design$upper$bound, reference$upper$bound))
+  (all.equal(design$lower$bound, reference$lower$bound))
+  (all.equal(design$upper$spend, reference$upper$spend))
+  (all.equal(design$lower$spend, reference$lower$spend))
+  (design$T[3] %==% nb_args$trial_duration)
+  (diff(design$T) > 0)
+
+  expected_info <- vapply(design$T, function(time) {
+    stage_args <- nb_args
+    stage_args$trial_duration <- time
+    1 / do.call(sample_size_nbinom, stage_args)$variance
+  }, numeric(1))
+  (all.equal(expected_info / expected_info[3], fractions, tolerance = 1e-6))
+
+  scaled_args <- nb_args
+  scaled_args$accrual_rate <- 2.7 * nb_args$accrual_rate
+  scaled <- gsNB(do.call(sample_size_nbinom, scaled_args), k = 3,
+                 timing = fractions)
+  (all.equal(scaled$T, design$T, tolerance = 1e-6))
+  rounded <- toInteger(design)
+  (all.equal(rounded$T, design$T))
+  (all.equal(rounded$timing, fractions, tolerance = 1e-6))
+})
+
+assert("gsNB forwards custom spending and selective bounds", {
+  fixed <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  args <- list(
+    k = 3, timing = c(0.4, 0.7), test.type = 8,
+    alpha = 0.02, beta = 0.15, astar = 0.015,
+    sfu = gsDesign::sfHSD, sfupar = -3,
+    sfl = gsDesign::sfHSD, sflpar = -1,
+    sfharm = gsDesign::sfHSD, sfharmparam = -3,
+    testUpper = c(FALSE, TRUE, TRUE),
+    testLower = c(TRUE, TRUE, FALSE),
+    testHarm = c(FALSE, TRUE, TRUE),
+    usTime = c(0.2, 0.6, 1), lsTime = c(0.3, 0.65, 1),
+    tol = 1e-7, r = 20
+  )
+  design <- do.call(gsNB, c(list(x = fixed), args))
+  reference <- do.call(gsDesign::gsDesign, c(args, list(
+    n.fix = 1 / fixed$variance, delta1 = log(0.6), delta0 = 0
+  )))
+  components <- c("upper", "lower", "harm", "testUpper", "testLower",
+                  "testHarm", "alpha", "beta", "astar", "usTime", "lsTime")
+  (all.equal(design[components], reference[components]))
+  (all.equal(design$n.I, reference$n.I, tolerance = 1e-6))
+  (all.equal(design$timing, c(0.4, 0.7, 1), tolerance = 1e-6))
+  (design$T[3] %==% 24)
+  (inherits(summary(design), "gsNBsummary"))
+})
+
+assert("gsNB validates information timing as gsDesign does", {
+  fixed <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.3, dispersion = 0.1, power = 0.9,
+    accrual_rate = 10, accrual_duration = 20, trial_duration = 24
+  )
+  (has_error(gsNB(fixed, k = 3, timing = c(0.7, 0.4))))
+  (has_error(gsNB(fixed, k = 3, timing = c(0.4, 0.7, 0.9))))
+  (has_error(gsNB(fixed, k = 3, timing = c(0, 0.7))))
+  (has_error(gsNB(fixed, k = 3, timing = c(0.4, 1))))
+  (has_error(gsNB(fixed, k = 3, timing = c(0.2, 0.4, 0.6, 1))))
+  (all.equal(gsNB(fixed, k = 2, timing = 0.6)$timing,
+             c(0.6, 1), tolerance = 1e-6))
 })

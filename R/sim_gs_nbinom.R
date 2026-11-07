@@ -13,9 +13,11 @@
 #' @param event_gap Event gap duration. If `NULL`, inherits
 #'   `design$inputs$event_gap` when available; otherwise defaults to `0`.
 #' @param analysis_times Vector of calendar times for interim and final analyses.
-#'   Optional if `cuts` is provided.
+#'   Defaults to `design$T` for a `gsNB` design when `cuts` is not provided.
+#'   These dates remain fixed regardless of observed information.
 #' @param n_target Total sample size to enroll (optional, if not defined by `enroll_rate`).
-#' @param design An object of class `gsNB` or `sample_size_nbinom_result`.
+#' @param design An object of class `gsNB` from [gsNB()] or [gsNBCalendar()],
+#'   or a `sample_size_nbinom_result` from [sample_size_nbinom()].
 #'   Used to extract planning parameters (`lambda1`, `lambda2`, `ratio`) for blinded
 #'   information estimation.
 #' @param data_cut Function to cut data for analysis. Defaults to [cut_data_by_date()].
@@ -99,6 +101,13 @@
 #'     \item{info_blinded_ml}{Estimated blinded statistical information (ML)}
 #'     \item{info_unblinded_mom}{Observed unblinded statistical information (Method of Moments)}
 #'     \item{info_blinded_mom}{Estimated blinded statistical information (Method of Moments)}
+#'     \item{planned_info}{Planned information at this analysis for a `gsNB` design, otherwise `NA`}
+#'     \item{planned_info_fraction}{Planned information fraction for a `gsNB` design, otherwise `NA`}
+#'     \item{planned_final_info}{Planned final information (`design$n.I[design$k]` for a `gsNB` design, otherwise `1 / design$variance`)}
+#'     \item{info_fraction_unblinded_ml}{Unblinded ML information divided by planned final information}
+#'     \item{info_fraction_blinded_ml}{Blinded ML information divided by planned final information}
+#'     \item{info_fraction_unblinded_mom}{Unblinded MoM information divided by planned final information}
+#'     \item{info_fraction_blinded_mom}{Blinded MoM information divided by planned final information}
 #'   }
 #'
 #' @importFrom data.table as.data.table
@@ -174,6 +183,9 @@ sim_gs_nbinom <- function(
   }
 
   if (is.null(cuts)) {
+    if (is.null(analysis_times) && inherits(design, "gsNB")) {
+      analysis_times <- design$T
+    }
     if (is.null(analysis_times)) {
       stop("Either analysis_times or cuts must be provided.")
     }
@@ -182,6 +194,18 @@ sim_gs_nbinom <- function(
   }
 
   n_analyses <- length(cuts)
+
+  planned_final_info <- if (inherits(design, "gsNB")) {
+    utils::tail(design$n.I, 1)
+  } else {
+    1 / design$variance
+  }
+  planned_info <- rep(NA_real_, n_analyses)
+  planned_info_fraction <- rep(NA_real_, n_analyses)
+  if (inherits(design, "gsNB") && n_analyses == design$k) {
+    planned_info <- design$n.I
+    planned_info_fraction <- design$timing
+  }
 
   # Extract planning parameters for blinded info estimation
   inputs <- if (inherits(design, "gsNB")) design$nb_design$inputs else design$inputs
@@ -403,7 +427,14 @@ sim_gs_nbinom <- function(
         info_unblinded_ml = info_unblinded_ml,
         info_blinded_ml = info_blinded_ml,
         info_unblinded_mom = info_unblinded_mom,
-        info_blinded_mom = info_blinded_mom
+        info_blinded_mom = info_blinded_mom,
+        planned_info = planned_info[k],
+        planned_info_fraction = planned_info_fraction[k],
+        planned_final_info = planned_final_info,
+        info_fraction_unblinded_ml = info_unblinded_ml / planned_final_info,
+        info_fraction_blinded_ml = info_blinded_ml / planned_final_info,
+        info_fraction_unblinded_mom = info_unblinded_mom / planned_final_info,
+        info_fraction_blinded_mom = info_blinded_mom / planned_final_info
       )
     }
     do.call(rbind, res_list)

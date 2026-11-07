@@ -23,7 +23,10 @@ library(lt)
 ```
 
 This vignette demonstrates how to create a group sequential design for
-negative binomial outcomes using `gsNBCalendar()` and simulate the design to confirm design operating characteristics using `sim_gs_nbinom()`, `check_gs_bound()`, and `summarize_gs_sim()`.
+negative binomial outcomes using `gsNBCalendar()` for specified calendar times or
+`gsNB()` for expected information fractions, and simulate the design to confirm
+design operating characteristics using `sim_gs_nbinom()`, `check_gs_bound()`, and
+`summarize_gs_sim()`.
 
 ## Trial design parameters
 
@@ -106,6 +109,36 @@ gs_nb_calendar <- gsNBCalendar(
 )
 gs_nb <- gsDesignNB::toInteger(gs_nb_calendar)
 ```
+
+Alternatively, use `gsNB()` to specify expected information fractions with
+`timing`, as in `gsDesign()`. Supply either the interim fractions or all fractions
+ending in `1`; the default is equally spaced information fractions.
+`gsNBCalendar()` requires explicit calendar times instead. Both constructors
+return the same `gsNB` class. Calendar dates are solved from the fixed design's expected information,
+including its enrollment pattern, dropout, maximum follow-up, and event gaps.
+The final remains at `nb_ss$inputs$trial_duration`, and a common multiplier
+of the enrollment rates does not change the solved dates. Spending is
+determined by the `gsDesign()` call, with optional `usTime` and `lsTime`.
+
+```{r information-timing}
+gs_nb_info <- gsNB(nb_ss, k = 3, timing = c(0.5, 0.75)) |>
+  gsDesignNB::toInteger()
+data.frame(
+  analysis = seq_len(gs_nb_info$k),
+  calendar_time = gs_nb_info$T,
+  information_fraction = gs_nb_info$timing,
+  expected_information = gs_nb_info$n.I
+)
+```
+
+To verify the asymptotic design by simulation, pass `gs_nb_info` as `design`
+to `sim_gs_nbinom()` and omit `analysis_times` and `cuts` to use its solved
+calendar dates. Use enrollment rates scaled to its final sample size, as in
+the simulation setup below. Observed information does not move these dates.
+The result includes `planned_info`, `planned_info_fraction`, and
+`planned_final_info`, together with achieved fractions for blinded and
+unblinded ML and MoM information. These achieved fractions are relative to
+planned final information and can be below or above `1` at the final analysis.
 
 Textual group sequential design summary:
 
@@ -392,7 +425,7 @@ This simulation demonstrates the basic workflow for group sequential designs wit
 negative binomial outcomes:
 
 1. **Sample size calculation** using `sample_size_nbinom()` for a fixed design
-2. **Group sequential design** using `gsNBCalendar()` to add interim analyses
+2. **Group sequential design** using `gsNBCalendar()` for calendar times or `gsNB()` for expected-information timing to add interim analyses
 3. **Simulation** using `sim_gs_nbinom()` to generate trial data and perform analyses
 4. **Boundary checking** using `check_gs_bound()` to apply group sequential boundaries
 

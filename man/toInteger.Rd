@@ -40,7 +40,7 @@ randomization ratio. When calendar analysis times are available, interim
 sample sizes remain expected enrollment counts at those calendar times after
 rescaling the accrual rate to the rounded final sample size.
 
-When \code{analysis_times} were provided to \code{\link[=gsNBCalendar]{gsNBCalendar()}},
+For supplied or solved calendar times from \code{\link[=gsNBCalendar]{gsNBCalendar()}},
 expected events, exposure, and statistical information (\code{n.I}) are recomputed
 at each analysis time based on the new sample size and expected exposures.
 }

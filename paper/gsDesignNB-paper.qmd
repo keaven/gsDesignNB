@@ -985,6 +985,7 @@ simulation summaries.
 | Fixed-design verification | Demonstrate agreement between NB planning formulas and simulated power | `verification-simulation`, `sample-size-nbinom` | Scenario-specific power, information, and Monte Carlo error checks |
 | Event-gap correction | Show where the Jensen correction changes sample size and power | `simulation-example`, `verification-simulation` | 64-scenario sweep; 3,500 or 10,000 replicates depending on table; corrected vs naive $n$ and power |
 | Wald versus score inference | Compare Wald and score tests under Wald- and score-sized designs | `score-vs-wald-simulation` | 27-scenario factorial grid; 20,000 null replicates and 3,500 power replicates per cell; Type I error, power, and null Z distributions |
+| Planned-calendar-time information validation | Compare expected and simulated information for `gsNB()` and `gsNBCalendar()` | `data-raw/gs_validation_study.R` | Eight scenarios; 20,000 null and 5,000 alternative replicates per timing method; mean information at each planned date, Monte Carlo uncertainty, and estimator failures |
 | SSR Type I calibration | Summarize null rejection and adapted sample size | `ssr-simulation-study` | 20,000 replicates for RR = 1; rejection rate, MCSE, mean $n$, and percent adapted |
 | SSR power recovery | Compare no adaptation, blinded SSR, and unblinded SSR under nuisance misspecification | `ssr-simulation-study` | Bundled production cache uses 3,600 replicates per RR $<1$ scenario and 1,000 replicates per RR $>1$ scenario |
 | SSR starting-size sensitivity | Compare Wald- and score-sized starting designs under the score final test | `ssr-simulation-study` | Low-event stress setting; 5,000 null and 3,000 planned-effect replicates per starting-size rule |
@@ -994,6 +995,21 @@ simulation summaries.
 for the condensed results reported in the manuscript. {#tbl-simulation-reporting}
 
 ### Results
+
+**Expected information at planned analyses.** The information-validation study compares
+information-fraction timing from `gsNB()` with fixed calendar looks at months 10, 18, and 24 from
+`gsNBCalendar()`. Each scenario is designed at RR = 0.70 and simulated under both the null and
+the design alternative. At each planned date, the comparison target is expected information under
+the generating rates, dispersion, accrual, dropout, event gap, and follow-up limits. Under the
+design alternative this equals planned information; under the null it is recomputed using the
+null rates.
+
+All simulated trials are analyzed at every planned date, without stopping for boundary crossings.
+Mean fitted information is compared with this expectation separately for unblinded and blinded
+ML and MoM estimators, with Monte Carlo standard errors, intervals for the means, and counts of
+failed estimates. This checks information planning, not boundary calibration, Type I error, or
+power; those require a separate simulation of the monitoring and data-cut rules. The script writes
+scenario-level and lookwise information summaries to `paper/gs-validation-results/`.
 
 **Wald versus score calibration.** The `score-vs-wald-simulation` article evaluates 27 base
 scenarios varying $\lambda_1 \in \{0.15, 0.40, 1.00\}$, $k \in \{0.2, 0.5, 1.0\}$, and event

@@ -35,11 +35,13 @@ sim_gs_nbinom(
 \code{design$inputs$event_gap} when available; otherwise defaults to \code{0}.}
 
 \item{analysis_times}{Vector of calendar times for interim and final analyses.
-Optional if \code{cuts} is provided.}
+Defaults to \code{design$T} for a \code{gsNB} design when \code{cuts} is not provided.
+These dates remain fixed regardless of observed information.}
 
 \item{n_target}{Total sample size to enroll (optional, if not defined by \code{enroll_rate}).}
 
-\item{design}{An object of class \code{gsNB} or \code{sample_size_nbinom_result}.
+\item{design}{An object of class \code{gsNB} from \code{\link[=gsNB]{gsNB()}} or \code{\link[=gsNBCalendar]{gsNBCalendar()}},
+or a \code{sample_size_nbinom_result} from \code{\link[=sample_size_nbinom]{sample_size_nbinom()}}.
 Used to extract planning parameters (\code{lambda1}, \code{lambda2}, \code{ratio}) for blinded
 information estimation.}
 
@@ -97,6 +99,13 @@ Columns include:
 \item{info_blinded_ml}{Estimated blinded statistical information (ML)}
 \item{info_unblinded_mom}{Observed unblinded statistical information (Method of Moments)}
 \item{info_blinded_mom}{Estimated blinded statistical information (Method of Moments)}
+\item{planned_info}{Planned information at this analysis for a \code{gsNB} design, otherwise \code{NA}}
+\item{planned_info_fraction}{Planned information fraction for a \code{gsNB} design, otherwise \code{NA}}
+\item{planned_final_info}{Planned final information (\code{design$n.I[design$k]} for a \code{gsNB} design, otherwise \code{1 / design$variance})}
+\item{info_fraction_unblinded_ml}{Unblinded ML information divided by planned final information}
+\item{info_fraction_blinded_ml}{Blinded ML information divided by planned final information}
+\item{info_fraction_unblinded_mom}{Unblinded MoM information divided by planned final information}
+\item{info_fraction_blinded_mom}{Blinded MoM information divided by planned final information}
 }
 }
 \description{

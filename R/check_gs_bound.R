@@ -172,16 +172,24 @@ check_gs_bound <- function(
         }
       )
 
-      upper_bound <- temp_gs$upper$bound[k]
-      lower_bound <- temp_gs$lower$bound[k]
+      upper_bound <- if (length(temp_gs$upper$bound) >= k) {
+        temp_gs$upper$bound[k]
+      } else {
+        Inf
+      }
+      lower_bound <- if (length(temp_gs$lower$bound) >= k) {
+        temp_gs$lower$bound[k]
+      } else {
+        -Inf
+      }
 
-      if (z_val > upper_bound) {
+      if (is.finite(upper_bound) && z_val > upper_bound) {
         cross_upper[k] <- TRUE
         stopped <- TRUE
       } else if (has_harm && !is.null(temp_gs$harm) && z_val < temp_gs$harm$bound[k]) {
         cross_harm[k] <- TRUE
         stopped <- TRUE
-      } else if (z_val < lower_bound) {
+      } else if (is.finite(lower_bound) && z_val < lower_bound) {
         cross_lower[k] <- TRUE
         stopped <- TRUE
       }

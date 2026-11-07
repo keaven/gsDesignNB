@@ -1,5 +1,6 @@
 # gsDesignNB 0.5.0
 
+- Added `gsNB()` with `gsDesign` information-fraction timing semantics, solving interim dates from expected information while keeping the final at the fixed design's calendar duration; `gsNBCalendar()` retains explicit calendar timing, and `sim_gs_nbinom()` can use either design's dates directly and reports planned and achieved information fractions (#55).
 - Now requires gsDesign >= 3.11.0, so the harm-bound arguments (`sfharm`, `sfharmparam`, `testUpper`, `testLower`, `testHarm`) are passed to `gsDesign::gsDesign()` unconditionally (#53).
 - Switched the test suite from testthat to testit, removing the testthat dependency (#53).
 
