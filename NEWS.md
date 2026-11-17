@@ -1,5 +1,6 @@
 # gsDesignNB 0.5.0
 
+- Added `dropout_rate_from_followup()` for calibrating exponential dropout under a common follow-up cap, added a published PASS sample-size regression benchmark, and corrected the Wald method number in the function documentation (#58).
 - Now requires gsDesign >= 3.11.0, so the harm-bound arguments (`sfharm`, `sfharmparam`, `testUpper`, `testLower`, `testHarm`) are passed to `gsDesign::gsDesign()` unconditionally (#53).
 - Switched the test suite from testthat to testit, removing the testthat dependency (#53).
 

@@ -3,7 +3,7 @@
 #' Computes the sample size (or power) for comparing two treatment groups
 #' assuming negative binomial distributed event counts. When
 #' `test_type = "wald"` (default), the formula uses a single variance
-#' evaluated under the alternative, corresponding to Method 3 of
+#' evaluated under the alternative, corresponding to Method 2 of
 #' Zhu & Lakkis (2014) and the formulas of Friede & Schmidli (2010)
 #' and Mutze et al. (2019). When `test_type = "score"`, separate null
 #' and alternative variances are used (Farrington & Manning style),
@@ -95,6 +95,8 @@
 #' rate \eqn{\delta > 0} this simplifies to
 #' \eqn{m(u) = (1 - e^{-\delta u})/\delta}.
 #' The overall average is a weighted mean across accrual segments.
+#' See [dropout_rate_from_followup()] to calibrate a constant dropout hazard
+#' from a known average follow-up under a common potential follow-up cap.
 #'
 #' ## Variance inflation
 #'

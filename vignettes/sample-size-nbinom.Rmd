@@ -137,7 +137,7 @@ If the planned analysis is the score test, the practical default is to compare W
 
 ### Relationship between Zhu-Lakkis, Friede-Schmidli, and Mutze et al.
 
-The default Wald sample size formula implemented in `sample_size_nbinom()` corresponds to **Method 3** of @zhu2014sample, which is the Wald test for the log rate ratio under a negative binomial model with a log link and an exposure offset.
+For common, constant exposure, the default Wald sample size formula implemented in `sample_size_nbinom()` corresponds to **Method 2** (true-rate variance) in the PASS implementation of @zhu2014sample.
 This same test statistic and variance formula are used by @friede2010blinded in the context of blinded sample size reestimation and by @mutze2019group for group sequential designs.
 
 **What the three references share:**
@@ -158,7 +158,7 @@ When all subjects in a group have the same exposure $\bar{t}$, this simplifies t
 | Aspect | @zhu2014sample | @friede2010blinded | @mutze2019group |
 |:-------|:--------------|:-------------------|:----------------|
 | **Focus** | Fixed sample size calculation | Blinded sample size reestimation | Group sequential designs |
-| **Methods compared** | Five different test statistics (Methods 1--5) | One method (equivalent to Zhu Method 3) | One method (same Wald test) |
+| **Methods compared** | Alternative choices for the null variance | Wald variance under the alternative | Wald variance under the alternative |
 | **Dispersion** | Common $k$ across groups | Common $k$; estimated from blinded data | Common $k$ |
 | **Exposure** | Fixed $\bar{t}$ for all subjects | Fixed $\bar{t}$ | Fixed $\bar{t}$ |
 | **Key contribution** | Systematic comparison of NB sample size methods | Blinded estimation of nuisance parameters ($k$, $\lambda$) during a trial | Extension to interim analyses with spending functions |
@@ -237,6 +237,52 @@ The `dropout_rate` argument accepts a scalar (common constant rate), a
 length-2 vector (per-group constant rates), or a data frame with columns
 `rate` and `duration` (and optionally `treatment`) for the full piecewise
 specification.
+
+### Starting from average follow-up
+
+When everyone could complete the same follow-up duration, use
+`dropout_rate_from_followup()` to calibrate an exponential dropout hazard:
+
+```{r average-followup-hazard}
+delta <- dropout_rate_from_followup(mean_followup = 0.9, max_followup = 1)
+delta
+```
+
+Both times are in years here, so `delta` is a hazard per year. This assumes
+independent exponential dropout with a common one-year potential follow-up;
+the mean alone does not determine a dropout distribution. With staggered
+enrollment and an earlier calendar cutoff, administrative censoring must also
+be accounted for. The individual log exposure is the regression offset;
+the overall mean is a planning input.
+
+### Comparing with PASS
+
+The [PASS procedure documentation](https://www.ncss.com/wp-content/themes/ncss/pdf/Procedures/PASS/Tests_for_the_Ratio_of_Two_Negative_Binomial_Rates.pdf)
+uses common constant exposure for its rate-ratio calculation. Under that
+assumption, `test_type = "wald"` matches its true-rate variance method (M2),
+while `test_type = "score"` matches its pooled-rate method (M3) for superiority
+with common dispersion. These labels describe sizing formulas, not identical
+finite-sample tests.
+
+Example 2 gives 1,131 participants per group. It can be reproduced with:
+
+```{r pass-benchmark}
+pass_design <- sample_size_nbinom(
+  lambda1 = 0.66, lambda2 = 0.66 * 0.8, dispersion = 0.8,
+  power = 0.9, alpha = 0.05, sided = 2, test_type = "score",
+  accrual_rate = 100, accrual_duration = 1, trial_duration = 2,
+  max_followup = 0.9
+)
+c(control = pass_design$n1, treatment = pass_design$n2)
+```
+
+Here every participant has exactly 0.9 years of exposure. Calibrating dropout
+to obtain the same *mean* with a one-year cap introduces variation in exposure,
+so the package's variance inflation can produce a different sample size.
+When investigating a discrepancy, match time units, dispersion convention,
+one- or two-sided alpha, the variance method, and per-group versus total sample
+size. Check separately for any inflation for participants with no usable data;
+that differs from retaining their partial follow-up under the dropout model.
 
 ### Maximum follow-up
 
