@@ -15,7 +15,9 @@ get_cut_date(
   lambda1 = NULL,
   lambda2 = NULL,
   min_date = 0,
-  max_date = Inf
+  max_date = Inf,
+  min_n = NULL,
+  min_followup = 0
 )
 }
 \arguments{
@@ -40,6 +42,10 @@ get_cut_date(
 \item{min_date}{Numeric. Minimum possible date (e.g., 0 or previous analysis time).}
 
 \item{max_date}{Numeric. Maximum possible date (e.g., trial duration).}
+
+\item{min_n}{Minimum number randomized before analysis.}
+
+\item{min_followup}{Minimum time since randomization of the \code{min_n}th patient.}
 }
 \value{
 Numeric. The calendar date satisfying the criteria. If criteria cannot be met

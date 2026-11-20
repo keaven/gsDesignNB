@@ -62,6 +62,15 @@ reaches the planned fraction of the target, rather than at fixed calendar
 times. This ensures analyses occur at comparable information levels
 regardless of the true nuisance parameters.
 
+**Cache provenance.** The bundled production results predate the event-gap
+consistency update in `blinded_ssr()`. They describe the archived adaptive
+implementation, not recalibrated operating characteristics of the revised rule.
+The no-adaptation comparator is unaffected by that SSR update. Fresh adaptive
+production simulations are needed before the displayed power, null rejection,
+and sample-size summaries are attributed to the current implementation.
+The `group-sequential-power-study` article reports coverage and failure
+diagnostics for the separate current-source monitoring study.
+
 ## Planned trial design
 
 ```{r planned_parameters}

@@ -1,0 +1,162 @@
+---
+title: "Asymptotic group sequential power under alternative assumptions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Asymptotic group sequential power under alternative assumptions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE)
+library(gsDesignNB)
+library(ggplot2)
+library(lt)
+```
+
+## Reference design
+
+`gsNBPower()` evaluates an existing design without resizing enrollment to recover
+target power. All time quantities below are in months. Information is evaluated
+at the planned calendar dates unless an explicit timing requirement is supplied.
+
+```{r reference}
+fixed <- sample_size_nbinom(
+  lambda1 = 1.5 / 12, lambda2 = 1 / 12, dispersion = 0.5,
+  power = 0.9, accrual_rate = 1, accrual_duration = 12,
+  trial_duration = 24, dropout_rate = -log(0.95) / 12,
+  max_followup = 12, event_gap = 20 / 30.4375
+)
+design <- gsDesignNB::toInteger(gsNB(fixed, test.type = 1))
+reference <- gsNBPower(design)
+reference$look_results |>
+  lt::lt()
+```
+
+Expected information agrees with the rounded planning design. Sample size and
+analysis dates remain unchanged when evaluating a different treatment rate.
+The reported expected resources account for stopping at any active boundary,
+with every remaining trial ending at the final decision.
+
+## Scenario sensitivity
+
+The following curves keep one design fixed. They are not separate designs each
+resized to have 90% power. Dispersion, event rates, follow-up, dropout, and
+piecewise accrual can all be changed in the same way.
+
+```{r curves}
+grid <- expand.grid(
+  rate_ratio = seq(0.4, 1.1, by = 0.05), dispersion = c(0.5, 1),
+  spending = c("min_planned_actual", "planned_final", "expected_final", "calendar"),
+  stringsAsFactors = FALSE
+)
+grid$power <- vapply(seq_len(nrow(grid)), function(index) {
+  gsNBPower(
+    design, lambda2 = fixed$inputs$lambda1 * grid$rate_ratio[index],
+    dispersion = grid$dispersion[index], spending = grid$spending[index]
+  )$power
+}, numeric(1))
+ggplot(grid, aes(rate_ratio, power, color = spending)) +
+  geom_line() + facet_wrap(~ dispersion, labeller = label_both) +
+  scale_y_continuous(labels = scales::label_percent()) +
+  labs(x = "True experimental/control rate ratio", y = "Asymptotic power",
+       color = "Spending strategy") + theme_minimal()
+```
+
+Recomputed boundaries spend the full upper error budget at the final analysis.
+`min_planned_actual` caps interim spending at both planned and accumulated
+information. `planned_final` uses the original final information denominator.
+`expected_final` uses scenario-expected final information; during a trial this
+denominator must be projected from currently available data. `calendar` uses
+calendar fractions. Explicit spending times inherited from the design take
+precedence over these rules.
+
+```{r score-wald}
+comparisons <- expand.grid(
+  test_type = c("score", "wald"), boundary_update = c("fixed", "recompute"),
+  stringsAsFactors = FALSE
+)
+comparisons$power <- vapply(seq_len(nrow(comparisons)), function(index) {
+  gsNBPower(design, lambda2 = 0.1, test_type = comparisons$test_type[index],
+            boundary_update = comparisons$boundary_update[index])$power
+}, numeric(1))
+lt::lt(comparisons)
+```
+
+The score approximation uses separate null and alternative variances. Both
+approximations assume a canonical cross-look covariance structure; finite-sample
+score calibration and information-estimation uncertainty require simulation.
+Fixed numerical bounds need not retain nominal Type I error under different
+information fractions.
+
+## Combined timing requirements
+
+Targets combine with AND. The final analysis stays at its hard calendar deadline.
+An unreachable interim is reported as skipped, rather than creating another test
+at the same final information.
+
+```{r timing}
+information_timing <- gsNBPower(
+  design, planned_calendar = c(NA, NA, 24),
+  target_info = c(design$n.I[1:2], NA)
+)
+minimum_age <- gsNBPower(
+  design, min_n = c(design$n_total[3], NA, NA),
+  min_followup = c(3, NA, NA)
+)
+shortfall <- gsNBPower(design, lambda1 = 0.02, lambda2 = 0.014,
+                       target_info = c(design$n.I[1:2], NA))
+lt::lt(shortfall$look_results)
+```
+
+`min_n` and `min_followup` refer to randomized subjects' calendar age, not to
+patients who remain observed without dropout. Expected target-hitting dates are
+deterministic planning approximations, not means of random simulated dates.
+
+## Reusing completed simulations
+
+The shipped GS cache contains 3,600 Wald trials and their numerical planning
+bounds. Reclassifying the saved Z paths against those fixed bounds provides a
+matched comparison without generating additional trials. Its original summary
+used observed-information-updated boundaries and answers a different question.
+
+```{r cached-comparison}
+cache_path <- system.file("extdata", "gs_simulation_results.rds", package = "gsDesignNB")
+if (!nzchar(cache_path)) cache_path <- "../inst/extdata/gs_simulation_results.rds"
+cache <- readRDS(cache_path)
+checked <- check_gs_bound(cache$sim_res, cache$gs_nb,
+                          info_col = "info_unblinded_ml", boundary_update = "fixed")
+rejected <- aggregate(cross_upper ~ sim, checked, any)$cross_upper
+interval <- binom.test(sum(rejected), length(rejected))$conf.int
+comparison <- data.frame(
+  asymptotic = gsNBPower(cache$gs_nb, boundary_update = "fixed")$power,
+  simulated = mean(rejected), lower = interval[1], upper = interval[2],
+  replicates = length(rejected)
+)
+lt::lt(comparison)
+```
+
+This comparator includes the cache's futility rule. The study article separately
+evaluates information estimators and spending strategies under null and
+alternative scenarios.
+
+## Blinded final-information projection
+
+The existing blinded SSR calculation also returns `info_projected` at the
+supplied enrollment and final date, without increasing sample size. Its
+`target_info` is a fixed-design power target and must not be substituted for
+projected GS final information.
+
+```{r blinded-workflow, eval=FALSE}
+blinded <- blinded_ssr(
+  interim_data, lambda1_planning = 1.5 / 12, lambda2_planning = 1 / 12,
+  accrual_rate = design$n_total[3] / 12, accrual_duration = 12,
+  trial_duration = 24, max_followup = 12, event_gap = 20 / 30.4375,
+  analysis_time = interim_date
+)
+interim_fraction <- blinded$blinded_info / blinded$info_projected
+```
+
+Projection uncertainty, pooled-rate splitting, and failed nuisance fits are
+measured in the simulation study. No asymptotic result alone establishes Type I
+error control for estimated, data-dependent spending.

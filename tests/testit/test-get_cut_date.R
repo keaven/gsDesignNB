@@ -1,3 +1,12 @@
+assert("minimum enrollment and randomized age combine with calendar rules", {
+  data <- data.frame(id = c(1, 1, 2, 3), enroll_time = c(0, 0, 1, 2))
+  (get_cut_date(data, min_n = 2, min_followup = 2) %==% 3)
+  (get_cut_date(data, min_n = 2, min_followup = 2, planned_calendar = 4) %==% 4)
+  (get_cut_date(data, min_n = 100, max_date = 5) %==% 5)
+  (has_error(get_cut_date(data, min_followup = 2), "requires min_n"))
+  (has_error(get_cut_date(data, min_n = 1.5), "positive integer"))
+})
+
 assert("get_cut_date returns planned_calendar when no other criteria", {
   set.seed(456)
   enroll_rate <- data.frame(rate = 15, duration = 1)

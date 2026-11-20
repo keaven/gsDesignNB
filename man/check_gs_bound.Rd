@@ -8,7 +8,12 @@ check_gs_bound(
   sim_results,
   design,
   info_scale = c("blinded", "unblinded"),
-  info_col = NULL
+  info_col = NULL,
+  boundary_update = NULL,
+  spending = NULL,
+  full_spending_at_final = TRUE,
+  final_info_col = "info_blinded_final_projected",
+  ignore_futility = FALSE
 )
 }
 \arguments{
@@ -22,6 +27,17 @@ check_gs_bound(
 \item{info_col}{Optional explicit column name containing the information
 metric to use for bounds, e.g. \code{"info_unblinded_ml"} or
 \code{"info_blinded_mom"}.}
+
+\item{boundary_update}{\code{"fixed"} or \code{"recompute"}. \code{NULL} preserves the legacy path.}
+
+\item{spending}{Spending strategy as in \code{\link[=gsNBPower]{gsNBPower()}}. \code{NULL} preserves legacy
+behavior unless another monitoring option is supplied.}
+
+\item{full_spending_at_final}{Complete error spending at the final analysis.}
+
+\item{final_info_col}{Projected-final information column for \code{"expected_final"}.}
+
+\item{ignore_futility}{Ignore futility stops when evaluating nonbinding Type I error.}
 }
 \value{
 A data frame with added columns:

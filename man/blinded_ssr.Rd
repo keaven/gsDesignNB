@@ -18,7 +18,8 @@ blinded_ssr(
   trial_duration,
   dropout_rate = 0,
   max_followup = NULL,
-  event_gap = NULL
+  event_gap = NULL,
+  analysis_time = NULL
 )
 }
 \arguments{
@@ -54,6 +55,9 @@ as \code{accrual_rate}.}
 
 \item{event_gap}{Gap duration after each event during which no new events are counted.
 Default is NULL (no gap).}
+
+\item{analysis_time}{Interim calendar date, if known. Past enrollment is then
+adjusted to the observed subject count; future enrollment retains planned rates.}
 }
 \value{
 A list containing:
@@ -64,6 +68,9 @@ A list containing:
 \item{info_fraction}{Estimated information fraction at interim (blinded information / target information).}
 \item{blinded_info}{Estimated statistical information from the blinded interim data.}
 \item{target_info}{Target statistical information required for the planned power.}
+\item{info_projected}{Projected final information at the supplied enrollment
+and final date, without sample-size adaptation.}
+\item{fallback}{Blinded nuisance-estimation method.}
 }
 }
 \description{

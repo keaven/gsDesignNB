@@ -38,3 +38,40 @@ assert("blinded_ssr estimates dispersion and rate", {
   (res$blinded_info > 0)
   (res$info_fraction > 0)
 })
+
+assert("blinded SSR projects fixed-size final information with consistent event gaps", {
+  set.seed(40)
+  sim <- nb_sim(
+    data.frame(rate = 40, duration = 2),
+    data.frame(treatment = c("Control", "Experimental"),
+               rate = c(0.8, 0.5), dispersion = 0.4),
+    max_followup = 4, n = 80, event_gap = 0.2
+  )
+  cut <- cut_data_by_date(sim, cut_date = 3, event_gap = 0.2)
+  blinded <- calculate_blinded_info(cut, lambda1_planning = 0.8,
+                                    lambda2_planning = 0.5, event_gap = 0.2)
+  result <- blinded_ssr(
+    cut, lambda1_planning = 0.8, lambda2_planning = 0.5,
+    accrual_rate = 40, accrual_duration = 2, trial_duration = 6,
+    max_followup = 4, event_gap = 0.2
+  )
+  expected <- sample_size_nbinom(
+    lambda1 = blinded$lambda1_adjusted, lambda2 = blinded$lambda2_adjusted,
+    dispersion = blinded$dispersion_blinded, power = NULL,
+    accrual_rate = 40, accrual_duration = 2, trial_duration = 6,
+    max_followup = 4, event_gap = 0.2
+  )
+  (all.equal(result$blinded_info, blinded$blinded_info))
+  (all.equal(result$info_projected, 1 / expected$variance))
+  (result$fallback %==% blinded$fallback)
+  planned <- list(lambda1_adjusted = 0.8, lambda2_adjusted = 0.5,
+                  dispersion_blinded = 0.4)
+  projected <- .gs_nb_projected_info(planned, 40, 2, 6, 0, 4, 0.2, 1,
+                                    analysis_time = 1, n_observed = 40)
+  reference <- sample_size_nbinom(
+    lambda1 = 0.8, lambda2 = 0.5, dispersion = 0.4, power = NULL,
+    accrual_rate = 40, accrual_duration = 2, trial_duration = 6,
+    max_followup = 4, event_gap = 0.2
+  )
+  (all.equal(projected, 1 / reference$variance))
+})

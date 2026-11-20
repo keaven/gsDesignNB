@@ -28,6 +28,9 @@ negative binomial outcomes using `gsNBCalendar()` for specified calendar times o
 design operating characteristics using `sim_gs_nbinom()`, `check_gs_bound()`, and
 `summarize_gs_sim()`.
 
+For fixed-size scenario power, see the asymptotic group sequential power article;
+the companion strategy-study article evaluates data-dependent monitoring separately.
+
 ## Trial design parameters
 
 We design a trial with the following characteristics:

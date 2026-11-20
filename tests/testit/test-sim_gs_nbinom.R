@@ -49,6 +49,26 @@ assert("sim_gs_nbinom uses planned information dates without moving the final", 
   (high$info_fraction_blinded_ml[high$analysis == 3] > 1)
 })
 
+assert("GS simulation projects blinded final information and keeps the final deadline", {
+  fixed <- sample_size_nbinom(
+    lambda1 = 0.8, lambda2 = 0.5, dispersion = 0.2, power = NULL,
+    accrual_rate = 60, accrual_duration = 1, trial_duration = 4, max_followup = 3
+  )
+  design <- toInteger(gsNB(fixed))
+  result <- sim_gs_nbinom(
+    n_sims = 1, enroll_rate = data.frame(rate = design$n_total[3], duration = 1),
+    fail_rate = data.frame(treatment = c("Control", "Experimental"),
+                           rate = c(0.8, 0.5), dispersion = 0.2),
+    max_followup = 3, n_target = design$n_total[3], design = design,
+    cuts = list(list(target_info = 1e9), list(target_info = 1e9),
+                list(planned_calendar = 4)), seed = 40
+  )
+  (result$status %==% c("skipped", "skipped", "analyzed"))
+  (is.na(result$z_stat[1:2]))
+  (result$analysis_time[3] %==% 4)
+  (is.finite(result$info_blinded_final_projected[3]))
+})
+
 assert("sim_gs_nbinom runs basic simulation", {
   set.seed(123)
   enroll_rate <- data.frame(rate = 10, duration = 3)

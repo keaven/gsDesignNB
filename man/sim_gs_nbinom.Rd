@@ -106,6 +106,10 @@ Columns include:
 \item{info_fraction_blinded_ml}{Blinded ML information divided by planned final information}
 \item{info_fraction_unblinded_mom}{Unblinded MoM information divided by planned final information}
 \item{info_fraction_blinded_mom}{Blinded MoM information divided by planned final information}
+\item{info_blinded_final_projected}{Final information projected using the
+current blinded nuisance estimates and the planned enrollment cap}
+\item{blinded_fallback}{Blinded nuisance-estimation method}
+\item{status}{\code{"analyzed"} or \code{"skipped"} when an interim reaches the final deadline}
 }
 }
 \description{

@@ -1,0 +1,208 @@
+---
+title: "Simulation evaluation of group sequential spending strategies"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulation evaluation of group sequential spending strategies}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE)
+library(gsDesignNB)
+library(ggplot2)
+library(lt)
+```
+
+## Study specification
+
+The asymptotic power article computes expected information at planned dates.
+This study separately evaluates what happens when information and its final
+projection are estimated from actual trial data. Each simulated path is evaluated
+under fixed bounds and all four recomputed-bound strategies. Primary null
+comparisons ignore nonbinding futility; operational comparisons retain it.
+
+Tier A reproduces the eight historical score scenarios under planned nuisance
+parameters and two timing constructors. Tier B changes rates, dispersion, and
+accrual while keeping the planned design. Tier C evaluates minimum randomized
+age, blinded-information targets, and the existing no-adaptation/blinded-SSR
+workflows. The target precision is 20,000 null and 5,000 alternative replicates
+per cell. Score and Wald comparisons use identical simulated-trial seeds.
+
+Run the workflow and production study explicitly from the source repository:
+
+```sh
+Rscript data-raw/gs_strategy_study.R --debug --workers=2
+Rscript data-raw/gs_strategy_study.R --production --workers=8 --publish
+```
+
+Each cell is checkpointed with its settings, design, raw paths, and summaries.
+Additional options select tiers and output directory. Production runs are not
+part of vignette rendering or ordinary package tests.
+
+## Available strategy results
+
+```{r strategy-results}
+study_path <- system.file("extdata", "gs_strategy_summary.rds", package = "gsDesignNB")
+local_paths <- c("../inst/extdata/gs_strategy_summary.rds",
+                 "../paper/gs-strategy-results/gs_strategy_summary.rds")
+local_paths <- local_paths[file.exists(local_paths)]
+if (length(local_paths)) {
+  study_path <- local_paths[1]
+}
+study <- if (nzchar(study_path)) readRDS(study_path) else NULL
+```
+
+```{r results, results='asis'}
+if (is.null(study)) {
+  cat("Production strategy results are not yet bundled. The study specification and existing SSR evidence are available below.\n")
+} else {
+  cat("Saved study mode: **", study$mode, "**.\n\n", sep = "")
+  cat("This saved summary covers **", nrow(study$cells),
+      " simulation cells**, generated on ", study$generated_at,
+      ". It is not a certificate of completion for the full planned study.\n\n", sep = "")
+  if (!is.null(study$coverage)) {
+    print(knitr::kable(study$coverage, row.names = FALSE,
+                       caption = "Completed current-source cells versus the full planned study"))
+    cat("\nExcluded incompatible or non-production checkpoints: ",
+        study$excluded_checkpoints, ".\n\n", sep = "")
+  }
+  print(knitr::kable(study$cells[c("tier", "scenario", "timing_method", "truth",
+                                  "test_type", "cut_rule", "n_sims")],
+                     row.names = FALSE, caption = "Coverage of the loaded summary"))
+  if (study$mode != "production") {
+    cat("These are debug workflow results, not evidence of Type I error calibration.\n\n")
+  }
+  if (!any(study$cells$truth == "null")) {
+    cat("No null cells are included in this summary; these results cannot establish Type I error control.\n\n")
+  }
+  if (!is.null(study$summary)) {
+    selected <- study$summary[study$summary$tier == "A", ]
+    selected$failure_rate <- selected$n_failed / selected$n_sims
+    groups <- split(selected, interaction(selected$truth, selected$policy,
+                    selected$spending, selected$information_estimator, drop = TRUE))
+    display <- do.call(rbind, lapply(groups, function(rows) {
+      data.frame(
+        Truth = rows$truth[1], Policy = rows$policy[1], Spending = rows$spending[1],
+        Estimator = rows$information_estimator[1], Cells = nrow(rows),
+        `Rejection range` = sprintf("%.4f to %.4f", min(rows$rejection_rate), max(rows$rejection_rate)),
+        `Maximum failure rate` = max(rows$failure_rate),
+        `Maximum rejection or failure` = max(rows$rejection_or_failure), check.names = FALSE
+      )
+    }))
+    print(knitr::kable(display, row.names = FALSE, digits = 4,
+                       caption = "Tier A results across completed cells only; ranges are not pooled estimates"))
+    failed_nulls <- selected[selected$truth == "null" & selected$n_failed > 0, ]
+    if (nrow(failed_nulls)) {
+      cat("\nSome recomputed-bound null paths fail. Near-nominal rejection alone therefore does not establish error control.\n\n")
+      print(knitr::kable(failed_nulls[c("scenario", "timing_method", "spending",
+                       "information_estimator", "n_sims", "rejection_rate", "ci_lower",
+                       "ci_upper", "n_failed", "rejection_or_failure")],
+                        row.names = FALSE, digits = 4,
+                        caption = "Null cells with failures, including Monte Carlo intervals and sensitivity"))
+    }
+  }
+}
+```
+
+Bound failures and missing-statistic paths remain in the simulation denominator.
+They are reported separately, together with rejection-or-failure sensitivity;
+they must not be interpreted as evidence of conservative error control. Exact
+binomial intervals describe Monte Carlo uncertainty, not uncertainty in the
+asymptotic model itself. Production conclusions require checking failure rates
+and scenario coverage as well as the rejection intervals.
+
+## Skip near-final interims, retain final follow-up
+
+A separate candidate monitoring policy skips a scheduled interim when the
+uncapped spending time, current information divided by blinded projected-final
+information, is at least 0.95. This is an information-based decision, not a
+decision based on the treatment-effect statistic. The skipped look uses no
+additional alpha and does not trigger an efficacy or futility stop. The planned
+final date and follow-up requirements are retained; this policy does not promote
+the interim to the final analysis. Earlier valid stopping decisions still apply.
+
+At the final look, boundaries use the observed information history from tested
+looks and complete the remaining spending. Earlier boundaries and spending are
+preserved. The final look is never skipped by the 0.95 rule, and it does not need
+a projected-final information estimate. Safety review can continue at a skipped
+formal testing look.
+
+For example, one saved trial has current information 57.03 at month 10 and
+74.64 at month 18, but projects only 74.33 at the final analysis. The original
+implementation rejects the resulting nonincreasing projected information
+sequence. This is not an inherently unevaluable month-18 statistic. Under the
+revised policy, month 18 is skipped, month 10 retains its original boundary,
+and the final analysis remains at month 24.
+
+The source-repository workflow reuses saved trial histories without changing
+the active production generator or its fingerprinted monitoring code:
+
+```sh
+Rscript data-raw/evaluate_interim_skip.R --self-test
+Rscript data-raw/evaluate_interim_skip.R
+```
+
+The reanalysis is single-process and resumable. It records actual skipped looks
+and trials with a skip, excludes candidates after an earlier stopping decision,
+and reports scenario-specific rejection, failure, and final-evaluation counts.
+Blinded and unblinded current-information estimators are labeled separately;
+both use the blinded projected-final estimate. Adaptive SSR cells are excluded.
+Use `--max-sims=100` for a separately labeled smoke test, not calibration
+evidence. The full-replication report is written to
+`paper/gs-strategy-results/interim-skip/production/summary.md`.
+
+An initial full-replication reanalysis on November 9, 2026 used 20,000 null
+trials per fixed-calendar Tier A scenario with unblinded current information:
+
+| Scenario | Trials with an actual skip | Skip rate | Flagged trials remaining |
+|:--|--:|--:|--:|
+| High-rate, front-loaded | 17,070 | 85.35% | 248 |
+| Low-rate, ramp-up | 40 | 0.20% | 28 |
+| Mixed stress | 11,196 | 55.98% | 317 |
+| Reference | 7,330 | 36.65% | 716 |
+
+These are sequential skip frequencies, not the larger scheduled-look screening
+counts that ignore earlier stopping. The threshold is a candidate operational
+rule, not an assurance of Type I error control. Remaining failures and partial
+scenario coverage prevent a blanket calibration claim. The original saved study
+summary above remains unchanged and describes a different monitoring policy.
+
+## Existing blinded SSR evidence
+
+The completed SSR study covers 90 rate, dispersion, accrual, and treatment-effect
+scenarios. Its saved null comparisons include 20,000 futility-ignored trials per
+test/dispersion/strategy cell. These use information-driven dates and different
+futility calibration, so they are contextual evidence rather than exact
+comparators for fixed calendar monitoring.
+
+```{r ssr-evidence}
+ssr_path <- system.file("extdata", "ssr_sim_vignette_summary_score.rds", package = "gsDesignNB")
+if (!nzchar(ssr_path)) ssr_path <- "../inst/extdata/ssr_sim_vignette_summary_score.rds"
+ssr <- readRDS(ssr_path)
+nulls <- do.call(rbind, ssr$null_nonbinding_by_test)
+nulls$lower <- vapply(seq_len(nrow(nulls)), function(index) {
+  binom.test(round(nulls$type1_error[index] * nulls$n_sims[index]),
+             nulls$n_sims[index])$conf.int[1]
+}, numeric(1))
+nulls$upper <- vapply(seq_len(nrow(nulls)), function(index) {
+  binom.test(round(nulls$type1_error[index] * nulls$n_sims[index]),
+             nulls$n_sims[index])$conf.int[2]
+}, numeric(1))
+lt::lt(nulls[c("analysis_test", "k_true", "strategy", "n_sims", "type1_error", "lower", "upper")])
+```
+
+```{r ssr-plot}
+ggplot(nulls, aes(strategy, type1_error, color = analysis_test)) +
+  geom_point(position = position_dodge(width = 0.4)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.1,
+                position = position_dodge(width = 0.4)) +
+  geom_hline(yintercept = 0.025, linetype = "dashed") +
+  facet_wrap(~ k_true, labeller = label_both) +
+  labs(x = NULL, y = "Null rejection probability", color = "Test") + theme_minimal()
+```
+
+These saved SSR results predate the event-gap consistency fix in
+`blinded_ssr()`. New adaptive runs record the corrected implementation and must
+not be claimed to reproduce the old adaptive sample sizes exactly. The
+no-adaptation comparator is unaffected by that SSR update.

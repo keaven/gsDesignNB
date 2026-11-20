@@ -1,3 +1,43 @@
+assert("new monitoring strategies share expected boundaries with gsNBPower", {
+  fixed <- sample_size_nbinom(
+    lambda1 = 0.5, lambda2 = 0.35, dispersion = 0.5, power = 0.9,
+    accrual_rate = 1, accrual_duration = 12, trial_duration = 24, max_followup = 12
+  )
+  design <- toInteger(gsNB(fixed, test.type = 1))
+  for (strategy in c("min_planned_actual", "planned_final", "expected_final", "calendar")) {
+    expected <- gsNBPower(design, spending = strategy)
+    rows <- data.frame(sim = 1, analysis = 1:3, z_stat = 0,
+                       analysis_time = design$T, info_blinded_ml = design$n.I,
+                       info_blinded_final_projected = design$n.I[3])
+    checked <- check_gs_bound(rows, design, info_col = "info_blinded_ml", spending = strategy)
+    (checked$bound_status %==% rep("ok", 3))
+    (all.equal(checked$upper_bound, expected$look_results$upper_bound, tolerance = 1e-6))
+    (checked$spending_time[3] %==% 1)
+  }
+  rows$z_stat <- c(-5, 0, 0)
+  checked <- check_gs_bound(rows, design, info_col = "info_blinded_ml", boundary_update = "fixed")
+  (checked$cross_upper[1])
+  (all.equal(checked$upper_bound[1], design$upper$bound[1]))
+  rows$info_blinded_ml <- NA_real_
+  checked <- check_gs_bound(rows, design, info_col = "info_blinded_ml", boundary_update = "fixed")
+  (checked$cross_upper[1])
+  rows$info_blinded_ml <- design$n.I
+  rows$z_stat <- 0
+  rows$status <- c("skipped", "skipped", "analyzed")
+  checked <- check_gs_bound(rows, design, info_col = "info_blinded_ml", spending = "expected_final")
+  (checked$bound_status %==% c("skipped", "skipped", "ok"))
+  rows$status <- "analyzed"
+  rows$info_blinded_ml[2] <- rows$info_blinded_ml[1] / 2
+  checked <- check_gs_bound(rows, design, info_col = "info_blinded_ml", spending = "planned_final")
+  (checked$bound_status[2] %==% "failed")
+  rows$info_blinded_ml <- design$n.I
+  rows$status <- "analyzed"
+  baseline <- check_gs_bound(rows, design, info_col = "info_blinded_ml", spending = "min_planned_actual")
+  rows$status[2] <- "skipped"
+  altered <- check_gs_bound(rows, design, info_col = "info_blinded_ml", spending = "min_planned_actual")
+  (all.equal(altered$upper_bound[1], baseline$upper_bound[1]))
+})
+
 assert("check_gs_bound returns correct structure", {
   design <- gsDesign::gsDesign(k = 2, n.fix = 100, test.type = 2, timing = c(0.5, 1))
   sim_df <- data.frame(

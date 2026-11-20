@@ -501,15 +501,18 @@ ggplot(z_null_df, aes(x = z, color = Test)) +
 The Jensen correction for event gaps only applies when both the dispersion ($k > 0$) and the event gap ($g > 0$) are nonzero.
 When either is zero, the corrected and naive formulas produce identical sample sizes.
 
-To assess the correction's impact across a range of realistic parameter combinations, we ran a simulation sweep with 
-10,000 replicates per scenario. For each scenario, trials were simulated at the corrected sample size ($n_\text{corr}$), 
-and results were also extracted for the first $n_\text{naive}$ subjects (the uncorrected sample size). 
-Because both analyses use the same simulated data, the **paired** comparison is very precise.
+The broad study covers 64 scenarios: control rates 0.3, 0.5, 1.0, and 2.0 events/month;
+dispersion 0.1, 0.3, 0.5, and 1.0; and gaps of 10, 20, 30, and 45 days. It uses
+RR = 0.70, one-sided alpha = 0.025, 90% target power, 24 months of trial time,
+12 months maximum follow-up, and piecewise ramp-up accrual. For each scenario,
+3,500 trials are simulated at the corrected Wald sample size, and the first
+$n_\text{naive}$ subjects provide the naive-design analysis on the same data.
+This is a separate study from the paper's historical four-scenario, 10,000-replicate table.
 
 ```{r load_sweep}
-sweep_file <- system.file("extdata", "scenario_sweep_results.rds", package = "gsDesignNB")
-if (sweep_file == "" && file.exists("../inst/extdata/scenario_sweep_results.rds")) {
-  sweep_file <- "../inst/extdata/scenario_sweep_results.rds"
+sweep_file <- system.file("extdata", "jensen_broad_sweep_results.rds", package = "gsDesignNB")
+if (file.exists("../inst/extdata/jensen_broad_sweep_results.rds")) {
+  sweep_file <- "../inst/extdata/jensen_broad_sweep_results.rds"
 }
 has_sweep <- sweep_file != ""
 if (has_sweep) {
@@ -519,7 +522,7 @@ if (has_sweep) {
 
 ```{r sweep_table, eval=has_sweep}
 sweep_display <- data.frame(
-  Scenario = sprintf("k = %.1f, gap = %d days", sweep$k, sweep$gap_days),
+  Scenario = sprintf("rate = %.1f, k = %.1f, gap = %d days", sweep$lambda1, sweep$k, sweep$gap_days),
   `n (corrected)` = sweep$n_corrected,
   `n (naive)` = sweep$n_naive,
   `Extra subjects` = sweep$n_diff,
@@ -533,7 +536,7 @@ sweep_display |>
   lt() |>
   lt_header(
     title = "Impact of Jensen Correction Across Scenarios",
-    subtitle = "10,000 replicates per scenario; power difference is paired (95% CI)"
+    subtitle = "64 scenarios, 3,500 replicates each; Wald power difference is paired (95% CI)"
   ) |>
   lt_format(columns = c("Power (corrected)", "Power (naive)"), decimals = 4) |>
   lt_label(
@@ -549,18 +552,53 @@ sweep_display |>
 
 ```{r sweep_interpretation, eval=has_sweep, results='asis'}
 cat("**Key findings:**\n\n")
-cat("*   The corrected design achieves power at or above the 90% target in **all** scenarios.\n")
-cat("*   The naive design falls below 90% in **three of four** scenarios, with the shortfall increasing as $k$ and $g$ grow.\n")
+cat(sprintf("*   Corrected-design Wald power ranges from %.3f to %.3f; some cells overshoot the target.\n",
+            min(sweep$power_corrected), max(sweep$power_corrected)))
+cat(sprintf("*   The naive design has observed power below 90%% in %d of %d cells. This is a point-estimate comparison, not a significance test.\n",
+            sum(sweep$power_naive < 0.9), nrow(sweep)))
 cat(sprintf("*   The largest paired power difference is %.1f percentage points ($k = %.1f$, gap = %d days), ",
     100 * sweep$power_diff[which.max(sweep$power_diff)],
     sweep$k[which.max(sweep$power_diff)],
     sweep$gap_days[which.max(sweep$power_diff)]))
 cat(sprintf("where the corrected design adds %d subjects.\n",
     sweep$n_diff[which.max(sweep$power_diff)]))
-cat(sprintf("*   All paired differences are statistically significant (discordant pair ratios range from %.1f:1 to %.1f:1 in favor of the corrected design).\n",
-    min(sweep$corr_only / sweep$naive_only),
-    max(sweep$corr_only / sweep$naive_only)))
+cat(sprintf("*   Paired normal-approximation intervals exclude zero in %d of %d cells; small corrections are not uniformly distinguishable from Monte Carlo noise.\n",
+    sum(sweep$power_diff - 1.96 * sweep$power_diff_se > 0), nrow(sweep)))
 ```
+
+### Broad-sweep Wald and score calibration
+
+A separate cache evaluates both final tests at corrected and naive Wald sample sizes.
+It contains 3,500 power and 3,500 null replicates per cell, so its null estimates
+are less precise than the 20,000-null-replicate score-versus-Wald factorial study.
+Correcting the event-gap approximation does not itself correct a test's null
+distribution or guarantee the score test's target power.
+
+```{r broad-score-results}
+score_file <- system.file("extdata", "jensen_score_broad_sweep_results.rds", package = "gsDesignNB")
+if (file.exists("../inst/extdata/jensen_score_broad_sweep_results.rds")) {
+  score_file <- "../inst/extdata/jensen_score_broad_sweep_results.rds"
+}
+score_sweep <- readRDS(score_file)
+score_display <- data.frame(
+  `Control rate` = score_sweep$lambda1, Dispersion = score_sweep$k,
+  `Gap (days)` = score_sweep$gap_days,
+  `Wald power` = score_sweep$power_wald_corrected,
+  `Score power` = score_sweep$power_score_corrected,
+  `Score power MCSE` = score_sweep$se_power_score_corrected,
+  `Wald null rejection` = score_sweep$type1_wald_corrected,
+  `Score null rejection` = score_sweep$type1_score_corrected,
+  `Score null MCSE` = score_sweep$se_type1_score_corrected, check.names = FALSE
+)
+knitr::kable(score_display, digits = 4, row.names = FALSE,
+             caption = "Broad-sweep calibration at corrected Wald sample sizes; 3,500 replicates per truth and cell")
+```
+
+Corrected-design score power ranges from
+`r sprintf("%.3f", min(score_sweep$power_score_corrected))` to
+`r sprintf("%.3f", max(score_sweep$power_score_corrected))` in this cache.
+Retain the gap correction, but verify both null rejection and power using the
+planned final statistic; extra information may be needed for conservative score analyses.
 
 ## Discussion: why we apply the correction
 

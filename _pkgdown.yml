@@ -54,6 +54,7 @@ reference:
     contents:
       - gsNB
       - gsNBCalendar
+      - gsNBPower
       - update_gsNB
       - toInteger
       - summary.gsNB
@@ -120,6 +121,8 @@ articles:
   - title: "Group sequential monitoring"
     contents:
       - group-sequential-simulation
+      - group-sequential-power
+      - group-sequential-power-study
       - completers-interim-example
 
   - title: "Sample size re-estimation"

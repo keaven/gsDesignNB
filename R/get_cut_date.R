@@ -15,6 +15,8 @@
 #' @param lambda2 Numeric. Planned experimental rate for info calculation.
 #' @param min_date Numeric. Minimum possible date (e.g., 0 or previous analysis time).
 #' @param max_date Numeric. Maximum possible date (e.g., trial duration).
+#' @param min_n Minimum number randomized before analysis.
+#' @param min_followup Minimum time since randomization of the `min_n`th patient.
 #'
 #' @return Numeric. The calendar date satisfying the criteria. If criteria cannot be met
 #'   within `max_date` (or data limits), returns `max_date` (or max data time).
@@ -36,9 +38,26 @@ get_cut_date <- function(
   data, planned_calendar = NULL, target_events = NULL,
   target_completers = NULL, target_info = NULL,
   event_gap = 0, ratio = 1, lambda1 = NULL, lambda2 = NULL,
-  min_date = 0, max_date = Inf
+  min_date = 0, max_date = Inf, min_n = NULL, min_followup = 0
 ) {
   dates <- numeric(0)
+  if (!is.numeric(min_followup) || length(min_followup) != 1L ||
+      !is.finite(min_followup) || min_followup < 0) {
+    stop("min_followup must be a nonnegative finite number.", call. = FALSE)
+  }
+  if (is.null(min_n) && min_followup > 0) {
+    stop("min_followup requires min_n.", call. = FALSE)
+  }
+  if (!is.null(min_n)) {
+    if (!is.numeric(min_n) || length(min_n) != 1L || !is.finite(min_n) ||
+        min_n < 1 || min_n != floor(min_n)) {
+      stop("min_n must be a positive integer.", call. = FALSE)
+    }
+    enrolled <- unique(data[, c("id", "enroll_time"), drop = FALSE])
+    enrollment_times <- sort(enrolled$enroll_time)
+    date <- if (length(enrollment_times) >= min_n) enrollment_times[min_n] + min_followup else max_date
+    dates <- c(dates, date)
+  }
 
   # 1. Calendar Time
   if (!is.null(planned_calendar)) {

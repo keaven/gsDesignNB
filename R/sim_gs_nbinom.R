@@ -108,6 +108,10 @@
 #'     \item{info_fraction_blinded_ml}{Blinded ML information divided by planned final information}
 #'     \item{info_fraction_unblinded_mom}{Unblinded MoM information divided by planned final information}
 #'     \item{info_fraction_blinded_mom}{Blinded MoM information divided by planned final information}
+#'     \item{info_blinded_final_projected}{Final information projected using the
+#'       current blinded nuisance estimates and the planned enrollment cap}
+#'     \item{blinded_fallback}{Blinded nuisance-estimation method}
+#'     \item{status}{`"analyzed"` or `"skipped"` when an interim reaches the final deadline}
 #'   }
 #'
 #' @importFrom data.table as.data.table
@@ -194,6 +198,12 @@ sim_gs_nbinom <- function(
   }
 
   n_analyses <- length(cuts)
+  final_calendar <- if (inherits(design, "gsNB")) {
+    if (!is.null(cuts[[n_analyses]]$planned_calendar)) {
+      cuts[[n_analyses]]$planned_calendar
+    } else utils::tail(design$T, 1)
+  } else NULL
+  projection_accrual <- if (inherits(design, "gsNB")) .gs_nb_accrual(design) else NULL
 
   planned_final_info <- if (inherits(design, "gsNB")) {
     utils::tail(design$n.I, 1)
@@ -252,8 +262,15 @@ sim_gs_nbinom <- function(
       # Default max_date to something reasonable if not provided?
       # get_cut_date defaults to Inf.
 
-      cut_time <- do.call(get_cut_date, cut_args)
-      last_cut_time <- cut_time
+      if (!is.null(final_calendar)) {
+        cut_args$max_date <- if (is.null(cut_args$max_date)) final_calendar else
+          min(cut_args$max_date, final_calendar)
+      }
+      cut_time <- if (!is.null(final_calendar) && k == n_analyses) {
+        final_calendar
+      } else do.call(get_cut_date, cut_args)
+      skipped <- !is.null(final_calendar) && k < n_analyses && cut_time >= final_calendar
+      if (!skipped) last_cut_time <- cut_time
 
       # Cut data
       cut_data <- data_cut(sim_data, cut_date = cut_time, event_gap = event_gap)
@@ -299,13 +316,15 @@ sim_gs_nbinom <- function(
       info_blinded_ml <- NA_real_
       info_unblinded_mom <- NA_real_
       info_blinded_mom <- NA_real_
+      info_blinded_final_projected <- NA_real_
+      blinded_fallback <- NA_character_
       
       # Legacy columns (mapped to ML)
       blinded_info <- NA_real_
       unblinded_info <- NA_real_
 
       # Run analysis if sufficient data
-      if (n_enrolled >= 4 && events_total >= 2) {
+      if (!skipped && n_enrolled >= 4 && events_total >= 2) {
         
         # --- 1. Unblinded ML ---
         test_res <- tryCatch(mutze_test(cut_data, test_type = test_type), error = function(e) NULL)
@@ -322,15 +341,25 @@ sim_gs_nbinom <- function(
         }
 
         # --- 2. Blinded ML ---
-        blinded_res <- calculate_blinded_info(
+        blinded_res <- tryCatch(calculate_blinded_info(
             cut_data,
             ratio = ratio_plan,
             lambda1_planning = lambda1_plan,
             lambda2_planning = lambda2_plan,
             event_gap = event_gap
-        )
-        info_blinded_ml <- blinded_res$blinded_info
-        blinded_info <- info_blinded_ml
+        ), error = function(error) NULL)
+        if (!is.null(blinded_res)) {
+          info_blinded_ml <- blinded_res$blinded_info
+          blinded_info <- info_blinded_ml
+          blinded_fallback <- blinded_res$fallback
+          if (!is.null(projection_accrual)) {
+            info_blinded_final_projected <- tryCatch(.gs_nb_projected_info(
+              blinded_res, projection_accrual$rate, projection_accrual$duration,
+              final_calendar, inputs$dropout_rate, max_followup, event_gap, ratio_plan,
+              analysis_time = cut_time, n_observed = n_enrolled
+            ), error = function(error) NA_real_)
+          }
+        }
         
         # --- Helper for Info Calculation ---
         # Calculates Fisher info for log-rate-ratio given specific parameters and data
@@ -434,7 +463,10 @@ sim_gs_nbinom <- function(
         info_fraction_unblinded_ml = info_unblinded_ml / planned_final_info,
         info_fraction_blinded_ml = info_blinded_ml / planned_final_info,
         info_fraction_unblinded_mom = info_unblinded_mom / planned_final_info,
-        info_fraction_blinded_mom = info_blinded_mom / planned_final_info
+        info_fraction_blinded_mom = info_blinded_mom / planned_final_info,
+        info_blinded_final_projected = info_blinded_final_projected,
+        blinded_fallback = blinded_fallback,
+        status = if (skipped) "skipped" else "analyzed"
       )
     }
     do.call(rbind, res_list)
